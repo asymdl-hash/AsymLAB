@@ -19,10 +19,7 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            const { error } = await auth.signInWithPassword({
-                email,
-                password,
-            });
+            const { error } = await auth.signIn(email, password);
 
             if (error) throw error;
             router.push('/dashboard');
