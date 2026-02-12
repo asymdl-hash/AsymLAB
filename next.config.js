@@ -3,13 +3,14 @@ const nextConfig = {
     reactStrictMode: true,
     swcMinify: true,
     eslint: {
-        // Ignorar erros de lint durante o build para garantir deploy e evitar falhas por warnings
         ignoreDuringBuilds: true,
     },
     typescript: {
-        // Ignorar erros de tipo durante o build para garantir deploy e evitar falhas por tipagem incompleta
         ignoreBuildErrors: true,
-    }
+    },
+    // Desativar output tracing automático para evitar "RangeError: Maximum call stack size exceeded"
+    // causado por estruturas de ficheiros complexas durante o build
+    outputFileTracing: false,
 };
 
 module.exports = nextConfig;

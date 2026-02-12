@@ -1,9 +1,11 @@
 .agent
 .git
 .next
+.vscode
 node_modules
 docs
 scripts
 *.md
 *.sh
 *.ps1
+package-lock.json
