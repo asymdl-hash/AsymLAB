@@ -5,7 +5,12 @@ import { auth } from '@/lib/supabase';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Plus } from 'lucide-react';
+import { User, Plus, Search, Bell, Grid, List } from 'lucide-react';
+
+/* 
+ * Dashboard Page - Estilo Soft SaaS Premium (Mobbin/Refero)
+ * Layout limpo, minimalista e arejado.
+ */
 
 export default function DashboardPage() {
     const [userEmail, setUserEmail] = useState<string>('');
@@ -22,92 +27,95 @@ export default function DashboardPage() {
 
     return (
         <DashboardLayout>
-            {/* Header Dark - Fica atrás */}
-            <div className="bg-[#1e293b] pb-32">
-                <div className="container mx-auto px-6 pt-8 pb-6">
+            {/* Header Limpo e Moderno (Soft Style) */}
+            <div className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm">
+                <div className="container mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-                            <p className="text-gray-400 text-sm">
-                                Gestão clínica e laboratório unificada
+                            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
+                            <p className="text-gray-500 text-sm mt-0.5">
+                                Panorâmica geral da clínica
                             </p>
                         </div>
-                        <Button>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Novo Paciente
-                        </Button>
+
+                        <div className="flex items-center gap-3">
+                            {/* Search Bar (Simulada) */}
+                            <div className="relative hidden md:block">
+                                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Procurar paciente..."
+                                    className="pl-9 pr-4 py-2 bg-gray-50 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all"
+                                />
+                            </div>
+
+                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-600">
+                                <Bell className="h-5 w-5" />
+                            </Button>
+
+                            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md font-medium px-4">
+                                <Plus className="h-4 w-4 mr-2" />
+                                Novo Paciente
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Content - UM ÚNICO container branco que sobrepõe o header */}
-            <div className="container mx-auto px-6 -mt-20 pb-6">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    {/* Welcome Section */}
-                    <div className="mb-6">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-2">Bem-vindo ao AsymLAB</h2>
-                        <p className="text-sm text-gray-600">
-                            Conectado como: <span className="text-blue-600 font-medium">{userEmail}</span>
-                        </p>
-                    </div>
+            {/* Conteúdo Principal (Scrollable) */}
+            <div className="container mx-auto px-6 py-8 space-y-8 bg-[#f9fafb] min-h-screen">
 
-                    {/* Info Box */}
-                    <div className="bg-blue-50 border-l-4 border-blue-600 p-4 rounded-md mb-6">
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                            Sistema de gestão clínica integrado com funcionalidades de agendamento,
-                            faturação e relatórios. Use o menu lateral para navegar entre os módulos.
-                        </p>
-                    </div>
+                {/* Stats Cards (Mobbin Style - Clean & White) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[
+                        { label: 'Pacientes Ativos', value: '1,248', change: '+12%', color: 'text-green-600', bg: 'bg-green-50' },
+                        { label: 'Consultas Hoje', value: '24', change: '-2%', color: 'text-orange-500', bg: 'bg-orange-50' },
+                        { label: 'Faturação Mês', value: '€ 12.4k', change: '+8%', color: 'text-blue-600', bg: 'bg-blue-50' },
+                    ].map((stat) => (
+                        <div key={stat.label} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-4">
+                                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">{stat.label}</h3>
+                                <span className={`text-xs font-semibold px-2 py-1 rounded-full ${stat.bg} ${stat.color}`}>
+                                    {stat.change}
+                                </span>
+                            </div>
+                            <div className="text-3xl font-bold text-gray-900">{stat.value}</div>
+                        </div>
+                    ))}
+                </div>
 
-                    {/* Stats */}
-                    <div className="grid grid-cols-3 gap-4 mb-6 pb-6 border-b border-gray-200">
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <span className="text-sm text-gray-600">Pacientes Ativos</span>
-                            <Badge variant="success">12</Badge>
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <span className="text-sm text-gray-600">Consultas Hoje</span>
-                            <Badge variant="info">5</Badge>
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <span className="text-sm text-gray-600">Pendentes</span>
-                            <Badge variant="warning">3</Badge>
+                {/* Section: Módulos Rápidos */}
+                <div>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-gray-900">Acesso Rápido</h2>
+                        <div className="flex gap-2">
+                            <Button variant="ghost" size="sm" className="text-gray-400"><Grid className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="sm" className="text-gray-400"><List className="h-4 w-4" /></Button>
                         </div>
                     </div>
 
-                    {/* Modules Section */}
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Módulos Disponíveis</h3>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Aceda aos diferentes módulos do sistema através da barra lateral
-                        </p>
-
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            {[
-                                { name: 'Pacientes', desc: 'Gestão de fichas clínicas', status: 'Ativo' },
-                                { name: 'Agenda', desc: 'Marcações e consultas', status: 'Ativo' },
-                                { name: 'Faturação', desc: 'Gestão financeira', status: 'Ativo' },
-                                { name: 'Relatórios', desc: 'Análises e estatísticas', status: 'Ativo' },
-                                { name: 'Definições', desc: 'Configurações do sistema', status: 'Ativo' },
-                            ].map((module) => (
-                                <div
-                                    key={module.name}
-                                    className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all cursor-pointer"
-                                >
-                                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                        <User className="h-5 w-5 text-blue-600" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <h4 className="font-semibold text-sm text-gray-900">{module.name}</h4>
-                                            <Badge variant="success" className="text-xs">{module.status}</Badge>
-                                        </div>
-                                        <p className="text-xs text-gray-600 mt-0.5">{module.desc}</p>
-                                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {[
+                            { name: 'Fichas Clínicas', desc: 'Gerir pacientes e históricos', icon: User, color: 'bg-blue-500' },
+                            { name: 'Agenda Médica', desc: 'Marcações e calendário', icon: Calendar, color: 'bg-indigo-500' },
+                            { name: 'Faturação', desc: 'Emitir faturas e orçamentos', icon: Euro, color: 'bg-emerald-500' },
+                        ].map((module) => (
+                            <div key={module.name} className="group bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-primary/30 hover:shadow-md transition-all cursor-pointer flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-lg ${module.color} flex items-center justify-center text-white shadow-lg`}>
+                                    <module.icon className="h-6 w-6" />
                                 </div>
-                            ))}
-                        </div>
+                                <div>
+                                    <h4 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">{module.name}</h4>
+                                    <p className="text-sm text-gray-500">{module.desc}</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
+                </div>
+
+                {/* Welcome Info (Subtle Footer) */}
+                <div className="mt-8 pt-8 border-t border-gray-200 text-center text-sm text-gray-400">
+                    <p>Ligado como <span className="font-medium text-gray-600">{userEmail}</span> • AsymLAB v2.4 (Soft SaaS)</p>
                 </div>
             </div>
         </DashboardLayout>
