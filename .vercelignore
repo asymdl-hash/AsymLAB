@@ -1,0 +1,9 @@
+.agent
+.git
+.next
+node_modules
+docs
+scripts
+*.md
+*.sh
+*.ps1
