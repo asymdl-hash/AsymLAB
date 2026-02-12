@@ -22,28 +22,31 @@
     --radius-sm: 2px;
     --radius-md: 4px;
 
+    /* Zirkonzahn Effect Shadows */
     --shadow-neon: 0 0 10px rgba(255, 102, 0, 0.4), 0 0 20px rgba(255, 102, 0, 0.2);
     --shadow-cnc: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.5);
     --shadow-cnc-pressed: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+
+    /* Novas sombras para correçāo de build */
+    --shadow-zirkon: 0 4px 0 0 rgba(180, 70, 0, 1);
+    --shadow-zirkon-input: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-zirkon-input-dark: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+    --shadow-neon-glow: 0 0 8px rgba(255, 102, 0, 0.5);
+    --shadow-neon-box: 0 0 10px rgba(255, 102, 0, 0.3);
 }
 
 /* DAY MODE (Default / Light) - Aluminium Look */
 :root {
     --background: 220 14% 96%;
-    /* #f1f2f4 - Clean Aluminium */
     --foreground: 0 0% 10%;
-    /* #1a1a1a - Deep Black Text */
 
     --card: 0 0% 100%;
-    /* #ffffff - Pure White Card */
     --card-foreground: 0 0% 10%;
 
     --primary: 24 100% 50%;
-    /* #ff6600 - Zirkonzahn Orange */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 93%;
-    /* #eef0f2 */
     --secondary-foreground: 0 0% 10%;
 
     --muted: 220 14% 90%;
@@ -53,52 +56,41 @@
     --destuctive-foreground: 0 0% 100%;
 
     --border: 220 13% 85%;
-    /* #d1d5db */
     --input: 220 13% 90%;
     --ring: 24 100% 50%;
 
     --radius: 2px;
-    /* Slight roundness for machined effect */
 }
 
 /* DARK MODE (Zirkonzahn Night) - Titanium Look */
-/* Activated when class="dark" is on <html> or via media query */
 @media (prefers-color-scheme: dark) {
     :root {
         --background: 0 0% 5%;
-        /* #0d0d0d - Deep Titanium */
         --foreground: 0 0% 90%;
-        /* #e5e5e5 - Bright Silver Text */
 
         --card: 0 0% 10%;
-        /* #1a1a1a - Matte Dark Grey */
         --card-foreground: 0 0% 90%;
 
         --primary: 24 100% 50%;
-        /* #ff6600 - Neon Orange */
         --primary-foreground: 0 0% 0%;
 
         --secondary: 0 0% 15%;
-        /* #262626 */
         --secondary-foreground: 0 0% 90%;
 
         --muted: 0 0% 15%;
         --muted-foreground: 0 0% 60%;
 
         --border: 0 0% 20%;
-        /* #333333 - Dark Steel Border */
         --input: 0 0% 20%;
     }
 }
 
-/* Manual Dark Mode Class Override */
 .dark {
     --background: 0 0% 5%;
     --foreground: 0 0% 90%;
     --card: 0 0% 10%;
     --card-foreground: 0 0% 90%;
     --primary: 24 100% 55%;
-    /* Slightly brighter orange for dark mode */
     --primary-foreground: 0 0% 0%;
     --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 90%;
@@ -118,7 +110,6 @@
         font-feature-settings: "cv11", "ss01";
     }
 
-    /* Typography - Technical & Precise */
     h1,
     h2,
     h3,
@@ -130,27 +121,24 @@
         letter-spacing: 0.05em;
     }
 
-    /* Data & Numbers */
     .font-mono,
     .data-value {
         font-family: var(--font-mono);
         @apply tracking-tighter;
     }
 
-    /* CNC Machined Inputs */
     input,
     select,
     textarea {
-        @apply rounded-sm border border-input bg-card px-3 py-2 text-sm shadow-[inset_0_2px_4px_rgba(0, 0, 0, 0.05)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-primary transition-all duration-200;
+        @apply rounded-sm border border-input bg-card px-3 py-2 text-sm shadow-zirkon-input focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-primary transition-all duration-200;
     }
 
     .dark input,
     .dark select,
     .dark textarea {
-        @apply bg-[#151515] shadow-[inset_0_2px_4px_rgba(0, 0, 0, 0.5)];
+        @apply bg-[#151515] shadow-zirkon-input-dark;
     }
 
-    /* CNC Interaction Buttons */
     button {
         font-family: var(--font-tech);
         @apply uppercase tracking-wider font-bold transition-all active:scale-[0.98];
@@ -159,7 +147,6 @@
 
 /* COMPONENTES CNC / ZIRKONZAHN STYLE */
 
-/* Painel com relevo subtil e borda técnica */
 .cnc-panel {
     @apply bg-card border border-border/50 rounded-sm shadow-sm;
     background-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.03), transparent);
@@ -168,14 +155,11 @@
 .dark .cnc-panel {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    /* Highlight edge */
 }
 
-/* Botão Primário "Ligar Máquina" */
 .btn-cnc {
     @apply bg-primary text-primary-foreground px-4 py-2 rounded-sm shadow-md hover:bg-primary/90 hover:shadow-lg relative overflow-hidden;
     border-bottom: 2px solid rgba(0, 0, 0, 0.2);
-    /* 3D effect */
     text-shadow: 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
@@ -184,22 +168,19 @@
     border-bottom: 0;
 }
 
-/* Botão Secundário "Metal" */
 .btn-cnc-metal {
     @apply bg-secondary text-secondary-foreground border border-border/50 hover:bg-secondary/80 shadow-sm;
     background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), transparent);
 }
 
-/* Neon Glow para status */
 .neon-text {
-    @apply text-primary drop-shadow-[0_0_8px_rgba(255, 102, 0, 0.5)];
+    @apply text-primary shadow-neon-glow;
 }
 
 .neon-border {
-    @apply border-primary shadow-[0_0_10px_rgba(255, 102, 0, 0.3)];
+    @apply border-primary shadow-neon-box;
 }
 
-/* Scrollbars CAD Style */
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
