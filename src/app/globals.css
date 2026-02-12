@@ -29,6 +29,9 @@
     --radius-sm: 0px;
     --radius-md: 2px;
     --radius-lg: 4px;
+
+    /* Custom Shadow for Industrial Depth */
+    --shadow-zirkon: 0 4px 0 0 rgba(180, 70, 0, 1);
 }
 
 /* Base Styles - Zirkonzahn Industrial Precision */
@@ -83,10 +86,8 @@
     body {
         @apply bg-background text-foreground;
         font-feature-settings: "rlig" 1, "calt" 1, "tnum" 1;
-        /* Tabular numbers for engineering precision */
     }
 
-    /* Precision Headers */
     h1,
     h2,
     h3,
@@ -95,21 +96,18 @@
     h6 {
         @apply font-bold tracking-tight uppercase text-white/90;
         letter-spacing: 0.05em;
-        /* Technical spacing */
     }
 
-    /* Technical Details */
     .technical-text {
         font-family: var(--font-mono);
         @apply text-xs uppercase tracking-wider text-muted-foreground;
     }
 
-    /* Industrial Inputs */
     input,
     select,
     textarea {
         @apply rounded-none border border-input bg-muted/20 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        transition: border-color 0.15s ease;
     }
 
     input:focus,
@@ -118,17 +116,15 @@
         @apply border-primary bg-background;
     }
 
-    /* Structural Buttons */
     button {
         @apply rounded-none font-medium uppercase tracking-wide transition-all duration-200 active:scale-[0.98];
     }
 
     .btn-primary {
-        @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_4px_0_0_rgba(180, 70, 0, 1)] active:shadow-none active:translate-y-[4px];
+        @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-zirkon active:shadow-none active:translate-y-[4px];
     }
 }
 
-/* Utilities for "Zirkonzahn" aesthetic */
 .z-panel {
     @apply bg-card border border-border shadow-none;
 }
@@ -141,7 +137,6 @@
     @apply inline-flex items-center rounded-none border border-transparent bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
 }
 
-/* Scrollbar customization for industrial look */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -159,5 +154,4 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background-color: #ff6600;
-    /* Orange highlight on interaction */
 }
