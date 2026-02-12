@@ -1,0 +1,117 @@
+.main {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-bg-primary);
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    max-width: 1400px;
+    min-height: 100vh;
+    gap: 0;
+}
+
+.formSection {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: var(--space-8);
+    background-color: var(--color-bg-primary);
+}
+
+.formWrapper {
+    width: 100%;
+    max-width: 450px;
+    padding-right: var(--space-12);
+}
+
+.title {
+    font-size: clamp(40px, 6vw, 72px);
+    margin-bottom: var(--space-3);
+    color: var(--color-text-primary);
+    letter-spacing: -0.03em;
+}
+
+.subtitle {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-12);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.accentSection {
+    position: relative;
+    background-color: var(--color-bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: var(--space-16);
+}
+
+.accentBar {
+    width: 4px;
+    height: 60%;
+    background-color: var(--color-accent);
+    animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scaleY(0.95);
+    }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+
+    .formSection {
+        justify-content: center;
+        padding: var(--space-6);
+    }
+
+    .formWrapper {
+        padding-right: 0;
+        max-width: 500px;
+    }
+
+    .accentSection {
+        display: none;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .formSection {
+        padding: var(--space-4);
+    }
+
+    .formWrapper {
+        max-width: 100%;
+    }
+
+    .title {
+        font-size: 48px;
+    }
+
+    .subtitle {
+        font-size: 12px;
+        margin-bottom: var(--space-8);
+    }
+}

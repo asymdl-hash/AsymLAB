@@ -1,0 +1,115 @@
+.main {
+    min-height: 100vh;
+    background-color: var(--color-bg-primary);
+    padding: var(--space-8);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-12);
+    padding-bottom: var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.header h1 {
+    margin: 0;
+}
+
+.signOutBtn {
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    padding: var(--space-2) var(--space-4);
+    font-size: 12px;
+}
+
+.signOutBtn:hover {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    border-color: var(--color-text-secondary);
+}
+
+.content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-8);
+}
+
+.welcomeCard,
+.placeholderCard {
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    padding: var(--space-8);
+}
+
+.welcomeCard h2 {
+    margin-bottom: var(--space-4);
+}
+
+.userEmail {
+    font-family: var(--font-body);
+    color: var(--color-accent);
+    margin-bottom: var(--space-6);
+}
+
+.infoBox {
+    background-color: var(--color-bg-tertiary);
+    padding: var(--space-6);
+    border-left: 3px solid var(--color-accent);
+    margin-top: var(--space-6);
+}
+
+.infoBox p {
+    margin: 0;
+    line-height: 1.8;
+}
+
+.placeholderCard h3 {
+    margin-bottom: var(--space-4);
+    color: var(--color-text-secondary);
+}
+
+.placeholderCard ul {
+    list-style: none;
+    padding: 0;
+}
+
+.placeholderCard li {
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.placeholderCard li:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 1024px) {
+    .content {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .main {
+        padding: var(--space-4);
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-4);
+    }
+
+    .welcomeCard,
+    .placeholderCard {
+        padding: var(--space-6);
+    }
+}
