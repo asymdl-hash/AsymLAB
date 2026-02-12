@@ -1,17 +1,27 @@
 import type { Metadata } from 'next';
-import { Outfit, Roboto_Mono } from 'next/font/google';
+import { Rajdhani, Roboto_Mono, Inter } from 'next/font/google';
 import './globals.css';
 import PWARegister from '@/components/PWARegister';
 
-const outfit = Outfit({
+// Fonte técnica quadrada para Títulos e UI Principal (Estilo CAD)
+const rajdhani = Rajdhani({
+    weight: ['400', '500', '600', '700'],
     subsets: ['latin'],
-    variable: '--font-sans',
+    variable: '--font-tech',
     display: 'swap',
 });
 
+// Fonte mono para dados e números
 const robotoMono = Roboto_Mono({
     subsets: ['latin'],
     variable: '--font-mono',
+    display: 'swap',
+});
+
+// Fonte neutra para textos longos (leitura)
+const inter = Inter({
+    subsets: ['latin'],
+    variable: '--font-sans',
     display: 'swap',
 });
 
@@ -24,11 +34,11 @@ export const metadata: Metadata = {
         apple: '/icons/icon-192x192.png',
     },
     applicationName: 'AsymLAB',
-    keywords: ['gestão clínica', 'saúde', 'precisão', 'técnico', 'zirkonzahn'],
+    keywords: ['gestão clínica', 'saúde', 'zirkonzahn', 'cad', 'cam'],
 };
 
 export const viewport = {
-    themeColor: '#121212', // Dark Titanium Black
+    themeColor: '#0a0a0a',
     width: 'device-width',
     initialScale: 1,
     maximumScale: 1,
@@ -41,13 +51,12 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="pt" className="dark">
+        <html lang="pt" suppressHydrationWarning>
             <head>
                 <link rel="icon" href="/icons/icon-192x192.png" />
-                {/* Preloading important fonts */}
-                <meta name="theme-color" content="#121212" />
             </head>
-            <body className={`${outfit.variable} ${robotoMono.variable} font-sans antialiased bg-[#121212] text-white selection:bg-[#ff6600] selection:text-black`}>
+            {/* O bg-background aqui adapta-se automaticamente ao tema do sistema ou classe 'dark' */}
+            <body className={`${rajdhani.variable} ${robotoMono.variable} ${inter.variable} font-sans antialiased bg-background text-foreground selection:bg-[#ff6600] selection:text-black`}>
                 <PWARegister />
                 {children}
             </body>
