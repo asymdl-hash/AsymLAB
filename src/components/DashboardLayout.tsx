@@ -1,17 +1,14 @@
 'use client';
 
-import Sidebar from '@/components/Sidebar';
-import styles from './DashboardLayout.module.css';
+import Sidebar from './Sidebar';
 
-interface DashboardLayoutProps {
-    children: React.ReactNode;
-}
-
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className={styles.layout}>
+        <div className="flex min-h-screen bg-gray-50">
             <Sidebar />
-            <main className={styles.main}>{children}</main>
+            <main className="flex-1 ml-64 transition-all duration-300">
+                {children}
+            </main>
         </div>
     );
 }
