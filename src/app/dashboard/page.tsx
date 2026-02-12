@@ -5,7 +5,7 @@ import { auth } from '@/lib/supabase';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Plus, Search, Bell, Grid, List } from 'lucide-react';
+import { User, Plus, Search, Bell, Grid, List, Calendar, Euro } from 'lucide-react';
 
 /* 
  * Dashboard Page - Estilo Soft SaaS Premium (Mobbin/Refero)
