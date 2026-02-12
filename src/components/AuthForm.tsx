@@ -19,17 +19,35 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
         setLoading(true);
         setError(null);
 
-        const { data, error: signInError } = await auth.signIn(email, password);
+        console.log('🔐 Tentando login com:', email);
 
-        if (signInError) {
-            setError(signInError.message);
+        try {
+            const { data, error: signInError } = await auth.signIn(email, password);
+
+            console.log('📊 Resposta do Supabase:', { data, error: signInError });
+
+            if (signInError) {
+                console.error('❌ Erro de login:', signInError.message);
+                setError(signInError.message);
+                setLoading(false);
+                return;
+            }
+
+            if (data.session) {
+                console.log('✅ Login bem-sucedido! Redirecionando...');
+                onSuccess?.();
+
+                // Redirecionar imediatamente
+                window.location.href = '/dashboard';
+            } else {
+                console.warn('⚠️ Login sem sessão retornada');
+                setError('Login falhou. Tenta novamente.');
+                setLoading(false);
+            }
+        } catch (err) {
+            console.error('💥 Erro inesperado:', err);
+            setError('Erro de conexão. Verifica a consola.');
             setLoading(false);
-            return;
-        }
-
-        if (data.session) {
-            onSuccess?.();
-            window.location.href = '/dashboard';
         }
     };
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { auth } from '@/lib/supabase';
+import DashboardLayout from '@/components/DashboardLayout';
 import styles from './page.module.css';
 
 export default function DashboardPage() {
@@ -18,29 +19,21 @@ export default function DashboardPage() {
         setLoading(false);
     };
 
-    const handleSignOut = async () => {
-        await auth.signOut();
-        window.location.href = '/login';
-    };
-
     if (loading) {
         return (
-            <main className={styles.main}>
+            <DashboardLayout>
                 <div className={styles.container}>
                     <p>A carregar...</p>
                 </div>
-            </main>
+            </DashboardLayout>
         );
     }
 
     return (
-        <main className={styles.main}>
+        <DashboardLayout>
             <div className={styles.container}>
                 <header className={styles.header}>
                     <h1>Dashboard</h1>
-                    <button onClick={handleSignOut} className={styles.signOutBtn}>
-                        Sair
-                    </button>
                 </header>
 
                 <div className={styles.content}>
@@ -55,22 +48,24 @@ export default function DashboardPage() {
                                 <br />
                                 ✅ Responsividade total
                                 <br />
+                                ✅ Sidebar com navegação
+                                <br />
                                 🔄 Sincronização com Pasta Local (em breve)
                             </p>
                         </div>
                     </div>
 
                     <div className={styles.placeholderCard}>
-                        <h3>Módulos Futuros</h3>
+                        <h3>Módulos Disponíveis</h3>
                         <ul>
-                            <li>Ficha do Paciente</li>
-                            <li>Sincronização Offline</li>
-                            <li>Gestão de Consultas</li>
-                            <li>Relatórios Clínicos</li>
+                            <li>👤 Pacientes</li>
+                            <li>📅 Agenda</li>
+                            <li>💰 Faturação</li>
+                            <li>📊 Relatórios</li>
                         </ul>
                     </div>
                 </div>
             </div>
-        </main>
+        </DashboardLayout>
     );
 }
