@@ -14,7 +14,8 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
-    Activity
+    Activity,
+    Building2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,6 +27,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
     { icon: Home, label: 'Dashboard', href: '/dashboard' },
+    { icon: Building2, label: 'Clínicas', href: '/dashboard/clinics' },
     { icon: Users, label: 'Pacientes', href: '/dashboard/patients' },
     { icon: Calendar, label: 'Agenda', href: '/dashboard/schedule' },
     { icon: Euro, label: 'Faturação', href: '/dashboard/billing' },

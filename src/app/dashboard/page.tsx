@@ -26,7 +26,7 @@ export default function DashboardPage() {
     }, []);
 
     return (
-        <DashboardLayout>
+        <>
             {/* Header Limpo e Moderno (Soft Style) */}
             <div className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm">
                 <div className="container mx-auto px-6 py-4">
@@ -118,6 +118,6 @@ export default function DashboardPage() {
                     <p>Ligado como <span className="font-medium text-gray-600">{userEmail}</span> • AsymLAB v2.4 (Soft SaaS)</p>
                 </div>
             </div>
-        </DashboardLayout>
+        </>
     );
 }
