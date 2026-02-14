@@ -129,8 +129,7 @@ async function runBackup(overridePath) {
                 const { data, error } = await supabase
                     .from(table)
                     .select('*')
-                    .range(from, from + pageSize - 1)
-                    .order('created_at', { ascending: true });
+                    .range(from, from + pageSize - 1);
 
                 if (error) throw error;
 
