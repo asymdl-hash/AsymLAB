@@ -8,12 +8,10 @@ const nextConfig = {
     typescript: {
         ignoreBuildErrors: true,
     },
-    experimental: {
-        // Ativar output file tracing mas com limite de recursão
-        outputFileTracingRoot: __dirname,
-    },
-    // Configuração de output para Vercel
-    output: 'standalone',
+    // Desativar output tracing para evitar RangeError
+    // Nota: Isto causa problemas com client-reference-manifest em rotas dinâmicas
+    // mas é preferível a falhar o build completamente
+    outputFileTracing: false,
 };
 
 module.exports = nextConfig;

@@ -10,8 +10,7 @@ import ClinicInfoTab from './tabs/ClinicInfoTab';
 import ClinicDeliveryTab from './tabs/ClinicDeliveryTab';
 import ClinicTeamTab from './tabs/ClinicTeamTab';
 import ClinicDiscountsTab from './tabs/ClinicDiscountsTab';
-// import ClinicPermissionsTab from './tabs/ClinicPermissionsTab';
-// import ClinicDiscountsTab from './tabs/ClinicDiscountsTab';
+import ClinicSecurityTab from './tabs/ClinicSecurityTab';
 
 
 interface ClinicFormProps {
@@ -133,7 +132,7 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
                         <TabsTrigger value="delivery">Entregas</TabsTrigger>
                         <TabsTrigger value="team">Equipa</TabsTrigger>
                         <TabsTrigger value="discounts">Descontos</TabsTrigger>
-                        <TabsTrigger value="permissions">Permissões</TabsTrigger>
+                        <TabsTrigger value="permissions">Acesso & Segurança</TabsTrigger>
                     </TabsList>
 
                     <div className="mt-6">
@@ -154,7 +153,13 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
                         </TabsContent>
 
                         <TabsContent value="permissions">
-                            <div className="p-4 text-center text-gray-400">Em desenvolvimento (Permissões)...</div>
+                            {/* TEMPORARIAMENTE DESATIVADO PARA DIAGNÓSTICO */}
+                            <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-md">
+                                <p className="text-yellow-900">
+                                    ⚠️ Aba de Acesso & Segurança temporariamente desativada para diagnóstico.
+                                </p>
+                            </div>
+                            {/* <ClinicSecurityTab /> */}
                         </TabsContent>
                     </div>
                 </Tabs>
