@@ -26,18 +26,16 @@ interface MenuItem {
     icon: React.ElementType;
     label: string;
     href: string;
-    iconBg: string;
-    iconColor: string;
 }
 
 const menuItems: MenuItem[] = [
-    { icon: Home, label: 'Dashboard', href: '/dashboard', iconBg: 'bg-blue-500/15', iconColor: 'text-blue-400' },
-    { icon: Building2, label: 'Clínicas', href: '/dashboard/clinics', iconBg: 'bg-violet-500/15', iconColor: 'text-violet-400' },
-    { icon: Users, label: 'Pacientes', href: '/dashboard/patients', iconBg: 'bg-emerald-500/15', iconColor: 'text-emerald-400' },
-    { icon: Calendar, label: 'Agenda', href: '/dashboard/schedule', iconBg: 'bg-amber-500/15', iconColor: 'text-amber-400' },
-    { icon: Euro, label: 'Faturação', href: '/dashboard/billing', iconBg: 'bg-teal-500/15', iconColor: 'text-teal-400' },
-    { icon: BarChart3, label: 'Relatórios', href: '/dashboard/reports', iconBg: 'bg-indigo-500/15', iconColor: 'text-indigo-400' },
-    { icon: Settings, label: 'Definições', href: '/dashboard/settings', iconBg: 'bg-gray-500/15', iconColor: 'text-gray-400' },
+    { icon: Home, label: 'Dashboard', href: '/dashboard' },
+    { icon: Building2, label: 'Clínicas', href: '/dashboard/clinics' },
+    { icon: Users, label: 'Pacientes', href: '/dashboard/patients' },
+    { icon: Calendar, label: 'Agenda', href: '/dashboard/schedule' },
+    { icon: Euro, label: 'Faturação', href: '/dashboard/billing' },
+    { icon: BarChart3, label: 'Relatórios', href: '/dashboard/reports' },
+    { icon: Settings, label: 'Definições', href: '/dashboard/settings' },
 ];
 
 export default function Sidebar() {
@@ -130,7 +128,7 @@ export default function Sidebar() {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto">
+            <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
@@ -140,31 +138,19 @@ export default function Sidebar() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative",
+                                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group relative",
                                 isActive
-                                    ? "bg-white/5 text-white"
-                                    : "text-gray-400 hover:bg-white/5 hover:text-gray-200",
+                                    ? "bg-primary/10 text-primary shadow-[inset_2px_0_0_0_#f59e0b]"
+                                    : "text-gray-400 hover:bg-[#1f2937] hover:text-white",
                                 collapsed && !isMobile && "justify-center px-2"
                             )}
                             title={collapsed && !isMobile ? item.label : undefined}
                         >
-                            {/* Flat Icon com cor própria */}
-                            <div className={cn(
-                                "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all",
-                                isActive ? item.iconBg : `${item.iconBg} opacity-70 group-hover:opacity-100`
-                            )}>
-                                <Icon className={cn("h-[18px] w-[18px] transition-colors", item.iconColor)} />
-                            </div>
-                            {(!collapsed || isMobile) && (
-                                <span className={cn(
-                                    "transition-colors",
-                                    isActive ? "text-white font-semibold" : ""
-                                )}>{item.label}</span>
-                            )}
+                            <Icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", isActive ? "text-primary" : "text-gray-500 group-hover:text-white")} />
+                            {(!collapsed || isMobile) && <span>{item.label}</span>}
 
-                            {/* Indicador ativo */}
-                            {isActive && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
+                            {collapsed && !isMobile && isActive && (
+                                <div className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-primary" />
                             )}
                         </Link>
                     );
