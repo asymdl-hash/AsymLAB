@@ -260,36 +260,58 @@ async function runBackup(overridePath) {
     try {
         process.stdout.write('  ⏳ Exportar utilizadores...');
 
-        // Nota: Com a anon key, não temos acesso admin à auth.
-        // Guardamos o que podemos via API pública + info do utilizador actual
-        const { data: userData, error: userError } = await supabase.auth.getUser();
+        // Tentar via RPC (exporta TODOS os users via SECURITY DEFINER)
+        const { data: allUsers, error: rpcError } = await supabase.rpc('get_auth_users_summary');
 
-        if (!userError && userData?.user) {
+        if (!rpcError && allUsers && allUsers.length > 0) {
             const authInfo = {
-                note: 'Backup parcial — apenas o utilizador actual. Para backup completo de todos os users, usar Service Role Key.',
-                current_user: {
-                    id: userData.user.id,
-                    email: userData.user.email,
-                    role: userData.user.role,
-                    created_at: userData.user.created_at,
-                    last_sign_in_at: userData.user.last_sign_in_at,
-                    app_metadata: userData.user.app_metadata,
-                    user_metadata: userData.user.user_metadata,
-                },
+                backup_type: 'full',
+                total_users: allUsers.length,
+                users: allUsers,
                 backup_date: now.toISOString(),
             };
 
             const authPath = path.join(backupDir, '_infrastructure', 'auth_users.json');
             fs.writeFileSync(authPath, JSON.stringify(authInfo, null, 2), 'utf-8');
             metadata.infrastructure.auth = {
-                status: 'partial',
+                status: 'ok',
                 file: '_infrastructure/auth_users.json',
-                note: 'Apenas user actual. Para todos os users, configurar Service Role Key.'
+                total_users: allUsers.length
             };
-            console.log(' ✅ User actual exportado');
+            console.log(` ✅ ${allUsers.length} utilizador(es) exportados`);
         } else {
-            metadata.infrastructure.auth = { status: 'skipped', reason: 'Sem sessão activa' };
-            console.log(' ⚠️ Sem sessão activa — auth ignorado');
+            // Fallback: apenas o user actual via API
+            console.log(' ⚠️ RPC não disponível, a usar fallback...');
+            const { data: userData, error: userError } = await supabase.auth.getUser();
+
+            if (!userError && userData?.user) {
+                const authInfo = {
+                    backup_type: 'partial',
+                    note: 'Apenas o utilizador actual. Executar setup-backup-functions.sql no Supabase para backup completo.',
+                    current_user: {
+                        id: userData.user.id,
+                        email: userData.user.email,
+                        role: userData.user.role,
+                        created_at: userData.user.created_at,
+                        last_sign_in_at: userData.user.last_sign_in_at,
+                        app_metadata: userData.user.app_metadata,
+                        user_metadata: userData.user.user_metadata,
+                    },
+                    backup_date: now.toISOString(),
+                };
+
+                const authPath = path.join(backupDir, '_infrastructure', 'auth_users.json');
+                fs.writeFileSync(authPath, JSON.stringify(authInfo, null, 2), 'utf-8');
+                metadata.infrastructure.auth = {
+                    status: 'partial',
+                    file: '_infrastructure/auth_users.json',
+                    note: 'Apenas user actual. Executar setup-backup-functions.sql para todos os users.'
+                };
+                console.log('  ✅ User actual exportado (parcial)');
+            } else {
+                metadata.infrastructure.auth = { status: 'skipped', reason: 'Sem sessão activa' };
+                console.log('  ⚠️ Sem sessão activa — auth ignorado');
+            }
         }
     } catch (err) {
         metadata.infrastructure.auth = { status: 'error', error: err.message };
