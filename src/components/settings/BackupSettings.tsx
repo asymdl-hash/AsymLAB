@@ -14,12 +14,14 @@ import {
     Loader2,
     Calendar,
     Database,
-    Trash2
+    Trash2,
+    Settings2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import BackupWizard from './BackupWizard';
 
 interface BackupConfig {
     base_path: string;
@@ -56,6 +58,7 @@ export default function BackupSettings() {
     const [backingUp, setBackingUp] = useState(false);
     const [backupResult, setBackupResult] = useState<string | null>(null);
     const [hasChanges, setHasChanges] = useState(false);
+    const [showWizard, setShowWizard] = useState(false);
 
     // Campos editáveis
     const [editPath, setEditPath] = useState('');
@@ -153,6 +156,16 @@ export default function BackupSettings() {
         );
     }
 
+    // Mostrar Wizard
+    if (showWizard) {
+        return (
+            <BackupWizard
+                onComplete={() => { setShowWizard(false); loadConfig(); }}
+                onCancel={() => setShowWizard(false)}
+            />
+        );
+    }
+
     return (
         <div className="space-y-8">
             {/* ====== HEADER ====== */}
@@ -166,18 +179,28 @@ export default function BackupSettings() {
                         <p className="text-sm text-gray-500">Redundância dos dados do Supabase</p>
                     </div>
                 </div>
-                <Button
-                    onClick={handleBackupNow}
-                    disabled={backingUp}
-                    className="bg-primary hover:bg-primary/90 text-white gap-2"
-                >
-                    {backingUp ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                        <Play className="h-4 w-4" />
-                    )}
-                    {backingUp ? 'A fazer backup...' : 'Backup Agora'}
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => setShowWizard(true)}
+                        className="gap-2 text-gray-600"
+                    >
+                        <Settings2 className="h-4 w-4" />
+                        Reconfigurar
+                    </Button>
+                    <Button
+                        onClick={handleBackupNow}
+                        disabled={backingUp}
+                        className="bg-primary hover:bg-primary/90 text-white gap-2"
+                    >
+                        {backingUp ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <Play className="h-4 w-4" />
+                        )}
+                        {backingUp ? 'A fazer backup...' : 'Backup Agora'}
+                    </Button>
+                </div>
             </div>
 
             {/* Resultado do backup manual */}
