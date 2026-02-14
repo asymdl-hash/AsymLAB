@@ -82,21 +82,24 @@ async function runBackup(overridePath) {
 
     // Criar directórios
     fs.mkdirSync(backupDir, { recursive: true });
+    fs.mkdirSync(path.join(backupDir, '_infrastructure'), { recursive: true });
 
     console.log('');
-    console.log('╔══════════════════════════════════════════════╗');
-    console.log('║        AsymLAB — Supabase Backup             ║');
-    console.log('╚══════════════════════════════════════════════╝');
+    console.log('╔══════════════════════════════════════════════════╗');
+    console.log('║    AsymLAB — Supabase Full Backup                ║');
+    console.log('╚══════════════════════════════════════════════════╝');
     console.log(`📅 Data: ${now.toLocaleString('pt-PT')}`);
     console.log(`📁 Destino: ${backupDir}`);
     console.log(`📊 Tabelas: ${tables.length}`);
-    console.log('─'.repeat(48));
+    console.log('─'.repeat(52));
 
     const metadata = {
+        version: '2.0',
         timestamp: now.toISOString(),
         date: dateStr,
         supabase_url: supabaseUrl,
         tables: {},
+        infrastructure: {},
         status: 'in_progress',
         duration_ms: 0,
         errors: []
@@ -105,6 +108,12 @@ async function runBackup(overridePath) {
     const startTime = Date.now();
     let totalRows = 0;
     let successCount = 0;
+
+    // ═══════════════════════════════════════════
+    // FASE 1: Dados das tabelas
+    // ═══════════════════════════════════════════
+    console.log('\n📦 FASE 1: Dados das tabelas');
+    console.log('─'.repeat(52));
 
     for (const table of tables) {
         try {
@@ -162,6 +171,265 @@ async function runBackup(overridePath) {
         }
     }
 
+    // ═══════════════════════════════════════════
+    // FASE 2: Schema (DDL) — Estrutura completa
+    // ═══════════════════════════════════════════
+    console.log('\n🏗️  FASE 2: Schema (estrutura das tabelas)');
+    console.log('─'.repeat(52));
+
+    try {
+        process.stdout.write('  ⏳ Exportar schema DDL...');
+
+        const { data: schemaData, error: schemaError } = await supabase.rpc('get_schema_ddl');
+
+        if (schemaError) {
+            // Fallback: usar information_schema se a função RPC não existir
+            console.log(' ⚠️ RPC não disponível, a usar information_schema...');
+
+            const { data: columnsData, error: colError } = await supabase
+                .from('information_schema.columns')
+                .select('*')
+                .in('table_schema', ['public'])
+                .order('table_name', { ascending: true });
+
+            if (colError) {
+                // Segundo fallback: query directa via REST
+                const schemaInfo = {};
+                for (const table of tables) {
+                    try {
+                        const { data: sample, error: sampleErr } = await supabase
+                            .from(table)
+                            .select('*')
+                            .limit(1);
+
+                        if (!sampleErr && sample && sample.length > 0) {
+                            schemaInfo[table] = {
+                                columns: Object.keys(sample[0]).map(col => ({
+                                    name: col,
+                                    sample_type: typeof sample[0][col],
+                                    sample_value: sample[0][col],
+                                    is_null: sample[0][col] === null,
+                                }))
+                            };
+                        }
+                    } catch (e) {
+                        // Ignorar tabelas com erro
+                    }
+                }
+
+                const schemaPath = path.join(backupDir, '_infrastructure', 'schema_inferred.json');
+                fs.writeFileSync(schemaPath, JSON.stringify(schemaInfo, null, 2), 'utf-8');
+                metadata.infrastructure.schema = { status: 'inferred', file: '_infrastructure/schema_inferred.json' };
+                console.log('  ✅ Schema inferido (baseado em dados)');
+            } else {
+                const schemaPath = path.join(backupDir, '_infrastructure', 'schema_columns.json');
+                fs.writeFileSync(schemaPath, JSON.stringify(columnsData, null, 2), 'utf-8');
+                metadata.infrastructure.schema = { status: 'ok', file: '_infrastructure/schema_columns.json' };
+                console.log(' ✅ Schema exportado (information_schema)');
+            }
+        } else {
+            const schemaPath = path.join(backupDir, '_infrastructure', 'schema_ddl.sql');
+            fs.writeFileSync(schemaPath, schemaData, 'utf-8');
+            metadata.infrastructure.schema = { status: 'ok', file: '_infrastructure/schema_ddl.sql' };
+            console.log(' ✅ Schema DDL completo');
+        }
+    } catch (err) {
+        console.log(` ⚠️ Schema parcial: ${err.message}`);
+        metadata.infrastructure.schema = { status: 'error', error: err.message };
+    }
+
+    // Backup dos tipos TypeScript (cópia local do ficheiro de tipos)
+    try {
+        const typesPath = path.resolve(__dirname, '..', 'src', 'types', 'database.types.ts');
+        if (fs.existsSync(typesPath)) {
+            const dest = path.join(backupDir, '_infrastructure', 'database.types.ts');
+            fs.copyFileSync(typesPath, dest);
+            metadata.infrastructure.typescript_types = { status: 'ok', file: '_infrastructure/database.types.ts' };
+            console.log('  ✅ TypeScript types copiados');
+        }
+    } catch (e) {
+        // Não é crítico
+    }
+
+    // ═══════════════════════════════════════════
+    // FASE 3: Auth Users
+    // ═══════════════════════════════════════════
+    console.log('\n🔐 FASE 3: Utilizadores (Auth)');
+    console.log('─'.repeat(52));
+
+    try {
+        process.stdout.write('  ⏳ Exportar utilizadores...');
+
+        // Nota: Com a anon key, não temos acesso admin à auth.
+        // Guardamos o que podemos via API pública + info do utilizador actual
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+
+        if (!userError && userData?.user) {
+            const authInfo = {
+                note: 'Backup parcial — apenas o utilizador actual. Para backup completo de todos os users, usar Service Role Key.',
+                current_user: {
+                    id: userData.user.id,
+                    email: userData.user.email,
+                    role: userData.user.role,
+                    created_at: userData.user.created_at,
+                    last_sign_in_at: userData.user.last_sign_in_at,
+                    app_metadata: userData.user.app_metadata,
+                    user_metadata: userData.user.user_metadata,
+                },
+                backup_date: now.toISOString(),
+            };
+
+            const authPath = path.join(backupDir, '_infrastructure', 'auth_users.json');
+            fs.writeFileSync(authPath, JSON.stringify(authInfo, null, 2), 'utf-8');
+            metadata.infrastructure.auth = {
+                status: 'partial',
+                file: '_infrastructure/auth_users.json',
+                note: 'Apenas user actual. Para todos os users, configurar Service Role Key.'
+            };
+            console.log(' ✅ User actual exportado');
+        } else {
+            metadata.infrastructure.auth = { status: 'skipped', reason: 'Sem sessão activa' };
+            console.log(' ⚠️ Sem sessão activa — auth ignorado');
+        }
+    } catch (err) {
+        metadata.infrastructure.auth = { status: 'error', error: err.message };
+        console.log(` ⚠️ Auth: ${err.message}`);
+    }
+
+    // ═══════════════════════════════════════════
+    // FASE 4: RLS Policies & Functions
+    // ═══════════════════════════════════════════
+    console.log('\n🛡️  FASE 4: RLS Policies & Functions');
+    console.log('─'.repeat(52));
+
+    // RLS Policies — tentar via REST query
+    try {
+        process.stdout.write('  ⏳ Exportar RLS policies...');
+
+        const { data: rlsData, error: rlsError } = await supabase
+            .rpc('get_rls_policies');
+
+        if (!rlsError && rlsData) {
+            const rlsPath = path.join(backupDir, '_infrastructure', 'rls_policies.json');
+            fs.writeFileSync(rlsPath, JSON.stringify(rlsData, null, 2), 'utf-8');
+            metadata.infrastructure.rls_policies = { status: 'ok', file: '_infrastructure/rls_policies.json' };
+            console.log(' ✅ Policies exportadas');
+        } else {
+            // RPC não existe — exportar aviso
+            metadata.infrastructure.rls_policies = {
+                status: 'unavailable',
+                note: 'Criar função RPC get_rls_policies no Supabase para backup completo. Ver docs em _infrastructure/README.md'
+            };
+            console.log(' ⚠️ RPC não disponível (ver README)');
+        }
+    } catch (err) {
+        metadata.infrastructure.rls_policies = { status: 'error', error: err.message };
+        console.log(` ⚠️ RLS: ${err.message}`);
+    }
+
+    // DB Functions
+    try {
+        process.stdout.write('  ⏳ Exportar DB functions...');
+
+        const { data: fnData, error: fnError } = await supabase
+            .rpc('get_db_functions');
+
+        if (!fnError && fnData) {
+            const fnPath = path.join(backupDir, '_infrastructure', 'db_functions.json');
+            fs.writeFileSync(fnPath, JSON.stringify(fnData, null, 2), 'utf-8');
+            metadata.infrastructure.db_functions = { status: 'ok', file: '_infrastructure/db_functions.json' };
+            console.log(' ✅ Functions exportadas');
+        } else {
+            metadata.infrastructure.db_functions = {
+                status: 'unavailable',
+                note: 'Criar função RPC get_db_functions no Supabase para backup completo.'
+            };
+            console.log(' ⚠️ RPC não disponível');
+        }
+    } catch (err) {
+        metadata.infrastructure.db_functions = { status: 'error', error: err.message };
+        console.log(` ⚠️ Functions: ${err.message}`);
+    }
+
+    // ═══════════════════════════════════════════
+    // FASE 5: Gerar README de migração
+    // ═══════════════════════════════════════════
+
+    const readmeContent = `# AsymLAB — Backup Completo do Supabase
+## Data: ${now.toISOString()}
+
+### Conteúdo deste backup:
+
+#### 📦 Dados (tabelas JSON)
+${tables.map(t => `- ${t}.json`).join('\n')}
+
+#### 🏗️ Infraestrutura (_infrastructure/)
+- **schema_inferred.json** — Estrutura das tabelas (tipos e colunas)
+- **database.types.ts** — Tipos TypeScript (cópia do código fonte)
+- **auth_users.json** — Utilizadores de autenticação
+- **rls_policies.json** — Políticas de segurança por linha (se disponível)
+- **db_functions.json** — Funções SQL personalizadas (se disponível)
+
+### 🔄 Para migração completa, adicionalmente precisa de:
+
+1. **Backup completo de Auth** — Requer Service Role Key:
+   - Ir ao Supabase Dashboard → Settings → API → Service Role Key
+   - Adicionar como SUPABASE_SERVICE_ROLE_KEY ao .env.local
+   
+2. **RLS Policies** — Criar estas funções SQL no Supabase SQL Editor:
+
+\`\`\`sql
+-- Função para exportar RLS policies
+CREATE OR REPLACE FUNCTION get_rls_policies()
+RETURNS json AS $$
+  SELECT json_agg(row_to_json(p))
+  FROM pg_policies p
+  WHERE p.schemaname = 'public';
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- Função para exportar schema DDL
+CREATE OR REPLACE FUNCTION get_schema_ddl()
+RETURNS text AS $$
+DECLARE
+  result text := '';
+  rec record;
+BEGIN
+  FOR rec IN
+    SELECT table_name FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+    ORDER BY table_name
+  LOOP
+    result := result || pg_catalog.pg_get_tabledef(rec.table_name) || E'\\n\\n';
+  END LOOP;
+  RETURN result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Função para exportar DB functions
+CREATE OR REPLACE FUNCTION get_db_functions()
+RETURNS json AS $$
+  SELECT json_agg(json_build_object(
+    'name', p.proname,
+    'schema', n.nspname,
+    'language', l.lanname,
+    'definition', pg_get_functiondef(p.oid)
+  ))
+  FROM pg_proc p
+  JOIN pg_namespace n ON p.pronamespace = n.oid
+  JOIN pg_language l ON p.prolang = l.oid
+  WHERE n.nspname = 'public';
+$$ LANGUAGE sql SECURITY DEFINER;
+\`\`\`
+
+3. **Storage** — Se usar Supabase Storage no futuro, adicionar backup de buckets/ficheiros.
+
+### 📋 Metadata
+- Ver \`_metadata.json\` para detalhes completos do backup.
+`;
+
+    const readmePath = path.join(backupDir, '_infrastructure', 'README.md');
+    fs.writeFileSync(readmePath, readmeContent, 'utf-8');
+
     // Finalizar metadata
     metadata.status = metadata.errors.length === 0 ? 'success' : 'partial';
     metadata.duration_ms = Date.now() - startTime;
@@ -177,10 +445,8 @@ async function runBackup(overridePath) {
     const latestPath = path.join(basePath, 'backups', 'latest');
     try {
         if (fs.existsSync(latestPath)) {
-            // Em Windows, ler e re-escrever ficheiro de referência
             fs.rmSync(latestPath, { recursive: true, force: true });
         }
-        // Usar ficheiro de referência em vez de symlink (compatibilidade Windows)
         fs.writeFileSync(latestPath + '.txt', backupDir, 'utf-8');
     } catch (e) {
         // Não é crítico
@@ -190,9 +456,12 @@ async function runBackup(overridePath) {
     cleanOldBackups(basePath, config.backup.retention_days);
 
     // Log final
-    console.log('─'.repeat(48));
-    console.log(`✅ Backup completo!`);
+    console.log('\n' + '═'.repeat(52));
+    console.log(`✅ BACKUP COMPLETO!`);
     console.log(`   📊 ${totalRows} registos em ${successCount}/${tables.length} tabelas`);
+    console.log(`   🏗️  Schema: ${metadata.infrastructure.schema?.status || 'n/a'}`);
+    console.log(`   🔐 Auth: ${metadata.infrastructure.auth?.status || 'n/a'}`);
+    console.log(`   🛡️  RLS: ${metadata.infrastructure.rls_policies?.status || 'n/a'}`);
     console.log(`   ⏱️  ${metadata.duration_ms}ms`);
     console.log(`   📁 ${backupDir}`);
     if (metadata.errors.length > 0) {
