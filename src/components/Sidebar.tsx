@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { auth } from '@/lib/supabase';
@@ -15,7 +15,9 @@ import {
     ChevronLeft,
     ChevronRight,
     Activity,
-    Building2
+    Building2,
+    Menu,
+    X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -38,19 +40,39 @@ const menuItems: MenuItem[] = [
 export default function Sidebar() {
     const pathname = usePathname();
     const [collapsed, setCollapsed] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
+
+    // Fechar sidebar mobile quando muda de página
+    useEffect(() => {
+        setMobileOpen(false);
+    }, [pathname]);
+
+    // Fechar sidebar mobile com Escape
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setMobileOpen(false);
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, []);
+
+    // Bloquear scroll do body quando mobile sidebar está aberta
+    useEffect(() => {
+        if (mobileOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [mobileOpen]);
 
     const handleSignOut = async () => {
         await auth.signOut();
         window.location.href = '/login';
     };
 
-    return (
-        <aside
-            className={cn(
-                "fixed top-0 left-0 h-screen bg-[#111827] text-gray-400 border-r border-[#1f2937] transition-all duration-300 z-50 flex flex-col",
-                collapsed ? "w-[70px]" : "w-64"
-            )}
-        >
+    const sidebarContent = (
+        <>
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-[#1f2937]">
                 {!collapsed && (
@@ -69,10 +91,17 @@ export default function Sidebar() {
                         AL
                     </div>
                 )}
+                {/* Botão fechar no mobile */}
+                <button
+                    onClick={() => setMobileOpen(false)}
+                    className="md:hidden p-2 text-gray-400 hover:text-white rounded-md transition-colors"
+                >
+                    <X className="h-5 w-5" />
+                </button>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-3 py-6 space-y-1">
+            <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
@@ -81,11 +110,10 @@ export default function Sidebar() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            onClick={() => setCollapsed(false)} // Auto-expand on mobile
                             className={cn(
                                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group relative",
                                 isActive
-                                    ? "bg-primary/10 text-primary shadow-[inset_2px_0_0_0_#f59e0b]" // Gold accent left
+                                    ? "bg-primary/10 text-primary shadow-[inset_2px_0_0_0_#f59e0b]"
                                     : "text-gray-400 hover:bg-[#1f2937] hover:text-white",
                                 collapsed && "justify-center px-2"
                             )}
@@ -103,7 +131,7 @@ export default function Sidebar() {
                 })}
             </nav>
 
-            {/* Footer User Profile (Mobbin Style) */}
+            {/* Footer User Profile */}
             <div className="p-4 border-t border-[#1f2937] bg-[#0f1523]">
                 <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
                     <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-yellow-300 flex items-center justify-center text-white text-sm font-bold shadow-lg ring-2 ring-[#1f2937]">
@@ -128,14 +156,61 @@ export default function Sidebar() {
                     )}
                 </div>
             </div>
+        </>
+    );
 
-            {/* Collapse Toggle (Absolute) */}
-            <button
-                onClick={() => setCollapsed(!collapsed)}
-                className="absolute -right-3 top-20 w-6 h-6 bg-[#1f2937] border border-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary transition-colors shadow-sm z-50"
+    return (
+        <>
+            {/* ============ MOBILE: Header bar com botão hamburger ============ */}
+            <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-[#111827] border-b border-[#1f2937] flex items-center px-4 z-40">
+                <button
+                    onClick={() => setMobileOpen(true)}
+                    className="p-2 text-gray-400 hover:text-white rounded-md transition-colors"
+                    aria-label="Abrir menu"
+                >
+                    <Menu className="h-6 w-6" />
+                </button>
+                <div className="flex items-center gap-2 ml-3">
+                    <Activity className="h-5 w-5 text-primary" />
+                    <span className="text-white font-bold text-sm">AsymLAB</span>
+                </div>
+            </div>
+
+            {/* ============ MOBILE: Overlay escuro ============ */}
+            {mobileOpen && (
+                <div
+                    className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
+                    onClick={() => setMobileOpen(false)}
+                />
+            )}
+
+            {/* ============ MOBILE: Sidebar drawer ============ */}
+            <aside
+                className={cn(
+                    "md:hidden fixed top-0 left-0 h-screen w-72 bg-[#111827] text-gray-400 border-r border-[#1f2937] z-50 flex flex-col transition-transform duration-300 ease-in-out",
+                    mobileOpen ? "translate-x-0" : "-translate-x-full"
+                )}
             >
-                {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
-            </button>
-        </aside>
+                {sidebarContent}
+            </aside>
+
+            {/* ============ DESKTOP: Sidebar fixa normal ============ */}
+            <aside
+                className={cn(
+                    "hidden md:flex fixed top-0 left-0 h-screen bg-[#111827] text-gray-400 border-r border-[#1f2937] transition-all duration-300 z-50 flex-col",
+                    collapsed ? "w-[70px]" : "w-64"
+                )}
+            >
+                {sidebarContent}
+
+                {/* Collapse Toggle - Desktop only */}
+                <button
+                    onClick={() => setCollapsed(!collapsed)}
+                    className="absolute -right-3 top-20 w-6 h-6 bg-[#1f2937] border border-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary transition-colors shadow-sm z-50"
+                >
+                    {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+                </button>
+            </aside>
+        </>
     );
 }
