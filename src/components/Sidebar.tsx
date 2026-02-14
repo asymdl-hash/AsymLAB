@@ -76,30 +76,54 @@ export default function Sidebar() {
         <>
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-[#1f2937]">
-                {(!collapsed || isMobile) && (
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
-                            <Activity className="h-5 w-5" />
+                {isMobile ? (
+                    /* MOBILE: Logo + Nome + Fechar */
+                    <>
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
+                                <Activity className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h1 className="text-lg font-bold text-white tracking-tight">AsymLAB</h1>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Clinic OS</p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-lg font-bold text-white tracking-tight">AsymLAB</h1>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Clinic OS</p>
-                        </div>
-                    </div>
-                )}
-                {collapsed && !isMobile && (
-                    <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center text-primary font-bold mx-auto">
-                        AL
-                    </div>
-                )}
-                {/* Botão fechar no mobile */}
-                {isMobile && (
+                        <button
+                            onClick={() => setMobileOpen(false)}
+                            className="p-2 text-gray-400 hover:text-white rounded-md transition-colors"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </>
+                ) : collapsed ? (
+                    /* DESKTOP FECHADA: Só o botão de expandir, centrado */
                     <button
-                        onClick={() => setMobileOpen(false)}
-                        className="p-2 text-gray-400 hover:text-white rounded-md transition-colors"
+                        onClick={toggleCollapsed}
+                        className="w-10 h-10 rounded-lg bg-[#1f2937] flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary/20 transition-colors mx-auto"
+                        title="Expandir sidebar"
                     >
-                        <X className="h-5 w-5" />
+                        <PanelLeft className="h-5 w-5" />
                     </button>
+                ) : (
+                    /* DESKTOP ABERTA: Logo + Nome + Botão fechar à direita */
+                    <>
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
+                                <Activity className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h1 className="text-lg font-bold text-white tracking-tight">AsymLAB</h1>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Clinic OS</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={toggleCollapsed}
+                            className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-[#1f2937] transition-colors"
+                            title="Recolher sidebar"
+                        >
+                            <PanelLeftClose className="h-5 w-5" />
+                        </button>
+                    </>
                 )}
             </div>
 
@@ -204,15 +228,6 @@ export default function Sidebar() {
                 )}
             >
                 {sidebarContent(false)}
-
-                {/* Collapse Toggle Button - Desktop only */}
-                <button
-                    onClick={toggleCollapsed}
-                    className="absolute -right-4 top-20 w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center text-gray-500 hover:text-primary hover:border-primary/30 hover:bg-primary/5 transition-all shadow-sm z-50"
-                    title={collapsed ? "Expandir sidebar" : "Recolher sidebar"}
-                >
-                    {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-                </button>
             </aside>
         </>
     );
