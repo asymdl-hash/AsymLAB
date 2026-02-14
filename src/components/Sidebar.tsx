@@ -17,7 +17,7 @@ import {
     Building2,
     Menu,
     X,
-    PanelLeftClose,
+
     PanelLeft
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -121,7 +121,7 @@ export default function Sidebar() {
                             className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-[#1f2937] transition-colors"
                             title="Recolher sidebar"
                         >
-                            <PanelLeftClose className="h-5 w-5" />
+                            <PanelLeft className="h-5 w-5" />
                         </button>
                     </>
                 )}
