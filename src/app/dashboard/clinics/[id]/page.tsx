@@ -64,10 +64,10 @@ export default function ClinicPage({ params }: { params: { id: string } }) {
                         <img
                             src={clinic.logo_url}
                             alt={clinic.commercial_name}
-                            className="h-14 w-14 rounded-xl object-cover border-2 border-white/10 shadow-lg"
+                            className="h-14 w-14 rounded-full object-cover border-2 border-white/10 shadow-lg"
                         />
                     ) : (
-                        <div className="h-14 w-14 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center shadow-lg">
+                        <div className="h-14 w-14 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center shadow-lg">
                             <Building2 className="h-7 w-7 text-primary" />
                         </div>
                     )}

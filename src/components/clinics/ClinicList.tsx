@@ -113,11 +113,11 @@ export default function ClinicList() {
                                     <img
                                         src={logoUrl}
                                         alt={clinic.commercial_name}
-                                        className="h-10 w-10 rounded-lg object-cover shrink-0 border border-gray-100"
+                                        className="h-10 w-10 rounded-full object-cover shrink-0 border border-gray-100"
                                     />
                                 ) : (
                                     <div className={cn(
-                                        "h-10 w-10 rounded-lg flex items-center justify-center shrink-0 text-sm font-bold transition-colors",
+                                        "h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold transition-colors",
                                         isActive
                                             ? "bg-primary/15 text-primary"
                                             : "bg-gradient-to-br from-gray-100 to-gray-200 text-gray-500 group-hover:from-primary/10 group-hover:to-primary/5 group-hover:text-primary"
