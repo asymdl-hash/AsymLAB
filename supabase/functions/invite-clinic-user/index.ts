@@ -83,7 +83,7 @@ serve(async (req) => {
                     app_role: 'clinic_user',
                     full_name: full_name,
                 },
-                redirectTo: `${Deno.env.get('APP_URL')}/auth/callback`
+                redirectTo: `${Deno.env.get('APP_URL') || 'https://asym-lab-2.vercel.app'}/auth/callback`
             }
         )
 

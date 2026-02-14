@@ -59,7 +59,7 @@ export async function middleware(req: NextRequest) {
     } = await supabase.auth.getSession();
 
     // Public routes
-    const publicRoutes = ['/login'];
+    const publicRoutes = ['/login', '/auth'];
     const isPublicRoute = publicRoutes.some((route) =>
         req.nextUrl.pathname.startsWith(route)
     );
