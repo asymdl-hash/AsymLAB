@@ -8,6 +8,9 @@ const nextConfig = {
     typescript: {
         ignoreBuildErrors: true,
     },
+    // OBRIGATÓRIO manter false para evitar RangeError
+    // .nftignore NÃO resolve o problema
+    outputFileTracing: false,
 };
 
 module.exports = nextConfig;

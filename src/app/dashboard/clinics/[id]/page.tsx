@@ -1,27 +1,53 @@
-import { notFound, redirect } from 'next/navigation';
-import { clinicsService } from '@/services/clinicsService';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { clinicsService, ClinicFullDetails } from '@/services/clinicsService';
 import ClinicForm from '@/components/clinics/ClinicForm';
+import { Loader2 } from 'lucide-react';
 
-export default async function ClinicPage({ params }: { params: { id: string } }) {
-    // Se vier "new", redirecionar para função de criação
-    if (params.id === 'new') {
-        const newClinic = await clinicsService.createClinic('Nova Clínica');
-        if (newClinic) {
-            redirect(`/dashboard/clinics/${newClinic.id}`);
+export default function ClinicPage({ params }: { params: { id: string } }) {
+    const [clinic, setClinic] = useState<ClinicFullDetails | null>(null);
+    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+    useEffect(() => {
+        async function loadData() {
+            try {
+                // Se vier "new", criar nova clínica
+                if (params.id === 'new') {
+                    const newClinic = await clinicsService.createClinic('Nova Clínica');
+                    if (newClinic) {
+                        router.replace(`/dashboard/clinics/${newClinic.id}`);
+                    }
+                    return;
+                }
+
+                // Carregar dados da clínica
+                const data = await clinicsService.getClinicDetails(params.id);
+                setClinic(data);
+            } catch (err) {
+                console.error('Erro ao carregar clínica:', err);
+                // Redirecionar para lista em caso de erro
+                router.push('/dashboard/clinics');
+            } finally {
+                setLoading(false);
+            }
         }
-    }
 
-    // Carregar dados da clínica no servidor
-    let clinic;
-    try {
-        clinic = await clinicsService.getClinicDetails(params.id);
-    } catch (err) {
-        console.error('Failed to load clinic:', err);
-        notFound();
+        loadData();
+    }, [params.id, router]);
+
+    if (loading) {
+        return (
+            <div className="flex h-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
     }
 
     if (!clinic) {
-        notFound();
+        return null; // Será redirecionado
     }
 
     return (
@@ -33,11 +59,9 @@ export default async function ClinicPage({ params }: { params: { id: string } })
                         Criada em {new Date(clinic.created_at).toLocaleDateString()}
                     </p>
                 </div>
-                {/* Botão de Delete pode ficar aqui ou dentro do form */}
             </div>
 
-            {/* O Grande Formulário */}
-            <ClinicForm initialData={clinic!} />
+            <ClinicForm initialData={clinic} />
         </div>
     );
 }
