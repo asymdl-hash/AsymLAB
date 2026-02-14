@@ -45,3 +45,7 @@ docs/ACESSOS.md
 **/workbox-*.js
 **/worker-*.js
 **/fallback-*.js
+
+# Database Backups (dados sensíveis - não versionar)
+DB/Supabase/backups/
+DB/Supabase/logs/

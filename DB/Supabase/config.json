@@ -1,0 +1,29 @@
+{
+    "version": "1.0",
+    "description": "Configuração do sistema de backup local do Supabase",
+    "backup": {
+        "base_path": "F:\\AsymLAB\\DB\\Supabase",
+        "retention_days": 30,
+        "schedule": {
+            "enabled": true,
+            "time": "23:30",
+            "description": "Backup diário às 23:30"
+        }
+    },
+    "supabase": {
+        "url_env": "NEXT_PUBLIC_SUPABASE_URL",
+        "key_env": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "tables": [
+            "clinics",
+            "clinic_contacts",
+            "clinic_delivery_points",
+            "clinic_staff",
+            "clinic_discounts",
+            "organization_settings"
+        ]
+    },
+    "notes": {
+        "nas_migration": "Para migrar para NAS, basta alterar o 'base_path' para o caminho da NAS montada (ex: '\\\\NAS\\AsymLAB\\DB\\Supabase' ou 'Z:\\AsymLAB\\DB\\Supabase')",
+        "new_tables": "Ao criar novas tabelas no Supabase, adicionar ao array 'tables' para serem incluídas no backup"
+    }
+}
