@@ -1,62 +1,27 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { clinicsService, ClinicFullDetails } from '@/services/clinicsService';
+import { notFound, redirect } from 'next/navigation';
+import { clinicsService } from '@/services/clinicsService';
 import ClinicForm from '@/components/clinics/ClinicForm';
-import { Loader2 } from 'lucide-react';
 
-export default function ClinicPage({ params }: { params: { id: string } }) {
-    const [clinic, setClinic] = useState<ClinicFullDetails | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const router = useRouter();
-
-    useEffect(() => {
-        // Se vier "new", redirecionar para função de criação (embora a lista já trate disso, proteção extra)
-        if (params.id === 'new') {
-            clinicsService.createClinic('Nova Clínica').then(newClinic => {
-                if (newClinic) router.replace(`/dashboard/clinics/${newClinic.id}`);
-            });
-            return;
+export default async function ClinicPage({ params }: { params: { id: string } }) {
+    // Se vier "new", redirecionar para função de criação
+    if (params.id === 'new') {
+        const newClinic = await clinicsService.createClinic('Nova Clínica');
+        if (newClinic) {
+            redirect(`/dashboard/clinics/${newClinic.id}`);
         }
-
-        loadClinicData();
-    }, [params.id]);
-
-    const loadClinicData = async () => {
-        try {
-            setLoading(true);
-            const data = await clinicsService.getClinicDetails(params.id);
-            setClinic(data);
-        } catch (err) {
-            console.error(err);
-            setError('Falha ao carregar dados da clínica.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        );
     }
 
-    if (error || !clinic) {
-        return (
-            <div className="flex h-full flex-col items-center justify-center space-y-4">
-                <p className="text-red-500">{error || 'Clínica não encontrada.'}</p>
-                <button
-                    onClick={() => router.push('/dashboard/clinics')}
-                    className="text-primary hover:underline"
-                >
-                    Voltar à lista
-                </button>
-            </div>
-        );
+    // Carregar dados da clínica no servidor
+    let clinic;
+    try {
+        clinic = await clinicsService.getClinicDetails(params.id);
+    } catch (err) {
+        console.error('Failed to load clinic:', err);
+        notFound();
+    }
+
+    if (!clinic) {
+        notFound();
     }
 
     return (
@@ -72,7 +37,7 @@ export default function ClinicPage({ params }: { params: { id: string } }) {
             </div>
 
             {/* O Grande Formulário */}
-            <ClinicForm initialData={clinic} />
+            <ClinicForm initialData={clinic!} />
         </div>
     );
 }
