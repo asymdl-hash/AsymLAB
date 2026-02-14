@@ -1,0 +1,21 @@
+{
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/node_modules": true
+    },
+    // Ignorar erros TypeScript nas Edge Functions (Deno environment)
+    "typescript.validate.enable": true,
+    "typescript.suggestionActions.enabled": false,
+    "eslint.workingDirectories": [
+        {
+            "mode": "auto"
+        }
+    ],
+    // Excluir supabase/functions da verificação TypeScript
+    "files.associations": {
+        "supabase/functions/**/*.ts": "typescript"
+    }
+}
