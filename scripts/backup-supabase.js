@@ -228,9 +228,9 @@ async function runBackup(overridePath) {
                 console.log(' ✅ Schema exportado (information_schema)');
             }
         } else {
-            const schemaPath = path.join(backupDir, '_infrastructure', 'schema_ddl.sql');
-            fs.writeFileSync(schemaPath, schemaData, 'utf-8');
-            metadata.infrastructure.schema = { status: 'ok', file: '_infrastructure/schema_ddl.sql' };
+            const schemaPath = path.join(backupDir, '_infrastructure', 'schema_ddl.json');
+            fs.writeFileSync(schemaPath, JSON.stringify(schemaData, null, 2), 'utf-8');
+            metadata.infrastructure.schema = { status: 'ok', file: '_infrastructure/schema_ddl.json' };
             console.log(' ✅ Schema DDL completo');
         }
     } catch (err) {

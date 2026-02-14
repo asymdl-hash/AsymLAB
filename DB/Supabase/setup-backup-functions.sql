@@ -126,7 +126,7 @@ AS $$
     'return_type', pg_get_function_result(p.oid),
     'arguments', pg_get_function_arguments(p.oid),
     'definition', pg_get_functiondef(p.oid),
-    'is_security_definer', p.prosecuritydef,
+    'is_security_definer', p.prosecdef,
     'volatility', 
       CASE p.provolatile 
         WHEN 'i' THEN 'IMMUTABLE'

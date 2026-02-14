@@ -19,7 +19,10 @@
             "clinic_delivery_points",
             "clinic_staff",
             "clinic_discounts",
-            "organization_settings"
+            "organization_settings",
+            "profiles",
+            "user_profiles",
+            "user_clinic_access"
         ]
     },
     "notes": {
