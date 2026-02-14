@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -141,10 +143,10 @@ export default function ClinicSecurityTab() {
                     {/* Status do Convite */}
                     {inviteStatus.message && (
                         <div className={`flex items-start gap-2 p-3 rounded-md border ${inviteStatus.success === null
-                                ? 'bg-blue-50 border-blue-200 text-blue-700'
-                                : inviteStatus.success
-                                    ? 'bg-green-50 border-green-200 text-green-700'
-                                    : 'bg-red-50 border-red-200 text-red-700'
+                            ? 'bg-blue-50 border-blue-200 text-blue-700'
+                            : inviteStatus.success
+                                ? 'bg-green-50 border-green-200 text-green-700'
+                                : 'bg-red-50 border-red-200 text-red-700'
                             }`}>
                             {inviteStatus.loading ? (
                                 <Loader2 className="h-5 w-5 animate-spin mt-0.5 flex-shrink-0" />
