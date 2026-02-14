@@ -8,10 +8,6 @@ const nextConfig = {
     typescript: {
         ignoreBuildErrors: true,
     },
-    // Desativar output tracing para evitar RangeError
-    // Nota: Isto causa problemas com client-reference-manifest em rotas dinâmicas
-    // mas é preferível a falhar o build completamente
-    outputFileTracing: false,
 };
 
 module.exports = nextConfig;

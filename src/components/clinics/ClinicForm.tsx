@@ -153,13 +153,7 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
                         </TabsContent>
 
                         <TabsContent value="permissions">
-                            {/* TEMPORARIAMENTE DESATIVADO PARA DIAGNÓSTICO */}
-                            <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-md">
-                                <p className="text-yellow-900">
-                                    ⚠️ Aba de Acesso & Segurança temporariamente desativada para diagnóstico.
-                                </p>
-                            </div>
-                            {/* <ClinicSecurityTab /> */}
+                            <ClinicSecurityTab />
                         </TabsContent>
                     </div>
                 </Tabs>

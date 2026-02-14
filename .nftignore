@@ -1,0 +1,12 @@
+# Excluir pastas que causam recursão infinita no Next.js File Tracing
+supabase/
+.git/
+.next/
+node_modules/.cache/
+scripts/
+docs/
+*.db
+*.db-shm
+*.db-wal
+development.db*
+production.db*
