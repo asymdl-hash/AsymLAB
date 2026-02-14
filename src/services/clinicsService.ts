@@ -20,7 +20,7 @@ export const clinicsService = {
     async getClinics() {
         const { data, error } = await supabase
             .from('clinics')
-            .select('id, commercial_name, logo_url, is_active, email')
+            .select('id, commercial_name, legal_name, logo_url, is_active, email')
             .order('commercial_name', { ascending: true });
 
         if (error) throw error;

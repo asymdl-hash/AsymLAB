@@ -12,9 +12,9 @@ export default function ClinicsLayout({
                 <ClinicList />
             </div>
 
-            {/* Conteúdo Principal (Detail View) */}
+            {/* Conteúdo Principal (Detail View) - SEM padding para o hero header ir de ponta a ponta */}
             <div className="flex-1 flex flex-col overflow-hidden min-w-0 bg-gray-50/50 relative">
-                <div className="flex-1 overflow-y-auto px-6 py-6 scroll-smooth">
+                <div className="flex-1 overflow-y-auto scroll-smooth">
                     {children}
                 </div>
             </div>

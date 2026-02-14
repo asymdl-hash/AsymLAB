@@ -3,11 +3,19 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Plus, Search, Building2, MapPin } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { clinicsService, Clinic } from '@/services/clinicsService';
-import { cn } from '@/lib/utils'; // Assumindo utils do shadcn
+import { cn } from '@/lib/utils';
+
+/** Gera iniciais a partir da razão social (primeira e última palavra) */
+function getInitials(name: string | null | undefined): string {
+    if (!name || name.trim() === '') return '?';
+    const words = name.trim().split(/\s+/);
+    if (words.length === 1) return words[0].charAt(0).toUpperCase();
+    return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+}
 
 export default function ClinicList() {
     const [clinics, setClinics] = useState<Clinic[]>([]);
@@ -43,13 +51,9 @@ export default function ClinicList() {
 
     const handleCreateNew = async () => {
         try {
-            // Optimistic update or just loading state
-            // setLoading(true); // Se bloquearmos a UI toda é chato, melhor só um spinner no botão
             const newClinic = await clinicsService.createClinic('Nova Clínica (Rascunho)');
             if (newClinic) {
                 router.push(`/dashboard/clinics/${newClinic.id}`);
-                // loadClinics(); // O router push vai provavelmente desencadear refresh se mudarmos a route
-                // Mas por segurança podemos recarregar a lista localmente
                 setClinics(prev => [...prev, newClinic].sort((a, b) => a.commercial_name.localeCompare(b.commercial_name)));
             }
         } catch (error) {
@@ -92,29 +96,43 @@ export default function ClinicList() {
                 ) : (
                     filteredClinics.map((clinic) => {
                         const isActive = pathname?.includes(clinic.id);
+                        const initials = getInitials((clinic as any).legal_name || clinic.commercial_name);
+                        const logoUrl = (clinic as any).logo_url;
+
                         return (
                             <Link
                                 key={clinic.id}
                                 href={`/dashboard/clinics/${clinic.id}`}
                                 className={cn(
-                                    "flex items-start gap-3 p-3 rounded-lg transition-all group hover:bg-gray-50",
+                                    "flex items-center gap-3 p-3 rounded-lg transition-all group hover:bg-gray-50",
                                     isActive ? "bg-primary/5 border border-primary/20 shadow-sm" : "border border-transparent"
                                 )}
                             >
-                                <div className={cn(
-                                    "h-10 w-10 rounded-md flex items-center justify-center shrink-0 transition-colors",
-                                    isActive ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-400 group-hover:bg-white group-hover:shadow-sm"
-                                )}>
-                                    <Building2 className="h-5 w-5" />
-                                </div>
+                                {/* Avatar: Logo ou Iniciais */}
+                                {logoUrl ? (
+                                    <img
+                                        src={logoUrl}
+                                        alt={clinic.commercial_name}
+                                        className="h-10 w-10 rounded-lg object-cover shrink-0 border border-gray-100"
+                                    />
+                                ) : (
+                                    <div className={cn(
+                                        "h-10 w-10 rounded-lg flex items-center justify-center shrink-0 text-sm font-bold transition-colors",
+                                        isActive
+                                            ? "bg-primary/15 text-primary"
+                                            : "bg-gradient-to-br from-gray-100 to-gray-200 text-gray-500 group-hover:from-primary/10 group-hover:to-primary/5 group-hover:text-primary"
+                                    )}>
+                                        {initials}
+                                    </div>
+                                )}
                                 <div className="flex-1 min-w-0">
                                     <h3 className={cn(
                                         "font-medium text-sm truncate",
-                                        isActive ? "text-primary-900" : "text-gray-700"
+                                        isActive ? "text-gray-900" : "text-gray-700"
                                     )}>
                                         {clinic.commercial_name}
                                     </h3>
-                                    <p className="text-xs text-gray-400 truncate mt-0.5 flex items-center gap-1">
+                                    <p className="text-xs text-gray-400 truncate mt-0.5">
                                         {clinic.email || 'Sem email'}
                                     </p>
                                 </div>
@@ -124,7 +142,7 @@ export default function ClinicList() {
                 )}
             </div>
 
-            {/* Footer da Lista (Opcional - Totalizadores) */}
+            {/* Footer da Lista */}
             <div className="p-3 border-t border-gray-100 text-xs text-center text-gray-400 bg-gray-50/50">
                 {filteredClinics.length} Clínicas Registadas
             </div>
