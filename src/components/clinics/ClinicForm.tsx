@@ -127,12 +127,12 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
                 </div>
 
                 <Tabs defaultValue="info" className="w-full">
-                    <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
-                        <TabsTrigger value="info">Dados</TabsTrigger>
-                        <TabsTrigger value="delivery">Entregas</TabsTrigger>
-                        <TabsTrigger value="team">Equipa</TabsTrigger>
-                        <TabsTrigger value="discounts">Descontos</TabsTrigger>
-                        <TabsTrigger value="permissions">Acesso & Segurança</TabsTrigger>
+                    <TabsList className="flex w-full max-w-full overflow-x-auto">
+                        <TabsTrigger value="info" className="flex-shrink-0">Dados</TabsTrigger>
+                        <TabsTrigger value="delivery" className="flex-shrink-0">Entregas</TabsTrigger>
+                        <TabsTrigger value="team" className="flex-shrink-0">Equipa</TabsTrigger>
+                        <TabsTrigger value="discounts" className="flex-shrink-0">Descontos</TabsTrigger>
+                        <TabsTrigger value="permissions" className="flex-shrink-0 whitespace-nowrap">Acesso & Segurança</TabsTrigger>
                     </TabsList>
 
                     <div className="mt-6">
