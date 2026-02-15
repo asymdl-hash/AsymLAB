@@ -170,6 +170,26 @@ export interface Database {
                     is_contact?: boolean
                 }
             }
+            delivery_point_contacts: {
+                Row: {
+                    id: string
+                    delivery_point_id: string
+                    staff_id: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    delivery_point_id: string
+                    staff_id: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    delivery_point_id?: string
+                    staff_id?: string
+                    created_at?: string
+                }
+            }
             clinic_discounts: {
                 Row: {
                     id: string

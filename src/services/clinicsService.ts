@@ -104,5 +104,44 @@ export const clinicsService = {
 
         if (error) throw error;
         return data || [];
+    },
+
+    // 9. Buscar contactos associados a um delivery point
+    async getDeliveryPointContacts(deliveryPointId: string) {
+        const { data, error } = await supabase
+            .from('delivery_point_contacts')
+            .select('id, staff_id, clinic_staff(id, name, phone, role)')
+            .eq('delivery_point_id', deliveryPointId);
+
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+            id: d.id,
+            staff_id: d.staff_id,
+            name: d.clinic_staff?.name || '',
+            phone: d.clinic_staff?.phone || null,
+            role: d.clinic_staff?.role || null,
+        }));
+    },
+
+    // 10. Associar contacto a delivery point
+    async addDeliveryPointContact(deliveryPointId: string, staffId: string) {
+        const { data, error } = await supabase
+            .from('delivery_point_contacts')
+            .insert({ delivery_point_id: deliveryPointId, staff_id: staffId })
+            .select('id, staff_id')
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    // 11. Remover contacto de delivery point
+    async removeDeliveryPointContact(id: string) {
+        const { error } = await supabase
+            .from('delivery_point_contacts')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
     }
 };
