@@ -39,11 +39,12 @@
   - Botão "Backup Agora"
   - Histórico visual dos últimos 10 backups
 
-### ⏳ Pendente:
-- [ ] Agendar no Windows Task Scheduler (requer admin):
+### ⏳ Ativação (servidor local):
+- [ ] Ativar no Windows Task Scheduler do servidor local (requer admin):
   ```powershell
   schtasks /create /tn "AsymLAB_Backup_Supabase" /tr "F:\AsymLAB\scripts\backup-daily.bat" /sc daily /st 23:30 /f /rl HIGHEST
   ```
+  > **Nota:** O servidor local é o responsável pelos backups automáticos. O Vercel serve apenas para manter a app online e acessível. O agendamento é uma tarefa operacional — todo o código necessário já está pronto.
 
 ### Tabelas monitorizadas:
 | Tabela | Descrição |
@@ -59,7 +60,9 @@
 
 ---
 
-## 2. Migração para NAS 🔜 FUTURO
+## 2. Migração para NAS 🔜 FUTURO (Adiado)
+
+> **Nota:** Esta tarefa será implementada quando a NAS for adquirida. Não é prioritária neste momento.
 
 ### Fase 1 — NAS como Drive de Rede (Simples, já suportado)
 - A NAS aparece como drive de rede (ex: `Z:\AsymLAB\DB\Supabase`)
@@ -107,43 +110,130 @@ Passo 5: Verificação
 - Node.js disponível na NAS
 - **Implementar quando a NAS for adquirida**
 
-### Benefícios da NAS:
-- ✅ Está sempre ligada (baixo consumo)
-- ✅ PC não precisa de estar ligado
-- ✅ Redundância física (RAID)
-- ✅ Acessível de qualquer dispositivo na rede
-
 ---
 
 ## 3. Acesso & Segurança (Gestão de Utilizadores)
-**Objetivo:** Permitir criar utilizadores para clínicas com acesso restrito.
+**Objetivo:** Permitir criar utilizadores para clínicas com acesso restrito e granular.
 
-**Fluxo de Implementação:**
-1. **Nova Aba "Acesso & Segurança" (`ClinicSecurityTab`):**
-    - **Interface:** Botão "Criar Acesso Clínica".
-    - **Lógica:** Usa o e-mail da ficha da clínica.
-    - **Estado:** Mostra se o convite foi enviado / pendente / aceito.
-2. **Backend (API Segura):**
-    - Criar endpoint `POST /api/admin/invite-clinic-user`.
-    - Usa `supabase.auth.admin.inviteUserByEmail(email)` (requer Service Role Key).
-    - Envia e-mail automático do Supabase com link para definir password.
-3. **Permissões (RLS):**
-    - Criar nova regra na DB: Utilizadores com role `clinic_user` apenas veem registos onde `clinic_id` corresponde à sua clínica.
-    - É necessário uma tabela de ligação `profile_clinics` para associar o `auth.uid()` ao `clinic_id`.
-4. **Restrição do Painel de Backups:**
-    - Só visível para utilizadores com role `admin`
-    - Esconder a tab "Backups" nas Definições para `clinic_user`
+### ✅ Implementado (V1.9.0):
+- **Login por Username:** Utilizadores podem fazer login com email ou username
+  - Username é convertido internamente para `username@asymlab.app`
+  - Campo de login aceita ambos os formatos
+  - "Esqueci-me da password" só aparece para emails reais (com @)
+- **API de Gestão de Utilizadores:** `src/app/api/users/route.ts`
+  - `GET /api/users` — lista todos os users com profiles, roles e clínicas
+  - `POST /api/users` — criar user (username ou email)
+  - `PATCH /api/users` — reset password, alterar role/nome, eliminar
+  - Usa `SUPABASE_SERVICE_ROLE_KEY` (server-side only)
+- **Painel de Gestão:** `src/components/settings/UserManagement.tsx`
+  - Lista de utilizadores com avatares, badges de role, tipo de login
+  - Modal "Novo Utilizador" (toggle username/email, roles)
+  - Modal "Resetar Password"
+  - Eliminar utilizador com confirmação
+  - Integrado em Definições > Utilizadores
+- **Variável de Ambiente:** `SUPABASE_SERVICE_ROLE_KEY` configurada no Vercel
 
-## 4. Login
-- Remover opção de "Sign Up" público no componente de Login.
-- Manter apenas "Sign In" e "Esqueci a Password".
+### ⏳ Pendente — Permissões Granulares por Role:
+
+#### 3.1 Sistema de Permissões (3 Níveis)
+Cada módulo da app deve suportar **3 níveis de acesso**, configuráveis por role:
+
+| Nível | Descrição | Ações Permitidas |
+|-------|-----------|-----------------|
+| **Sem Acesso** | Menu completamente escondido | Nada — o módulo não aparece na sidebar/navegação |
+| **Só Leitura** | Pode ver mas não alterar | Ver dados, abrir imagens/ficheiros, fazer download. **Não pode** editar, eliminar ou adicionar. |
+| **Acesso Total** | Pode fazer tudo | Editar campos, anexar ficheiros, criar novos registos, eliminar |
+
+#### 3.2 Módulos a controlar:
+| Módulo | Admin | Médico | Staff Clínica | Utilizador Clínica |
+|--------|-------|--------|---------------|-------------------|
+| Dashboard | ✅ Total | ✅ Total | 👁️ Leitura | 👁️ Leitura |
+| Clínicas | ✅ Total | 👁️ Leitura | 👁️ Leitura | 👁️ Leitura |
+| Pacientes | ✅ Total | ✅ Total* | 👁️ Leitura | 👁️ Leitura |
+| Agenda | ✅ Total | ✅ Total | ✅ Total | 👁️ Leitura |
+| Faturação | ✅ Total | 👁️ Leitura | ✅ Total | ❌ Sem Acesso |
+| Relatórios | ✅ Total | 👁️ Leitura | 👁️ Leitura | ❌ Sem Acesso |
+| Definições | ✅ Total | ❌ Sem Acesso | ❌ Sem Acesso | ❌ Sem Acesso |
+
+> *Médico tem acesso total mas apenas aos pacientes que lhe estão associados (ver §3.3)
+
+#### 3.3 RLS (Row Level Security) no Supabase:
+Regras de visibilidade dos dados — **quem vê o quê:**
+
+```
+Hierarquia de acesso a pacientes:
+├── Admin → Vê TODOS os pacientes de TODAS as clínicas
+├── Médico → Vê apenas pacientes em que ele é o médico associado
+├── Clínica (Staff/User) → Vê todos os pacientes dessa clínica
+│   └── Baseado na tabela user_clinic_access
+│       → Qualquer user associado à clínica X pode ver pacientes da clínica X
+└── Sem associação → Não vê nenhum paciente
+```
+
+**Implementação técnica:**
+- Usar `user_clinic_access` para determinar a que clínicas o user tem acesso
+- Usar a relação `paciente <-> clínica` para filtrar pacientes
+- Usar a relação `paciente <-> médico` para filtrar por médico associado
+- RLS policies no Supabase aplicam estas regras automaticamente
+- O frontend também filtra para UX (mas a segurança real é no backend/RLS)
+
+#### 3.4 Convite por Clínica:
+- Botão na **ficha da clínica** para criar acesso rápido
+- Pré-preenche com dados da clínica (email, nome)
+- Associa automaticamente o `clinic_id` ao novo utilizador
+- Mostra estado do convite (enviado / pendente / aceito)
+- Opção de criar com username (para secretárias/staff sem email pessoal)
 
 ---
 
-## Prioridades
-1. ~~Implementar script de backup~~ ✅
-2. ~~Painel de backups nas Definições~~ ✅
-3. [ ] Agendar Task Scheduler no PC
-4. [ ] Implementar roles (admin vs clinic_user)
-5. [ ] Aba "Acesso & Segurança"
-6. [ ] Migração NAS (quando adquirida)
+## 4. Login ✅ IMPLEMENTADO (V1.9.0)
+- ~~Remover opção de "Sign Up" público no componente de Login.~~ ✅ Já não existe
+- ~~Manter apenas "Sign In" e "Esqueci a Password".~~ ✅ Implementado
+- ✅ Login aceita email ou username
+- ✅ "Esqueci a Password" condicional (só para emails reais)
+
+### ⏳ Pendente:
+- [ ] **Ícone de ajuda (ℹ️) no campo "Email ou Username":**
+  - Ícone clicável ao lado da label
+  - Ao clicar, abre tooltip/popover com explicação:
+    > "Pode usar o seu email pessoal ou o username atribuído pelo administrador.
+    > Se tiver um username (ex: ana.assistente), basta inseri-lo diretamente.
+    > A recuperação de password está disponível apenas para contas com email."
+  - Design discreto, não intrusivo
+
+---
+
+## Arquitetura dos Ambientes
+
+```
+┌─────────────────────────────────────────────────┐
+│             Supabase (Cloud)                     │
+│  Base de dados principal — fonte de verdade      │
+│  Auth, Storage, RLS, Edge Functions              │
+└────────────┬──────────────────┬──────────────────┘
+             │                  │
+     ┌───────▼───────┐  ┌──────▼───────────────┐
+     │   Vercel       │  │   Servidor Local      │
+     │   (Produção)   │  │   (PC/NAS)            │
+     │                │  │                        │
+     │  • App online  │  │  • App local           │
+     │    24/7         │  │  • Backups automáticos │
+     │  • Acessível   │  │  • Task Scheduler      │
+     │    de qualquer  │  │  • Dados locais        │
+     │    lugar        │  │    (redundância)       │
+     └────────────────┘  └────────────────────────┘
+```
+
+---
+
+## Prioridades Atualizadas
+1. ~~Implementar script de backup~~ ✅ V1.7.0
+2. ~~Painel de backups nas Definições~~ ✅ V1.7.0
+3. ~~Implementar gestão de utilizadores~~ ✅ V1.9.0
+4. ~~Login por username~~ ✅ V1.9.0
+5. [ ] **Ícone de ajuda no login** (rápido)
+6. [ ] **Sistema de permissões granulares** (frontend — 3 níveis por módulo)
+7. [ ] **RLS policies no Supabase** (backend — filtros por clínica/médico)
+8. [ ] **Convite por clínica** (botão na ficha da clínica)
+9. [ ] Ativar Task Scheduler no servidor local (operacional)
+10. [ ] Migração NAS (quando adquirida)
