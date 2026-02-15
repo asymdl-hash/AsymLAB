@@ -133,18 +133,30 @@ Passo 5: Verificação
   - Integrado em Definições > Utilizadores
 - **Variável de Ambiente:** `SUPABASE_SERVICE_ROLE_KEY` configurada no Vercel
 
-### ⏳ Pendente — Permissões Granulares por Role:
+### ⏳ Pendente — RLS e Convite por Clínica:
 
-#### 3.1 Sistema de Permissões (3 Níveis)
-Cada módulo da app deve suportar **3 níveis de acesso**, configuráveis por role:
+### ✅ Implementado (V1.10.0 / V1.10.2) — Permissões Granulares por Role:
+
+#### 3.1 Sistema de Permissões (3 Níveis) ✅
+Cada módulo da app suporta **3 níveis de acesso**, configuráveis por role:
 
 | Nível | Descrição | Ações Permitidas |
-|-------|-----------|-----------------|
+|-------|-----------|-----------------| 
 | **Sem Acesso** | Menu completamente escondido | Nada — o módulo não aparece na sidebar/navegação |
-| **Só Leitura** | Pode ver mas não alterar | Ver dados, abrir imagens/ficheiros, fazer download. **Não pode** editar, eliminar ou adicionar. |
+| **Só Leitura** | Pode ver mas não alterar | Ver dados, abrir imagens/ficheiros. **Não pode** editar, eliminar ou adicionar. |
 | **Acesso Total** | Pode fazer tudo | Editar campos, anexar ficheiros, criar novos registos, eliminar |
 
-#### 3.2 Módulos a controlar:
+**Ficheiros implementados:**
+- `src/lib/permissions.ts` — Matriz de permissões, tipos, helper functions
+- `src/contexts/AuthContext.tsx` — Provider global com role do user, funções hasAccess/canEdit/isReadOnly
+- `src/components/PermissionGuard.tsx` — Componente reutilizável + hook `useModulePermission`
+- `src/components/Sidebar.tsx` — Sidebar dinâmica com filtro de menu e badges "Leitura"
+- `src/app/dashboard/page.tsx` — Dashboard protegido, botão "Novo Paciente" condicional
+- `src/app/dashboard/clinics/layout.tsx` — Layout clínicas protegido com banner read-only
+- `src/app/dashboard/settings/page.tsx` — Definições restritas a Admin
+- `src/components/clinics/ClinicForm.tsx` — Formulário com `<fieldset disabled>` para read-only
+
+#### 3.2 Módulos controlados: ✅
 | Módulo | Admin | Médico | Staff Clínica | Utilizador Clínica |
 |--------|-------|--------|---------------|-------------------|
 | Dashboard | ✅ Total | ✅ Total | 👁️ Leitura | 👁️ Leitura |
@@ -157,7 +169,7 @@ Cada módulo da app deve suportar **3 níveis de acesso**, configuráveis por ro
 
 > *Médico tem acesso total mas apenas aos pacientes que lhe estão associados (ver §3.3)
 
-#### 3.3 RLS (Row Level Security) no Supabase:
+#### 3.3 ⏳ RLS (Row Level Security) no Supabase — PENDENTE:
 Regras de visibilidade dos dados — **quem vê o quê:**
 
 ```
@@ -177,7 +189,7 @@ Hierarquia de acesso a pacientes:
 - RLS policies no Supabase aplicam estas regras automaticamente
 - O frontend também filtra para UX (mas a segurança real é no backend/RLS)
 
-#### 3.4 Convite por Clínica:
+#### 3.4 ⏳ Convite por Clínica — PENDENTE:
 - Botão na **ficha da clínica** para criar acesso rápido
 - Pré-preenche com dados da clínica (email, nome)
 - Associa automaticamente o `clinic_id` ao novo utilizador
