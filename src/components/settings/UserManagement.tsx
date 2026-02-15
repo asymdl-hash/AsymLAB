@@ -5,7 +5,7 @@ import {
     UserPlus, RefreshCw, Key, Trash2, Edit3,
     User, Shield, CheckCircle, AlertCircle, X, Eye, EyeOff,
     Building2, Loader2, AlertTriangle, Save, MessageCircle, Smartphone, ExternalLink, Copy, Check,
-    HelpCircle, ChevronDown, ChevronUp, Info, Mail, Phone
+    HelpCircle, ChevronDown, ChevronUp, Info, Mail, Phone, Send, Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -52,6 +52,8 @@ export default function UserManagement() {
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+    const [showEmailModal, setShowEmailModal] = useState(false);
+    const [showFirstLoginAlert, setShowFirstLoginAlert] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
 
     const fetchUsers = useCallback(async () => {
@@ -319,11 +321,32 @@ export default function UserManagement() {
                                                 <Key className="h-4 w-4" />
                                             </button>
                                             <button
-                                                onClick={() => { setSelectedUser(user); setShowWhatsAppModal(true); }}
+                                                onClick={() => {
+                                                    setSelectedUser(user);
+                                                    if (user.last_sign_in_at) {
+                                                        setShowFirstLoginAlert(true);
+                                                    } else {
+                                                        setShowWhatsAppModal(true);
+                                                    }
+                                                }}
                                                 title="Enviar Credenciais por WhatsApp"
                                                 className="p-1.5 rounded-md text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors"
                                             >
                                                 <MessageCircle className="h-4 w-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedUser(user);
+                                                    if (user.last_sign_in_at) {
+                                                        setShowFirstLoginAlert(true);
+                                                    } else {
+                                                        setShowEmailModal(true);
+                                                    }
+                                                }}
+                                                title="Enviar Credenciais por Email"
+                                                className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                            >
+                                                <Mail className="h-4 w-4" />
                                             </button>
                                             <button
                                                 onClick={() => { setSelectedUser(user); setShowDeleteModal(true); }}
@@ -376,6 +399,63 @@ export default function UserManagement() {
                     user={selectedUser}
                     onClose={() => { setShowWhatsAppModal(false); setSelectedUser(null); }}
                 />
+            )}
+
+            {/* Email Send Modal */}
+            {showEmailModal && selectedUser && (
+                <EmailSendModal
+                    user={selectedUser}
+                    onClose={() => { setShowEmailModal(false); setSelectedUser(null); }}
+                    onSuccess={(msg) => setSuccess(msg)}
+                    onError={(msg) => setError(msg)}
+                />
+            )}
+
+            {/* First Login Alert */}
+            {showFirstLoginAlert && selectedUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => { setShowFirstLoginAlert(false); setSelectedUser(null); }}>
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-amber-100 bg-amber-50/50 rounded-t-2xl">
+                            <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
+                                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-amber-900">Convite Não Disponível</h3>
+                            </div>
+                            <button onClick={() => { setShowFirstLoginAlert(false); setSelectedUser(null); }} className="p-1 rounded-md hover:bg-amber-100"><X className="h-5 w-5 text-amber-400" /></button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200">
+                                <div className={cn(
+                                    "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold",
+                                    selectedUser.app_role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-primary/10 text-primary'
+                                )}>
+                                    {selectedUser.full_name.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-900">{selectedUser.full_name}</p>
+                                    <p className="text-xs text-gray-400">
+                                        Último login: {new Date(selectedUser.last_sign_in_at!).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="px-3 py-3 rounded-lg bg-amber-50 border border-amber-200">
+                                <p className="text-sm text-amber-800">
+                                    <strong>Este utilizador já fez login na app.</strong>
+                                </p>
+                                <p className="text-xs text-amber-700 mt-1">
+                                    Não é possível enviar um novo convite com credenciais. Se o utilizador esqueceu a password, use o botão <strong>🔑 Resetar Password</strong> em vez disso.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => { setShowFirstLoginAlert(false); setSelectedUser(null); }}
+                                className="w-full h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                            >
+                                Entendido
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Delete Confirmation Modal */}
@@ -523,13 +603,42 @@ ${appUrl}
         window.open(whatsappUrl, '_blank');
     };
 
-    const handleSendEmail = () => {
+    const handleSendEmail = async () => {
         if (!created || !created.email) return;
         const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://app.asymlab.pt';
         const loginLabel = created.loginType === 'email' ? 'Email' : 'Username';
         const subject = 'Dados de Acesso — AsymLAB';
-        const body = `Olá ${created.fullName}!\n\nSeguem os teus dados de acesso à aplicação AsymLAB:\n\nLink da App: ${appUrl}\n${loginLabel}: ${created.loginIdentifier}\nPassword: ${created.password}\n\nComo instalar no telemóvel:\n1. Abre o link acima no Chrome/Safari\n2. Clica em "Adicionar ao ecrã inicial"\n\nRecomendação: Altera a tua password após o primeiro login.`;
-        window.open(`mailto:${created.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+        const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #1a1a2e;">🔐 Dados de Acesso — AsymLAB</h2>
+                <p>Olá <strong>${created.fullName}</strong>! 👋</p>
+                <p>Seguem os teus dados de acesso à aplicação AsymLAB:</p>
+                <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                    <p style="margin: 4px 0;">📱 <strong>Link da App:</strong> <a href="${appUrl}">${appUrl}</a></p>
+                    <p style="margin: 4px 0;">👤 <strong>${loginLabel}:</strong> ${created.loginIdentifier}</p>
+                    <p style="margin: 4px 0;">🔑 <strong>Password:</strong> ${created.password}</p>
+                </div>
+                <p style="font-size: 14px;">📝 <strong>Como instalar no telemóvel:</strong></p>
+                <ol style="font-size: 14px;">
+                    <li>Abre o link acima no Chrome/Safari</li>
+                    <li>Clica em "Adicionar ao ecrã inicial" ou no ícone ⊕</li>
+                    <li>A app ficará disponível como atalho!</li>
+                </ol>
+                <p style="font-size: 13px; color: #6c757d; border-top: 1px solid #e9ecef; padding-top: 12px; margin-top: 16px;">💡 <em>Recomendação: Altera a tua password após o primeiro login em "A Minha Conta".</em></p>
+            </div>
+        `;
+        try {
+            const res = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ to: created.email, subject, html })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            onSuccess(`Email enviado com sucesso para ${created.email}`);
+        } catch (err: any) {
+            onError(err.message || 'Erro ao enviar email');
+        }
     };
 
     const handleClose = () => {
@@ -844,7 +953,36 @@ function EditUserModal({
     const [appRole, setAppRole] = useState(user.app_role);
     const [loading, setLoading] = useState(false);
 
-    const hasChanges = fullName !== user.full_name || appRole !== user.app_role;
+    // Clinic management
+    const [allClinics, setAllClinics] = useState<{ id: string; commercial_name: string }[]>([]);
+    const [selectedClinics, setSelectedClinics] = useState<string[]>(user.clinics.map(c => c.clinic_id));
+    const [loadingClinics, setLoadingClinics] = useState(true);
+    const originalClinics = user.clinics.map(c => c.clinic_id);
+
+    useEffect(() => {
+        const fetchClinics = async () => {
+            try {
+                const { supabase } = await import('@/lib/supabase');
+                const { data } = await supabase
+                    .from('clinics')
+                    .select('id, commercial_name')
+                    .order('commercial_name');
+                setAllClinics(data || []);
+            } catch { /* silently fail */ } finally {
+                setLoadingClinics(false);
+            }
+        };
+        fetchClinics();
+    }, []);
+
+    const toggleClinic = (clinicId: string) => {
+        setSelectedClinics(prev =>
+            prev.includes(clinicId) ? prev.filter(id => id !== clinicId) : [...prev, clinicId]
+        );
+    };
+
+    const clinicsChanged = JSON.stringify([...selectedClinics].sort()) !== JSON.stringify([...originalClinics].sort());
+    const hasChanges = fullName !== user.full_name || appRole !== user.app_role || clinicsChanged;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -878,6 +1016,38 @@ function EditUserModal({
                 updates.push('role');
             }
 
+            // Atualizar clínicas se mudaram
+            if (clinicsChanged) {
+                const toAdd = selectedClinics.filter(id => !originalClinics.includes(id));
+                const toRemove = originalClinics.filter(id => !selectedClinics.includes(id));
+
+                for (const clinicId of toAdd) {
+                    const res = await fetch('/api/users/clinic-access', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: user.id, clinic_id: clinicId })
+                    });
+                    if (!res.ok) {
+                        const data = await res.json();
+                        throw new Error(data.error);
+                    }
+                }
+
+                for (const clinicId of toRemove) {
+                    const res = await fetch('/api/users/clinic-access', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: user.id, clinic_id: clinicId })
+                    });
+                    if (!res.ok) {
+                        const data = await res.json();
+                        throw new Error(data.error);
+                    }
+                }
+
+                updates.push('clínicas');
+            }
+
             onSuccess(`Utilizador "${fullName}" atualizado (${updates.join(' e ')})`);
         } catch (err: any) {
             onError(err.message);
@@ -888,13 +1058,13 @@ function EditUserModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
                     <h3 className="text-lg font-semibold text-gray-900">Editar Utilizador</h3>
                     <button onClick={onClose} className="p-1 rounded-md hover:bg-gray-100"><X className="h-5 w-5 text-gray-400" /></button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
                     {/* User Info Card */}
                     <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200">
                         <div className={cn(
@@ -947,20 +1117,54 @@ function EditUserModal({
                         )}
                     </div>
 
-                    {/* Clinics (read-only info) */}
-                    {user.clinics.length > 0 && (
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-gray-700">Clínicas Associadas</label>
-                            <div className="flex flex-wrap gap-1.5">
-                                {user.clinics.map((c, i) => (
-                                    <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs bg-gray-100 text-gray-600 border border-gray-200">
-                                        <Building2 className="h-3 w-3" />
-                                        {c.clinic_name}
-                                    </span>
-                                ))}
+                    {/* Clinics — Editable */}
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                            <Building2 className="h-4 w-4 text-gray-400" />
+                            Clínicas Associadas
+                        </label>
+                        {loadingClinics ? (
+                            <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                A carregar clínicas...
                             </div>
-                        </div>
-                    )}
+                        ) : allClinics.length === 0 ? (
+                            <p className="text-xs text-gray-400">Nenhuma clínica disponível</p>
+                        ) : (
+                            <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                                {allClinics.map(clinic => {
+                                    const isSelected = selectedClinics.includes(clinic.id);
+                                    const wasOriginal = originalClinics.includes(clinic.id);
+                                    return (
+                                        <label
+                                            key={clinic.id}
+                                            className={cn(
+                                                "flex items-center gap-3 px-3 py-2 rounded-lg border cursor-pointer transition-colors",
+                                                isSelected
+                                                    ? 'bg-primary/5 border-primary/30 text-gray-900'
+                                                    : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                                            )}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => toggleClinic(clinic.id)}
+                                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary/50"
+                                            />
+                                            <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
+                                            <span className="text-sm flex-1">{clinic.commercial_name}</span>
+                                            {isSelected && !wasOriginal && (
+                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">NOVO</span>
+                                            )}
+                                            {!isSelected && wasOriginal && (
+                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium">REMOVER</span>
+                                            )}
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
 
                     {/* Actions */}
                     <div className="flex items-center gap-3 pt-2">
@@ -1136,6 +1340,178 @@ Qualquer dúvida, contacta o administrador.`;
                     >
                         <ExternalLink className="h-4 w-4" />
                         Enviar via WhatsApp
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ===========================
+// EMAIL SEND MODAL
+// ===========================
+function EmailSendModal({
+    user, onClose, onSuccess, onError
+}: {
+    user: UserData;
+    onClose: () => void;
+    onSuccess: (msg: string) => void;
+    onError: (msg: string) => void;
+}) {
+    const [email, setEmail] = useState(user.email || '');
+    const [loading, setLoading] = useState(false);
+    const [sent, setSent] = useState(false);
+
+    const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://app.asymlab.pt';
+    const loginIdentifier = user.is_username_account ? user.username : user.email;
+    const loginLabel = user.is_username_account ? 'Username' : 'Email';
+
+    const messagePreview = `🔐 Dados de Acesso — AsymLAB
+
+Olá ${user.full_name}! 👋
+
+Seguem os teus dados de acesso:
+
+📱 Link da App: ${appUrl}
+👤 ${loginLabel}: ${loginIdentifier}
+🔑 Password: (definida pelo administrador)
+
+📝 Como instalar no telemóvel:
+1. Abre o link acima no Chrome/Safari
+2. Clica em "Adicionar ao ecrã inicial"
+
+💡 Recomendação: Altera a tua password após o primeiro login.`;
+
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #1a1a2e;">🔐 Dados de Acesso — AsymLAB</h2>
+            <p>Olá <strong>${user.full_name}</strong>! 👋</p>
+            <p>Seguem os teus dados de acesso à aplicação AsymLAB:</p>
+            <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                <p style="margin: 4px 0;">📱 <strong>Link da App:</strong> <a href="${appUrl}">${appUrl}</a></p>
+                <p style="margin: 4px 0;">👤 <strong>${loginLabel}:</strong> ${loginIdentifier}</p>
+                <p style="margin: 4px 0;">🔑 <strong>Password:</strong> (definida pelo administrador)</p>
+            </div>
+            <p style="font-size: 14px;">📝 <strong>Como instalar no telemóvel:</strong></p>
+            <ol style="font-size: 14px;">
+                <li>Abre o link acima no Chrome/Safari</li>
+                <li>Clica em "Adicionar ao ecrã inicial" ou no ícone ⊕</li>
+                <li>A app ficará disponível como atalho!</li>
+            </ol>
+            <p style="font-size: 13px; color: #6c757d; border-top: 1px solid #e9ecef; padding-top: 12px; margin-top: 16px;">💡 <em>Recomendação: Altera a tua password após o primeiro login em "A Minha Conta".</em></p>
+        </div>
+    `;
+
+    const handleSendEmail = async () => {
+        if (!email.trim()) return;
+        setLoading(true);
+        try {
+            const res = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: email.trim(),
+                    subject: 'Dados de Acesso — AsymLAB',
+                    html,
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            setSent(true);
+            onSuccess(`Email enviado com sucesso para ${email}`);
+        } catch (err: any) {
+            onError(err.message || 'Erro ao enviar email');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-blue-100 bg-blue-50/50 rounded-t-2xl flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <Mail className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-blue-900">Enviar via Email</h3>
+                    </div>
+                    <button onClick={onClose} className="p-1 rounded-md hover:bg-blue-100"><X className="h-5 w-5 text-blue-400" /></button>
+                </div>
+
+                <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                    {/* User card */}
+                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200">
+                        <div className={cn(
+                            "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold",
+                            user.app_role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-primary/10 text-primary'
+                        )}>
+                            {user.full_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
+                            <p className="text-xs text-gray-400">
+                                {user.is_username_account ? `👤 ${user.username}` : `📧 ${user.email}`}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Email input */}
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                            <Mail className="h-4 w-4 text-gray-400" />
+                            Email do Destinatário
+                        </label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            placeholder="email@exemplo.com"
+                            className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+                            autoFocus
+                            disabled={sent}
+                        />
+                    </div>
+
+                    {/* Message preview */}
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-gray-700">Pré-visualização da Mensagem</label>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-600 whitespace-pre-wrap max-h-48 overflow-y-auto font-mono leading-relaxed">
+                            {messagePreview}
+                        </div>
+                    </div>
+
+                    {/* Info note */}
+                    <div className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
+                        <strong>Nota:</strong> A password não é incluída no email por segurança.
+                        Comunique a password temporária pessoalmente ou defina-a pelo botão 🔑.
+                    </div>
+
+                    {sent && (
+                        <div className="px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-xs text-green-700 flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4" />
+                            <strong>Email enviado com sucesso!</strong>
+                        </div>
+                    )}
+                </div>
+
+                {/* Actions */}
+                <div className="px-6 py-4 border-t border-gray-100 flex items-center gap-3 flex-shrink-0">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                        Fechar
+                    </button>
+                    <button
+                        onClick={handleSendEmail}
+                        disabled={!email.trim() || loading || sent}
+                        className="flex-1 h-10 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : sent ? <CheckCircle className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+                        {loading ? 'A enviar...' : sent ? 'Enviado!' : 'Enviar Email'}
                     </button>
                 </div>
             </div>

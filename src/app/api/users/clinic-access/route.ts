@@ -16,6 +16,43 @@ function getAdminClient() {
     });
 }
 
+// POST - Associar um utilizador a uma clínica
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.json();
+        const { user_id, clinic_id } = body;
+
+        if (!user_id || !clinic_id) {
+            return NextResponse.json(
+                { error: 'user_id e clinic_id são obrigatórios' },
+                { status: 400 }
+            );
+        }
+
+        const admin = getAdminClient();
+
+        const { error: insertError } = await admin
+            .from('user_clinic_access')
+            .upsert(
+                { user_id, clinic_id, can_edit: true },
+                { onConflict: 'user_id,clinic_id' }
+            );
+
+        if (insertError) throw insertError;
+
+        return NextResponse.json({
+            success: true,
+            message: 'Acesso à clínica adicionado com sucesso'
+        });
+    } catch (error: any) {
+        console.error('Error adding clinic access:', error);
+        return NextResponse.json(
+            { error: error.message || 'Erro ao adicionar acesso' },
+            { status: 500 }
+        );
+    }
+}
+
 // DELETE - Remover acesso de um utilizador a uma clínica
 export async function DELETE(request: NextRequest) {
     try {
