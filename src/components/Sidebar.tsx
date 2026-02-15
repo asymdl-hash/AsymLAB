@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { auth } from '@/lib/supabase';
 import { useSidebar } from '@/contexts/SidebarContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { AppModule } from '@/lib/permissions';
 import {
     Home,
     Users,
@@ -18,7 +20,8 @@ import {
     Menu,
     X,
     UserCircle,
-    PanelLeft
+    PanelLeft,
+    Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,22 +29,32 @@ interface MenuItem {
     icon: React.ElementType;
     label: string;
     href: string;
+    module: AppModule;
 }
 
 const menuItems: MenuItem[] = [
-    { icon: Home, label: 'Dashboard', href: '/dashboard' },
-    { icon: Building2, label: 'Clínicas', href: '/dashboard/clinics' },
-    { icon: Users, label: 'Pacientes', href: '/dashboard/patients' },
-    { icon: Calendar, label: 'Agenda', href: '/dashboard/schedule' },
-    { icon: Euro, label: 'Faturação', href: '/dashboard/billing' },
-    { icon: BarChart3, label: 'Relatórios', href: '/dashboard/reports' },
-    { icon: Settings, label: 'Definições', href: '/dashboard/settings' },
+    { icon: Home, label: 'Dashboard', href: '/dashboard', module: 'dashboard' },
+    { icon: Building2, label: 'Clínicas', href: '/dashboard/clinics', module: 'clinics' },
+    { icon: Users, label: 'Pacientes', href: '/dashboard/patients', module: 'patients' },
+    { icon: Calendar, label: 'Agenda', href: '/dashboard/schedule', module: 'schedule' },
+    { icon: Euro, label: 'Faturação', href: '/dashboard/billing', module: 'billing' },
+    { icon: BarChart3, label: 'Relatórios', href: '/dashboard/reports', module: 'reports' },
+    { icon: Settings, label: 'Definições', href: '/dashboard/settings', module: 'settings' },
 ];
 
 export default function Sidebar() {
     const pathname = usePathname();
     const { collapsed, toggleCollapsed } = useSidebar();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const { user, hasAccess, isReadOnly, role } = useAuth();
+
+    // Filtrar menus por permissão
+    const visibleMenuItems = menuItems.filter(item => hasAccess(item.module));
+
+    // Iniciais do utilizador
+    const userInitials = user?.full_name
+        ? user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+        : 'U';
 
     // Fechar sidebar mobile quando muda de página
     useEffect(() => {
@@ -129,9 +142,10 @@ export default function Sidebar() {
 
             {/* Navigation */}
             <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-                {menuItems.map((item) => {
+                {visibleMenuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
+                    const readOnly = isReadOnly(item.module);
 
                     return (
                         <Link
@@ -144,10 +158,20 @@ export default function Sidebar() {
                                     : "text-gray-400 hover:bg-[#1f2937] hover:text-white",
                                 collapsed && !isMobile && "justify-center px-2"
                             )}
-                            title={collapsed && !isMobile ? item.label : undefined}
+                            title={collapsed && !isMobile ? `${item.label}${readOnly ? ' (Leitura)' : ''}` : undefined}
                         >
                             <Icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", isActive ? "text-primary" : "text-gray-500 group-hover:text-white")} />
-                            {(!collapsed || isMobile) && <span>{item.label}</span>}
+                            {(!collapsed || isMobile) && (
+                                <span className="flex-1 flex items-center gap-2">
+                                    {item.label}
+                                    {readOnly && (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 text-gray-400 font-normal flex items-center gap-0.5">
+                                            <Lock className="h-2.5 w-2.5" />
+                                            Leitura
+                                        </span>
+                                    )}
+                                </span>
+                            )}
 
                             {collapsed && !isMobile && isActive && (
                                 <div className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-primary" />
@@ -165,7 +189,7 @@ export default function Sidebar() {
                         className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-yellow-300 flex items-center justify-center text-white text-sm font-bold shadow-lg ring-2 ring-[#1f2937] hover:ring-primary/50 transition-all"
                         title="A Minha Conta"
                     >
-                        DU
+                        {userInitials}
                     </Link>
 
                     {(!collapsed || isMobile) && (
@@ -173,7 +197,7 @@ export default function Sidebar() {
                             href="/dashboard/minha-conta"
                             className="flex-1 min-w-0 hover:opacity-80 transition-opacity"
                         >
-                            <p className="text-sm font-medium text-white truncate">Dr. Utilizador</p>
+                            <p className="text-sm font-medium text-white truncate">{user?.full_name || 'Utilizador'}</p>
                             <p className="text-xs text-gray-500 truncate flex items-center gap-1">
                                 <UserCircle className="h-3 w-3" />
                                 A Minha Conta
