@@ -500,11 +500,14 @@ function CreateUserModal({
     const [created, setCreated] = useState<{
         loginType: 'username' | 'email';
         loginIdentifier: string;
-        password: string;
+        password?: string;
+        inviteLink?: string;
         fullName: string;
         phone: string;
         email: string;
     } | null>(null);
+    const [emailSending, setEmailSending] = useState(false);
+    const [emailSent, setEmailSent] = useState(false);
     const [copiedField, setCopiedField] = useState<string | null>(null);
 
     // Carregar lista de clínicas
@@ -535,14 +538,16 @@ function CreateUserModal({
         setLoading(true);
 
         try {
-            const body: any = { password, full_name: fullName, app_role: appRole };
+            const body: any = { full_name: fullName, app_role: appRole };
             if (loginType === 'username') {
                 if (!username.trim()) throw new Error('Username é obrigatório');
                 if (username.includes('@') || username.includes(' ')) throw new Error('Username não pode conter @ ou espaços');
                 body.username = username.trim();
+                body.password = password;
             } else {
                 if (!email.trim()) throw new Error('Email é obrigatório');
                 body.email = email.trim();
+                // Email accounts: sem password — usam invite link
             }
 
             if (phone.trim()) body.phone = phone.trim();
@@ -561,7 +566,8 @@ function CreateUserModal({
             setCreated({
                 loginType,
                 loginIdentifier: loginType === 'username' ? username.trim() : email.trim(),
-                password,
+                password: loginType === 'username' ? password : undefined,
+                inviteLink: data.user?.invite_link || undefined,
                 fullName,
                 phone: phone.trim(),
                 email: loginType === 'email' ? email.trim() : '',
@@ -577,24 +583,15 @@ function CreateUserModal({
         if (!created) return;
         const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://app.asymlab.pt';
         const loginLabel = created.loginType === 'email' ? 'Email' : 'Username';
-        const message = `🔐 *Dados de Acesso — AsymLAB*
 
-Olá ${created.fullName}! 👋
-
-Seguem os teus dados de acesso à aplicação AsymLAB:
-
-📱 *Link da App:*
-${appUrl}
-
-👤 *${loginLabel}:* ${created.loginIdentifier}
-🔑 *Password:* ${created.password}
-
-📝 *Como instalar a App no telemóvel:*
-1. Abre o link acima no Chrome/Safari
-2. Clica em "Adicionar ao ecrã inicial" ou no ícone ⊕
-3. A app ficará disponível como atalho no teu telemóvel!
-
-💡 *Recomendação:* Altera a tua password após o primeiro login em "A Minha Conta".`;
+        let message: string;
+        if (created.loginType === 'email' && created.inviteLink) {
+            // Fluxo email: enviar link de convite
+            message = `🔐 *Dados de Acesso — AsymLAB*\n\nOlá ${created.fullName}! 👋\n\nFoste convidado para a aplicação AsymLAB.\n\n📱 *Clica neste link para criar a tua password e aceder:*\n${created.inviteLink}\n\n📝 *Como instalar a App no telemóvel:*\n1. Abre o link acima no Chrome/Safari\n2. Clica em \"Adicionar ao ecrã inicial\" ou no ícone ⊕\n3. A app ficará disponível como atalho no teu telemóvel!`;
+        } else {
+            // Fluxo username: enviar credenciais
+            message = `🔐 *Dados de Acesso — AsymLAB*\n\nOlá ${created.fullName}! 👋\n\nSeguem os teus dados de acesso à aplicação AsymLAB:\n\n📱 *Link da App:*\n${appUrl}\n\n👤 *${loginLabel}:* ${created.loginIdentifier}\n🔑 *Password:* ${created.password}\n\n📝 *Como instalar a App no telemóvel:*\n1. Abre o link acima no Chrome/Safari\n2. Clica em \"Adicionar ao ecrã inicial\" ou no ícone ⊕\n3. A app ficará disponível como atalho no teu telemóvel!\n\n💡 *Recomendação:* Altera a tua password após o primeiro login em \"A Minha Conta\".`;
+        }
 
         const cleanPhone = created.phone.replace(/\D/g, '');
         const whatsappUrl = cleanPhone
@@ -605,28 +602,52 @@ ${appUrl}
 
     const handleSendEmail = async () => {
         if (!created || !created.email) return;
+        setEmailSending(true);
         const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://app.asymlab.pt';
-        const loginLabel = created.loginType === 'email' ? 'Email' : 'Username';
-        const subject = 'Dados de Acesso — AsymLAB';
-        const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #1a1a2e;">🔐 Dados de Acesso — AsymLAB</h2>
-                <p>Olá <strong>${created.fullName}</strong>! 👋</p>
-                <p>Seguem os teus dados de acesso à aplicação AsymLAB:</p>
-                <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 16px; margin: 16px 0;">
-                    <p style="margin: 4px 0;">📱 <strong>Link da App:</strong> <a href="${appUrl}">${appUrl}</a></p>
-                    <p style="margin: 4px 0;">👤 <strong>${loginLabel}:</strong> ${created.loginIdentifier}</p>
-                    <p style="margin: 4px 0;">🔑 <strong>Password:</strong> ${created.password}</p>
+        const subject = created.inviteLink
+            ? 'Convite — AsymLAB'
+            : 'Dados de Acesso — AsymLAB';
+
+        let html: string;
+        if (created.inviteLink) {
+            // Fluxo email: link de convite para definir password
+            html = `
+                <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #1a1a2e;">🔐 Convite — AsymLAB</h2>
+                    <p>Olá <strong>${created.fullName}</strong>! 👋</p>
+                    <p>Foste convidado para a aplicação <strong>AsymLAB</strong>.</p>
+                    <p>Clica no botão abaixo para criar a tua password e aceder:</p>
+                    <div style="text-align: center; margin: 24px 0;">
+                        <a href="${created.inviteLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Criar Password e Aceder</a>
+                    </div>
+                    <p style="font-size: 13px; color: #6c757d;">Ou copia este link: <a href="${created.inviteLink}">${created.inviteLink}</a></p>
+                    <hr style="border: none; border-top: 1px solid #e9ecef; margin: 16px 0;" />
+                    <p style="font-size: 14px;">📝 <strong>Como instalar no telemóvel:</strong></p>
+                    <ol style="font-size: 14px;">
+                        <li>Abre o link acima no Chrome/Safari</li>
+                        <li>Clica em "Adicionar ao ecrã inicial"</li>
+                        <li>A app ficará disponível como atalho!</li>
+                    </ol>
                 </div>
-                <p style="font-size: 14px;">📝 <strong>Como instalar no telemóvel:</strong></p>
-                <ol style="font-size: 14px;">
-                    <li>Abre o link acima no Chrome/Safari</li>
-                    <li>Clica em "Adicionar ao ecrã inicial" ou no ícone ⊕</li>
-                    <li>A app ficará disponível como atalho!</li>
-                </ol>
-                <p style="font-size: 13px; color: #6c757d; border-top: 1px solid #e9ecef; padding-top: 12px; margin-top: 16px;">💡 <em>Recomendação: Altera a tua password após o primeiro login em "A Minha Conta".</em></p>
-            </div>
-        `;
+            `;
+        } else {
+            // Fluxo username: credenciais
+            const loginLabel = created.loginType === 'email' ? 'Email' : 'Username';
+            html = `
+                <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #1a1a2e;">🔐 Dados de Acesso — AsymLAB</h2>
+                    <p>Olá <strong>${created.fullName}</strong>! 👋</p>
+                    <p>Seguem os teus dados de acesso à aplicação AsymLAB:</p>
+                    <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                        <p style="margin: 4px 0;">📱 <strong>Link da App:</strong> <a href="${appUrl}">${appUrl}</a></p>
+                        <p style="margin: 4px 0;">👤 <strong>${loginLabel}:</strong> ${created.loginIdentifier}</p>
+                        <p style="margin: 4px 0;">🔑 <strong>Password:</strong> ${created.password}</p>
+                    </div>
+                    <p style="font-size: 13px; color: #6c757d;">💡 <em>Recomendação: Altera a tua password após o primeiro login.</em></p>
+                </div>
+            `;
+        }
+
         try {
             const res = await fetch('/api/send-email', {
                 method: 'POST',
@@ -635,9 +656,12 @@ ${appUrl}
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
-            onSuccess(`Email enviado com sucesso para ${created.email}`);
+            setEmailSent(true);
+            onSuccess(`Email de convite enviado para ${created.email}`);
         } catch (err: any) {
             onError(err.message || 'Erro ao enviar email');
+        } finally {
+            setEmailSending(false);
         }
     };
 
@@ -749,28 +773,35 @@ ${appUrl}
                             <p className="text-xs text-gray-400">Usado para envio de credenciais por WhatsApp</p>
                         </div>
 
-                        {/* Password */}
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-gray-700">Password</label>
-                            <div className="relative">
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                    placeholder="Mínimo 6 caracteres"
-                                    className="w-full h-10 rounded-lg border border-gray-300 px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                                    required
-                                    minLength={6}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
-                                >
-                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                </button>
+                        {/* Password - só para username accounts */}
+                        {loginType === 'username' ? (
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium text-gray-700">Password</label>
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={password}
+                                        onChange={e => setPassword(e.target.value)}
+                                        placeholder="Mínimo 6 caracteres"
+                                        className="w-full h-10 rounded-lg border border-gray-300 px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                        required
+                                        minLength={6}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                                    >
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="px-3 py-2.5 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
+                                <strong>✨ Convite por Email:</strong> Não é necessário definir password.
+                                O utilizador receberá um link para criar a sua própria password.
+                            </div>
+                        )}
 
                         {/* Role */}
                         <div className="space-y-1.5">
@@ -880,28 +911,59 @@ ${appUrl}
                                 </div>
                             </div>
 
-                            {/* Password */}
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium text-gray-500">Password Temporária</label>
-                                <div className="flex items-center gap-2">
-                                    <div className="flex-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm font-mono">
-                                        {created.password}
+                            {created.inviteLink ? (
+                                /* EMAIL: Link de convite */
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-gray-500">Link de Convite</label>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-xs font-mono text-blue-700 break-all">
+                                            {created.inviteLink}
+                                        </div>
+                                        <button
+                                            onClick={() => handleCopy(created.inviteLink!, 'invite')}
+                                            className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                                            title="Copiar link"
+                                        >
+                                            {copiedField === 'invite' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={() => handleCopy(created.password, 'password')}
-                                        className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                                        title="Copiar password"
-                                    >
-                                        {copiedField === 'password' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
-                                    </button>
                                 </div>
-                            </div>
+                            ) : created.password ? (
+                                /* USERNAME: Password */
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-gray-500">Password Temporária</label>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm font-mono">
+                                            {created.password}
+                                        </div>
+                                        <button
+                                            onClick={() => handleCopy(created.password!, 'password')}
+                                            className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                                            title="Copiar password"
+                                        >
+                                            {copiedField === 'password' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : null}
                         </div>
 
-                        <div className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
-                            <strong>Importante:</strong> Guarde estas credenciais! A password não será visível novamente.
-                            Recomende ao utilizador que altere a password no primeiro login.
-                        </div>
+                        {created.inviteLink ? (
+                            <div className="px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
+                                <strong>✨ Link de convite gerado!</strong> O utilizador vai clicar neste link para definir a sua própria password e aceder à aplicação.
+                            </div>
+                        ) : (
+                            <div className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
+                                <strong>Importante:</strong> Guarde estas credenciais! A password não será visível novamente.
+                            </div>
+                        )}
+
+                        {emailSent && (
+                            <div className="px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-xs text-green-700 flex items-center gap-2">
+                                <CheckCircle className="h-4 w-4" />
+                                <strong>Email de convite enviado com sucesso!</strong>
+                            </div>
+                        )}
 
                         {/* Send buttons */}
                         <div className="flex items-center gap-2 pt-2">
@@ -917,10 +979,11 @@ ${appUrl}
                                 <button
                                     type="button"
                                     onClick={handleSendEmail}
-                                    className="flex-1 h-10 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                                    disabled={emailSending || emailSent}
+                                    className="flex-1 h-10 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
-                                    <Mail className="h-4 w-4" />
-                                    Email
+                                    {emailSending ? <Loader2 className="h-4 w-4 animate-spin" /> : emailSent ? <CheckCircle className="h-4 w-4" /> : <Mail className="h-4 w-4" />}
+                                    {emailSending ? 'A enviar...' : emailSent ? 'Enviado!' : created.inviteLink ? 'Enviar Convite' : 'Email'}
                                 </button>
                             )}
                             <button

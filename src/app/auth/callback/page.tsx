@@ -56,19 +56,16 @@ export default function AuthCallbackPage() {
                     throw new Error('Não foi possível criar a sessão. O link pode ter expirado.');
                 }
 
-                // Verificar o tipo de utilizador
-                const { data: { user } } = await supabase.auth.getUser();
-
-                if (user?.user_metadata?.app_role === 'clinic_user') {
-                    // Utilizador de clínica - verificar se precisa definir password
-                    // Se nunca fez login antes, redirecionar para set-password
+                // Verificar se é um convite ou recovery — redirecionar para set-password
+                if (type === 'invite' || type === 'recovery') {
                     setStatus('Bem-vindo! A preparar a sua conta...');
                     await new Promise(resolve => setTimeout(resolve, 500));
                     router.replace('/auth/set-password');
-                } else {
-                    // Admin ou outro - ir para dashboard
-                    router.replace('/dashboard');
+                    return;
                 }
+
+                // Para outros fluxos, ir para dashboard
+                router.replace('/dashboard');
 
             } catch (err: any) {
                 console.error('Auth callback error:', err);

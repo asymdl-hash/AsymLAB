@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 // Admin client com Service Role Key para operações administrativas
 function getAdminClient() {
@@ -82,14 +82,10 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { username, email, password, full_name, app_role, clinic_ids, phone } = body;
 
-        // Validações
-        if (!password || password.length < 6) {
-            return NextResponse.json(
-                { error: 'Password deve ter pelo menos 6 caracteres' },
-                { status: 400 }
-            );
-        }
+        const isEmailAccount = !!email && !username;
+        const isUsernameAccount = !!username;
 
+        // Validações
         if (!full_name) {
             return NextResponse.json(
                 { error: 'Nome completo é obrigatório' },
@@ -104,6 +100,14 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Para username accounts, password é obrigatória
+        if (isUsernameAccount && (!password || password.length < 6)) {
+            return NextResponse.json(
+                { error: 'Password deve ter pelo menos 6 caracteres' },
+                { status: 400 }
+            );
+        }
+
         // Determinar o email para o Supabase Auth
         const authEmail = email || `${username!.toLowerCase().trim()}@asymlab.app`;
         const validRole = ['admin', 'clinic_user', 'doctor', 'staff', 'staff_lab', 'staff_clinic'].includes(app_role)
@@ -111,62 +115,123 @@ export async function POST(request: NextRequest) {
             : 'staff';
 
         const admin = getAdminClient();
+        let inviteLink: string | null = null;
 
-        // Criar user no Auth
-        const createPayload: any = {
-            email: authEmail,
-            password,
-            email_confirm: true,
-            user_metadata: {
-                full_name,
-                app_role: validRole,
-            }
-        };
-
-        // Associar telefone se fornecido
-        if (phone) {
-            createPayload.phone = phone.replace(/\D/g, '');
-        }
-
-        const { data: newUser, error: createError } = await admin.auth.admin.createUser(createPayload);
-
-        if (createError) throw createError;
-
-        // O trigger on_auth_user_created deve criar o user_profile automaticamente
-        // Mas vamos garantir que o role está correcto
-        await admin
-            .from('user_profiles')
-            .upsert({
-                user_id: newUser.user.id,
-                app_role: validRole,
-                full_name
-            }, { onConflict: 'user_id' });
-
-        // Associar às clínicas (se fornecidas)
-        if (clinic_ids && clinic_ids.length > 0) {
-            const clinicRows = clinic_ids.map((cid: string) => ({
-                user_id: newUser.user.id,
-                clinic_id: cid,
-                clinic_role: validRole === 'doctor' ? 'doctor' : 'staff'
-            }));
-
-            await admin.from('user_clinic_access').insert(clinicRows);
-        }
-
-        return NextResponse.json({
-            success: true,
-            user: {
-                id: newUser.user.id,
+        if (isEmailAccount) {
+            // === FLUXO EMAIL: Criar user + gerar link de convite ===
+            // Criar user com password temporária aleatória
+            const tempPassword = crypto.randomUUID() + 'Aa1!';
+            const createPayload: any = {
                 email: authEmail,
-                username: username || null,
-                full_name,
-                app_role: validRole,
-                password // Retornar para o modal pós-criação
-            },
-            message: username
-                ? `Utilizador "${username}" criado com sucesso`
-                : `Utilizador "${email}" criado com sucesso`
-        });
+                password: tempPassword,
+                email_confirm: true,
+                user_metadata: {
+                    full_name,
+                    app_role: validRole,
+                }
+            };
+            if (phone) createPayload.phone = phone.replace(/\D/g, '');
+
+            const { data: newUser, error: createError } = await admin.auth.admin.createUser(createPayload);
+            if (createError) throw createError;
+
+            // Guardar profile
+            await admin
+                .from('user_profiles')
+                .upsert({
+                    user_id: newUser.user.id,
+                    app_role: validRole,
+                    full_name
+                }, { onConflict: 'user_id' });
+
+            // Associar clínicas
+            if (clinic_ids && clinic_ids.length > 0) {
+                const clinicRows = clinic_ids.map((cid: string) => ({
+                    user_id: newUser.user.id,
+                    clinic_id: cid,
+                    clinic_role: validRole === 'doctor' ? 'doctor' : 'staff'
+                }));
+                await admin.from('user_clinic_access').insert(clinicRows);
+            }
+
+            // Gerar link de convite
+            const appUrl = request.headers.get('origin') || 'https://asym-lab-2.vercel.app';
+            const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+                type: 'invite',
+                email: authEmail,
+                options: {
+                    redirectTo: `${appUrl}/auth/callback`
+                }
+            });
+
+            if (linkError) {
+                console.error('generateLink error:', linkError);
+                // Fallback: retornar sem link
+            } else if (linkData?.properties?.action_link) {
+                inviteLink = linkData.properties.action_link;
+            }
+
+            return NextResponse.json({
+                success: true,
+                user: {
+                    id: newUser.user.id,
+                    email: authEmail,
+                    username: null,
+                    full_name,
+                    app_role: validRole,
+                    invite_link: inviteLink
+                },
+                message: `Utilizador "${email}" criado com sucesso`
+            });
+
+        } else {
+            // === FLUXO USERNAME: Criar user com password definida ===
+            const createPayload: any = {
+                email: authEmail,
+                password,
+                email_confirm: true,
+                user_metadata: {
+                    full_name,
+                    app_role: validRole,
+                }
+            };
+            if (phone) createPayload.phone = phone.replace(/\D/g, '');
+
+            const { data: newUser, error: createError } = await admin.auth.admin.createUser(createPayload);
+            if (createError) throw createError;
+
+            // Guardar profile
+            await admin
+                .from('user_profiles')
+                .upsert({
+                    user_id: newUser.user.id,
+                    app_role: validRole,
+                    full_name
+                }, { onConflict: 'user_id' });
+
+            // Associar clínicas
+            if (clinic_ids && clinic_ids.length > 0) {
+                const clinicRows = clinic_ids.map((cid: string) => ({
+                    user_id: newUser.user.id,
+                    clinic_id: cid,
+                    clinic_role: validRole === 'doctor' ? 'doctor' : 'staff'
+                }));
+                await admin.from('user_clinic_access').insert(clinicRows);
+            }
+
+            return NextResponse.json({
+                success: true,
+                user: {
+                    id: newUser.user.id,
+                    email: authEmail,
+                    username: username || null,
+                    full_name,
+                    app_role: validRole,
+                    password // Retornar para o modal pós-criação
+                },
+                message: `Utilizador "${username}" criado com sucesso`
+            });
+        }
     } catch (error: any) {
         console.error('Error creating user:', error);
         return NextResponse.json(
