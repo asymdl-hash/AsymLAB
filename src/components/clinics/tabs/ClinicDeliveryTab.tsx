@@ -170,7 +170,7 @@ export default function ClinicDeliveryTab() {
                         );
 
                         return (
-                            <Card key={field.id} className="relative overflow-hidden group transition-all hover:border-primary/20">
+                            <Card key={field.id} className="relative group transition-all hover:border-primary/20">
                                 <CardContent className="p-6">
                                     <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Button

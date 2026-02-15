@@ -230,16 +230,16 @@ export default function UserManagement() {
                     <span className="ml-2 text-sm text-gray-400">A carregar utilizadores...</span>
                 </div>
             ) : (
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                    <table className="w-full table-fixed">
+                <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto shadow-sm">
+                    <table className="w-full" style={{ minWidth: '720px' }}>
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-200">
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[25%]">Utilizador</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[14%]">Login</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">Role</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[16%]">Clínicas</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[14%]">Último Login</th>
-                                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[16%]">Ações</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ width: '22%' }}>Utilizador</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ width: '12%' }}>Login</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ width: '14%' }}>Role</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ width: '18%' }}>Clínicas</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ width: '14%' }}>Último Login</th>
+                                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ width: '20%' }}>Ações</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
