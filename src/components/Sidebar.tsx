@@ -17,7 +17,7 @@ import {
     Building2,
     Menu,
     X,
-
+    UserCircle,
     PanelLeft
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -160,15 +160,25 @@ export default function Sidebar() {
             {/* Footer User Profile */}
             <div className="p-4 border-t border-[#1f2937] bg-[#0f1523]">
                 <div className={cn("flex items-center gap-3", collapsed && !isMobile && "justify-center")}>
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-yellow-300 flex items-center justify-center text-white text-sm font-bold shadow-lg ring-2 ring-[#1f2937]">
+                    <Link
+                        href="/dashboard/minha-conta"
+                        className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-yellow-300 flex items-center justify-center text-white text-sm font-bold shadow-lg ring-2 ring-[#1f2937] hover:ring-primary/50 transition-all"
+                        title="A Minha Conta"
+                    >
                         DU
-                    </div>
+                    </Link>
 
                     {(!collapsed || isMobile) && (
-                        <div className="flex-1 min-w-0">
+                        <Link
+                            href="/dashboard/minha-conta"
+                            className="flex-1 min-w-0 hover:opacity-80 transition-opacity"
+                        >
                             <p className="text-sm font-medium text-white truncate">Dr. Utilizador</p>
-                            <p className="text-xs text-gray-500 truncate">Administrador</p>
-                        </div>
+                            <p className="text-xs text-gray-500 truncate flex items-center gap-1">
+                                <UserCircle className="h-3 w-3" />
+                                A Minha Conta
+                            </p>
+                        </Link>
                     )}
 
                     {(!collapsed || isMobile) && (

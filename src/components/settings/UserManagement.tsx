@@ -4,13 +4,14 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     UserPlus, RefreshCw, Key, Trash2, Edit3,
     User, Shield, CheckCircle, AlertCircle, X, Eye, EyeOff,
-    Building2, Loader2, AlertTriangle, Save
+    Building2, Loader2, AlertTriangle, Save, MessageCircle, Smartphone, ExternalLink, Copy, Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface UserData {
     id: string;
     email: string;
+    phone: string | null;
     username: string | null;
     is_username_account: boolean;
     full_name: string;
@@ -45,6 +46,7 @@ export default function UserManagement() {
     const [showResetModal, setShowResetModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
 
     const fetchUsers = useCallback(async () => {
@@ -213,6 +215,13 @@ export default function UserManagement() {
                                                 <Key className="h-4 w-4" />
                                             </button>
                                             <button
+                                                onClick={() => { setSelectedUser(user); setShowWhatsAppModal(true); }}
+                                                title="Enviar Credenciais por WhatsApp"
+                                                className="p-1.5 rounded-md text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors"
+                                            >
+                                                <MessageCircle className="h-4 w-4" />
+                                            </button>
+                                            <button
                                                 onClick={() => { setSelectedUser(user); setShowDeleteModal(true); }}
                                                 title="Eliminar Utilizador"
                                                 className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
@@ -254,6 +263,14 @@ export default function UserManagement() {
                     onClose={() => { setShowResetModal(false); setSelectedUser(null); }}
                     onSuccess={(msg) => { setSuccess(msg); setShowResetModal(false); setSelectedUser(null); }}
                     onError={(msg) => setError(msg)}
+                />
+            )}
+
+            {/* WhatsApp Send Modal */}
+            {showWhatsAppModal && selectedUser && (
+                <WhatsAppSendModal
+                    user={selectedUser}
+                    onClose={() => { setShowWhatsAppModal(false); setSelectedUser(null); }}
                 />
             )}
 
@@ -624,6 +641,163 @@ function EditUserModal({
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    );
+}
+
+// ===========================
+// WHATSAPP SEND MODAL
+// ===========================
+function WhatsAppSendModal({
+    user, onClose
+}: {
+    user: UserData;
+    onClose: () => void;
+}) {
+    const [phone, setPhone] = useState(user.phone || '');
+    const [copied, setCopied] = useState(false);
+
+    const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://app.asymlab.pt';
+    const loginIdentifier = user.is_username_account ? user.username : user.email;
+
+    const message = `🔐 *Dados de Acesso — AsymLAB*
+
+Olá ${user.full_name}! 👋
+
+Seguem os teus dados de acesso à aplicação AsymLAB:
+
+📱 *Link da App:*
+${appUrl}
+
+👤 *Login:* ${loginIdentifier}
+🔑 *Password:* (definida pelo administrador)
+
+📝 *Como instalar a App no telemóvel:*
+1. Abre o link acima no Chrome/Safari
+2. Clica em "Adicionar ao ecrã inicial" ou no ícone ⊕
+3. A app ficará disponível como atalho no teu telemóvel!
+
+💡 *Recomendação:* Altera a tua password após o primeiro login em "A Minha Conta".
+
+Qualquer dúvida, contacta o administrador.`;
+
+    const cleanPhone = phone.replace(/\D/g, '');
+
+    const handleSendWhatsApp = () => {
+        if (!cleanPhone) return;
+        const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    };
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(message);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // fallback
+            const textArea = document.createElement('textarea');
+            textArea.value = message;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-green-100 bg-green-50/50 rounded-t-2xl flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                            <MessageCircle className="h-4 w-4 text-green-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-green-900">Enviar via WhatsApp</h3>
+                    </div>
+                    <button onClick={onClose} className="p-1 rounded-md hover:bg-green-100"><X className="h-5 w-5 text-green-400" /></button>
+                </div>
+
+                <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                    {/* User card */}
+                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200">
+                        <div className={cn(
+                            "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold",
+                            user.app_role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-primary/10 text-primary'
+                        )}>
+                            {user.full_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
+                            <p className="text-xs text-gray-400">
+                                {user.is_username_account ? `👤 ${user.username}` : `📧 ${user.email}`}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Phone input */}
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                            <Smartphone className="h-4 w-4 text-gray-400" />
+                            Número de Telefone
+                        </label>
+                        <input
+                            type="tel"
+                            value={phone}
+                            onChange={e => setPhone(e.target.value)}
+                            placeholder="351912345678 (com indicativo)"
+                            className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400"
+                            autoFocus
+                        />
+                        <p className="text-xs text-gray-400">Inclui o indicativo do país (ex: 351 para Portugal)</p>
+                    </div>
+
+                    {/* Message preview */}
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-gray-700">Pré-visualização da Mensagem</label>
+                        <div className="relative">
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-600 whitespace-pre-wrap max-h-48 overflow-y-auto font-mono leading-relaxed">
+                                {message}
+                            </div>
+                            <button
+                                onClick={handleCopy}
+                                className="absolute top-2 right-2 p-1.5 rounded-md bg-white border border-gray-200 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                                title="Copiar mensagem"
+                            >
+                                {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Info note */}
+                    <div className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
+                        <strong>Nota:</strong> A password não é incluída na mensagem por segurança.
+                        Comunique a password temporária pessoalmente ou defina-a pelo botão 🔑.
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="px-6 py-4 border-t border-gray-100 flex items-center gap-3 flex-shrink-0">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                        Fechar
+                    </button>
+                    <button
+                        onClick={handleSendWhatsApp}
+                        disabled={!cleanPhone}
+                        className="flex-1 h-10 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        <ExternalLink className="h-4 w-4" />
+                        Enviar via WhatsApp
+                    </button>
+                </div>
             </div>
         </div>
     );
