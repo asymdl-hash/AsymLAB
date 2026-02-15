@@ -495,6 +495,7 @@ function CreateUserModal({
     const [clinics, setClinics] = useState<{ id: string; commercial_name: string }[]>([]);
     const [selectedClinics, setSelectedClinics] = useState<string[]>([]);
     const [loadingClinics, setLoadingClinics] = useState(true);
+    const [showClinicDropdown, setShowClinicDropdown] = useState(false);
 
     // Estado pós-criação
     const [created, setCreated] = useState<{
@@ -819,8 +820,8 @@ function CreateUserModal({
                             </select>
                         </div>
 
-                        {/* Clinic Selection */}
-                        <div className="space-y-1.5">
+                        {/* Clinic Selection - Dropdown Multi-select */}
+                        <div className="space-y-1.5 relative">
                             <label className="text-sm font-medium text-gray-700">Clínicas Associadas <span className="text-gray-400 font-normal">(opcional)</span></label>
                             {loadingClinics ? (
                                 <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
@@ -829,28 +830,64 @@ function CreateUserModal({
                             ) : clinics.length === 0 ? (
                                 <p className="text-xs text-gray-400 py-1">Nenhuma clínica registada</p>
                             ) : (
-                                <div className="border border-gray-200 rounded-lg max-h-32 overflow-y-auto">
-                                    {clinics.map(c => (
-                                        <label
-                                            key={c.id}
-                                            className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedClinics.includes(c.id)}
-                                                onChange={e => {
-                                                    if (e.target.checked) {
-                                                        setSelectedClinics([...selectedClinics, c.id]);
-                                                    } else {
-                                                        setSelectedClinics(selectedClinics.filter(id => id !== c.id));
-                                                    }
-                                                }}
-                                                className="rounded border-gray-300 text-primary focus:ring-primary"
-                                            />
-                                            <span className="text-gray-700">{c.commercial_name || 'Sem nome'}</span>
-                                        </label>
-                                    ))}
-                                </div>
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowClinicDropdown(!showClinicDropdown)}
+                                        className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm text-left bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary flex items-center justify-between"
+                                    >
+                                        <span className={selectedClinics.length === 0 ? 'text-gray-400' : 'text-gray-700'}>
+                                            {selectedClinics.length === 0
+                                                ? 'Selecionar clínicas...'
+                                                : `${selectedClinics.length} clínica${selectedClinics.length > 1 ? 's' : ''} selecionada${selectedClinics.length > 1 ? 's' : ''}`
+                                            }
+                                        </span>
+                                        <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform", showClinicDropdown && "rotate-180")} />
+                                    </button>
+                                    {showClinicDropdown && (
+                                        <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                            {clinics.map(c => (
+                                                <label
+                                                    key={c.id}
+                                                    className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedClinics.includes(c.id)}
+                                                        onChange={e => {
+                                                            if (e.target.checked) {
+                                                                setSelectedClinics([...selectedClinics, c.id]);
+                                                            } else {
+                                                                setSelectedClinics(selectedClinics.filter(id => id !== c.id));
+                                                            }
+                                                        }}
+                                                        className="rounded border-gray-300 text-primary focus:ring-primary"
+                                                    />
+                                                    <span className="text-gray-700">{c.commercial_name || 'Sem nome'}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {selectedClinics.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                            {selectedClinics.map(cid => {
+                                                const clinic = clinics.find(c => c.id === cid);
+                                                return clinic ? (
+                                                    <span key={cid} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                                                        {clinic.commercial_name}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSelectedClinics(selectedClinics.filter(id => id !== cid))}
+                                                            className="hover:text-red-500 transition-colors"
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </button>
+                                                    </span>
+                                                ) : null;
+                                            })}
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
 
