@@ -3,16 +3,18 @@
 
 ---
 
-## 1. Redundância de Dados — Backup Local ✅ IMPLEMENTADO (V1.7.0)
+## 1. Redundância de Dados — Backup Local ✅ IMPLEMENTADO (V1.7.0 → V1.9.0)
 
 **Objetivo:** Manter uma cópia local (JSON) da base de dados Supabase.
 
 ### ✅ O que já está implementado:
 - **Script de Backup:** `scripts/backup-supabase.js`
   - Conecta ao Supabase via `supabase-js`
+  - **3 modos de backup:** FULL, INCREMENTAL e AUTO (V1.9.0)
   - Exporta todas as tabelas para JSON com paginação
-  - Guarda em `F:\AsymLAB\DB\Supabase\backups\YYYY-MM-DD_HH-MM-SS\`
-  - Metadata com timestamp, row counts, status
+  - Guarda em `F:\AsymLAB\DB\Supabase\backups\FULL_YYYY-MM-DD_HH-MM-SS\` ou `INCR_...`
+  - Metadata v3.0 com tipo, timestamp, row counts, status
+  - `_summary.json` para backups incrementais
   - Limpeza automática de backups antigos (retenção configurável)
   - Log em `DB\Supabase\logs\backup.log`
 
@@ -21,30 +23,32 @@
 
 - **Configuração:** `DB\Supabase\config.json`
   - Path base, retenção, horário, lista de tabelas
+  - `default_mode: "auto"` — modo de backup padrão (V1.9.0)
+  - `full_backup_interval_days: 7` — consolida com FULL a cada N dias (V1.9.0)
   - Preparado para transição NAS (alterar `base_path`)
 
 - **API Route:** `src/app/api/backup/route.ts`
-  - `POST /api/backup` — trigger manual
-  - `GET /api/backup` — info do último backup
+  - `POST /api/backup` — trigger manual (aceita `{ mode: "full"|"incremental"|"auto" }`) (V1.9.0)
+  - `GET /api/backup` — info do último backup + último FULL + contagens por tipo (V1.9.0)
 
 - **API de Config:** `src/app/api/backup/config/route.ts`
-  - `GET /api/backup/config` — ler config + lista backups + stats
-  - `PUT /api/backup/config` — atualizar config
+  - `GET /api/backup/config` — ler config + lista backups + stats (total_full, total_incremental) (V1.9.0)
+  - `PUT /api/backup/config` — atualizar config (inclui default_mode, full_backup_interval_days) (V1.9.0)
 
 - **Painel de Definições:** `src/app/dashboard/settings/page.tsx`
   - `src/components/settings/BackupSettings.tsx`
-  - Cards de estatísticas (total, espaço, tabelas)
-  - Configuração editável (path, retenção, horário)
+  - Cards de estatísticas: total (split Full/Incr), espaço, tabelas, modo atual (V1.9.0)
+  - Seletor visual de modo: Automático, Sempre Full, Sempre Incremental (V1.9.0)
+  - Configuração editável (path, retenção, horário, intervalo FULL) (V1.9.0)
   - Toggle automático on/off
-  - Botão "Backup Agora"
-  - Histórico visual dos últimos 10 backups
+  - Botão "Backup Agora" com dropdown para forçar modo (V1.9.0)
+  - Histórico visual com badges `FULL` (azul), `INCR` (verde), `Manual` (roxo) (V1.9.0)
 
-### ⏳ Ativação (servidor local):
-- [ ] Ativar no Windows Task Scheduler do servidor local (requer admin):
+### ✅ Ativação (servidor local):
+- [x] Task Scheduler ativo: `AsymLAB_Backup_Supabase` — diário às 23:30
   ```powershell
   schtasks /create /tn "AsymLAB_Backup_Supabase" /tr "F:\AsymLAB\scripts\backup-daily.bat" /sc daily /st 23:30 /f /rl HIGHEST
   ```
-  > **Nota:** O servidor local é o responsável pelos backups automáticos. O Vercel serve apenas para manter a app online e acessível. O agendamento é uma tarefa operacional — todo o código necessário já está pronto.
 
 ### Tabelas monitorizadas:
 | Tabela | Descrição |
@@ -133,7 +137,7 @@ Passo 5: Verificação
   - Integrado em Definições > Utilizadores
 - **Variável de Ambiente:** `SUPABASE_SERVICE_ROLE_KEY` configurada no Vercel
 
-### ⏳ Pendente — RLS e Convite por Clínica:
+
 
 ### ✅ Implementado (V1.10.0 / V1.10.2) — Permissões Granulares por Role:
 
@@ -156,16 +160,16 @@ Cada módulo da app suporta **3 níveis de acesso**, configuráveis por role:
 - `src/app/dashboard/settings/page.tsx` — Definições restritas a Admin
 - `src/components/clinics/ClinicForm.tsx` — Formulário com `<fieldset disabled>` para read-only
 
-#### 3.2 Módulos controlados: ✅
-| Módulo | Admin | Médico | Staff Clínica | Utilizador Clínica |
-|--------|-------|--------|---------------|-------------------|
-| Dashboard | ✅ Total | ✅ Total | 👁️ Leitura | 👁️ Leitura |
-| Clínicas | ✅ Total | 👁️ Leitura | 👁️ Leitura | 👁️ Leitura |
-| Pacientes | ✅ Total | ✅ Total* | 👁️ Leitura | 👁️ Leitura |
-| Agenda | ✅ Total | ✅ Total | ✅ Total | 👁️ Leitura |
-| Faturação | ✅ Total | 👁️ Leitura | ✅ Total | ❌ Sem Acesso |
-| Relatórios | ✅ Total | 👁️ Leitura | 👁️ Leitura | ❌ Sem Acesso |
-| Definições | ✅ Total | ❌ Sem Acesso | ❌ Sem Acesso | ❌ Sem Acesso |
+#### 3.2 Módulos controlados: ✅ (Atualizado V1.8.0)
+| Módulo | Admin | Médico | Utilizador Clínica | Staff Clínica | Staff Lab |
+|--------|-------|--------|-------------------|---------------|----------|
+| Dashboard | ✅ Total | ❌ Sem Acesso | ❌ Sem Acesso | ❌ Sem Acesso | ✅ Total |
+| Clínicas | ✅ Total | 👁️ Leitura | 👁️ Leitura | 👁️ Leitura | 👁️ Leitura |
+| Pacientes | ✅ Total | ✅ Total* | 👁️ Leitura | 👁️ Leitura | 👁️ Leitura |
+| Agenda | ✅ Total | ❌ Sem Acesso | ❌ Sem Acesso | ❌ Sem Acesso | ❌ Sem Acesso |
+| Faturação | ✅ Total | ❌ Sem Acesso | ❌ Sem Acesso | ❌ Sem Acesso | ❌ Sem Acesso |
+| Relatórios | ✅ Total | ❌ Sem Acesso | ❌ Sem Acesso | ❌ Sem Acesso | ❌ Sem Acesso |
+| Definições | ✅ Total | ❌ Sem Acesso | ❌ Sem Acesso | ❌ Sem Acesso | ❌ Sem Acesso |
 
 > *Médico tem acesso total mas apenas aos pacientes que lhe estão associados (ver §3.3)
 
@@ -173,11 +177,12 @@ Cada módulo da app suporta **3 níveis de acesso**, configuráveis por role:
 Regras de visibilidade dos dados — **quem vê o quê:**
 
 ```
-Hierarquia de acesso (implementada):
+Hierarquia de acesso (implementada V1.8.0):
 ├── Admin (app_role='admin') → Vê TUDO, edita TUDO
-├── Médico (app_role='doctor') → Vê clínicas associadas via user_clinic_access
-├── Staff Clínica (app_role='clinic_user') → Vê clínicas associadas
-└── Utilizador (app_role='staff') → Vê clínicas associadas (read-only via frontend)
+├── Médico (app_role='doctor') → Vê clínicas e pacientes associados
+├── Utilizador Clínica (app_role='clinic_user') → Vê clínicas associadas (leitura)
+├── Staff Clínica (app_role='staff_clinic') → Vê clínicas associadas (leitura)
+└── Staff Lab (app_role='staff_lab') → Dashboard + clínicas + pacientes (leitura)
 ```
 
 **Helper Functions criadas:**
@@ -202,12 +207,14 @@ Hierarquia de acesso (implementada):
 > **Nota:** As API routes usam `service_role_key` que bypassa RLS. As policies aplicam-se ao client Supabase (anon key) usado pelo frontend.
 > **⏳ Futuro:** Quando a tabela de pacientes migrar para Supabase, será necessário criar policies adicionais para filtrar por médico associado.
 
-#### 3.4 ⏳ Convite por Clínica — PENDENTE:
-- Botão na **ficha da clínica** para criar acesso rápido
-- Pré-preenche com dados da clínica (email, nome)
-- Associa automaticamente o `clinic_id` ao novo utilizador
-- Mostra estado do convite (enviado / pendente / aceito)
-- Opção de criar com username (para secretárias/staff sem email pessoal)
+#### 3.4 ✅ Convite por Clínica — IMPLEMENTADO:
+- ✅ Tab "Segurança & Acessos" na ficha da clínica (`ClinicSecurityTab.tsx`)
+- ✅ Criar utilizador com username (para staff sem email pessoal)
+- ✅ Associa automaticamente o `clinic_id` ao novo utilizador
+- ✅ Envio de credenciais via WhatsApp (`handleSendWhatsApp`)
+- ✅ Copiar credenciais para clipboard
+- ✅ Remover acesso de utilizador à clínica
+- ✅ Edge Function: `supabase/functions/invite-clinic-user`
 
 ---
 
@@ -249,14 +256,62 @@ Hierarquia de acesso (implementada):
 
 ---
 
+## 5. Backup Incremental ✅ IMPLEMENTADO (V1.9.0)
+
+**Objetivo:** Sistema inteligente que só descarrega dados alterados desde o último backup, poupando tempo, banda e espaço.
+
+### ✅ O que foi implementado:
+
+#### 5.1 Migração SQL (Supabase)
+- Função trigger reutilizável `handle_updated_at()` em todas as tabelas
+- Coluna `updated_at` adicionada a: `clinics`, `clinic_contacts`, `clinic_delivery_points`, `clinic_staff`, `clinic_discounts`, `organization_settings`, `user_clinic_access`
+- Migração aplicada via MCP: `add_updated_at_to_all_tables`
+
+#### 5.2 Lógica de 3 Modos (Script + API)
+
+| Modo | Comportamento |
+|------|---------------|
+| **AUTO** (padrão) | FULL se sem base ou último FULL > N dias, senão INCREMENTAL |
+| **FULL** | Backup completo de todas as tabelas + infraestrutura |
+| **INCREMENTAL** | Só dados alterados desde o último backup (added/modified/deleted) |
+
+#### 5.3 Estrutura de pastas:
+```
+backups/
+├── FULL_2026-02-15_23-30/       ← Backup base completo
+│   ├── tabela.json              (todos os registos)
+│   ├── _metadata.json           (version: 3.0, type: "full")
+│   └── _infrastructure/         (schema, auth, RLS, functions)
+│
+├── INCR_2026-02-16_23-30/       ← Apenas diferenças
+│   ├── tabela.json              { added: [], modified: [], deleted_ids: [] }
+│   ├── _metadata.json           (type: "incremental", base_backup, since)
+│   └── _summary.json            (contagem de mudanças por tabela)
+│
+└── FULL_2026-02-22_23-30/       ← Consolidação semanal automática
+```
+
+#### 5.4 Ficheiros modificados:
+| Ficheiro | Versão |
+|----------|--------|
+| `scripts/backup-supabase.js` | Reescrito com 3 modos, CLI `--mode` |
+| `src/app/api/backup/route.ts` | POST aceita `{ mode }`, GET retorna info FULL/INCR |
+| `src/app/api/backup/config/route.ts` | Novos campos: `default_mode`, `full_backup_interval_days` |
+| `DB/Supabase/config.json` | `default_mode: "auto"`, `full_backup_interval_days: 7` |
+| `src/components/settings/BackupSettings.tsx` | Badges, dropdown, seletor de modo, stats por tipo |
+
+---
+
 ## Prioridades Atualizadas
 1. ~~Implementar script de backup~~ ✅ V1.7.0
 2. ~~Painel de backups nas Definições~~ ✅ V1.7.0
 3. ~~Implementar gestão de utilizadores~~ ✅ V1.9.0
 4. ~~Login por username~~ ✅ V1.9.0
 5. ~~Ícone de ajuda no login~~ ✅ V1.9.4
-6. [ ] **Sistema de permissões granulares** (frontend - 3 niveis por modulo)
-7. [ ] **RLS policies no Supabase** (backend - filtros por clinica/medico)
-8. [ ] **Convite por clinica** (botao na ficha da clinica)
-9. [ ] Ativar Task Scheduler no servidor local (operacional)
-10. [ ] Migracao NAS (quando adquirida)
+6. ~~Sistema de permissões granulares~~ ✅ V1.10.0 / V1.10.2
+7. ~~RLS policies no Supabase~~ ✅ V1.11.0
+8. ~~Convite por clínica~~ ✅ (ClinicSecurityTab + Edge Function)
+9. ~~Novos roles (Staff Lab, Staff Clínica) + Avatar~~ ✅ V1.8.0
+10. ~~Ativar Task Scheduler no servidor local~~ ✅ (operacional — configurado via Wizard)
+11. ~~Backup Incremental~~ ✅ V1.9.0 (FULL/INCR/AUTO com updated_at triggers)
+12. [ ] Migração NAS (quando adquirida)
