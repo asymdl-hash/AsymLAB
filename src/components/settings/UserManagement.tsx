@@ -229,39 +229,39 @@ export default function UserManagement() {
                 </div>
             ) : (
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                    <table className="w-full">
+                    <table className="w-full table-fixed">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-200">
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Utilizador</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Login</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Clínicas</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Último Login</th>
-                                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ações</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[25%]">Utilizador</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[14%]">Login</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">Role</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[16%]">Clínicas</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[14%]">Último Login</th>
+                                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[16%]">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {users.map(user => (
                                 <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                                     <td className="px-4 py-3">
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-3 min-w-0">
                                             <div className={cn(
-                                                "h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold",
+                                                "h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold shrink-0",
                                                 user.app_role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-primary/10 text-primary'
                                             )}>
                                                 {user.full_name.charAt(0).toUpperCase()}
                                             </div>
-                                            <div>
-                                                <p className="font-medium text-gray-900 text-sm">{user.full_name}</p>
-                                                <p className="text-xs text-gray-400">{user.email}</p>
+                                            <div className="min-w-0">
+                                                <p className="font-medium text-gray-900 text-sm truncate">{user.full_name}</p>
+                                                <p className="text-xs text-gray-400 truncate">{user.email}</p>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-4 py-3">
                                         {user.is_username_account ? (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                                                <User className="h-3 w-3" />
-                                                {user.username}
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 max-w-full">
+                                                <User className="h-3 w-3 shrink-0" />
+                                                <span className="truncate">{user.username}</span>
                                             </span>
                                         ) : (
                                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200">
@@ -284,8 +284,8 @@ export default function UserManagement() {
                                             <div className="flex flex-wrap gap-1">
                                                 {user.clinics.map((c, i) => (
                                                     <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
-                                                        <Building2 className="h-3 w-3" />
-                                                        {c.clinic_name}
+                                                        <Building2 className="h-3 w-3 shrink-0" />
+                                                        <span className="truncate">{c.clinic_name}</span>
                                                     </span>
                                                 ))}
                                             </div>

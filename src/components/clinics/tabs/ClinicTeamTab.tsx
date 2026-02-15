@@ -339,13 +339,14 @@ ${appUrl}
             {/* Delete Confirmation Modal */}
             {deleteTarget && (
                 <ConfirmModal
-                    title="Remover Colaborador"
-                    message="Tem a certeza que pretende remover este colaborador? Esta ação é irreversível."
-                    confirmLabel="Remover"
-                    cancelLabel="Cancelar"
+                    isOpen={!!deleteTarget}
+                    onClose={() => setDeleteTarget(null)}
                     onConfirm={confirmDeleteMember}
-                    onCancel={() => setDeleteTarget(null)}
-                    variant="danger"
+                    title="Remover Colaborador"
+                    description="Tem a certeza que pretende remover este colaborador? Esta ação é irreversível."
+                    confirmText="Remover"
+                    cancelText="Cancelar"
+                    variant="destructive"
                 />
             )}
 

@@ -665,13 +665,14 @@ ${appUrl}
             {/* ============ MODAL DE CONFIRMAÇÃO DE REMOÇÃO ============ */}
             {deleteTarget && (
                 <ConfirmModal
-                    title="Remover Acesso à Clínica"
-                    message={`Tem a certeza que quer remover o acesso de "${deleteTarget.full_name}" a "${clinicName}"? O utilizador deixará de ver esta clínica. A conta do utilizador não será eliminada.`}
-                    confirmLabel={deleting ? "A remover..." : "Remover Acesso"}
-                    cancelLabel="Cancelar"
+                    isOpen={!!deleteTarget}
+                    onClose={() => setDeleteTarget(null)}
                     onConfirm={handleRemoveAccess}
-                    onCancel={() => setDeleteTarget(null)}
-                    variant="danger"
+                    title="Remover Acesso à Clínica"
+                    description={`Tem a certeza que quer remover o acesso de "${deleteTarget.full_name}" a "${clinicName}"? O utilizador deixará de ver esta clínica. A conta do utilizador não será eliminada.`}
+                    confirmText={deleting ? "A remover..." : "Remover Acesso"}
+                    cancelText="Cancelar"
+                    variant="destructive"
                 />
             )}
         </div>
