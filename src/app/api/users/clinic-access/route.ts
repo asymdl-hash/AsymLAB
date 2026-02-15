@@ -68,20 +68,6 @@ export async function DELETE(request: NextRequest) {
 
         const admin = getAdminClient();
 
-        // Verificar se o user não é admin (admin não pode ser removido)
-        const { data: profile } = await admin
-            .from('user_profiles')
-            .select('app_role')
-            .eq('user_id', user_id)
-            .single();
-
-        if (profile?.app_role === 'admin') {
-            return NextResponse.json(
-                { error: 'Não é possível remover o acesso de um administrador' },
-                { status: 403 }
-            );
-        }
-
         // Remover a associação user <-> clinic
         const { error: deleteError } = await admin
             .from('user_clinic_access')
