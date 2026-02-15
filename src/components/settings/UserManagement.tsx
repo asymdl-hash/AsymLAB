@@ -1057,6 +1057,7 @@ function EditUserModal({
     const [allClinics, setAllClinics] = useState<{ id: string; commercial_name: string }[]>([]);
     const [selectedClinics, setSelectedClinics] = useState<string[]>(user.clinics.map(c => c.clinic_id));
     const [loadingClinics, setLoadingClinics] = useState(true);
+    const [showClinicDropdown, setShowClinicDropdown] = useState(false);
     const originalClinics = user.clinics.map(c => c.clinic_id);
 
     useEffect(() => {
@@ -1217,8 +1218,8 @@ function EditUserModal({
                         )}
                     </div>
 
-                    {/* Clinics — Editable */}
-                    <div className="space-y-1.5">
+                    {/* Clinics — Dropdown Multi-select */}
+                    <div className="space-y-1.5 relative">
                         <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
                             <Building2 className="h-4 w-4 text-gray-400" />
                             Clínicas Associadas
@@ -1231,38 +1232,72 @@ function EditUserModal({
                         ) : allClinics.length === 0 ? (
                             <p className="text-xs text-gray-400">Nenhuma clínica disponível</p>
                         ) : (
-                            <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                                {allClinics.map(clinic => {
-                                    const isSelected = selectedClinics.includes(clinic.id);
-                                    const wasOriginal = originalClinics.includes(clinic.id);
-                                    return (
-                                        <label
-                                            key={clinic.id}
-                                            className={cn(
-                                                "flex items-center gap-3 px-3 py-2 rounded-lg border cursor-pointer transition-colors",
-                                                isSelected
-                                                    ? 'bg-primary/5 border-primary/30 text-gray-900'
-                                                    : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
-                                            )}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={isSelected}
-                                                onChange={() => toggleClinic(clinic.id)}
-                                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary/50"
-                                            />
-                                            <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
-                                            <span className="text-sm flex-1">{clinic.commercial_name}</span>
-                                            {isSelected && !wasOriginal && (
-                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">NOVO</span>
-                                            )}
-                                            {!isSelected && wasOriginal && (
-                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium">REMOVER</span>
-                                            )}
-                                        </label>
-                                    );
-                                })}
-                            </div>
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowClinicDropdown(!showClinicDropdown)}
+                                    className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm text-left bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary flex items-center justify-between"
+                                >
+                                    <span className={selectedClinics.length === 0 ? 'text-gray-400' : 'text-gray-700'}>
+                                        {selectedClinics.length === 0
+                                            ? 'Selecionar clínicas...'
+                                            : `${selectedClinics.length} clínica${selectedClinics.length > 1 ? 's' : ''} selecionada${selectedClinics.length > 1 ? 's' : ''}`
+                                        }
+                                    </span>
+                                    <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform", showClinicDropdown && "rotate-180")} />
+                                </button>
+                                {showClinicDropdown && (
+                                    <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                        {allClinics.map(clinic => {
+                                            const isSelected = selectedClinics.includes(clinic.id);
+                                            const wasOriginal = originalClinics.includes(clinic.id);
+                                            return (
+                                                <label
+                                                    key={clinic.id}
+                                                    className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => toggleClinic(clinic.id)}
+                                                        className="rounded border-gray-300 text-primary focus:ring-primary"
+                                                    />
+                                                    <span className="text-gray-700 flex-1">{clinic.commercial_name}</span>
+                                                    {isSelected && !wasOriginal && (
+                                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">NOVO</span>
+                                                    )}
+                                                    {!isSelected && wasOriginal && (
+                                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium">REMOVER</span>
+                                                    )}
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                {selectedClinics.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                        {selectedClinics.map(cid => {
+                                            const clinic = allClinics.find(c => c.id === cid);
+                                            const wasOriginal = originalClinics.includes(cid);
+                                            return clinic ? (
+                                                <span key={cid} className={cn(
+                                                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
+                                                    !wasOriginal ? 'bg-green-100 text-green-700' : 'bg-primary/10 text-primary'
+                                                )}>
+                                                    {clinic.commercial_name}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleClinic(cid)}
+                                                        className="hover:text-red-500 transition-colors"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                </span>
+                                            ) : null;
+                                        })}
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
 
