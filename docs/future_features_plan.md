@@ -192,14 +192,12 @@ Hierarquia de acesso a pacientes:
 - ✅ Login aceita email ou username
 - ✅ "Esqueci a Password" condicional (só para emails reais)
 
-### ⏳ Pendente:
-- [ ] **Ícone de ajuda (ℹ️) no campo "Email ou Username":**
-  - Ícone clicável ao lado da label
-  - Ao clicar, abre tooltip/popover com explicação:
-    > "Pode usar o seu email pessoal ou o username atribuído pelo administrador.
-    > Se tiver um username (ex: ana.assistente), basta inseri-lo diretamente.
-    > A recuperação de password está disponível apenas para contas com email."
-  - Design discreto, não intrusivo
+### ✅ Implementado (V1.9.4):
+- ✅ **Ícone de ajuda (ℹ️) no campo "Email ou Username":**
+  - Ícone `HelpCircle` clicável ao lado da label
+  - Ao clicar, abre popover com explicação
+  - Fecha ao clicar fora ou no X
+  - Design discreto e responsivo
 
 ---
 
@@ -231,9 +229,9 @@ Hierarquia de acesso a pacientes:
 2. ~~Painel de backups nas Definições~~ ✅ V1.7.0
 3. ~~Implementar gestão de utilizadores~~ ✅ V1.9.0
 4. ~~Login por username~~ ✅ V1.9.0
-5. [ ] **Ícone de ajuda no login** (rápido)
-6. [ ] **Sistema de permissões granulares** (frontend — 3 níveis por módulo)
-7. [ ] **RLS policies no Supabase** (backend — filtros por clínica/médico)
-8. [ ] **Convite por clínica** (botão na ficha da clínica)
+5. ~~Ícone de ajuda no login~~ ✅ V1.9.4
+6. [ ] **Sistema de permissões granulares** (frontend - 3 niveis por modulo)
+7. [ ] **RLS policies no Supabase** (backend - filtros por clinica/medico)
+8. [ ] **Convite por clinica** (botao na ficha da clinica)
 9. [ ] Ativar Task Scheduler no servidor local (operacional)
-10. [ ] Migração NAS (quando adquirida)
+10. [ ] Migracao NAS (quando adquirida)

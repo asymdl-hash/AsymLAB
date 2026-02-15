@@ -1,12 +1,12 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { auth } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, ArrowLeft, Mail } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Mail, HelpCircle, X } from 'lucide-react';
 
 function LoginForm() {
     const [emailOrUsername, setEmailOrUsername] = useState('');
@@ -15,7 +15,22 @@ function LoginForm() {
     const [loading, setLoading] = useState(false);
     const [resetMode, setResetMode] = useState(false);
     const [resetSent, setResetSent] = useState(false);
+    const [showHelp, setShowHelp] = useState(false);
+    const helpRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
+
+    // Fechar tooltip ao clicar fora
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (helpRef.current && !helpRef.current.contains(event.target as Node)) {
+                setShowHelp(false);
+            }
+        }
+        if (showHelp) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [showHelp]);
     const searchParams = useSearchParams();
     const urlError = searchParams.get('error');
 
@@ -155,12 +170,52 @@ function LoginForm() {
             <CardContent>
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
-                        <label
-                            htmlFor="login_identifier"
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                            Email ou Username
-                        </label>
+                        <div className="flex items-center gap-1.5 relative" ref={helpRef}>
+                            <label
+                                htmlFor="login_identifier"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                                Email ou Username
+                            </label>
+                            <button
+                                type="button"
+                                onClick={() => setShowHelp(!showHelp)}
+                                className="text-muted-foreground hover:text-primary transition-colors focus:outline-none"
+                                aria-label="Ajuda sobre login"
+                            >
+                                <HelpCircle className="h-4 w-4" />
+                            </button>
+                            {showHelp && (
+                                <div className="absolute top-full left-0 mt-2 w-72 sm:w-80 bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                                    <div className="flex items-start justify-between mb-2">
+                                        <p className="text-sm font-semibold text-gray-900">Como fazer login?</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowHelp(false)}
+                                            className="p-0.5 text-gray-400 hover:text-gray-600 rounded"
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2.5 text-xs text-gray-600">
+                                        <div className="flex items-start gap-2">
+                                            <span className="text-base leading-none mt-0.5">📧</span>
+                                            <p><strong>Email:</strong> Use o seu email pessoal (ex: joao@email.com).</p>
+                                        </div>
+                                        <div className="flex items-start gap-2">
+                                            <span className="text-base leading-none mt-0.5">👤</span>
+                                            <p><strong>Username:</strong> Use o username atribuído pelo administrador (ex: ana.assistente).</p>
+                                        </div>
+                                        <hr className="border-gray-100" />
+                                        <div className="flex items-start gap-2">
+                                            <span className="text-base leading-none mt-0.5">🔑</span>
+                                            <p>A recuperação de password só está disponível para contas com <strong>email</strong>. Para contas com username, contacte o administrador.</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 w-2 h-2 bg-white border-l border-t border-gray-200 rotate-45 absolute -top-1 left-6"></div>
+                                </div>
+                            )}
+                        </div>
                         <input
                             id="login_identifier"
                             type="text"
