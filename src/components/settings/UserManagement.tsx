@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     UserPlus, RefreshCw, Key, Trash2, Edit3,
     User, Shield, CheckCircle, AlertCircle, X, Eye, EyeOff,
-    Building2, Loader2
+    Building2, Loader2, AlertTriangle, Save
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -43,6 +43,8 @@ export default function UserManagement() {
     // Modal states
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
 
     const fetchUsers = useCallback(async () => {
@@ -69,24 +71,6 @@ export default function UserManagement() {
             return () => clearTimeout(timer);
         }
     }, [success]);
-
-    const handleDelete = async (user: UserData) => {
-        if (!confirm(`Tem a certeza que deseja eliminar "${user.full_name}"?\n\nEsta ação é irreversível!`)) return;
-
-        try {
-            const res = await fetch('/api/users', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: user.id, action: 'delete' })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
-            setSuccess(data.message);
-            fetchUsers();
-        } catch (err: any) {
-            setError(err.message);
-        }
-    };
 
     return (
         <div className="space-y-6">
@@ -215,6 +199,13 @@ export default function UserManagement() {
                                     <td className="px-4 py-3">
                                         <div className="flex items-center justify-end gap-1">
                                             <button
+                                                onClick={() => { setSelectedUser(user); setShowEditModal(true); }}
+                                                title="Editar Utilizador"
+                                                className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                            >
+                                                <Edit3 className="h-4 w-4" />
+                                            </button>
+                                            <button
                                                 onClick={() => { setSelectedUser(user); setShowResetModal(true); }}
                                                 title="Resetar Password"
                                                 className="p-1.5 rounded-md text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
@@ -222,7 +213,7 @@ export default function UserManagement() {
                                                 <Key className="h-4 w-4" />
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(user)}
+                                                onClick={() => { setSelectedUser(user); setShowDeleteModal(true); }}
                                                 title="Eliminar Utilizador"
                                                 className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                                             >
@@ -246,12 +237,32 @@ export default function UserManagement() {
                 />
             )}
 
+            {/* Edit User Modal */}
+            {showEditModal && selectedUser && (
+                <EditUserModal
+                    user={selectedUser}
+                    onClose={() => { setShowEditModal(false); setSelectedUser(null); }}
+                    onSuccess={(msg) => { setSuccess(msg); setShowEditModal(false); setSelectedUser(null); fetchUsers(); }}
+                    onError={(msg) => setError(msg)}
+                />
+            )}
+
             {/* Reset Password Modal */}
             {showResetModal && selectedUser && (
                 <ResetPasswordModal
                     user={selectedUser}
                     onClose={() => { setShowResetModal(false); setSelectedUser(null); }}
                     onSuccess={(msg) => { setSuccess(msg); setShowResetModal(false); setSelectedUser(null); }}
+                    onError={(msg) => setError(msg)}
+                />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && selectedUser && (
+                <DeleteConfirmModal
+                    user={selectedUser}
+                    onClose={() => { setShowDeleteModal(false); setSelectedUser(null); }}
+                    onSuccess={(msg) => { setSuccess(msg); setShowDeleteModal(false); setSelectedUser(null); fetchUsers(); }}
                     onError={(msg) => setError(msg)}
                 />
             )}
@@ -463,6 +474,162 @@ function CreateUserModal({
 }
 
 // ===========================
+// EDIT USER MODAL
+// ===========================
+function EditUserModal({
+    user, onClose, onSuccess, onError
+}: {
+    user: UserData;
+    onClose: () => void;
+    onSuccess: (msg: string) => void;
+    onError: (msg: string) => void;
+}) {
+    const [fullName, setFullName] = useState(user.full_name);
+    const [appRole, setAppRole] = useState(user.app_role);
+    const [loading, setLoading] = useState(false);
+
+    const hasChanges = fullName !== user.full_name || appRole !== user.app_role;
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!hasChanges) { onClose(); return; }
+        setLoading(true);
+
+        try {
+            const updates: string[] = [];
+
+            // Atualizar nome se mudou
+            if (fullName !== user.full_name) {
+                const res = await fetch('/api/users', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user.id, action: 'update_name', full_name: fullName })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                updates.push('nome');
+            }
+
+            // Atualizar role se mudou
+            if (appRole !== user.app_role) {
+                const res = await fetch('/api/users', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user.id, action: 'update_role', app_role: appRole })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                updates.push('role');
+            }
+
+            onSuccess(`Utilizador "${fullName}" atualizado (${updates.join(' e ')})`);
+        } catch (err: any) {
+            onError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900">Editar Utilizador</h3>
+                    <button onClick={onClose} className="p-1 rounded-md hover:bg-gray-100"><X className="h-5 w-5 text-gray-400" /></button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    {/* User Info Card */}
+                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200">
+                        <div className={cn(
+                            "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold",
+                            user.app_role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-primary/10 text-primary'
+                        )}>
+                            {user.full_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-700">{user.is_username_account ? user.username : user.email}</p>
+                            <p className="text-xs text-gray-400">
+                                {user.is_username_account ? '👤 Conta username' : '📧 Conta email'}
+                                {' · '}Criado em {new Date(user.created_at).toLocaleDateString('pt-PT')}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Full Name */}
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-gray-700">Nome Completo</label>
+                        <input
+                            type="text"
+                            value={fullName}
+                            onChange={e => setFullName(e.target.value)}
+                            placeholder="Nome completo"
+                            className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            required
+                            autoFocus
+                        />
+                    </div>
+
+                    {/* Role */}
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-gray-700">Perfil / Role</label>
+                        <select
+                            value={appRole}
+                            onChange={e => setAppRole(e.target.value)}
+                            className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white"
+                        >
+                            <option value="staff">Staff</option>
+                            <option value="clinic_user">Utilizador Clínica</option>
+                            <option value="doctor">Médico</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                        {appRole !== user.app_role && (
+                            <p className="text-xs text-amber-600">
+                                ⚠️ A alterar de <strong>{ROLE_LABELS[user.app_role]}</strong> para <strong>{ROLE_LABELS[appRole]}</strong>
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Clinics (read-only info) */}
+                    {user.clinics.length > 0 && (
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-gray-700">Clínicas Associadas</label>
+                            <div className="flex flex-wrap gap-1.5">
+                                {user.clinics.map((c, i) => (
+                                    <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs bg-gray-100 text-gray-600 border border-gray-200">
+                                        <Building2 className="h-3 w-3" />
+                                        {c.clinic_name}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading || !hasChanges}
+                            className="flex-1 h-10 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            {loading ? 'A guardar...' : 'Guardar Alterações'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+// ===========================
 // RESET PASSWORD MODAL
 // ===========================
 function ResetPasswordModal({
@@ -499,7 +666,7 @@ function ResetPasswordModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                     <h3 className="text-lg font-semibold text-gray-900">Resetar Password</h3>
@@ -558,6 +725,121 @@ function ResetPasswordModal({
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    );
+}
+
+// ===========================
+// DELETE CONFIRMATION MODAL
+// ===========================
+function DeleteConfirmModal({
+    user, onClose, onSuccess, onError
+}: {
+    user: UserData;
+    onClose: () => void;
+    onSuccess: (msg: string) => void;
+    onError: (msg: string) => void;
+}) {
+    const [confirmText, setConfirmText] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const expectedText = 'ELIMINAR';
+    const isConfirmed = confirmText.toUpperCase() === expectedText;
+
+    const handleDelete = async () => {
+        if (!isConfirmed) return;
+        setLoading(true);
+
+        try {
+            const res = await fetch('/api/users', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user.id, action: 'delete' })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            onSuccess(`Utilizador "${user.full_name}" eliminado com sucesso`);
+        } catch (err: any) {
+            onError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-red-100 bg-red-50/50 rounded-t-2xl">
+                    <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
+                            <AlertTriangle className="h-4 w-4 text-red-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-red-900">Eliminar Utilizador</h3>
+                    </div>
+                    <button onClick={onClose} className="p-1 rounded-md hover:bg-red-100"><X className="h-5 w-5 text-red-400" /></button>
+                </div>
+
+                <div className="p-6 space-y-4">
+                    {/* User being deleted */}
+                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200">
+                        <div className={cn(
+                            "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold",
+                            user.app_role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-primary/10 text-primary'
+                        )}>
+                            {user.full_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
+                            <p className="text-xs text-gray-400">{user.is_username_account ? `👤 ${user.username}` : `📧 ${user.email}`}</p>
+                        </div>
+                    </div>
+
+                    {/* Warning */}
+                    <div className="px-3 py-3 rounded-lg bg-red-50 border border-red-200">
+                        <p className="text-sm text-red-800 font-medium mb-1.5">⚠️ Esta ação é irreversível!</p>
+                        <ul className="text-xs text-red-700 space-y-1">
+                            <li>• A conta de autenticação será eliminada permanentemente</li>
+                            <li>• O perfil e todas as associações a clínicas serão removidos</li>
+                            <li>• O utilizador perderá todo o acesso à aplicação</li>
+                        </ul>
+                    </div>
+
+                    {/* Confirmation input */}
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-gray-700">
+                            Para confirmar, escreva <span className="font-bold text-red-600">ELIMINAR</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={confirmText}
+                            onChange={e => setConfirmText(e.target.value)}
+                            placeholder="Escreva ELIMINAR para confirmar"
+                            className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400"
+                            autoFocus
+                        />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3 pt-1">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handleDelete}
+                            disabled={loading || !isConfirmed}
+                            className="flex-1 h-10 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            {loading ? 'A eliminar...' : 'Eliminar Utilizador'}
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );
