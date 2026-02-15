@@ -105,7 +105,7 @@ export const clinicsService = {
     async getClinicTeam(clinicId: string): Promise<ClinicTeamMember[]> {
         const { data, error } = await supabase
             .from('user_clinic_access')
-            .select('user_id, is_contact, role_at_clinic, user_profiles(full_name, phone, app_role)')
+            .select('user_id, is_contact, role_at_clinic, user_profiles!user_clinic_access_user_id_profiles_fkey(full_name, phone, app_role)')
             .eq('clinic_id', clinicId);
 
         if (error) throw error;
@@ -123,7 +123,7 @@ export const clinicsService = {
     async getClinicTeamContacts(clinicId: string): Promise<ClinicTeamMember[]> {
         const { data, error } = await supabase
             .from('user_clinic_access')
-            .select('user_id, is_contact, role_at_clinic, user_profiles(full_name, phone, app_role)')
+            .select('user_id, is_contact, role_at_clinic, user_profiles!user_clinic_access_user_id_profiles_fkey(full_name, phone, app_role)')
             .eq('clinic_id', clinicId)
             .eq('is_contact', true);
 
