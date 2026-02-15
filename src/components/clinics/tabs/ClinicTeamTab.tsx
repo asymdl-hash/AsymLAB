@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
     Plus, Trash2, User, Phone, Mail, Briefcase,
     UserPlus, Copy, Check, MessageCircle, ExternalLink,
-    Loader2, KeyRound, X, AlertCircle, CheckCircle
+    Loader2, KeyRound, X, AlertCircle, CheckCircle, Info
 } from 'lucide-react';
 import { ClinicFullDetails, clinicsService } from '@/services/clinicsService';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -22,7 +22,7 @@ interface CreatedCredentials {
 }
 
 export default function ClinicTeamTab() {
-    const { control, register } = useFormContext<ClinicFullDetails>();
+    const { control, register, getValues, setValue, watch } = useFormContext<ClinicFullDetails>();
 
     // Estado para o Modal de Confirmação de eliminação
     const [deleteTarget, setDeleteTarget] = useState<{ index: number, id: string } | null>(null);
@@ -234,6 +234,12 @@ ${appUrl}
                 </Button>
             </div>
 
+            {/* Info banner */}
+            <div className="flex items-start gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700">
+                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>Marque membros como <strong>"Contacto da Clínica"</strong> para que apareçam automaticamente no bloco de Contactos da aba Dados e como opção nos locais de entrega.</span>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
                 {fields.length === 0 ? (
                     <div className="col-span-2 text-center py-12 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg">
@@ -327,6 +333,40 @@ ${appUrl}
                                                     onBlur={(e) => handleUpdateMember(index, 'email', e.target.value)}
                                                 />
                                             </div>
+                                        </div>
+
+                                        {/* Toggle Contacto da Clínica */}
+                                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                                            <label
+                                                htmlFor={`contact-toggle-${index}`}
+                                                className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer select-none"
+                                            >
+                                                <Phone className="h-3 w-3" />
+                                                Contacto da Clínica
+                                            </label>
+                                            <button
+                                                id={`contact-toggle-${index}`}
+                                                type="button"
+                                                role="switch"
+                                                aria-checked={watch(`clinic_staff.${index}.is_contact`) || false}
+                                                className={cn(
+                                                    "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                                                    watch(`clinic_staff.${index}.is_contact`) ? 'bg-primary' : 'bg-gray-200'
+                                                )}
+                                                onClick={() => {
+                                                    const current = getValues(`clinic_staff.${index}.is_contact`) || false;
+                                                    const newValue = !current;
+                                                    setValue(`clinic_staff.${index}.is_contact`, newValue);
+                                                    handleUpdateMember(index, 'is_contact', newValue as any);
+                                                }}
+                                            >
+                                                <span
+                                                    className={cn(
+                                                        "pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg ring-0 transition-transform",
+                                                        watch(`clinic_staff.${index}.is_contact`) ? 'translate-x-4' : 'translate-x-0'
+                                                    )}
+                                                />
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

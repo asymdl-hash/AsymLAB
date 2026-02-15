@@ -70,22 +70,28 @@ export interface Database {
                     id: string
                     clinic_id: string
                     created_at: string
-                    description: string
-                    contact: string
+                    name: string | null
+                    phone: string | null
+                    type: string | null
+                    updated_at: string | null
                 }
                 Insert: {
                     id?: string
                     clinic_id: string
                     created_at?: string
-                    description: string
-                    contact: string
+                    name?: string | null
+                    phone?: string | null
+                    type?: string | null
+                    updated_at?: string | null
                 }
                 Update: {
                     id?: string
                     clinic_id?: string
                     created_at?: string
-                    description?: string
-                    contact?: string
+                    name?: string | null
+                    phone?: string | null
+                    type?: string | null
+                    updated_at?: string | null
                 }
             }
             clinic_delivery_points: {
@@ -100,6 +106,8 @@ export interface Database {
                     maps_link: string | null
                     distance_km: number | null
                     is_hq: boolean | null
+                    contact_name: string | null
+                    contact_phone: string | null
                 }
                 Insert: {
                     id?: string
@@ -112,6 +120,8 @@ export interface Database {
                     maps_link?: string | null
                     distance_km?: number | null
                     is_hq?: boolean | null
+                    contact_name?: string | null
+                    contact_phone?: string | null
                 }
                 Update: {
                     id?: string
@@ -124,6 +134,8 @@ export interface Database {
                     maps_link?: string | null
                     distance_km?: number | null
                     is_hq?: boolean | null
+                    contact_name?: string | null
+                    contact_phone?: string | null
                 }
             }
             clinic_staff: {
@@ -135,6 +147,7 @@ export interface Database {
                     role: 'assistant' | 'receptionist' | 'accounting' | 'manager' | 'other' | null
                     phone: string | null
                     email: string | null
+                    is_contact: boolean
                 }
                 Insert: {
                     id?: string
@@ -144,6 +157,7 @@ export interface Database {
                     role?: 'assistant' | 'receptionist' | 'accounting' | 'manager' | 'other' | null
                     phone?: string | null
                     email?: string | null
+                    is_contact?: boolean
                 }
                 Update: {
                     id?: string
@@ -153,6 +167,7 @@ export interface Database {
                     role?: 'assistant' | 'receptionist' | 'accounting' | 'manager' | 'other' | null
                     phone?: string | null
                     email?: string | null
+                    is_contact?: boolean
                 }
             }
             clinic_discounts: {

@@ -216,6 +216,45 @@ Hierarquia de acesso (implementada V1.8.0):
 - ✅ Remover acesso de utilizador à clínica
 - ✅ Edge Function: `supabase/functions/invite-clinic-user`
 
+#### 3.5 🔜 Contactos Inteligentes + Role Contabilidade (FUTURO):
+
+##### Contactos da Clínica (aba Dados)
+O bloco "Contactos" na aba Dados deve mostrar automaticamente os membros da equipa marcados como contacto, em vez de inserção manual duplicada.
+
+**Abordagem:** Adicionar flag `is_contact` + `contact_phone` à tabela `user_clinic_access`:
+```
+user_clinic_access (alteração)
+├── is_contact (boolean, default false) ← membro aparece nos contactos?
+└── contact_phone (text, nullable)      ← telefone para contacto logístico
+```
+
+- Na **aba Equipa**: toggle "Contacto da Clínica" ao lado de cada membro
+- Na **aba Dados → Contactos**: lista automática de membros com `is_contact = true` + contactos manuais existentes
+- Badges: `Membro` (automático) vs `Manual` (inserido à mão)
+
+> **Nota:** Esta abordagem substitui a ideia de multi-role. Um médico pode ser `is_contact = true` sem precisar de dois roles — mantém o `app_role` principal e aparece nos contactos.
+
+##### Contactos por Local de Entrega
+Cada ponto de entrega deve poder ter contacto(s) associado(s):
+- **Escolher da lista** (membros com `is_contact = true`)
+- **Ou adicionar manualmente** (pessoa externa)
+
+##### Role Contabilidade (quando Faturação existir)
+- Novo role `accountant` para contabilistas de clínicas
+- Acesso apenas ao módulo de **Faturação** e **Relatórios** (leitura + exportação)
+- **Sem acesso** a pacientes, clínicas ou definições
+- **Implementar quando:** módulo de Faturação estiver funcional
+
+| Módulo | Contabilidade |
+|--------|:---:|
+| Dashboard | ❌ Sem Acesso |
+| Clínicas | ❌ Sem Acesso |
+| Pacientes | ❌ Sem Acesso |
+| Agenda | ❌ Sem Acesso |
+| Faturação | 👁️ Leitura + Exportação |
+| Relatórios | 👁️ Leitura + Exportação |
+| Definições | ❌ Sem Acesso |
+
 ---
 
 ## 4. Login ✅ IMPLEMENTADO (V1.9.0)
@@ -352,5 +391,7 @@ Adicionados indexes de `clinic_id` nas tabelas filhas para acelerar queries de f
 10. ~~Ativar Task Scheduler no servidor local~~ ✅ (operacional — configurado via Wizard)
 11. ~~Backup Incremental~~ ✅ V1.9.0 (FULL/INCR/AUTO com updated_at triggers)
 12. ~~Optimização de Performance~~ ✅ V1.9.1 (Indexes + Edge Runtime)
-13. [ ] Migração NAS (quando adquirida)
-14. [ ] Reanálise de Performance (quando app crescer — ver §6)
+13. [ ] Contactos Inteligentes — flag `is_contact` + contactos por entrega (ver §3.5)
+14. [ ] Role Contabilidade (quando Faturação existir — ver §3.5)
+15. [ ] Migração NAS (quando adquirida)
+16. [ ] Reanálise de Performance (quando app crescer — ver §6)

@@ -1,18 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Plus, Trash2, MapPin, Navigation, Pencil, Check } from 'lucide-react';
+import { Plus, Trash2, MapPin, Navigation, Pencil, Check, Phone, User, Users, ChevronDown } from 'lucide-react';
 import { ClinicFullDetails, clinicsService } from '@/services/clinicsService';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 
+interface TeamContact {
+    id: string;
+    name: string;
+    phone: string | null;
+    role: string | null;
+}
 
 export default function ClinicDeliveryTab() {
-    const { control, register, getValues, watch } = useFormContext<ClinicFullDetails>();
+    const { control, register, getValues, watch, setValue } = useFormContext<ClinicFullDetails>();
     const [deleteTarget, setDeleteTarget] = useState<{ index: number, id: string } | null>(null);
     const [editingMapIndex, setEditingMapIndex] = useState<number | null>(null);
+    const [teamContacts, setTeamContacts] = useState<TeamContact[]>([]);
+    const [showContactDropdown, setShowContactDropdown] = useState<number | null>(null);
     const deliveryPoints = watch('clinic_delivery_points');
 
     // Gestão da lista de pontos de entrega
@@ -21,10 +29,25 @@ export default function ClinicDeliveryTab() {
         name: "clinic_delivery_points"
     });
 
+    // Buscar contactos da equipa
+    const clinicId = getValues().id;
+    useEffect(() => {
+        if (!clinicId) return;
+        clinicsService.getClinicTeamContacts(clinicId).then(setTeamContacts).catch(console.error);
+    }, [clinicId]);
+
+    // Escutar actualizações
+    useEffect(() => {
+        const handler = () => {
+            if (!clinicId) return;
+            clinicsService.getClinicTeamContacts(clinicId).then(setTeamContacts).catch(console.error);
+        };
+        window.addEventListener('clinic-updated', handler);
+        return () => window.removeEventListener('clinic-updated', handler);
+    }, [clinicId]);
+
     const handleAddPoint = async () => {
-        const clinicId = control._formValues.id;
         try {
-            // Cria registo vazio na BD
             const newPoint = await clinicsService.createRelatedRecord('clinic_delivery_points', {
                 clinic_id: clinicId,
                 name: '',
@@ -34,7 +57,6 @@ export default function ClinicDeliveryTab() {
                 country: 'Portugal',
                 distance_km: 0
             });
-            // Adiciona à UI
             append(newPoint);
         } catch (error) {
             console.error("Erro ao criar ponto de entrega", error);
@@ -65,6 +87,14 @@ export default function ClinicDeliveryTab() {
         } catch (error) {
             console.error("Erro ao salvar entrega", error);
         }
+    };
+
+    const selectTeamContact = (index: number, contact: TeamContact) => {
+        setValue(`clinic_delivery_points.${index}.contact_name`, contact.name);
+        setValue(`clinic_delivery_points.${index}.contact_phone`, contact.phone || '');
+        handleUpdatePoint(index, 'contact_name', contact.name);
+        handleUpdatePoint(index, 'contact_phone', contact.phone || '');
+        setShowContactDropdown(null);
     };
 
 
@@ -202,6 +232,72 @@ export default function ClinicDeliveryTab() {
                                                     )}
                                                 </div>
                                             )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* ===== Contacto do Local de Entrega ===== */}
+                                <div className="mt-6 pt-4 border-t border-gray-100">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <Label className="text-xs text-gray-400 flex items-center gap-1">
+                                            <Phone className="h-3 w-3" /> Contacto para Entregas
+                                        </Label>
+                                        {teamContacts.length > 0 && (
+                                            <div className="relative">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-1 text-xs h-7"
+                                                    onClick={() => setShowContactDropdown(showContactDropdown === index ? null : index)}
+                                                >
+                                                    <Users className="h-3 w-3" />
+                                                    Escolher da equipa
+                                                    <ChevronDown className="h-3 w-3" />
+                                                </Button>
+                                                {showContactDropdown === index && (
+                                                    <div className="absolute right-0 top-8 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[200px]">
+                                                        {teamContacts.map((tc) => (
+                                                            <button
+                                                                key={tc.id}
+                                                                type="button"
+                                                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                                                onClick={() => selectTeamContact(index, tc)}
+                                                            >
+                                                                <User className="h-3 w-3 text-gray-400" />
+                                                                <span className="flex-1 truncate">{tc.name}</span>
+                                                                {tc.phone && (
+                                                                    <span className="text-xs text-gray-400">{tc.phone}</span>
+                                                                )}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-1">
+                                            <Label className="text-[10px] uppercase text-gray-400 font-semibold flex items-center gap-1">
+                                                <User className="h-3 w-3" /> Nome
+                                            </Label>
+                                            <Input
+                                                {...register(`clinic_delivery_points.${index}.contact_name`)}
+                                                placeholder="Nome do contacto"
+                                                className="h-8 text-sm"
+                                                onBlur={(e) => handleUpdatePoint(index, 'contact_name', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-[10px] uppercase text-gray-400 font-semibold flex items-center gap-1">
+                                                <Phone className="h-3 w-3" /> Telefone
+                                            </Label>
+                                            <Input
+                                                {...register(`clinic_delivery_points.${index}.contact_phone`)}
+                                                placeholder="+351..."
+                                                className="h-8 text-sm"
+                                                onBlur={(e) => handleUpdatePoint(index, 'contact_phone', e.target.value)}
+                                            />
                                         </div>
                                     </div>
                                 </div>

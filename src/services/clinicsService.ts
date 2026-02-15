@@ -92,5 +92,17 @@ export const clinicsService = {
     async deleteRecord(table: any, id: string) {
         const { error } = await supabase.from(table).delete().eq('id', id);
         if (error) throw error;
+    },
+
+    // 8. Buscar membros da equipa marcados como contacto
+    async getClinicTeamContacts(clinicId: string) {
+        const { data, error } = await supabase
+            .from('clinic_staff')
+            .select('id, name, phone, role, is_contact')
+            .eq('clinic_id', clinicId)
+            .eq('is_contact', true);
+
+        if (error) throw error;
+        return data || [];
     }
 };
