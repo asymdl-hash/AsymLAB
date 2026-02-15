@@ -169,25 +169,38 @@ Cada módulo da app suporta **3 níveis de acesso**, configuráveis por role:
 
 > *Médico tem acesso total mas apenas aos pacientes que lhe estão associados (ver §3.3)
 
-#### 3.3 ⏳ RLS (Row Level Security) no Supabase — PENDENTE:
+#### 3.3 ✅ RLS (Row Level Security) no Supabase — IMPLEMENTADO (V1.11.0):
 Regras de visibilidade dos dados — **quem vê o quê:**
 
 ```
-Hierarquia de acesso a pacientes:
-├── Admin → Vê TODOS os pacientes de TODAS as clínicas
-├── Médico → Vê apenas pacientes em que ele é o médico associado
-├── Clínica (Staff/User) → Vê todos os pacientes dessa clínica
-│   └── Baseado na tabela user_clinic_access
-│       → Qualquer user associado à clínica X pode ver pacientes da clínica X
-└── Sem associação → Não vê nenhum paciente
+Hierarquia de acesso (implementada):
+├── Admin (app_role='admin') → Vê TUDO, edita TUDO
+├── Médico (app_role='doctor') → Vê clínicas associadas via user_clinic_access
+├── Staff Clínica (app_role='clinic_user') → Vê clínicas associadas
+└── Utilizador (app_role='staff') → Vê clínicas associadas (read-only via frontend)
 ```
 
-**Implementação técnica:**
-- Usar `user_clinic_access` para determinar a que clínicas o user tem acesso
-- Usar a relação `paciente <-> clínica` para filtrar pacientes
-- Usar a relação `paciente <-> médico` para filtrar por médico associado
-- RLS policies no Supabase aplicam estas regras automaticamente
-- O frontend também filtra para UX (mas a segurança real é no backend/RLS)
+**Helper Functions criadas:**
+- `get_user_role()` — Retorna o app_role do utilizador autenticado
+- `is_admin()` — Verifica se é admin
+- `get_user_clinic_ids()` — Retorna IDs das clínicas associadas ao user
+
+**Tabelas protegidas com RLS:**
+| Tabela | RLS | Policies | Lógica |
+|--------|-----|----------|--------|
+| `user_profiles` | ✅ | 7 | User vê o seu, Admin vê todos |
+| `user_clinic_access` | ✅ | 4 | User vê as suas associações, Admin vê todas |
+| `clinics` | ✅ | 6 | Admin vê todas, outros só clínicas associadas |
+| `clinic_contacts` | ✅ | 5 | Segue a clínica-mãe |
+| `clinic_delivery_points` | ✅ | 5 | Segue a clínica-mãe |
+| `clinic_staff` | ✅ | 5 | Segue a clínica-mãe |
+| `clinic_discounts` | ✅ | 5 | Segue a clínica-mãe |
+| `organization_settings` | ✅ | 3 | Qualquer autenticado lê, só Admin edita |
+
+**Ficheiro de migração:** `supabase/migrations/20260215_rls_policies.sql`
+
+> **Nota:** As API routes usam `service_role_key` que bypassa RLS. As policies aplicam-se ao client Supabase (anon key) usado pelo frontend.
+> **⏳ Futuro:** Quando a tabela de pacientes migrar para Supabase, será necessário criar policies adicionais para filtrar por médico associado.
 
 #### 3.4 ⏳ Convite por Clínica — PENDENTE:
 - Botão na **ficha da clínica** para criar acesso rápido
