@@ -60,7 +60,8 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
         let timeoutId: NodeJS.Timeout;
 
         const subscription = methods.watch((value, { name, type }) => {
-            if (name) {
+            // Só reagir a mudanças do utilizador, não a registos internos de useFieldArray
+            if (name && type === 'change') {
                 setSaving(true);
                 clearTimeout(timeoutId);
                 timeoutId = setTimeout(() => {
