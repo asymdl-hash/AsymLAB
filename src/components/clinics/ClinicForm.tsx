@@ -3,8 +3,9 @@
 
 import { useForm, FormProvider } from 'react-hook-form';
 import { useEffect, useState } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'; // Assumindo shadcn/ui
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { clinicsService, ClinicFullDetails } from '@/services/clinicsService';
+import { useModulePermission } from '@/components/PermissionGuard';
 
 import ClinicInfoTab from './tabs/ClinicInfoTab';
 import ClinicDeliveryTab from './tabs/ClinicDeliveryTab';
@@ -18,9 +19,11 @@ interface ClinicFormProps {
 }
 
 export default function ClinicForm({ initialData }: ClinicFormProps) {
+    const { canEdit } = useModulePermission('clinics');
+
     const methods = useForm<ClinicFullDetails>({
         defaultValues: initialData,
-        mode: 'onChange' // Validação em tempo real
+        mode: 'onChange'
     });
 
     const [saving, setSaving] = useState(false);
@@ -48,8 +51,10 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [saving]);
 
-    // Auto-Save Logic (Debounced)
+    // Auto-Save Logic (Debounced) — só activo se canEdit
     useEffect(() => {
+        if (!canEdit) return;
+
         let timeoutId: NodeJS.Timeout;
 
         const subscription = methods.watch((value, { name, type }) => {
@@ -113,18 +118,20 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
 
     return (
         <FormProvider {...methods}>
-            <div className="space-y-6">
+            <fieldset disabled={!canEdit} className="space-y-6">
                 {/* Status Bar */}
-                <div className="flex items-center justify-end text-sm text-gray-500 h-6">
-                    {saving ? (
-                        <span className="flex items-center gap-2 text-primary">
-                            <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></span>
-                            A guardar...
-                        </span>
-                    ) : lastSaved ? (
-                        <span>Guardado às {lastSaved.toLocaleTimeString()}</span>
-                    ) : null}
-                </div>
+                {canEdit && (
+                    <div className="flex items-center justify-end text-sm text-gray-500 h-6">
+                        {saving ? (
+                            <span className="flex items-center gap-2 text-primary">
+                                <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></span>
+                                A guardar...
+                            </span>
+                        ) : lastSaved ? (
+                            <span>Guardado às {lastSaved.toLocaleTimeString()}</span>
+                        ) : null}
+                    </div>
+                )}
 
                 <Tabs defaultValue="info" className="w-full">
                     <TabsList className="flex w-full max-w-full overflow-x-auto">
@@ -157,7 +164,7 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
                         </TabsContent>
                     </div>
                 </Tabs>
-            </div>
+            </fieldset>
         </FormProvider>
     );
 }

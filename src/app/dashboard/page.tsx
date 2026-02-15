@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { auth } from '@/lib/supabase';
-import DashboardLayout from '@/components/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { User, Plus, Search, Bell, Grid, List, Calendar, Euro } from 'lucide-react';
+import PermissionGuard, { useModulePermission } from '@/components/PermissionGuard';
+import { useAuth } from '@/contexts/AuthContext';
 
 /* 
  * Dashboard Page - Estilo Soft SaaS Premium (Mobbin/Refero)
@@ -13,20 +12,11 @@ import { User, Plus, Search, Bell, Grid, List, Calendar, Euro } from 'lucide-rea
  */
 
 export default function DashboardPage() {
-    const [userEmail, setUserEmail] = useState<string>('');
-
-    useEffect(() => {
-        const getUser = async () => {
-            const { data: { user } } = await auth.getUser();
-            if (user) {
-                setUserEmail(user.email || '');
-            }
-        };
-        getUser();
-    }, []);
+    const { user } = useAuth();
+    const { canEdit } = useModulePermission('dashboard');
 
     return (
-        <>
+        <PermissionGuard module="dashboard">
             {/* Header Limpo e Moderno (Soft Style) */}
             <div className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm">
                 <div className="container mx-auto px-6 py-4">
@@ -53,10 +43,12 @@ export default function DashboardPage() {
                                 <Bell className="h-5 w-5" />
                             </Button>
 
-                            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md font-medium px-4">
-                                <Plus className="h-4 w-4 mr-2" />
-                                Novo Paciente
-                            </Button>
+                            {canEdit && (
+                                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md font-medium px-4">
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Novo Paciente
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -115,9 +107,9 @@ export default function DashboardPage() {
 
                 {/* Welcome Info (Subtle Footer) */}
                 <div className="mt-8 pt-8 border-t border-gray-200 text-center text-sm text-gray-400">
-                    <p>Ligado como <span className="font-medium text-gray-600">{userEmail}</span> • AsymLAB v2.4 (Soft SaaS)</p>
+                    <p>Ligado como <span className="font-medium text-gray-600">{user?.full_name || user?.email || 'Utilizador'}</span> • AsymLAB v2.4 (Soft SaaS)</p>
                 </div>
             </div>
-        </>
+        </PermissionGuard>
     );
 }

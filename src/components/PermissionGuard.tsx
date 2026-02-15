@@ -53,18 +53,20 @@ export default function PermissionGuard({ module, children, readOnlyFallback, sh
             return <>{readOnlyFallback}</>;
         }
 
-        // Caso contrário, mostrar banner + conteúdo
+        // Caso contrário, mostrar banner + conteúdo normal
+        // Os componentes individuais usam useModulePermission() para
+        // esconder/desactivar botões de edição
         return (
-            <div>
+            <div className="h-full flex flex-col">
                 {showReadOnlyBanner && (
-                    <div className="mx-4 mt-4 mb-0 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border-b border-amber-200 text-sm text-amber-800">
                         <Eye className="h-4 w-4 flex-shrink-0 text-amber-500" />
                         <span>
                             <strong>Modo Leitura</strong> — Pode visualizar as informações, mas não fazer alterações.
                         </span>
                     </div>
                 )}
-                <div className={isReadOnly(module) ? 'pointer-events-none select-none' : ''}>
+                <div className="flex-1 overflow-hidden">
                     {children}
                 </div>
             </div>
