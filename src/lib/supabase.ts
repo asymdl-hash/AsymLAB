@@ -11,7 +11,12 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
 // Helper functions for authentication
 export const auth = {
-    signIn: async (email: string, password: string) => {
+    signIn: async (emailOrUsername: string, password: string) => {
+        // Se não tem @, é username → converter para email interno
+        const email = emailOrUsername.includes('@')
+            ? emailOrUsername
+            : `${emailOrUsername.toLowerCase().trim()}@asymlab.app`;
+
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,

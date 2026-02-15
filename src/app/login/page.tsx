@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertCircle, ArrowLeft, Mail } from 'lucide-react';
 
 function LoginForm() {
-    const [email, setEmail] = useState('');
+    const [emailOrUsername, setEmailOrUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -25,7 +25,7 @@ function LoginForm() {
         setLoading(true);
 
         try {
-            const { error } = await auth.signIn(email, password);
+            const { error } = await auth.signIn(emailOrUsername, password);
 
             if (error) throw error;
             router.push('/dashboard');
@@ -42,11 +42,11 @@ function LoginForm() {
         setLoading(true);
 
         try {
-            if (!email) {
-                throw new Error('Por favor insira o seu email');
+            if (!emailOrUsername || !emailOrUsername.includes('@')) {
+                throw new Error('A recuperação de password requer um email (com @)');
             }
 
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            const { error } = await supabase.auth.resetPasswordForEmail(emailOrUsername, {
                 redirectTo: `${window.location.origin}/auth/set-password`,
             });
 
@@ -71,7 +71,7 @@ function LoginForm() {
                         Email enviado!
                     </h2>
                     <p className="text-sm text-muted-foreground text-center max-w-xs">
-                        Verifique a sua caixa de email em <strong>{email}</strong> para redefinir a sua password.
+                        Verifique a sua caixa de email em <strong>{emailOrUsername}</strong> para redefinir a sua password.
                     </p>
                     <Button
                         variant="outline"
@@ -109,8 +109,8 @@ function LoginForm() {
                                 id="reset_email"
                                 type="email"
                                 placeholder="seu@email.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                value={emailOrUsername}
+                                onChange={(e) => setEmailOrUsername(e.target.value)}
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 required
                             />
@@ -124,7 +124,7 @@ function LoginForm() {
                         <Button
                             type="submit"
                             className="w-full"
-                            disabled={loading || !email}
+                            disabled={loading || !emailOrUsername}
                         >
                             {loading ? 'A enviar...' : 'Enviar Link de Recuperação'}
                         </Button>
@@ -156,19 +156,20 @@ function LoginForm() {
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
                         <label
-                            htmlFor="email"
+                            htmlFor="login_identifier"
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                            Email
+                            Email ou Username
                         </label>
                         <input
-                            id="email"
-                            type="email"
-                            placeholder="seu@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            id="login_identifier"
+                            type="text"
+                            placeholder="email@exemplo.com ou username"
+                            value={emailOrUsername}
+                            onChange={(e) => setEmailOrUsername(e.target.value)}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             required
+                            autoComplete="username"
                         />
                     </div>
                     <div className="space-y-2">
@@ -179,13 +180,15 @@ function LoginForm() {
                             >
                                 Password
                             </label>
-                            <button
-                                type="button"
-                                onClick={() => { setResetMode(true); setError(''); }}
-                                className="text-xs text-primary hover:text-primary/80 hover:underline transition-colors"
-                            >
-                                Esqueci-me da password
-                            </button>
+                            {emailOrUsername.includes('@') && (
+                                <button
+                                    type="button"
+                                    onClick={() => { setResetMode(true); setError(''); }}
+                                    className="text-xs text-primary hover:text-primary/80 hover:underline transition-colors"
+                                >
+                                    Esqueci-me da password
+                                </button>
+                            )}
                         </div>
                         <input
                             id="password"

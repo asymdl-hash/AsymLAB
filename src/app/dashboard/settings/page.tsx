@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Settings, Database, Shield, Bell, Palette } from 'lucide-react';
+import { Settings, Database, Shield, Bell, Palette, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BackupSettings from '@/components/settings/BackupSettings';
+import UserManagement from '@/components/settings/UserManagement';
 
 interface SettingsTab {
     id: string;
@@ -39,9 +40,9 @@ const settingsTabs: SettingsTab[] = [
     },
     {
         id: 'security',
-        label: 'Segurança',
-        icon: Shield,
-        description: 'Controlo de acessos e permissões'
+        label: 'Utilizadores',
+        icon: Users,
+        description: 'Gestão de utilizadores e permissões'
     },
 ];
 
@@ -115,12 +116,7 @@ export default function SettingsPage() {
                             <p className="text-sm">Aparência — em desenvolvimento</p>
                         </div>
                     )}
-                    {activeTab === 'security' && (
-                        <div className="text-center py-16 text-gray-400">
-                            <Shield className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                            <p className="text-sm">Segurança — em desenvolvimento</p>
-                        </div>
-                    )}
+                    {activeTab === 'security' && <UserManagement />}
                 </div>
             </div>
         </div>
