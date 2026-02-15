@@ -32,7 +32,7 @@ export async function GET() {
 
         if (fs.existsSync(backupsDir)) {
             const entries = fs.readdirSync(backupsDir, { withFileTypes: true })
-                .filter(e => e.isDirectory() && e.name !== 'latest')
+                .filter(e => e.isDirectory() && (e.name.startsWith('FULL_') || e.name.startsWith('INCR_')))
                 .sort((a, b) => b.name.localeCompare(a.name));
 
             for (const entry of entries.slice(0, 10)) { // Últimos 10 backups
@@ -53,9 +53,14 @@ export async function GET() {
 
         // Contar total de backups
         let totalBackups = 0;
+        let totalFull = 0;
+        let totalIncremental = 0;
         if (fs.existsSync(backupsDir)) {
-            totalBackups = fs.readdirSync(backupsDir, { withFileTypes: true })
-                .filter(e => e.isDirectory() && e.name !== 'latest').length;
+            const allEntries = fs.readdirSync(backupsDir, { withFileTypes: true })
+                .filter(e => e.isDirectory() && (e.name.startsWith('FULL_') || e.name.startsWith('INCR_')));
+            totalBackups = allEntries.length;
+            totalFull = allEntries.filter(e => e.name.startsWith('FULL_')).length;
+            totalIncremental = allEntries.filter(e => e.name.startsWith('INCR_')).length;
         }
 
         // Calcular tamanho total
@@ -68,6 +73,8 @@ export async function GET() {
             config: {
                 base_path: config.backup.base_path,
                 retention_days: config.backup.retention_days,
+                default_mode: config.backup.default_mode || 'auto',
+                full_backup_interval_days: config.backup.full_backup_interval_days || 7,
                 schedule_time: config.backup.schedule?.time || '23:30',
                 schedule_enabled: config.backup.schedule?.enabled ?? true,
                 tables: config.supabase.tables
@@ -75,6 +82,8 @@ export async function GET() {
             backups,
             stats: {
                 total_backups: totalBackups,
+                total_full: totalFull,
+                total_incremental: totalIncremental,
                 total_size_bytes: totalSizeBytes,
                 total_size_display: formatBytes(totalSizeBytes)
             }
@@ -127,6 +136,21 @@ export async function PUT(request: Request) {
             config.backup.schedule.enabled = !!body.schedule_enabled;
         }
 
+        if (body.default_mode !== undefined) {
+            if (!['auto', 'full', 'incremental'].includes(body.default_mode)) {
+                return NextResponse.json({ error: 'Modo deve ser: auto, full ou incremental' }, { status: 400 });
+            }
+            config.backup.default_mode = body.default_mode;
+        }
+
+        if (body.full_backup_interval_days !== undefined) {
+            const days = parseInt(body.full_backup_interval_days);
+            if (isNaN(days) || days < 1 || days > 30) {
+                return NextResponse.json({ error: 'Intervalo FULL deve ser entre 1 e 30 dias' }, { status: 400 });
+            }
+            config.backup.full_backup_interval_days = days;
+        }
+
         writeConfig(config);
 
         return NextResponse.json({
@@ -135,6 +159,8 @@ export async function PUT(request: Request) {
             config: {
                 base_path: config.backup.base_path,
                 retention_days: config.backup.retention_days,
+                default_mode: config.backup.default_mode,
+                full_backup_interval_days: config.backup.full_backup_interval_days,
                 schedule_time: config.backup.schedule.time,
                 schedule_enabled: config.backup.schedule.enabled
             }

@@ -4,6 +4,8 @@
     "backup": {
         "base_path": "F:\\AsymLAB\\DB\\Supabase",
         "retention_days": 30,
+        "default_mode": "auto",
+        "full_backup_interval_days": 7,
         "schedule": {
             "enabled": true,
             "time": "23:30",

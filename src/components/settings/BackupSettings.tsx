@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     HardDrive,
     Clock,
@@ -15,7 +15,10 @@ import {
     Calendar,
     Database,
     Trash2,
-    Settings2
+    Settings2,
+    ChevronDown,
+    Zap,
+    Archive
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +29,8 @@ import BackupWizard from './BackupWizard';
 interface BackupConfig {
     base_path: string;
     retention_days: number;
+    default_mode: string;
+    full_backup_interval_days: number;
     schedule_time: string;
     schedule_enabled: boolean;
     tables: string[];
@@ -35,16 +40,23 @@ interface BackupEntry {
     folder: string;
     timestamp: string;
     date: string;
+    type?: string;
     status: string;
     total_rows: number;
     tables_ok: number;
     tables_failed: number;
+    tables_unchanged?: number;
     duration_ms: number;
     trigger?: string;
+    base_backup?: string;
+    since?: string;
+    mode_reason?: string;
 }
 
 interface BackupStats {
     total_backups: number;
+    total_full: number;
+    total_incremental: number;
     total_size_bytes: number;
     total_size_display: string;
 }
@@ -59,12 +71,16 @@ export default function BackupSettings() {
     const [backupResult, setBackupResult] = useState<string | null>(null);
     const [hasChanges, setHasChanges] = useState(false);
     const [showWizard, setShowWizard] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Campos editáveis
     const [editPath, setEditPath] = useState('');
     const [editRetention, setEditRetention] = useState('');
     const [editTime, setEditTime] = useState('');
     const [editEnabled, setEditEnabled] = useState(true);
+    const [editMode, setEditMode] = useState('auto');
+    const [editFullInterval, setEditFullInterval] = useState('7');
 
     const loadConfig = useCallback(async () => {
         try {
@@ -80,6 +96,8 @@ export default function BackupSettings() {
             setEditRetention(String(data.config.retention_days));
             setEditTime(data.config.schedule_time);
             setEditEnabled(data.config.schedule_enabled);
+            setEditMode(data.config.default_mode || 'auto');
+            setEditFullInterval(String(data.config.full_backup_interval_days || 7));
         } catch (err) {
             console.error('Erro ao carregar backup config:', err);
         } finally {
@@ -91,6 +109,17 @@ export default function BackupSettings() {
         loadConfig();
     }, [loadConfig]);
 
+    // Fechar dropdown ao clicar fora
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     // Detectar mudanças
     useEffect(() => {
         if (!config) return;
@@ -98,9 +127,11 @@ export default function BackupSettings() {
             editPath !== config.base_path ||
             editRetention !== String(config.retention_days) ||
             editTime !== config.schedule_time ||
-            editEnabled !== config.schedule_enabled;
+            editEnabled !== config.schedule_enabled ||
+            editMode !== (config.default_mode || 'auto') ||
+            editFullInterval !== String(config.full_backup_interval_days || 7);
         setHasChanges(changed);
-    }, [editPath, editRetention, editTime, editEnabled, config]);
+    }, [editPath, editRetention, editTime, editEnabled, editMode, editFullInterval, config]);
 
     const handleSave = async () => {
         setSaving(true);
@@ -113,6 +144,8 @@ export default function BackupSettings() {
                     retention_days: parseInt(editRetention),
                     schedule_time: editTime,
                     schedule_enabled: editEnabled,
+                    default_mode: editMode,
+                    full_backup_interval_days: parseInt(editFullInterval),
                 }),
             });
 
@@ -128,16 +161,22 @@ export default function BackupSettings() {
         }
     };
 
-    const handleBackupNow = async () => {
+    const handleBackupNow = async (mode?: string) => {
         setBackingUp(true);
         setBackupResult(null);
+        setShowDropdown(false);
         try {
-            const res = await fetch('/api/backup', { method: 'POST' });
+            const res = await fetch('/api/backup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: mode || undefined }),
+            });
             const data = await res.json();
 
             if (data.success) {
-                setBackupResult(`✅ ${data.message}`);
-                loadConfig(); // Recarregar lista
+                const typeLabel = data.type === 'full' ? '🗄️ FULL' : '⚡ INCR';
+                setBackupResult(`✅ ${typeLabel} — ${data.message}`);
+                loadConfig();
             } else {
                 setBackupResult(`❌ ${data.error}`);
             }
@@ -156,7 +195,6 @@ export default function BackupSettings() {
         );
     }
 
-    // Mostrar Wizard
     if (showWizard) {
         return (
             <BackupWizard
@@ -165,6 +203,18 @@ export default function BackupSettings() {
             />
         );
     }
+
+    const modeLabels: Record<string, string> = {
+        auto: 'Automático',
+        full: 'Sempre Full',
+        incremental: 'Sempre Incremental'
+    };
+
+    const modeDescriptions: Record<string, string> = {
+        auto: 'Decide automaticamente: FULL se não houver base ou a cada N dias, INCREMENTAL para o resto',
+        full: 'Faz sempre backup completo de todas as tabelas',
+        incremental: 'Exporta apenas dados alterados desde o último backup'
+    };
 
     return (
         <div className="space-y-8">
@@ -188,18 +238,66 @@ export default function BackupSettings() {
                         <Settings2 className="h-4 w-4" />
                         Reconfigurar
                     </Button>
-                    <Button
-                        onClick={handleBackupNow}
-                        disabled={backingUp}
-                        className="bg-primary hover:bg-primary/90 text-white gap-2"
-                    >
-                        {backingUp ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                            <Play className="h-4 w-4" />
+
+                    {/* Botão Backup com Dropdown */}
+                    <div className="relative" ref={dropdownRef}>
+                        <div className="flex">
+                            <Button
+                                onClick={() => handleBackupNow()}
+                                disabled={backingUp}
+                                className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-r-none"
+                            >
+                                {backingUp ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Play className="h-4 w-4" />
+                                )}
+                                {backingUp ? 'A fazer backup...' : 'Backup Agora'}
+                            </Button>
+                            <Button
+                                onClick={() => setShowDropdown(!showDropdown)}
+                                disabled={backingUp}
+                                className="bg-primary hover:bg-primary/90 text-white rounded-l-none border-l border-white/20 px-2"
+                            >
+                                <ChevronDown className="h-4 w-4" />
+                            </Button>
+                        </div>
+
+                        {showDropdown && (
+                            <div className="absolute right-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
+                                <button
+                                    onClick={() => handleBackupNow('auto')}
+                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                >
+                                    <Zap className="h-4 w-4 text-amber-500" />
+                                    <div>
+                                        <p className="font-medium text-gray-700">Auto</p>
+                                        <p className="text-[11px] text-gray-400">Decide automaticamente</p>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => handleBackupNow('full')}
+                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                >
+                                    <Archive className="h-4 w-4 text-blue-500" />
+                                    <div>
+                                        <p className="font-medium text-gray-700">Forçar Full</p>
+                                        <p className="text-[11px] text-gray-400">Backup completo de tudo</p>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => handleBackupNow('incremental')}
+                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                >
+                                    <Zap className="h-4 w-4 text-emerald-500" />
+                                    <div>
+                                        <p className="font-medium text-gray-700">Forçar Incremental</p>
+                                        <p className="text-[11px] text-gray-400">Só dados alterados</p>
+                                    </div>
+                                </button>
+                            </div>
                         )}
-                        {backingUp ? 'A fazer backup...' : 'Backup Agora'}
-                    </Button>
+                    </div>
                 </div>
             </div>
 
@@ -217,27 +315,37 @@ export default function BackupSettings() {
 
             {/* ====== STATS CARDS ====== */}
             {stats && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
                             <Calendar className="h-4 w-4 text-gray-400" />
-                            <span className="text-xs text-gray-500 uppercase font-medium">Total de Backups</span>
+                            <span className="text-xs text-gray-500 uppercase font-medium">Total</span>
                         </div>
                         <p className="text-2xl font-bold text-gray-900">{stats.total_backups}</p>
+                        <p className="text-[11px] text-gray-400 mt-1">
+                            <span className="text-blue-500 font-medium">{stats.total_full}</span> Full · <span className="text-emerald-500 font-medium">{stats.total_incremental}</span> Incr
+                        </p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
                             <HardDrive className="h-4 w-4 text-gray-400" />
-                            <span className="text-xs text-gray-500 uppercase font-medium">Espaço Utilizado</span>
+                            <span className="text-xs text-gray-500 uppercase font-medium">Espaço</span>
                         </div>
                         <p className="text-2xl font-bold text-gray-900">{stats.total_size_display}</p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
                             <Database className="h-4 w-4 text-gray-400" />
-                            <span className="text-xs text-gray-500 uppercase font-medium">Tabelas Monitorizadas</span>
+                            <span className="text-xs text-gray-500 uppercase font-medium">Tabelas</span>
                         </div>
                         <p className="text-2xl font-bold text-gray-900">{config?.tables.length || 0}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Zap className="h-4 w-4 text-gray-400" />
+                            <span className="text-xs text-gray-500 uppercase font-medium">Modo</span>
+                        </div>
+                        <p className="text-lg font-bold text-gray-900">{modeLabels[editMode] || 'Auto'}</p>
                     </div>
                 </div>
             )}
@@ -266,12 +374,44 @@ export default function BackupSettings() {
                     </p>
                 </div>
 
-                {/* Horário + Retenção (lado a lado) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Modo de Backup */}
+                <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-gray-400" />
+                        Modo de Backup
+                    </Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {(['auto', 'full', 'incremental'] as const).map((mode) => (
+                            <button
+                                key={mode}
+                                onClick={() => setEditMode(mode)}
+                                className={cn(
+                                    "p-3 rounded-lg border text-left transition-all",
+                                    editMode === mode
+                                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                        : "border-gray-200 hover:border-gray-300 bg-gray-50"
+                                )}
+                            >
+                                <p className={cn(
+                                    "text-sm font-medium",
+                                    editMode === mode ? "text-primary" : "text-gray-700"
+                                )}>
+                                    {modeLabels[mode]}
+                                </p>
+                                <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                                    {modeDescriptions[mode]}
+                                </p>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Horário + Retenção + Intervalo Full (grid) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="backup-time" className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-gray-400" />
-                            Horário do Backup Diário
+                            Horário Diário
                         </Label>
                         <Input
                             id="backup-time"
@@ -293,7 +433,27 @@ export default function BackupSettings() {
                             value={editRetention}
                             onChange={(e) => setEditRetention(e.target.value)}
                         />
-                        <p className="text-xs text-gray-400">Backups mais antigos são eliminados automaticamente</p>
+                        <p className="text-xs text-gray-400">Backups mais antigos são eliminados</p>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="full-interval" className="flex items-center gap-2">
+                            <Archive className="h-4 w-4 text-gray-400" />
+                            Intervalo FULL (dias)
+                        </Label>
+                        <Input
+                            id="full-interval"
+                            type="number"
+                            min={1}
+                            max={30}
+                            value={editFullInterval}
+                            onChange={(e) => setEditFullInterval(e.target.value)}
+                            disabled={editMode === 'full'}
+                        />
+                        <p className="text-xs text-gray-400">
+                            {editMode === 'full'
+                                ? 'Sempre FULL — intervalo não se aplica'
+                                : 'Consolida com FULL a cada N dias'}
+                        </p>
                     </div>
                 </div>
 
@@ -376,41 +536,72 @@ export default function BackupSettings() {
                     </div>
                 ) : (
                     <div className="space-y-2">
-                        {backups.map((backup, i) => (
-                            <div
-                                key={backup.folder}
-                                className={cn(
-                                    "flex items-center justify-between p-3 rounded-lg border transition-colors",
-                                    i === 0 ? "bg-primary/5 border-primary/20" : "bg-gray-50 border-gray-100"
-                                )}
-                            >
-                                <div className="flex items-center gap-3">
-                                    {backup.status === 'success' ? (
-                                        <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-                                    ) : backup.status === 'partial' ? (
-                                        <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
-                                    ) : (
-                                        <XCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                        {backups.map((backup, i) => {
+                            const isIncremental = backup.type === 'incremental' || backup.folder.startsWith('INCR_');
+                            const isFull = backup.type === 'full' || backup.folder.startsWith('FULL_');
+
+                            return (
+                                <div
+                                    key={backup.folder}
+                                    className={cn(
+                                        "flex items-center justify-between p-3 rounded-lg border transition-colors",
+                                        i === 0 ? "bg-primary/5 border-primary/20" : "bg-gray-50 border-gray-100"
                                     )}
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-700">
-                                            {backup.timestamp
-                                                ? new Date(backup.timestamp).toLocaleString('pt-PT')
-                                                : backup.folder}
-                                        </p>
-                                        <p className="text-xs text-gray-400">
-                                            {backup.total_rows} registos · {backup.tables_ok}/{(backup.tables_ok || 0) + (backup.tables_failed || 0)} tabelas
-                                            {backup.trigger === 'manual' && (
-                                                <span className="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-600 rounded text-[10px] uppercase">Manual</span>
-                                            )}
-                                        </p>
+                                >
+                                    <div className="flex items-center gap-3">
+                                        {backup.status === 'success' ? (
+                                            <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
+                                        ) : backup.status === 'partial' ? (
+                                            <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                                        ) : (
+                                            <XCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                                        )}
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-sm font-medium text-gray-700">
+                                                    {backup.timestamp
+                                                        ? new Date(backup.timestamp).toLocaleString('pt-PT')
+                                                        : backup.folder}
+                                                </p>
+                                                {/* Badge FULL/INCR */}
+                                                {isFull && (
+                                                    <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-bold uppercase">
+                                                        FULL
+                                                    </span>
+                                                )}
+                                                {isIncremental && (
+                                                    <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold uppercase">
+                                                        INCR
+                                                    </span>
+                                                )}
+                                                {backup.trigger === 'manual' && (
+                                                    <span className="px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded text-[10px] uppercase">
+                                                        Manual
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-gray-400">
+                                                {isIncremental ? (
+                                                    <>
+                                                        {backup.total_rows} alterações ·{' '}
+                                                        {backup.tables_ok} com mudanças ·{' '}
+                                                        {backup.tables_unchanged || 0} sem alterações
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        {backup.total_rows} registos ·{' '}
+                                                        {backup.tables_ok}/{(backup.tables_ok || 0) + (backup.tables_failed || 0)} tabelas
+                                                    </>
+                                                )}
+                                            </p>
+                                        </div>
                                     </div>
+                                    <span className="text-xs text-gray-400 font-mono">
+                                        {backup.duration_ms ? `${backup.duration_ms}ms` : '—'}
+                                    </span>
                                 </div>
-                                <span className="text-xs text-gray-400 font-mono">
-                                    {backup.duration_ms ? `${backup.duration_ms}ms` : '—'}
-                                </span>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>
