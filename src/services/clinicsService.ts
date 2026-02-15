@@ -5,13 +5,21 @@ import { Database } from '@/types/database.types';
 export type Clinic = Database['public']['Tables']['clinics']['Row'];
 export type ClinicContact = Database['public']['Tables']['clinic_contacts']['Row'];
 export type ClinicDeliveryPoint = Database['public']['Tables']['clinic_delivery_points']['Row'];
-export type ClinicStaff = Database['public']['Tables']['clinic_staff']['Row'];
 export type ClinicDiscount = Database['public']['Tables']['clinic_discounts']['Row'];
+
+// Membro da equipa = user_profile associado via user_clinic_access
+export interface ClinicTeamMember {
+    user_id: string;
+    full_name: string;
+    phone: string | null;
+    app_role: string;
+    is_contact: boolean;
+    role_at_clinic: string | null;
+}
 
 export type ClinicFullDetails = Clinic & {
     clinic_contacts: ClinicContact[];
     clinic_delivery_points: ClinicDeliveryPoint[];
-    clinic_staff: ClinicStaff[];
     clinic_discounts: ClinicDiscount[];
 };
 
@@ -24,7 +32,7 @@ export const clinicsService = {
             .order('commercial_name', { ascending: true });
 
         if (error) throw error;
-        return data as Clinic[]; // Casting explícito para garantir tipo
+        return data as Clinic[];
     },
 
     // 2. Obter Detalhes Completos (Para o Formulário)
@@ -35,14 +43,13 @@ export const clinicsService = {
         *,
         clinic_contacts(*),
         clinic_delivery_points(*),
-        clinic_staff(*),
         clinic_discounts(*)
       `)
             .eq('id', id)
             .single();
 
         if (error) throw error;
-        return data as unknown as ClinicFullDetails; // Supabase typing workaround
+        return data as unknown as ClinicFullDetails;
     },
 
     // 3. Criar Nova Clínica
@@ -94,53 +101,108 @@ export const clinicsService = {
         if (error) throw error;
     },
 
-    // 8a. Buscar TODOS os membros da equipa (para dropdown entregas)
-    async getClinicStaffAll(clinicId: string) {
+    // 8a. Buscar TODOS os membros da equipa da clínica (user_clinic_access + user_profiles)
+    async getClinicTeam(clinicId: string): Promise<ClinicTeamMember[]> {
         const { data, error } = await supabase
-            .from('clinic_staff')
-            .select('id, name, phone, role, is_contact')
-            .eq('clinic_id', clinicId)
-            .order('name');
+            .from('user_clinic_access')
+            .select('user_id, is_contact, role_at_clinic, user_profiles(full_name, phone, app_role)')
+            .eq('clinic_id', clinicId);
 
         if (error) throw error;
-        return data || [];
+        return (data || []).map((d: any) => ({
+            user_id: d.user_id,
+            full_name: d.user_profiles?.full_name || '',
+            phone: d.user_profiles?.phone || null,
+            app_role: d.user_profiles?.app_role || '',
+            is_contact: d.is_contact,
+            role_at_clinic: d.role_at_clinic,
+        }));
     },
 
     // 8b. Buscar membros da equipa marcados como contacto
-    async getClinicTeamContacts(clinicId: string) {
+    async getClinicTeamContacts(clinicId: string): Promise<ClinicTeamMember[]> {
         const { data, error } = await supabase
-            .from('clinic_staff')
-            .select('id, name, phone, role, is_contact')
+            .from('user_clinic_access')
+            .select('user_id, is_contact, role_at_clinic, user_profiles(full_name, phone, app_role)')
             .eq('clinic_id', clinicId)
             .eq('is_contact', true);
 
         if (error) throw error;
-        return data || [];
+        return (data || []).map((d: any) => ({
+            user_id: d.user_id,
+            full_name: d.user_profiles?.full_name || '',
+            phone: d.user_profiles?.phone || null,
+            app_role: d.user_profiles?.app_role || '',
+            is_contact: d.is_contact,
+            role_at_clinic: d.role_at_clinic,
+        }));
+    },
+
+    // 8c. Toggle is_contact num membro da equipa
+    async toggleTeamContact(userId: string, clinicId: string, isContact: boolean) {
+        const { error } = await supabase
+            .from('user_clinic_access')
+            .update({ is_contact: isContact })
+            .eq('user_id', userId)
+            .eq('clinic_id', clinicId);
+
+        if (error) throw error;
+    },
+
+    // 8d. Atualizar role_at_clinic
+    async updateRoleAtClinic(userId: string, clinicId: string, role: string) {
+        const { error } = await supabase
+            .from('user_clinic_access')
+            .update({ role_at_clinic: role })
+            .eq('user_id', userId)
+            .eq('clinic_id', clinicId);
+
+        if (error) throw error;
+    },
+
+    // 8e. Adicionar membro à equipa da clínica
+    async addTeamMember(userId: string, clinicId: string) {
+        const { error } = await supabase
+            .from('user_clinic_access')
+            .insert({ user_id: userId, clinic_id: clinicId });
+
+        if (error) throw error;
+    },
+
+    // 8f. Remover membro da equipa da clínica
+    async removeTeamMember(userId: string, clinicId: string) {
+        const { error } = await supabase
+            .from('user_clinic_access')
+            .delete()
+            .eq('user_id', userId)
+            .eq('clinic_id', clinicId);
+
+        if (error) throw error;
     },
 
     // 9. Buscar contactos associados a um delivery point
     async getDeliveryPointContacts(deliveryPointId: string) {
         const { data, error } = await supabase
             .from('delivery_point_contacts')
-            .select('id, staff_id, clinic_staff(id, name, phone, role)')
+            .select('id, user_id, user_profiles(full_name, phone, app_role)')
             .eq('delivery_point_id', deliveryPointId);
 
         if (error) throw error;
         return (data || []).map((d: any) => ({
             id: d.id,
-            staff_id: d.staff_id,
-            name: d.clinic_staff?.name || '',
-            phone: d.clinic_staff?.phone || null,
-            role: d.clinic_staff?.role || null,
+            user_id: d.user_id,
+            name: d.user_profiles?.full_name || '',
+            phone: d.user_profiles?.phone || null,
+            role: d.user_profiles?.app_role || null,
         }));
     },
 
     // 10. Associar contacto a delivery point
-    async addDeliveryPointContact(deliveryPointId: string, staffId: string) {
+    async addDeliveryPointContact(deliveryPointId: string, userId: string) {
         const { data, error } = await supabase
             .from('delivery_point_contacts')
-            .insert({ delivery_point_id: deliveryPointId, staff_id: staffId })
-            .select('id, staff_id')
+            .insert({ delivery_point_id: deliveryPointId, user_id: userId })
+            .select('id, user_id')
             .single();
 
         if (error) throw error;

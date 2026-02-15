@@ -5,19 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Trash2, MapPin, Navigation, Pencil, Check, Phone, User, Users, ChevronDown, X } from 'lucide-react';
-import { ClinicFullDetails, clinicsService } from '@/services/clinicsService';
+import { ClinicFullDetails, ClinicTeamMember, clinicsService } from '@/services/clinicsService';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
-
-interface TeamContact {
-    id: string;
-    name: string;
-    phone: string | null;
-    role: string | null;
-}
 
 interface AssignedContact {
     id: string;
-    staff_id: string;
+    user_id: string;
     name: string;
     phone: string | null;
     role: string | null;
@@ -27,7 +20,7 @@ export default function ClinicDeliveryTab() {
     const { control, register, getValues, watch, setValue } = useFormContext<ClinicFullDetails>();
     const [deleteTarget, setDeleteTarget] = useState<{ index: number, id: string } | null>(null);
     const [editingMapIndex, setEditingMapIndex] = useState<number | null>(null);
-    const [teamContacts, setTeamContacts] = useState<TeamContact[]>([]);
+    const [teamContacts, setTeamContacts] = useState<ClinicTeamMember[]>([]);
     const [showContactDropdown, setShowContactDropdown] = useState<number | null>(null);
     const [assignedContacts, setAssignedContacts] = useState<Record<string, AssignedContact[]>>({});
     const deliveryPoints = watch('clinic_delivery_points');
@@ -42,13 +35,13 @@ export default function ClinicDeliveryTab() {
     // Buscar contactos da equipa
     useEffect(() => {
         if (!clinicId) return;
-        clinicsService.getClinicStaffAll(clinicId).then(setTeamContacts).catch(console.error);
+        clinicsService.getClinicTeamContacts(clinicId).then(setTeamContacts).catch(console.error);
     }, [clinicId]);
 
     useEffect(() => {
         const handler = () => {
             if (!clinicId) return;
-            clinicsService.getClinicStaffAll(clinicId).then(setTeamContacts).catch(console.error);
+            clinicsService.getClinicTeamContacts(clinicId).then(setTeamContacts).catch(console.error);
         };
         window.addEventListener('clinic-updated', handler);
         return () => window.removeEventListener('clinic-updated', handler);
@@ -110,9 +103,9 @@ export default function ClinicDeliveryTab() {
         }
     };
 
-    const handleAddContact = async (dpId: string, staffId: string) => {
+    const handleAddContact = async (dpId: string, userId: string) => {
         try {
-            await clinicsService.addDeliveryPointContact(dpId, staffId);
+            await clinicsService.addDeliveryPointContact(dpId, userId);
             await loadAssignedContacts(dpId);
             setShowContactDropdown(null);
         } catch (error) {
@@ -166,7 +159,7 @@ export default function ClinicDeliveryTab() {
                         const dpId = deliveryPoints?.[index]?.id;
                         const dpContacts = dpId ? (assignedContacts[dpId] || []) : [];
                         const availableContacts = teamContacts.filter(
-                            tc => !dpContacts.some(ac => ac.staff_id === tc.id)
+                            tc => !dpContacts.some(ac => ac.user_id === tc.user_id)
                         );
 
                         return (
@@ -299,13 +292,13 @@ export default function ClinicDeliveryTab() {
                                                         <div className="absolute right-0 top-8 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[220px]">
                                                             {availableContacts.map((tc) => (
                                                                 <button
-                                                                    key={tc.id}
+                                                                    key={tc.user_id}
                                                                     type="button"
                                                                     className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                                                                    onClick={() => dpId && handleAddContact(dpId, tc.id)}
+                                                                    onClick={() => dpId && handleAddContact(dpId, tc.user_id)}
                                                                 >
                                                                     <User className="h-3 w-3 text-gray-400" />
-                                                                    <span className="flex-1 truncate">{tc.name}</span>
+                                                                    <span className="flex-1 truncate">{tc.full_name}</span>
                                                                     {tc.phone && (
                                                                         <span className="text-xs text-gray-400">{tc.phone}</span>
                                                                     )}

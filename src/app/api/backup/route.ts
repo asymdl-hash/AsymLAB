@@ -26,8 +26,10 @@ function getTables(): string[] {
         'clinics',
         'clinic_contacts',
         'clinic_delivery_points',
-        'clinic_staff',
         'clinic_discounts',
+        'user_clinic_access',
+        'user_profiles',
+        'delivery_point_contacts',
         'organization_settings'
     ];
 }

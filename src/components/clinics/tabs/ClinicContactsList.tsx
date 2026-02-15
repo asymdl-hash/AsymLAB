@@ -5,17 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Trash2, Phone, User, Users } from 'lucide-react';
-import { ClinicFullDetails, clinicsService } from '@/services/clinicsService';
+import { ClinicFullDetails, ClinicTeamMember, clinicsService } from '@/services/clinicsService';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 
-interface TeamContact {
-    id: string;
-    name: string;
-    phone: string | null;
-    role: string | null;
-}
-
 const ROLE_LABELS: Record<string, string> = {
+    admin: 'Administrador',
+    staff_lab: 'Staff Lab',
+    staff_clinic: 'Staff Clínica',
+    clinic_user: 'Utilizador Clínica',
+    doctor: 'Médico',
     assistant: 'Assistente',
     receptionist: 'Rececionista',
     accounting: 'Contabilidade',
@@ -26,7 +24,7 @@ const ROLE_LABELS: Record<string, string> = {
 export default function ClinicContactsList() {
     const { control, register, getValues } = useFormContext<ClinicFullDetails>();
     const [deleteTarget, setDeleteTarget] = useState<{ index: number, id: string } | null>(null);
-    const [teamContacts, setTeamContacts] = useState<TeamContact[]>([]);
+    const [teamContacts, setTeamContacts] = useState<ClinicTeamMember[]>([]);
 
     const { fields, append, remove } = useFieldArray({
         control,
@@ -121,13 +119,13 @@ export default function ClinicContactsList() {
                     </div>
                     <div className="grid gap-2">
                         {teamContacts.map((tc) => (
-                            <div key={tc.id} className="flex items-center gap-3 px-4 py-2.5 bg-primary/5 border border-primary/10 rounded-lg">
+                            <div key={tc.user_id} className="flex items-center gap-3 px-4 py-2.5 bg-primary/5 border border-primary/10 rounded-lg">
                                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
                                     <User className="h-4 w-4" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-900 truncate">{tc.name}</p>
-                                    <p className="text-xs text-gray-500">{ROLE_LABELS[tc.role || ''] || tc.role || 'Staff'}</p>
+                                    <p className="text-sm font-medium text-gray-900 truncate">{tc.full_name}</p>
+                                    <p className="text-xs text-gray-500">{ROLE_LABELS[tc.role_at_clinic || ''] || ROLE_LABELS[tc.app_role] || tc.app_role || 'Staff'}</p>
                                 </div>
                                 {tc.phone && (
                                     <div className="flex items-center gap-1 text-xs text-gray-600">
