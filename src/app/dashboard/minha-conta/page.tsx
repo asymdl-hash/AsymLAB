@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     User, Key, Save, Eye, EyeOff, Shield, Building2,
-    CheckCircle, AlertCircle, X, Loader2, Edit3, Smartphone
+    CheckCircle, AlertCircle, X, Loader2, Edit3, Smartphone, Camera, Download, Monitor
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
@@ -15,6 +15,7 @@ interface AccountData {
     is_username_account: boolean;
     full_name: string;
     app_role: string;
+    avatar_url: string | null;
     created_at: string;
     last_sign_in_at: string | null;
     clinics: { clinic_id: string; clinic_name: string; clinic_role: string }[];
@@ -27,11 +28,32 @@ const ROLE_LABELS: Record<string, string> = {
     staff: 'Staff',
 };
 
+// Ícones SVG oficiais
+const AndroidIcon = () => (
+    <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.523 2.277l1.929-1.929a.5.5 0 0 0-.707-.707L16.707 1.68A7.93 7.93 0 0 0 12 .5a7.93 7.93 0 0 0-4.707 1.18L5.255-.358a.5.5 0 0 0-.707.707l1.929 1.929A7.97 7.97 0 0 0 4 7.5V8h16v-.5a7.97 7.97 0 0 0-2.477-5.223zM9 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM4 9v9a2 2 0 0 0 2 2h1v3.5a1.5 1.5 0 0 0 3 0V20h4v3.5a1.5 1.5 0 0 0 3 0V20h1a2 2 0 0 0 2-2V9H4zM1 10.5a1.5 1.5 0 0 1 3 0v6a1.5 1.5 0 0 1-3 0v-6zm19 0a1.5 1.5 0 0 1 3 0v6a1.5 1.5 0 0 1-3 0v-6z" />
+    </svg>
+);
+
+const AppleIcon = () => (
+    <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+    </svg>
+);
+
+const WindowsIcon = () => (
+    <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801" />
+    </svg>
+);
+
 export default function MyAccountPage() {
     const [account, setAccount] = useState<AccountData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Edit states
     const [editName, setEditName] = useState(false);
@@ -104,6 +126,50 @@ export default function MyAccountPage() {
             return data;
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !account) return;
+
+        // Validar tipo e tamanho
+        if (!file.type.startsWith('image/')) {
+            setError('Por favor seleciona uma imagem (JPG, PNG, etc.)');
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            setError('A imagem deve ter no máximo 2MB');
+            return;
+        }
+
+        setUploadingAvatar(true);
+        try {
+            const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+            const filePath = `avatars/${account.id}.${ext}`;
+
+            // Upload para Supabase Storage
+            const { error: uploadError } = await supabase.storage
+                .from('user-avatars')
+                .upload(filePath, file, { upsert: true, contentType: file.type });
+
+            if (uploadError) throw uploadError;
+
+            // Obter URL pública
+            const { data: urlData } = supabase.storage
+                .from('user-avatars')
+                .getPublicUrl(filePath);
+
+            // Guardar avatar_url no profile
+            const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+            const result = await apiCall('update_avatar', { avatar_url: avatarUrl });
+            setSuccess('Foto de perfil atualizada!');
+            fetchAccount();
+        } catch (err: any) {
+            setError(err.message || 'Erro ao fazer upload da foto');
+        } finally {
+            setUploadingAvatar(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
@@ -193,17 +259,50 @@ export default function MyAccountPage() {
                 {/* Avatar Header */}
                 <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-6 py-5 border-b border-gray-100">
                     <div className="flex items-center gap-4">
-                        <div className={cn(
-                            "h-16 w-16 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-md",
-                            account.app_role === 'admin'
-                                ? 'bg-gradient-to-br from-red-500 to-red-600 text-white'
-                                : 'bg-gradient-to-br from-primary to-primary/80 text-white'
-                        )}>
-                            {account.full_name.charAt(0).toUpperCase()}
+                        {/* Avatar clicável */}
+                        <div className="relative group">
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleAvatarUpload}
+                                accept="image/*"
+                                className="hidden"
+                            />
+                            {account.avatar_url ? (
+                                <img
+                                    src={account.avatar_url}
+                                    alt={account.full_name}
+                                    className="h-16 w-16 rounded-2xl object-cover shadow-md border-2 border-white cursor-pointer transition-transform group-hover:scale-105"
+                                    onClick={() => fileInputRef.current?.click()}
+                                />
+                            ) : (
+                                <div
+                                    className={cn(
+                                        "h-16 w-16 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-md cursor-pointer transition-transform group-hover:scale-105",
+                                        account.app_role === 'admin'
+                                            ? 'bg-gradient-to-br from-red-500 to-red-600 text-white'
+                                            : 'bg-gradient-to-br from-primary to-primary/80 text-white'
+                                    )}
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    {account.full_name.charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                            {/* Overlay câmara */}
+                            <div
+                                className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                {uploadingAvatar ? (
+                                    <Loader2 className="h-5 w-5 text-white animate-spin" />
+                                ) : (
+                                    <Camera className="h-5 w-5 text-white" />
+                                )}
+                            </div>
                         </div>
                         <div>
                             <h2 className="text-lg font-semibold text-gray-900">{account.full_name}</h2>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
                                 <span className={cn(
                                     "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border",
                                     account.app_role === 'admin'
@@ -222,6 +321,7 @@ export default function MyAccountPage() {
                                     </span>
                                 ))}
                             </div>
+                            <p className="text-xs text-gray-400 mt-1">Clica na foto para alterar</p>
                         </div>
                     </div>
                 </div>
@@ -444,16 +544,51 @@ export default function MyAccountPage() {
                         )}
                     </div>
 
-                    {/* Info: Instalar como App */}
-                    <div className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                            <Smartphone className="h-4 w-4" />
+                    {/* Info: Instalar como App — Design Profissional */}
+                    <div className="px-6 py-5">
+                        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                            <Download className="h-4 w-4" />
                             Instalar como App
                         </div>
-                        <div className="px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700 space-y-1.5">
-                            <p><strong>📱 No telemóvel (Android):</strong> Abre o Chrome → Menu (⋮) → &quot;Adicionar ao ecrã inicial&quot;</p>
-                            <p><strong>🍎 No iPhone:</strong> Abre o Safari → Botão Partilhar (↑) → &quot;Adicionar ao ecrã principal&quot;</p>
-                            <p><strong>💻 No computador:</strong> No Chrome, clica no ícone de instalação na barra de endereço</p>
+                        <div className="space-y-2">
+                            {/* Android */}
+                            <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-50 to-green-50/30 border border-green-200/60">
+                                <div className="h-8 w-8 rounded-lg bg-green-500 flex items-center justify-center flex-shrink-0 text-white">
+                                    <AndroidIcon />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-800">Android</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        Abre o <strong>Chrome</strong> → toca em <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">⋮</span> (menu) → <strong>&quot;Adicionar ao ecrã inicial&quot;</strong>
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* iOS */}
+                            <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-gray-50 to-gray-50/30 border border-gray-200/60">
+                                <div className="h-8 w-8 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-white">
+                                    <AppleIcon />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-800">iPhone / iPad</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        Abre o <strong>Safari</strong> → toca em <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">⬆</span> (partilhar) → <strong>&quot;Adicionar ao ecrã principal&quot;</strong>
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Windows/Desktop */}
+                            <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-50 to-blue-50/30 border border-blue-200/60">
+                                <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0 text-white">
+                                    <WindowsIcon />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-800">Windows / macOS</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        No <strong>Chrome</strong> ou <strong>Edge</strong>, clica no ícone <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">⊕</span> na barra de endereço → <strong>&quot;Instalar&quot;</strong>
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

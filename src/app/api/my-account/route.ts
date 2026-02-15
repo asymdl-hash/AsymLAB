@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
             is_username_account: isUsernameAccount,
             full_name: profile?.full_name || 'Sem nome',
             app_role: profile?.app_role || 'staff',
+            avatar_url: profile?.avatar_url || null,
             created_at: user.created_at,
             last_sign_in_at: user.last_sign_in_at,
             clinics: (clinics || []).map(c => ({
@@ -187,6 +188,27 @@ export async function PATCH(request: NextRequest) {
                 return NextResponse.json({
                     success: true,
                     message: 'Nome atualizado com sucesso'
+                });
+            }
+
+            case 'update_avatar': {
+                if (!data.avatar_url?.trim()) {
+                    return NextResponse.json(
+                        { error: 'URL do avatar é obrigatório' },
+                        { status: 400 }
+                    );
+                }
+
+                const { error } = await admin
+                    .from('user_profiles')
+                    .update({ avatar_url: data.avatar_url.trim() })
+                    .eq('user_id', user.id);
+
+                if (error) throw error;
+
+                return NextResponse.json({
+                    success: true,
+                    message: 'Foto de perfil atualizada'
                 });
             }
 

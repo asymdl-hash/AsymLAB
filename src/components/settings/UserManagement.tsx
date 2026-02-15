@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     UserPlus, RefreshCw, Key, Trash2, Edit3,
     User, Shield, CheckCircle, AlertCircle, X, Eye, EyeOff,
-    Building2, Loader2, AlertTriangle, Save, MessageCircle, Smartphone, ExternalLink, Copy, Check
+    Building2, Loader2, AlertTriangle, Save, MessageCircle, Smartphone, ExternalLink, Copy, Check,
+    HelpCircle, ChevronDown, ChevronUp, Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -66,6 +67,8 @@ export default function UserManagement() {
 
     useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
+    const [showHelp, setShowHelp] = useState(false);
+
     // Auto-dismiss success messages
     useEffect(() => {
         if (success) {
@@ -73,6 +76,29 @@ export default function UserManagement() {
             return () => clearTimeout(timer);
         }
     }, [success]);
+
+    const ROLE_DESCRIPTIONS: Record<string, { icon: string; description: string; permissions: string[] }> = {
+        admin: {
+            icon: '🛡️',
+            description: 'Acesso total ao sistema. Pode gerir utilizadores, clínicas, pacientes, agenda, faturação, relatórios e definições.',
+            permissions: ['Gestão completa de utilizadores', 'Criar/editar clínicas', 'Acesso a todas as funcionalidades', 'Definições do sistema']
+        },
+        doctor: {
+            icon: '🩺',
+            description: 'Acesso completo a pacientes e agenda. Pode consultar clínicas e relatórios, mas não alterar definições do sistema.',
+            permissions: ['Dashboard completo', 'Pacientes (acesso total)', 'Agenda (acesso total)', 'Clínicas e Faturação (apenas leitura)']
+        },
+        clinic_user: {
+            icon: '🏥',
+            description: 'Focado na gestão operacional da clínica. Acesso completo à agenda e faturação, mas leitura limitada em pacientes.',
+            permissions: ['Agenda (acesso total)', 'Faturação (acesso total)', 'Pacientes (apenas leitura)', 'Clínicas (apenas leitura)']
+        },
+        staff: {
+            icon: '👤',
+            description: 'Acesso básico ao sistema. Pode consultar informações mas não fazer alterações significativas.',
+            permissions: ['Dashboard (apenas leitura)', 'Pacientes (apenas leitura)', 'Agenda (apenas leitura)', 'Clínicas (apenas leitura)']
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -85,6 +111,20 @@ export default function UserManagement() {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowHelp(!showHelp)}
+                        title="Ajuda sobre roles e permissões"
+                        className={cn(
+                            "inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border transition-colors",
+                            showHelp
+                                ? 'bg-blue-50 text-blue-600 border-blue-200'
+                                : 'text-gray-500 bg-white border-gray-200 hover:bg-gray-50'
+                        )}
+                    >
+                        <HelpCircle className="h-4 w-4" />
+                        <span className="hidden sm:inline">Roles</span>
+                        {showHelp ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                    </button>
                     <button
                         onClick={fetchUsers}
                         disabled={loading}
@@ -102,6 +142,65 @@ export default function UserManagement() {
                     </button>
                 </div>
             </div>
+
+            {/* Help Panel - Roles Explanation */}
+            {showHelp && (
+                <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 rounded-xl border border-blue-200/60 p-5 space-y-4 animate-in slide-in-from-top-2">
+                    <div className="flex items-center gap-2 mb-1">
+                        <Info className="h-4 w-4 text-blue-500" />
+                        <h4 className="text-sm font-semibold text-blue-900">Guia de Roles e Permissões</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {Object.entries(ROLE_DESCRIPTIONS).map(([role, info]) => (
+                            <div
+                                key={role}
+                                className={cn(
+                                    "rounded-lg border p-3 bg-white/80 backdrop-blur-sm transition-all hover:shadow-sm",
+                                    role === 'admin' ? 'border-red-200' :
+                                        role === 'doctor' ? 'border-blue-200' :
+                                            role === 'clinic_user' ? 'border-green-200' :
+                                                'border-gray-200'
+                                )}
+                            >
+                                <div className="flex items-center gap-2 mb-1.5">
+                                    <span className="text-lg">{info.icon}</span>
+                                    <span className={cn(
+                                        "text-sm font-semibold",
+                                        role === 'admin' ? 'text-red-700' :
+                                            role === 'doctor' ? 'text-blue-700' :
+                                                role === 'clinic_user' ? 'text-green-700' :
+                                                    'text-gray-700'
+                                    )}>
+                                        {ROLE_LABELS[role]}
+                                    </span>
+                                    <span className={cn(
+                                        "ml-auto text-[10px] font-medium px-2 py-0.5 rounded-full",
+                                        ROLE_COLORS[role]
+                                    )}>
+                                        {role}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-gray-600 mb-2">{info.description}</p>
+                                <div className="space-y-0.5">
+                                    {info.permissions.map((perm, i) => (
+                                        <div key={i} className="flex items-center gap-1.5 text-[11px] text-gray-500">
+                                            <CheckCircle className="h-3 w-3 text-green-400 flex-shrink-0" />
+                                            {perm}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="px-3 py-2 rounded-lg bg-amber-50/80 border border-amber-200/60 text-xs text-amber-700 flex items-start gap-2">
+                        <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <strong>Dica:</strong> A associação de utilizadores a clínicas é feita nas definições de cada clínica, na aba "Acesso & Segurança".
+                            Para alterar o role de um utilizador existente, clique no ícone de edição ✏️ na lista.
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Messages */}
             {error && (

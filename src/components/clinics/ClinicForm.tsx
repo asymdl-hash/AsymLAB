@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { clinicsService, ClinicFullDetails } from '@/services/clinicsService';
 import { useModulePermission } from '@/components/PermissionGuard';
+import { useAuth } from '@/contexts/AuthContext';
 
 import ClinicInfoTab from './tabs/ClinicInfoTab';
 import ClinicDeliveryTab from './tabs/ClinicDeliveryTab';
@@ -20,6 +21,7 @@ interface ClinicFormProps {
 
 export default function ClinicForm({ initialData }: ClinicFormProps) {
     const { canEdit } = useModulePermission('clinics');
+    const { isAdmin } = useAuth();
 
     const methods = useForm<ClinicFullDetails>({
         defaultValues: initialData,
@@ -138,8 +140,12 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
                         <TabsTrigger value="info" className="flex-shrink-0">Dados</TabsTrigger>
                         <TabsTrigger value="delivery" className="flex-shrink-0">Entregas</TabsTrigger>
                         <TabsTrigger value="team" className="flex-shrink-0">Equipa</TabsTrigger>
-                        <TabsTrigger value="discounts" className="flex-shrink-0">Descontos</TabsTrigger>
-                        <TabsTrigger value="permissions" className="flex-shrink-0 whitespace-nowrap">Acesso & Segurança</TabsTrigger>
+                        {isAdmin && (
+                            <TabsTrigger value="discounts" className="flex-shrink-0">Descontos</TabsTrigger>
+                        )}
+                        {isAdmin && (
+                            <TabsTrigger value="permissions" className="flex-shrink-0 whitespace-nowrap">Acesso & Segurança</TabsTrigger>
+                        )}
                     </TabsList>
 
                     <div className="mt-6">
@@ -155,13 +161,17 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
                             <ClinicTeamTab />
                         </TabsContent>
 
-                        <TabsContent value="discounts">
-                            <ClinicDiscountsTab />
-                        </TabsContent>
+                        {isAdmin && (
+                            <TabsContent value="discounts">
+                                <ClinicDiscountsTab />
+                            </TabsContent>
+                        )}
 
-                        <TabsContent value="permissions">
-                            <ClinicSecurityTab />
-                        </TabsContent>
+                        {isAdmin && (
+                            <TabsContent value="permissions">
+                                <ClinicSecurityTab />
+                            </TabsContent>
+                        )}
                     </div>
                 </Tabs>
             </fieldset>
