@@ -186,10 +186,20 @@ export default function Sidebar() {
                 <div className={cn("flex items-center gap-3", collapsed && !isMobile && "justify-center")}>
                     <Link
                         href="/dashboard/minha-conta"
-                        className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-yellow-300 flex items-center justify-center text-white text-sm font-bold shadow-lg ring-2 ring-[#1f2937] hover:ring-primary/50 transition-all"
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg ring-2 ring-[#1f2937] hover:ring-primary/50 transition-all overflow-hidden"
                         title="A Minha Conta"
                     >
-                        {userInitials}
+                        {user?.avatar_url ? (
+                            <img
+                                src={user.avatar_url}
+                                alt={user.full_name}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <span className="w-full h-full bg-gradient-to-tr from-primary to-yellow-300 flex items-center justify-center">
+                                {userInitials}
+                            </span>
+                        )}
                     </Link>
 
                     {(!collapsed || isMobile) && (

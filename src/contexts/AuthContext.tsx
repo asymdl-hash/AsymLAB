@@ -14,6 +14,7 @@ interface UserProfile {
     is_username_account: boolean;
     full_name: string;
     app_role: AppRole;
+    avatar_url: string | null;
     clinics: { clinic_id: string; clinic_name: string; clinic_role: string }[];
 }
 
@@ -75,7 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     : null,
                 is_username_account: isUsernameAccount,
                 full_name: profile?.full_name || authUser.user_metadata?.full_name || 'Utilizador',
-                app_role: (profile?.app_role as AppRole) || 'staff',
+                app_role: (profile?.app_role as AppRole) || 'staff_lab',
+                avatar_url: profile?.avatar_url || null,
                 clinics: (clinicAccess || []).map((ca: any) => ({
                     clinic_id: ca.clinic_id,
                     clinic_name: ca.clinics?.commercial_name || 'N/A',
@@ -106,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => subscription.unsubscribe();
     }, [fetchUserProfile]);
 
-    const role: AppRole = user?.app_role || 'staff';
+    const role: AppRole = user?.app_role || 'staff_lab';
 
     const contextValue: AuthContextType = {
         user,

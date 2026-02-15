@@ -138,8 +138,8 @@ export default function MyAccountPage() {
             setError('Por favor seleciona uma imagem (JPG, PNG, etc.)');
             return;
         }
-        if (file.size > 2 * 1024 * 1024) {
-            setError('A imagem deve ter no máximo 2MB');
+        if (file.size > 10 * 1024 * 1024) {
+            setError('A imagem deve ter no máximo 10MB');
             return;
         }
 
@@ -170,6 +170,27 @@ export default function MyAccountPage() {
         } finally {
             setUploadingAvatar(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const handleDeleteAvatar = async () => {
+        if (!account) return;
+        setUploadingAvatar(true);
+        try {
+            // Tentar apagar o ficheiro do Storage (ignorar erro se não existir)
+            const extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            for (const ext of extensions) {
+                await supabase.storage.from('user-avatars').remove([`avatars/${account.id}.${ext}`]);
+            }
+
+            // Limpar avatar_url no profile
+            await apiCall('update_avatar', { avatar_url: '' });
+            setSuccess('Foto de perfil removida!');
+            fetchAccount();
+        } catch (err: any) {
+            setError(err.message || 'Erro ao remover a foto');
+        } finally {
+            setUploadingAvatar(false);
         }
     };
 
@@ -321,7 +342,18 @@ export default function MyAccountPage() {
                                     </span>
                                 ))}
                             </div>
-                            <p className="text-xs text-gray-400 mt-1">Clica na foto para alterar</p>
+                            <div className="flex items-center gap-2 mt-1">
+                                <p className="text-xs text-gray-400">Clica na foto para alterar</p>
+                                {account.avatar_url && (
+                                    <button
+                                        onClick={handleDeleteAvatar}
+                                        disabled={uploadingAvatar}
+                                        className="text-xs text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                                    >
+                                        Remover foto
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -192,23 +192,19 @@ export async function PATCH(request: NextRequest) {
             }
 
             case 'update_avatar': {
-                if (!data.avatar_url?.trim()) {
-                    return NextResponse.json(
-                        { error: 'URL do avatar é obrigatório' },
-                        { status: 400 }
-                    );
-                }
+                // Permitir avatar_url vazio para remover a foto
+                const avatarValue = data.avatar_url?.trim() || null;
 
                 const { error } = await admin
                     .from('user_profiles')
-                    .update({ avatar_url: data.avatar_url.trim() })
+                    .update({ avatar_url: avatarValue })
                     .eq('user_id', user.id);
 
                 if (error) throw error;
 
                 return NextResponse.json({
                     success: true,
-                    message: 'Foto de perfil atualizada'
+                    message: avatarValue ? 'Foto de perfil atualizada' : 'Foto de perfil removida'
                 });
             }
 

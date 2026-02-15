@@ -5,7 +5,7 @@ import {
     UserPlus, RefreshCw, Key, Trash2, Edit3,
     User, Shield, CheckCircle, AlertCircle, X, Eye, EyeOff,
     Building2, Loader2, AlertTriangle, Save, MessageCircle, Smartphone, ExternalLink, Copy, Check,
-    HelpCircle, ChevronDown, ChevronUp, Info
+    HelpCircle, ChevronDown, ChevronUp, Info, Mail
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,6 +26,8 @@ const ROLE_LABELS: Record<string, string> = {
     admin: 'Administrador',
     doctor: 'Médico',
     clinic_user: 'Utilizador Clínica',
+    staff_clinic: 'Staff Clínica',
+    staff_lab: 'Staff Lab',
     staff: 'Staff',
 };
 
@@ -33,6 +35,8 @@ const ROLE_COLORS: Record<string, string> = {
     admin: 'bg-red-100 text-red-700 border-red-200',
     doctor: 'bg-blue-100 text-blue-700 border-blue-200',
     clinic_user: 'bg-green-100 text-green-700 border-green-200',
+    staff_clinic: 'bg-amber-100 text-amber-700 border-amber-200',
+    staff_lab: 'bg-purple-100 text-purple-700 border-purple-200',
     staff: 'bg-gray-100 text-gray-600 border-gray-200',
 };
 
@@ -261,7 +265,8 @@ export default function UserManagement() {
                                             </span>
                                         ) : (
                                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200">
-                                                📧 Email
+                                                <Mail className="h-3 w-3" />
+                                                Email
                                             </span>
                                         )}
                                     </td>
@@ -401,7 +406,7 @@ function CreateUserModal({
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
-    const [appRole, setAppRole] = useState('staff');
+    const [appRole, setAppRole] = useState('staff_lab');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -550,7 +555,8 @@ function CreateUserModal({
                             onChange={e => setAppRole(e.target.value)}
                             className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white"
                         >
-                            <option value="staff">Staff</option>
+                            <option value="staff_lab">Staff Lab</option>
+                            <option value="staff_clinic">Staff Clínica</option>
                             <option value="clinic_user">Utilizador Clínica</option>
                             <option value="doctor">Médico</option>
                             <option value="admin">Administrador</option>
@@ -694,7 +700,8 @@ function EditUserModal({
                             onChange={e => setAppRole(e.target.value)}
                             className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white"
                         >
-                            <option value="staff">Staff</option>
+                            <option value="staff_lab">Staff Lab</option>
+                            <option value="staff_clinic">Staff Clínica</option>
                             <option value="clinic_user">Utilizador Clínica</option>
                             <option value="doctor">Médico</option>
                             <option value="admin">Administrador</option>
