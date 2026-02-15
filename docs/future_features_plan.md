@@ -302,6 +302,43 @@ backups/
 
 ---
 
+## 6. Optimização de Performance ✅ PARCIAL (V1.9.1)
+
+**Objetivo:** Maximizar a velocidade da app na Vercel e Supabase.
+
+### ✅ Implementado (V1.9.1):
+
+#### 6.1 Indexes no Supabase
+Adicionados indexes de `clinic_id` nas tabelas filhas para acelerar queries de filtro:
+- `idx_clinic_contacts_clinic` → `clinic_contacts(clinic_id)`
+- `idx_clinic_delivery_points_clinic` → `clinic_delivery_points(clinic_id)`
+- `idx_clinic_staff_clinic` → `clinic_staff(clinic_id)`
+- `idx_clinic_discounts_clinic` → `clinic_discounts(clinic_id)`
+
+> Migração: `add_performance_indexes`
+
+#### 6.2 Edge Runtime (API Routes)
+3 API routes migradas para Edge Runtime (elimina cold starts de 1-3s):
+- `src/app/api/users/route.ts` → `export const runtime = 'edge'`
+- `src/app/api/users/clinic-access/route.ts` → `export const runtime = 'edge'`
+- `src/app/api/my-account/route.ts` → `export const runtime = 'edge'`
+
+> **Nota:** As routes de backup (`/api/backup/*`) usam `fs` e `child_process` — incompatíveis com Edge Runtime.
+
+### 🔜 Reavaliação Futura (quando a app crescer):
+
+| Área | Quando reavaliar | O que analisar |
+|------|------------------|----------------|
+| **Caching (revalidate)** | Se migrar para Server Components | Aplicar `revalidate` nas páginas que mudam pouco |
+| **Bundle Size** | Se adicionar novas libs pesadas | Correr `npx @next/bundle-analyzer` |
+| **Connection Pooling** | Se usar ORM (Prisma/Drizzle) | Configurar PgBouncer no Supabase |
+| **Supabase Pro ($25/mês)** | Se ultrapassar 500MB dados ou 5GB bandwidth | Avaliar necessidade |
+| **Vercel Pro ($20/mês)** | Se API routes demorarem >10s ou precisar de builds paralelas | Avaliar necessidade |
+
+> **Análise completa:** Ver relatório detalhado na conversa de 15/02/2026.
+
+---
+
 ## Prioridades Atualizadas
 1. ~~Implementar script de backup~~ ✅ V1.7.0
 2. ~~Painel de backups nas Definições~~ ✅ V1.7.0
@@ -314,4 +351,6 @@ backups/
 9. ~~Novos roles (Staff Lab, Staff Clínica) + Avatar~~ ✅ V1.8.0
 10. ~~Ativar Task Scheduler no servidor local~~ ✅ (operacional — configurado via Wizard)
 11. ~~Backup Incremental~~ ✅ V1.9.0 (FULL/INCR/AUTO com updated_at triggers)
-12. [ ] Migração NAS (quando adquirida)
+12. ~~Optimização de Performance~~ ✅ V1.9.1 (Indexes + Edge Runtime)
+13. [ ] Migração NAS (quando adquirida)
+14. [ ] Reanálise de Performance (quando app crescer — ver §6)

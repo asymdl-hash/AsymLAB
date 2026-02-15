@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const runtime = 'edge';
+
 // Admin client com Service Role Key para operações administrativas
 function getAdminClient() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
