@@ -94,7 +94,19 @@ export const clinicsService = {
         if (error) throw error;
     },
 
-    // 8. Buscar membros da equipa marcados como contacto
+    // 8a. Buscar TODOS os membros da equipa (para dropdown entregas)
+    async getClinicStaffAll(clinicId: string) {
+        const { data, error } = await supabase
+            .from('clinic_staff')
+            .select('id, name, phone, role, is_contact')
+            .eq('clinic_id', clinicId)
+            .order('name');
+
+        if (error) throw error;
+        return data || [];
+    },
+
+    // 8b. Buscar membros da equipa marcados como contacto
     async getClinicTeamContacts(clinicId: string) {
         const { data, error } = await supabase
             .from('clinic_staff')

@@ -15,10 +15,12 @@ import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { cn } from '@/lib/utils';
 
 interface CreatedCredentials {
-    username: string;
+    loginType: 'username' | 'email';
+    loginIdentifier: string; // username ou email
     password: string;
     full_name: string;
     phone?: string;
+    email?: string;
 }
 
 export default function ClinicTeamTab() {
@@ -34,6 +36,7 @@ export default function ClinicTeamTab() {
     const [createdCredentials, setCreatedCredentials] = useState<CreatedCredentials | null>(null);
     const [accountError, setAccountError] = useState('');
     const [copiedField, setCopiedField] = useState<string | null>(null);
+    const [accountLoginType, setAccountLoginType] = useState<'username' | 'email'>('username');
 
     const { fields, append, remove } = useFieldArray({
         control,
@@ -108,10 +111,13 @@ export default function ClinicTeamTab() {
 
     // Abrir modal de criação de conta
     const openCreateAccountModal = (index: number) => {
+        const member = control._formValues.clinic_staff?.[index];
         setTargetMemberIndex(index);
         setShowCreateAccountModal(true);
         setCreatedCredentials(null);
         setAccountError('');
+        // Auto-detectar: se o email estiver preenchido, sugerir login por email
+        setAccountLoginType(member?.email ? 'email' : 'username');
     };
 
     // Criar conta para o membro
@@ -126,11 +132,15 @@ export default function ClinicTeamTab() {
             return;
         }
 
+        if (accountLoginType === 'email' && !member?.email) {
+            setAccountError('O campo email deste membro está vazio. Preencha-o primeiro ou use login por username.');
+            return;
+        }
+
         setCreatingAccount(true);
         setAccountError('');
 
         try {
-            const username = generateUsername(member.name);
             const password = generatePassword();
             const clinicId = control._formValues.id;
 
@@ -143,26 +153,39 @@ export default function ClinicTeamTab() {
                 'other': 'staff'
             };
 
+            const body: Record<string, any> = {
+                password,
+                full_name: member.name,
+                app_role: roleMapping[member.role] || 'clinic_user',
+                clinic_ids: [clinicId]
+            };
+
+            if (accountLoginType === 'email') {
+                body.email = member.email;
+            } else {
+                body.username = generateUsername(member.name);
+            }
+
+            if (member.phone) {
+                body.phone = member.phone;
+            }
+
             const res = await fetch('/api/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username,
-                    password,
-                    full_name: member.name,
-                    app_role: roleMapping[member.role] || 'clinic_user',
-                    clinic_ids: [clinicId]
-                })
+                body: JSON.stringify(body)
             });
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
 
             setCreatedCredentials({
-                username,
+                loginType: accountLoginType,
+                loginIdentifier: accountLoginType === 'email' ? member.email : (body.username || ''),
                 password,
                 full_name: member.name,
                 phone: member.phone || undefined,
+                email: member.email || undefined,
             });
         } catch (err: any) {
             setAccountError(err.message || 'Erro ao criar conta');
@@ -194,6 +217,7 @@ export default function ClinicTeamTab() {
         if (!createdCredentials) return;
 
         const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://app.asymlab.pt';
+        const loginLabel = createdCredentials.loginType === 'email' ? 'Email' : 'Username';
         const message = `🔐 *Dados de Acesso — AsymLAB*
 
 Olá ${createdCredentials.full_name}! 👋
@@ -203,7 +227,7 @@ Seguem os teus dados de acesso à aplicação AsymLAB:
 📱 *Link da App:*
 ${appUrl}
 
-👤 *Username:* ${createdCredentials.username}
+👤 *${loginLabel}:* ${createdCredentials.loginIdentifier}
 🔑 *Password:* ${createdCredentials.password}
 
 📝 *Como instalar a App no telemóvel:*
@@ -219,6 +243,18 @@ ${appUrl}
             : `https://wa.me/?text=${encodeURIComponent(message)}`;
 
         window.open(whatsappUrl, '_blank');
+    };
+
+    // Enviar via Email
+    const handleSendEmail = () => {
+        if (!createdCredentials || !createdCredentials.email) return;
+
+        const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://app.asymlab.pt';
+        const loginLabel = createdCredentials.loginType === 'email' ? 'Email' : 'Username';
+        const subject = 'Dados de Acesso — AsymLAB';
+        const body = `Olá ${createdCredentials.full_name}!\n\nSeguem os teus dados de acesso à aplicação AsymLAB:\n\nLink da App: ${appUrl}\n${loginLabel}: ${createdCredentials.loginIdentifier}\nPassword: ${createdCredentials.password}\n\nComo instalar no telemóvel:\n1. Abre o link acima no Chrome/Safari\n2. Clica em "Adicionar ao ecrã inicial"\n\nRecomendação: Altera a tua password após o primeiro login.`;
+
+        window.open(`mailto:${createdCredentials.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
     };
 
     return (
@@ -430,11 +466,45 @@ ${appUrl}
                                     </div>
 
                                     <div className="space-y-3">
+                                        {/* Login Type Toggle */}
+                                        {control._formValues.clinic_staff?.[targetMemberIndex]?.email && (
+                                            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAccountLoginType('username')}
+                                                    className={cn(
+                                                        "flex-1 py-2 text-xs font-medium transition-colors",
+                                                        accountLoginType === 'username'
+                                                            ? 'bg-primary text-white'
+                                                            : 'bg-white text-gray-500 hover:bg-gray-50'
+                                                    )}
+                                                >
+                                                    👤 Username
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAccountLoginType('email')}
+                                                    className={cn(
+                                                        "flex-1 py-2 text-xs font-medium transition-colors",
+                                                        accountLoginType === 'email'
+                                                            ? 'bg-primary text-white'
+                                                            : 'bg-white text-gray-500 hover:bg-gray-50'
+                                                    )}
+                                                >
+                                                    📧 Email
+                                                </button>
+                                            </div>
+                                        )}
+
                                         <div className="px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
                                             <p className="font-medium mb-1">O que vai acontecer:</p>
                                             <ul className="space-y-1 list-disc list-inside">
                                                 <li>Será criada uma <strong>conta de acesso</strong> para este colaborador</li>
-                                                <li>O <strong>username</strong> será gerado a partir do nome: <code className="bg-blue-100 px-1 rounded">{generateUsername(control._formValues.clinic_staff?.[targetMemberIndex]?.name || '')}</code></li>
+                                                {accountLoginType === 'username' ? (
+                                                    <li>O <strong>username</strong> será gerado a partir do nome: <code className="bg-blue-100 px-1 rounded">{generateUsername(control._formValues.clinic_staff?.[targetMemberIndex]?.name || '')}</code></li>
+                                                ) : (
+                                                    <li>O login será feito com o <strong>email</strong>: <code className="bg-blue-100 px-1 rounded">{control._formValues.clinic_staff?.[targetMemberIndex]?.email}</code></li>
+                                                )}
                                                 <li>Uma <strong>password temporária</strong> será gerada automaticamente</li>
                                                 <li>A conta será associada a esta clínica com role <strong>clinic_user</strong></li>
                                             </ul>
@@ -466,19 +536,19 @@ ${appUrl}
                                     </div>
 
                                     <div className="space-y-3">
-                                        {/* Username */}
+                                        {/* Login Identifier */}
                                         <div className="space-y-1">
-                                            <label className="text-xs font-medium text-gray-500">Username</label>
+                                            <label className="text-xs font-medium text-gray-500">{createdCredentials.loginType === 'email' ? 'Email' : 'Username'}</label>
                                             <div className="flex items-center gap-2">
                                                 <div className="flex-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm font-mono">
-                                                    {createdCredentials.username}
+                                                    {createdCredentials.loginIdentifier}
                                                 </div>
                                                 <button
-                                                    onClick={() => handleCopy(createdCredentials.username, 'username')}
+                                                    onClick={() => handleCopy(createdCredentials.loginIdentifier, 'login')}
                                                     className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                                                    title="Copiar username"
+                                                    title="Copiar"
                                                 >
-                                                    {copiedField === 'username' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
+                                                    {copiedField === 'login' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
                                                 </button>
                                             </div>
                                         </div>
@@ -536,12 +606,21 @@ ${appUrl}
                                         className="flex-1 h-10 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                                     >
                                         <MessageCircle className="h-4 w-4" />
-                                        Enviar via WhatsApp
+                                        WhatsApp
                                     </button>
+                                    {createdCredentials?.email && (
+                                        <button
+                                            onClick={handleSendEmail}
+                                            className="flex-1 h-10 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <Mail className="h-4 w-4" />
+                                            Email
+                                        </button>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={() => { setShowCreateAccountModal(false); setCreatedCredentials(null); }}
-                                        className="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                                        className="h-10 px-4 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
                                     >
                                         Fechar
                                     </button>

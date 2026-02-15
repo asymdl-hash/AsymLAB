@@ -5,7 +5,7 @@ import {
     UserPlus, RefreshCw, Key, Trash2, Edit3,
     User, Shield, CheckCircle, AlertCircle, X, Eye, EyeOff,
     Building2, Loader2, AlertTriangle, Save, MessageCircle, Smartphone, ExternalLink, Copy, Check,
-    HelpCircle, ChevronDown, ChevronUp, Info, Mail
+    HelpCircle, ChevronDown, ChevronUp, Info, Mail, Phone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -406,9 +406,49 @@ function CreateUserModal({
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
+    const [phone, setPhone] = useState('');
     const [appRole, setAppRole] = useState('staff_lab');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    // Clínicas
+    const [clinics, setClinics] = useState<{ id: string; commercial_name: string }[]>([]);
+    const [selectedClinics, setSelectedClinics] = useState<string[]>([]);
+    const [loadingClinics, setLoadingClinics] = useState(true);
+
+    // Estado pós-criação
+    const [created, setCreated] = useState<{
+        loginType: 'username' | 'email';
+        loginIdentifier: string;
+        password: string;
+        fullName: string;
+        phone: string;
+        email: string;
+    } | null>(null);
+    const [copiedField, setCopiedField] = useState<string | null>(null);
+
+    // Carregar lista de clínicas
+    useEffect(() => {
+        const fetchClinics = async () => {
+            try {
+                const { supabase } = await import('@/lib/supabase');
+                const { data } = await supabase
+                    .from('clinics')
+                    .select('id, commercial_name')
+                    .order('commercial_name');
+                setClinics(data || []);
+            } catch { /* silently fail */ } finally {
+                setLoadingClinics(false);
+            }
+        };
+        fetchClinics();
+    }, []);
+
+    const handleCopy = (text: string, field: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedField(field);
+        setTimeout(() => setCopiedField(null), 2000);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -425,6 +465,9 @@ function CreateUserModal({
                 body.email = email.trim();
             }
 
+            if (phone.trim()) body.phone = phone.trim();
+            if (selectedClinics.length > 0) body.clinic_ids = selectedClinics;
+
             const res = await fetch('/api/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -433,7 +476,16 @@ function CreateUserModal({
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
-            onSuccess(data.message);
+
+            // Entrar no estado pós-criação
+            setCreated({
+                loginType,
+                loginIdentifier: loginType === 'username' ? username.trim() : email.trim(),
+                password,
+                fullName,
+                phone: phone.trim(),
+                email: loginType === 'email' ? email.trim() : '',
+            });
         } catch (err: any) {
             onError(err.message);
         } finally {
@@ -441,155 +493,337 @@ function CreateUserModal({
         }
     };
 
+    const handleSendWhatsApp = () => {
+        if (!created) return;
+        const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://app.asymlab.pt';
+        const loginLabel = created.loginType === 'email' ? 'Email' : 'Username';
+        const message = `🔐 *Dados de Acesso — AsymLAB*
+
+Olá ${created.fullName}! 👋
+
+Seguem os teus dados de acesso à aplicação AsymLAB:
+
+📱 *Link da App:*
+${appUrl}
+
+👤 *${loginLabel}:* ${created.loginIdentifier}
+🔑 *Password:* ${created.password}
+
+📝 *Como instalar a App no telemóvel:*
+1. Abre o link acima no Chrome/Safari
+2. Clica em "Adicionar ao ecrã inicial" ou no ícone ⊕
+3. A app ficará disponível como atalho no teu telemóvel!
+
+💡 *Recomendação:* Altera a tua password após o primeiro login em "A Minha Conta".`;
+
+        const cleanPhone = created.phone.replace(/\D/g, '');
+        const whatsappUrl = cleanPhone
+            ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
+            : `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    };
+
+    const handleSendEmail = () => {
+        if (!created || !created.email) return;
+        const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://app.asymlab.pt';
+        const loginLabel = created.loginType === 'email' ? 'Email' : 'Username';
+        const subject = 'Dados de Acesso — AsymLAB';
+        const body = `Olá ${created.fullName}!\n\nSeguem os teus dados de acesso à aplicação AsymLAB:\n\nLink da App: ${appUrl}\n${loginLabel}: ${created.loginIdentifier}\nPassword: ${created.password}\n\nComo instalar no telemóvel:\n1. Abre o link acima no Chrome/Safari\n2. Clica em "Adicionar ao ecrã inicial"\n\nRecomendação: Altera a tua password após o primeiro login.`;
+        window.open(`mailto:${created.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+    };
+
+    const handleClose = () => {
+        if (created) {
+            onSuccess(`Utilizador "${created.loginIdentifier}" criado com sucesso`);
+        }
+        onClose();
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                    <h3 className="text-lg font-semibold text-gray-900">Novo Utilizador</h3>
-                    <button onClick={onClose} className="p-1 rounded-md hover:bg-gray-100"><X className="h-5 w-5 text-gray-400" /></button>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                        {created ? '✅ Conta Criada!' : 'Novo Utilizador'}
+                    </h3>
+                    <button onClick={handleClose} className="p-1 rounded-md hover:bg-gray-100"><X className="h-5 w-5 text-gray-400" /></button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    {/* Login Type Toggle */}
-                    <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-                        <button
-                            type="button"
-                            onClick={() => setLoginType('username')}
-                            className={cn(
-                                "flex-1 py-2 text-sm font-medium transition-colors",
-                                loginType === 'username'
-                                    ? 'bg-primary text-white'
-                                    : 'bg-white text-gray-500 hover:bg-gray-50'
-                            )}
-                        >
-                            👤 Username
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setLoginType('email')}
-                            className={cn(
-                                "flex-1 py-2 text-sm font-medium transition-colors",
-                                loginType === 'email'
-                                    ? 'bg-primary text-white'
-                                    : 'bg-white text-gray-500 hover:bg-gray-50'
-                            )}
-                        >
-                            📧 Email
-                        </button>
-                    </div>
+                {!created ? (
+                    <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+                        {/* Login Type Toggle */}
+                        <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={() => setLoginType('username')}
+                                className={cn(
+                                    "flex-1 py-2 text-sm font-medium transition-colors",
+                                    loginType === 'username'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-white text-gray-500 hover:bg-gray-50'
+                                )}
+                            >
+                                👤 Username
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setLoginType('email')}
+                                className={cn(
+                                    "flex-1 py-2 text-sm font-medium transition-colors",
+                                    loginType === 'email'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-white text-gray-500 hover:bg-gray-50'
+                                )}
+                            >
+                                📧 Email
+                            </button>
+                        </div>
 
-                    {/* Username or Email */}
-                    {loginType === 'username' ? (
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-gray-700">Username</label>
-                            <div className="flex items-center">
+                        {/* Username or Email */}
+                        {loginType === 'username' ? (
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium text-gray-700">Username</label>
+                                <div className="flex items-center">
+                                    <input
+                                        type="text"
+                                        value={username}
+                                        onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))}
+                                        placeholder="ana.assistente"
+                                        className="flex-1 h-10 rounded-l-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                        required
+                                    />
+                                    <span className="h-10 px-3 flex items-center bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg text-xs text-gray-500">
+                                        @asymlab.app
+                                    </span>
+                                </div>
+                                <p className="text-xs text-gray-400">Só letras minúsculas, números, pontos e hífens</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium text-gray-700">Email</label>
                                 <input
-                                    type="text"
-                                    value={username}
-                                    onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))}
-                                    placeholder="ana.assistente"
-                                    className="flex-1 h-10 rounded-l-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                    type="email"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    placeholder="utilizador@email.com"
+                                    className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                     required
                                 />
-                                <span className="h-10 px-3 flex items-center bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg text-xs text-gray-500">
-                                    @asymlab.app
-                                </span>
                             </div>
-                            <p className="text-xs text-gray-400">Só letras minúsculas, números, pontos e hífens</p>
-                        </div>
-                    ) : (
+                        )}
+
+                        {/* Full Name */}
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-gray-700">Email</label>
+                            <label className="text-sm font-medium text-gray-700">Nome Completo</label>
                             <input
-                                type="email"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                placeholder="utilizador@email.com"
+                                type="text"
+                                value={fullName}
+                                onChange={e => setFullName(e.target.value)}
+                                placeholder="Ana Silva"
                                 className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                 required
                             />
                         </div>
-                    )}
 
-                    {/* Full Name */}
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-700">Nome Completo</label>
-                        <input
-                            type="text"
-                            value={fullName}
-                            onChange={e => setFullName(e.target.value)}
-                            placeholder="Ana Silva"
-                            className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                            required
-                        />
-                    </div>
-
-                    {/* Password */}
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-700">Password</label>
-                        <div className="relative">
+                        {/* Phone (optional) */}
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                                <Phone className="h-3.5 w-3.5" /> Telemóvel <span className="text-gray-400 font-normal">(opcional)</span>
+                            </label>
                             <input
-                                type={showPassword ? 'text' : 'password'}
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                placeholder="Mínimo 6 caracteres"
-                                className="w-full h-10 rounded-lg border border-gray-300 px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                                required
-                                minLength={6}
+                                type="tel"
+                                value={phone}
+                                onChange={e => setPhone(e.target.value)}
+                                placeholder="+351 912 345 678"
+                                className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                             />
+                            <p className="text-xs text-gray-400">Usado para envio de credenciais por WhatsApp</p>
+                        </div>
+
+                        {/* Password */}
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-gray-700">Password</label>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    placeholder="Mínimo 6 caracteres"
+                                    className="w-full h-10 rounded-lg border border-gray-300 px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                    required
+                                    minLength={6}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Role */}
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-gray-700">Perfil / Role</label>
+                            <select
+                                value={appRole}
+                                onChange={e => setAppRole(e.target.value)}
+                                className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white"
+                            >
+                                <option value="staff_lab">Staff Lab</option>
+                                <option value="staff_clinic">Staff Clínica</option>
+                                <option value="clinic_user">Utilizador Clínica</option>
+                                <option value="doctor">Médico</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+
+                        {/* Clinic Selection */}
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-gray-700">Clínicas Associadas <span className="text-gray-400 font-normal">(opcional)</span></label>
+                            {loadingClinics ? (
+                                <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+                                    <Loader2 className="h-3 w-3 animate-spin" /> A carregar clínicas...
+                                </div>
+                            ) : clinics.length === 0 ? (
+                                <p className="text-xs text-gray-400 py-1">Nenhuma clínica registada</p>
+                            ) : (
+                                <div className="border border-gray-200 rounded-lg max-h-32 overflow-y-auto">
+                                    {clinics.map(c => (
+                                        <label
+                                            key={c.id}
+                                            className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedClinics.includes(c.id)}
+                                                onChange={e => {
+                                                    if (e.target.checked) {
+                                                        setSelectedClinics([...selectedClinics, c.id]);
+                                                    } else {
+                                                        setSelectedClinics(selectedClinics.filter(id => id !== c.id));
+                                                    }
+                                                }}
+                                                className="rounded border-gray-300 text-primary focus:ring-primary"
+                                            />
+                                            <span className="text-gray-700">{c.commercial_name || 'Sem nome'}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Info box for username accounts */}
+                        {loginType === 'username' && (
+                            <div className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
+                                <strong>Nota:</strong> Utilizadores com username não recebem email de recuperação.
+                                Para resetar a password, usa o botão 🔑 na lista.
+                            </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-3 pt-2">
                             <button
                                 type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                                onClick={onClose}
+                                className="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
                             >
-                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="flex-1 h-10 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                                {loading ? 'A criar...' : 'Criar Utilizador'}
+                            </button>
+                        </div>
+                    </form>
+                ) : (
+                    <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                        {/* Post-creation: show credentials */}
+                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-green-50 border border-green-200">
+                            <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                            <p className="text-sm font-medium text-green-800">
+                                Conta criada com sucesso para {created.fullName}!
+                            </p>
+                        </div>
+
+                        <div className="space-y-3">
+                            {/* Login Identifier */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium text-gray-500">
+                                    {created.loginType === 'email' ? 'Email' : 'Username'}
+                                </label>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm font-mono">
+                                        {created.loginIdentifier}
+                                    </div>
+                                    <button
+                                        onClick={() => handleCopy(created.loginIdentifier, 'login')}
+                                        className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                                        title="Copiar"
+                                    >
+                                        {copiedField === 'login' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Password */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium text-gray-500">Password Temporária</label>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm font-mono">
+                                        {created.password}
+                                    </div>
+                                    <button
+                                        onClick={() => handleCopy(created.password, 'password')}
+                                        className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                                        title="Copiar password"
+                                    >
+                                        {copiedField === 'password' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
+                            <strong>Importante:</strong> Guarde estas credenciais! A password não será visível novamente.
+                            Recomende ao utilizador que altere a password no primeiro login.
+                        </div>
+
+                        {/* Send buttons */}
+                        <div className="flex items-center gap-2 pt-2">
+                            <button
+                                type="button"
+                                onClick={handleSendWhatsApp}
+                                className="flex-1 h-10 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <MessageCircle className="h-4 w-4" />
+                                WhatsApp
+                            </button>
+                            {created.email && (
+                                <button
+                                    type="button"
+                                    onClick={handleSendEmail}
+                                    className="flex-1 h-10 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Mail className="h-4 w-4" />
+                                    Email
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={handleClose}
+                                className="h-10 px-4 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                            >
+                                Fechar
                             </button>
                         </div>
                     </div>
-
-                    {/* Role */}
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-700">Perfil / Role</label>
-                        <select
-                            value={appRole}
-                            onChange={e => setAppRole(e.target.value)}
-                            className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white"
-                        >
-                            <option value="staff_lab">Staff Lab</option>
-                            <option value="staff_clinic">Staff Clínica</option>
-                            <option value="clinic_user">Utilizador Clínica</option>
-                            <option value="doctor">Médico</option>
-                            <option value="admin">Administrador</option>
-                        </select>
-                    </div>
-
-                    {/* Info box for username accounts */}
-                    {loginType === 'username' && (
-                        <div className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
-                            <strong>Nota:</strong> Utilizadores com username não recebem email de recuperação.
-                            Para resetar a password, usa o botão 🔑 na lista.
-                        </div>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-3 pt-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex-1 h-10 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-                            {loading ? 'A criar...' : 'Criar Utilizador'}
-                        </button>
-                    </div>
-                </form>
+                )}
             </div>
         </div>
     );

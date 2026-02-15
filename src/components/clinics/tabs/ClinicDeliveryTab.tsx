@@ -42,13 +42,13 @@ export default function ClinicDeliveryTab() {
     // Buscar contactos da equipa
     useEffect(() => {
         if (!clinicId) return;
-        clinicsService.getClinicTeamContacts(clinicId).then(setTeamContacts).catch(console.error);
+        clinicsService.getClinicStaffAll(clinicId).then(setTeamContacts).catch(console.error);
     }, [clinicId]);
 
     useEffect(() => {
         const handler = () => {
             if (!clinicId) return;
-            clinicsService.getClinicTeamContacts(clinicId).then(setTeamContacts).catch(console.error);
+            clinicsService.getClinicStaffAll(clinicId).then(setTeamContacts).catch(console.error);
         };
         window.addEventListener('clinic-updated', handler);
         return () => window.removeEventListener('clinic-updated', handler);

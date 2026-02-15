@@ -80,7 +80,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { username, email, password, full_name, app_role, clinic_ids } = body;
+        const { username, email, password, full_name, app_role, clinic_ids, phone } = body;
 
         // Validações
         if (!password || password.length < 6) {
@@ -106,22 +106,29 @@ export async function POST(request: NextRequest) {
 
         // Determinar o email para o Supabase Auth
         const authEmail = email || `${username!.toLowerCase().trim()}@asymlab.app`;
-        const validRole = ['admin', 'clinic_user', 'doctor', 'staff'].includes(app_role)
+        const validRole = ['admin', 'clinic_user', 'doctor', 'staff', 'staff_lab', 'staff_clinic'].includes(app_role)
             ? app_role
             : 'staff';
 
         const admin = getAdminClient();
 
         // Criar user no Auth
-        const { data: newUser, error: createError } = await admin.auth.admin.createUser({
+        const createPayload: any = {
             email: authEmail,
             password,
-            email_confirm: true, // Auto-confirmar (sem email de verificação)
+            email_confirm: true,
             user_metadata: {
                 full_name,
                 app_role: validRole,
             }
-        });
+        };
+
+        // Associar telefone se fornecido
+        if (phone) {
+            createPayload.phone = phone.replace(/\D/g, '');
+        }
+
+        const { data: newUser, error: createError } = await admin.auth.admin.createUser(createPayload);
 
         if (createError) throw createError;
 
@@ -153,7 +160,8 @@ export async function POST(request: NextRequest) {
                 email: authEmail,
                 username: username || null,
                 full_name,
-                app_role: validRole
+                app_role: validRole,
+                password // Retornar para o modal pós-criação
             },
             message: username
                 ? `Utilizador "${username}" criado com sucesso`
