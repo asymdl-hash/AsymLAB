@@ -20,7 +20,6 @@
             "clinic_staff",
             "clinic_discounts",
             "organization_settings",
-            "profiles",
             "user_profiles",
             "user_clinic_access"
         ]
