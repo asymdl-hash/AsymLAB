@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
     UserPlus, RefreshCw, Key, Trash2, Edit3,
     User, Shield, CheckCircle, AlertCircle, X, Eye, EyeOff,
@@ -1176,16 +1176,34 @@ function EditUserModal({
     const [selectedClinics, setSelectedClinics] = useState<string[]>(user.clinics.map(c => c.clinic_id));
     const [loadingClinics, setLoadingClinics] = useState(true);
     const [showClinicDropdown, setShowClinicDropdown] = useState(false);
+    const clinicDropdownRef = useRef<HTMLDivElement>(null);
+    const originalClinics = useMemo(() => user.clinics.map(c => c.clinic_id), [user]);
 
     // Tags / Funções
-    const allUserTags = user.clinics.flatMap(c => c.tags || []);
-    const uniqueInitialTags = [...new Set(allUserTags)];
+    const uniqueInitialTags = useMemo(() => {
+        const allTags = user.clinics.flatMap(c => c.tags || []);
+        return [...new Set(allTags)];
+    }, [user]);
     const [tags, setTags] = useState<string[]>(uniqueInitialTags);
     const [tagInput, setTagInput] = useState('');
     const [showTagDropdown, setShowTagDropdown] = useState(false);
     const tagDropdownRef = useRef<HTMLDivElement>(null);
     const PRESET_TAGS = ['Rececionista', 'Assistente', 'Gerente', 'Coordenador', 'Técnico', 'Secretária'];
-    const originalClinics = user.clinics.map(c => c.clinic_id);
+
+    // Click outside handlers
+    useEffect(() => {
+        if (!showClinicDropdown && !showTagDropdown) return;
+        const handleClickOutside = (e: MouseEvent) => {
+            if (showClinicDropdown && clinicDropdownRef.current && !clinicDropdownRef.current.contains(e.target as Node)) {
+                setShowClinicDropdown(false);
+            }
+            if (showTagDropdown && tagDropdownRef.current && !tagDropdownRef.current.contains(e.target as Node)) {
+                setShowTagDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showClinicDropdown, showTagDropdown]);
 
     useEffect(() => {
         const fetchClinics = async () => {
@@ -1361,7 +1379,7 @@ function EditUserModal({
                     </div>
 
                     {/* Clinics — Dropdown Multi-select */}
-                    <div className="space-y-1.5 relative">
+                    <div className="space-y-1.5 relative" ref={clinicDropdownRef}>
                         <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
                             <Building2 className="h-4 w-4 text-gray-400" />
                             Clínicas Associadas

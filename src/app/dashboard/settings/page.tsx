@@ -98,7 +98,7 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Conteúdo da tab */}
-                    <div className="p-8 max-w-4xl">
+                    <div className="p-8">
                         {activeTab === 'backups' && <BackupSettings />}
                         {activeTab === 'general' && (
                             <div className="text-center py-16 text-gray-400">
