@@ -61,7 +61,7 @@ export async function GET() {
                 clinics: clinics.map(ca => ({
                     clinic_id: ca.clinic_id,
                     clinic_name: ca.clinics?.commercial_name || 'N/A',
-                    clinic_role: ca.clinic_role
+                    clinic_role: ca.role_at_clinic
                 }))
             };
         });
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
                 const clinicRows = clinic_ids.map((cid: string) => ({
                     user_id: newUser.user.id,
                     clinic_id: cid,
-                    clinic_role: validRole === 'doctor' ? 'doctor' : 'staff'
+                    role_at_clinic: validRole === 'doctor' ? 'doctor' : 'staff'
                 }));
                 await admin.from('user_clinic_access').insert(clinicRows);
             }
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
                 const clinicRows = clinic_ids.map((cid: string) => ({
                     user_id: newUser.user.id,
                     clinic_id: cid,
-                    clinic_role: validRole === 'doctor' ? 'doctor' : 'staff'
+                    role_at_clinic: validRole === 'doctor' ? 'doctor' : 'staff'
                 }));
                 await admin.from('user_clinic_access').insert(clinicRows);
             }
