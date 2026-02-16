@@ -19,8 +19,8 @@
             "clinics",
             "clinic_contacts",
             "clinic_delivery_points",
-            "clinic_staff",
             "clinic_discounts",
+            "delivery_point_contacts",
             "organization_settings",
             "user_profiles",
             "user_clinic_access"
