@@ -1172,6 +1172,7 @@ function EditUserModal({
     const [phone, setPhone] = useState(user.phone || '');
     const [email, setEmail] = useState(user.email || '');
     const [loading, setLoading] = useState(false);
+    const [emailPending, setEmailPending] = useState(false);
 
     // Clinic management
     const [allClinics, setAllClinics] = useState<{ id: string; commercial_name: string }[]>([]);
@@ -1279,7 +1280,7 @@ function EditUserModal({
                 updates.push('telemóvel');
             }
 
-            // Atualizar email se mudou
+            // Atualizar email se mudou (gera link de confirmação)
             if (emailChanged) {
                 const res = await fetch('/api/users', {
                     method: 'PATCH',
@@ -1288,7 +1289,12 @@ function EditUserModal({
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
-                updates.push('email');
+                if (data.pending) {
+                    setEmailPending(true);
+                    updates.push('email (confirmação enviada)');
+                } else {
+                    updates.push('email');
+                }
             }
 
             // Atualizar clínicas se mudaram
@@ -1351,6 +1357,16 @@ function EditUserModal({
                     <h3 className="text-lg font-semibold text-gray-900">Editar Utilizador</h3>
                     <button onClick={onClose} className="p-1 rounded-md hover:bg-gray-100"><X className="h-5 w-5 text-gray-400" /></button>
                 </div>
+
+                {/* Banner de confirmação de email pendente */}
+                {emailPending && (
+                    <div className="mx-6 mt-4 p-3 rounded-lg bg-blue-50 border border-blue-200">
+                        <p className="text-sm font-medium text-blue-800">📧 Email de confirmação enviado</p>
+                        <p className="text-xs text-blue-600 mt-1">
+                            O utilizador recebeu um email com um link de confirmação. O email só será alterado após clicar nesse link.
+                        </p>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
                     {/* User Info Card */}

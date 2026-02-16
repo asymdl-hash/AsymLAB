@@ -346,17 +346,19 @@ export async function PATCH(request: NextRequest) {
                     );
                 }
 
-                // Atualizar email no auth (mantém password e UUID)
-                const { error } = await admin.auth.admin.updateUserById(user_id, {
+                // Atualizar email SEM email_confirm — o Supabase envia automaticamente
+                // um email de confirmação para o novo endereço (via SMTP).
+                // O email só muda após o utilizador clicar no link de confirmação.
+                const { error: emailError } = await admin.auth.admin.updateUserById(user_id, {
                     email: newEmail,
-                    email_confirm: true // Auto-confirmar para evitar perda de acesso
                 });
 
-                if (error) throw error;
+                if (emailError) throw emailError;
 
                 return NextResponse.json({
                     success: true,
-                    message: `Email atualizado para "${newEmail}"`
+                    message: `Email de confirmação enviado para ${newEmail}. O email só será alterado após o utilizador clicar no link recebido.`,
+                    pending: true,
                 });
             }
 
