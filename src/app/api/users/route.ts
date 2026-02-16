@@ -310,6 +310,56 @@ export async function PATCH(request: NextRequest) {
                 });
             }
 
+            case 'update_phone': {
+                const phone = (data.phone || '').trim();
+                const { error } = await admin
+                    .from('user_profiles')
+                    .update({ phone: phone || null })
+                    .eq('user_id', user_id);
+
+                if (error) throw error;
+
+                return NextResponse.json({
+                    success: true,
+                    message: 'Telemóvel atualizado com sucesso'
+                });
+            }
+
+            case 'update_email': {
+                const newEmail = (data.email || '').trim().toLowerCase();
+                if (!newEmail || !newEmail.includes('@')) {
+                    return NextResponse.json(
+                        { error: 'Email inválido' },
+                        { status: 400 }
+                    );
+                }
+
+                // Verificar se o email já está em uso por outro user
+                const { data: existingUsers } = await admin.auth.admin.listUsers();
+                const emailInUse = existingUsers?.users?.some(
+                    u => u.email?.toLowerCase() === newEmail && u.id !== user_id
+                );
+                if (emailInUse) {
+                    return NextResponse.json(
+                        { error: 'Este email já está associado a outro utilizador' },
+                        { status: 409 }
+                    );
+                }
+
+                // Atualizar email no auth (mantém password e UUID)
+                const { error } = await admin.auth.admin.updateUserById(user_id, {
+                    email: newEmail,
+                    email_confirm: true // Auto-confirmar para evitar perda de acesso
+                });
+
+                if (error) throw error;
+
+                return NextResponse.json({
+                    success: true,
+                    message: `Email atualizado para "${newEmail}"`
+                });
+            }
+
             case 'delete': {
                 // Remover clinic access
                 await admin.from('user_clinic_access').delete().eq('user_id', user_id);

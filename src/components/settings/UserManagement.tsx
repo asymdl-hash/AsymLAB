@@ -1169,6 +1169,8 @@ function EditUserModal({
 }) {
     const [fullName, setFullName] = useState(user.full_name);
     const [appRole, setAppRole] = useState(user.app_role);
+    const [phone, setPhone] = useState(user.phone || '');
+    const [email, setEmail] = useState(user.email || '');
     const [loading, setLoading] = useState(false);
 
     // Clinic management
@@ -1229,7 +1231,9 @@ function EditUserModal({
 
     const clinicsChanged = JSON.stringify([...selectedClinics].sort()) !== JSON.stringify([...originalClinics].sort());
     const tagsChanged = JSON.stringify([...tags].sort()) !== JSON.stringify([...uniqueInitialTags].sort());
-    const hasChanges = fullName !== user.full_name || appRole !== user.app_role || clinicsChanged || tagsChanged;
+    const phoneChanged = phone.trim() !== (user.phone || '').trim();
+    const emailChanged = !user.is_username_account && email.trim().toLowerCase() !== (user.email || '').trim().toLowerCase();
+    const hasChanges = fullName !== user.full_name || appRole !== user.app_role || clinicsChanged || tagsChanged || phoneChanged || emailChanged;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -1261,6 +1265,30 @@ function EditUserModal({
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
                 updates.push('role');
+            }
+
+            // Atualizar telemóvel se mudou
+            if (phoneChanged) {
+                const res = await fetch('/api/users', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user.id, action: 'update_phone', phone: phone.trim() })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                updates.push('telemóvel');
+            }
+
+            // Atualizar email se mudou
+            if (emailChanged) {
+                const res = await fetch('/api/users', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user.id, action: 'update_email', email: email.trim() })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                updates.push('email');
             }
 
             // Atualizar clínicas se mudaram
@@ -1353,6 +1381,44 @@ function EditUserModal({
                             className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                             required
                             autoFocus
+                        />
+                    </div>
+
+                    {/* Email (só para contas email) */}
+                    {!user.is_username_account && (
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                                <Mail className="h-4 w-4 text-gray-400" />
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                placeholder="email@exemplo.pt"
+                                className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                required
+                            />
+                            {emailChanged && (
+                                <p className="text-xs text-amber-600">
+                                    ⚠️ O email será alterado. A password e todos os dados associados mantêm-se.
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Telemóvel */}
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                            <Phone className="h-4 w-4 text-gray-400" />
+                            Telemóvel <span className="text-gray-400 font-normal">(opcional)</span>
+                        </label>
+                        <input
+                            type="tel"
+                            value={phone}
+                            onChange={e => setPhone(e.target.value)}
+                            placeholder="+351 912 345 678"
+                            className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                         />
                     </div>
 
