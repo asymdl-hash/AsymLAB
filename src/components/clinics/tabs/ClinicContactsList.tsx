@@ -10,10 +10,11 @@ import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 const ROLE_LABELS: Record<string, string> = {
     admin: 'Administrador',
-    staff_lab: 'Staff Lab',
-    staff_clinic: 'Staff Clínica',
-    clinic_user: 'Utilizador Clínica',
     doctor: 'Médico',
+    staff_clinic: 'Staff Clínica',
+    staff_lab: 'Staff Lab',
+    contabilidade_clinic: 'Contabilidade Clínica',
+    contabilidade_lab: 'Contabilidade Lab',
     assistant: 'Assistente',
     receptionist: 'Rececionista',
     accounting: 'Contabilidade',

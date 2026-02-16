@@ -25,19 +25,19 @@ interface UserData {
 const ROLE_LABELS: Record<string, string> = {
     admin: 'Administrador',
     doctor: 'Médico',
-    clinic_user: 'Utilizador Clínica',
     staff_clinic: 'Staff Clínica',
     staff_lab: 'Staff Lab',
-    staff: 'Staff',
+    contabilidade_clinic: 'Contabilidade Clínica',
+    contabilidade_lab: 'Contabilidade Lab',
 };
 
 const ROLE_COLORS: Record<string, string> = {
     admin: 'bg-red-100 text-red-700 border-red-200',
     doctor: 'bg-blue-100 text-blue-700 border-blue-200',
-    clinic_user: 'bg-green-100 text-green-700 border-green-200',
     staff_clinic: 'bg-amber-100 text-amber-700 border-amber-200',
     staff_lab: 'bg-purple-100 text-purple-700 border-purple-200',
-    staff: 'bg-gray-100 text-gray-600 border-gray-200',
+    contabilidade_clinic: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    contabilidade_lab: 'bg-teal-100 text-teal-700 border-teal-200',
 };
 
 export default function UserManagement() {
@@ -91,18 +91,28 @@ export default function UserManagement() {
         },
         doctor: {
             icon: '🩺',
-            description: 'Acesso completo a pacientes e agenda. Pode consultar clínicas e relatórios, mas não alterar definições do sistema.',
-            permissions: ['Dashboard completo', 'Pacientes (acesso total)', 'Agenda (acesso total)', 'Clínicas e Faturação (apenas leitura)']
+            description: 'Acesso completo a pacientes. Pode consultar clínicas mas não alterar definições.',
+            permissions: ['Pacientes (acesso total)', 'Clínicas (apenas leitura)']
         },
-        clinic_user: {
+        staff_clinic: {
             icon: '🏥',
-            description: 'Focado na gestão operacional da clínica. Acesso completo à agenda e faturação, mas leitura limitada em pacientes.',
-            permissions: ['Agenda (acesso total)', 'Faturação (acesso total)', 'Pacientes (apenas leitura)', 'Clínicas (apenas leitura)']
+            description: 'Staff da clínica. Acesso de leitura a clínicas e pacientes.',
+            permissions: ['Clínicas (apenas leitura)', 'Pacientes (apenas leitura)']
         },
-        staff: {
-            icon: '👤',
-            description: 'Acesso básico ao sistema. Pode consultar informações mas não fazer alterações significativas.',
-            permissions: ['Dashboard (apenas leitura)', 'Pacientes (apenas leitura)', 'Agenda (apenas leitura)', 'Clínicas (apenas leitura)']
+        staff_lab: {
+            icon: '🔬',
+            description: 'Staff do laboratório. Acesso de leitura ao dashboard, clínicas e pacientes.',
+            permissions: ['Dashboard (apenas leitura)', 'Clínicas (apenas leitura)', 'Pacientes (apenas leitura)']
+        },
+        contabilidade_clinic: {
+            icon: '📊',
+            description: 'Contabilidade da clínica. Acesso a faturação e relatórios.',
+            permissions: ['Clínicas (apenas leitura)', 'Faturação (apenas leitura)', 'Relatórios (apenas leitura)']
+        },
+        contabilidade_lab: {
+            icon: '📈',
+            description: 'Contabilidade do laboratório. Acesso ao dashboard, faturação e relatórios.',
+            permissions: ['Dashboard (apenas leitura)', 'Clínicas (apenas leitura)', 'Faturação (apenas leitura)', 'Relatórios (apenas leitura)']
         }
     };
 
@@ -162,10 +172,7 @@ export default function UserManagement() {
                                 key={role}
                                 className={cn(
                                     "rounded-lg border p-3 bg-white/80 backdrop-blur-sm transition-all hover:shadow-sm",
-                                    role === 'admin' ? 'border-red-200' :
-                                        role === 'doctor' ? 'border-blue-200' :
-                                            role === 'clinic_user' ? 'border-green-200' :
-                                                'border-gray-200'
+                                    ROLE_COLORS[role] ? `border-${ROLE_COLORS[role].split(' ')[0].replace('bg-', '').replace('/100', '')}-200` : 'border-gray-200'
                                 )}
                             >
                                 <div className="flex items-center gap-2 mb-1.5">
@@ -174,8 +181,7 @@ export default function UserManagement() {
                                         "text-sm font-semibold",
                                         role === 'admin' ? 'text-red-700' :
                                             role === 'doctor' ? 'text-blue-700' :
-                                                role === 'clinic_user' ? 'text-green-700' :
-                                                    'text-gray-700'
+                                                'text-gray-700'
                                     )}>
                                         {ROLE_LABELS[role]}
                                     </span>
@@ -498,6 +504,13 @@ function CreateUserModal({
     const [showClinicDropdown, setShowClinicDropdown] = useState(false);
     const clinicDropdownRef = useRef<HTMLDivElement>(null);
 
+    // Tags / Funções
+    const [tags, setTags] = useState<string[]>([]);
+    const [tagInput, setTagInput] = useState('');
+    const [showTagDropdown, setShowTagDropdown] = useState(false);
+    const tagDropdownRef = useRef<HTMLDivElement>(null);
+    const PRESET_TAGS = ['Rececionista', 'Assistente', 'Gerente', 'Coordenador', 'Técnico', 'Secretária'];
+
     // Fechar dropdown ao clicar fora
     useEffect(() => {
         if (!showClinicDropdown) return;
@@ -509,6 +522,18 @@ function CreateUserModal({
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showClinicDropdown]);
+
+    // Fechar dropdown de tags ao clicar fora
+    useEffect(() => {
+        if (!showTagDropdown) return;
+        const handleClickOutside = (e: MouseEvent) => {
+            if (tagDropdownRef.current && !tagDropdownRef.current.contains(e.target as Node)) {
+                setShowTagDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showTagDropdown]);
 
     // Estado pós-criação
     const [created, setCreated] = useState<{
@@ -566,6 +591,7 @@ function CreateUserModal({
 
             if (phone.trim()) body.phone = phone.trim();
             if (selectedClinics.length > 0) body.clinic_ids = selectedClinics;
+            if (tags.length > 0) body.tags = tags;
 
             const res = await fetch('/api/users', {
                 method: 'POST',
@@ -827,8 +853,9 @@ function CreateUserModal({
                             >
                                 <option value="staff_lab">Staff Lab</option>
                                 <option value="staff_clinic">Staff Clínica</option>
-                                <option value="clinic_user">Utilizador Clínica</option>
                                 <option value="doctor">Médico</option>
+                                <option value="contabilidade_clinic">Contabilidade Clínica</option>
+                                <option value="contabilidade_lab">Contabilidade Lab</option>
                                 <option value="admin">Administrador</option>
                             </select>
                         </div>
@@ -901,6 +928,84 @@ function CreateUserModal({
                                         </div>
                                     )}
                                 </>
+                            )}
+                        </div>
+
+                        {/* Tags / Funções - Creatable Multi-Select */}
+                        <div className="space-y-1.5 relative" ref={tagDropdownRef}>
+                            <label className="text-sm font-medium text-gray-700">Funções / Tags <span className="text-gray-400 font-normal">(opcional)</span></label>
+                            <div
+                                onClick={() => setShowTagDropdown(!showTagDropdown)}
+                                className="w-full min-h-[40px] rounded-lg border border-gray-300 px-3 py-2 text-sm cursor-pointer bg-white hover:border-gray-400 transition-colors flex items-center flex-wrap gap-1.5"
+                            >
+                                {tags.length === 0 && <span className="text-gray-400">Selecionar ou criar funções...</span>}
+                                {tags.map(tag => (
+                                    <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium">
+                                        {tag}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); setTags(tags.filter(t => t !== tag)); }}
+                                            className="hover:text-red-500 transition-colors"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                            {showTagDropdown && (
+                                <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-1 max-h-60 overflow-y-auto">
+                                    {/* Input para criar nova tag */}
+                                    <div className="flex gap-1.5 mb-1">
+                                        <input
+                                            type="text"
+                                            value={tagInput}
+                                            onChange={e => setTagInput(e.target.value)}
+                                            onKeyDown={e => {
+                                                if (e.key === 'Enter' && tagInput.trim()) {
+                                                    e.preventDefault();
+                                                    const newTag = tagInput.trim();
+                                                    if (!tags.includes(newTag)) {
+                                                        setTags([...tags, newTag]);
+                                                    }
+                                                    setTagInput('');
+                                                }
+                                            }}
+                                            placeholder="Escrever nova função..."
+                                            className="flex-1 h-8 rounded border border-gray-200 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                            onClick={e => e.stopPropagation()}
+                                        />
+                                        {tagInput.trim() && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newTag = tagInput.trim();
+                                                    if (!tags.includes(newTag)) {
+                                                        setTags([...tags, newTag]);
+                                                    }
+                                                    setTagInput('');
+                                                }}
+                                                className="h-8 px-2 text-xs font-medium text-white bg-primary rounded hover:bg-primary/90 transition-colors"
+                                            >
+                                                + Criar
+                                            </button>
+                                        )}
+                                    </div>
+                                    {/* Opções predefinidas */}
+                                    {PRESET_TAGS.filter(t => !tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase())).map(tag => (
+                                        <label key={tag} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                                            <input
+                                                type="checkbox"
+                                                checked={false}
+                                                onChange={() => setTags([...tags, tag])}
+                                                className="rounded border-gray-300 text-primary focus:ring-primary"
+                                            />
+                                            <span className="text-gray-700">{tag}</span>
+                                        </label>
+                                    ))}
+                                    {PRESET_TAGS.filter(t => !tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase())).length === 0 && !tagInput.trim() && (
+                                        <p className="text-xs text-gray-400 px-2 py-1">Todas as opções predefinidas selecionadas</p>
+                                    )}
+                                </div>
                             )}
                         </div>
 
@@ -1220,8 +1325,9 @@ function EditUserModal({
                         >
                             <option value="staff_lab">Staff Lab</option>
                             <option value="staff_clinic">Staff Clínica</option>
-                            <option value="clinic_user">Utilizador Clínica</option>
                             <option value="doctor">Médico</option>
+                            <option value="contabilidade_clinic">Contabilidade Clínica</option>
+                            <option value="contabilidade_lab">Contabilidade Lab</option>
                             <option value="admin">Administrador</option>
                         </select>
                         {appRole !== user.app_role && (

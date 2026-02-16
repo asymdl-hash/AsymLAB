@@ -3,7 +3,7 @@
 
 export type AccessLevel = 'none' | 'read' | 'full';
 
-export type AppRole = 'admin' | 'doctor' | 'clinic_user' | 'staff_clinic' | 'staff_lab';
+export type AppRole = 'admin' | 'doctor' | 'staff_clinic' | 'staff_lab' | 'contabilidade_clinic' | 'contabilidade_lab';
 
 export type AppModule =
     | 'dashboard'
@@ -45,20 +45,17 @@ export function getModuleFromPath(pathname: string): AppModule | null {
 /**
  * Matriz de permissões por role
  * 
- * | Módulo      | Admin    | Médico   | Staff Clínica | Util. Clínica | Staff Lab  |
- * |-------------|----------|----------|---------------|---------------|------------|
- * | Dashboard   | full     | none     | none          | none          | read       |
- * | Clínicas    | full     | read     | read          | read          | read       |
- * | Pacientes   | full     | full*    | read          | read          | read       |
- * | Agenda      | full     | none     | none          | none          | none       |
- * | Faturação   | full     | none     | none          | none          | none       |
- * | Relatórios  | full     | none     | none          | none          | none       |
- * | Definições  | full     | none     | none          | none          | none       |
+ * | Módulo      | Admin | Médico | Staff Clínica | Staff Lab | Contab. Clínica | Contab. Lab |
+ * |-------------|-------|--------|---------------|-----------|-----------------|-------------|
+ * | Dashboard   | full  | none   | none          | read      | none            | read        |
+ * | Clínicas    | full  | read   | read          | read      | read            | read        |
+ * | Pacientes   | full  | full*  | read          | read      | none            | none        |
+ * | Agenda      | full  | none   | none          | none      | none            | none        |
+ * | Faturação   | full  | none   | none          | none      | read            | read        |
+ * | Relatórios  | full  | none   | none          | none      | read            | read        |
+ * | Definições  | full  | none   | none          | none      | none            | none        |
  * 
  * *Médico tem acesso total mas apenas aos seus pacientes (implementado via RLS)
- * 
- * Nota: doctor, clinic_user e staff_clinic acedem também às abas "Entregas" e "Equipa"
- * dentro do módulo clínicas (controlado no ClinicForm).
  */
 export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>> = {
     admin: {
@@ -74,15 +71,6 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
         dashboard: 'none',
         clinics: 'read',
         patients: 'full',
-        schedule: 'none',
-        billing: 'none',
-        reports: 'none',
-        settings: 'none',
-    },
-    clinic_user: {
-        dashboard: 'none',
-        clinics: 'read',
-        patients: 'read',
         schedule: 'none',
         billing: 'none',
         reports: 'none',
@@ -104,6 +92,24 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
         schedule: 'none',
         billing: 'none',
         reports: 'none',
+        settings: 'none',
+    },
+    contabilidade_clinic: {
+        dashboard: 'none',
+        clinics: 'read',
+        patients: 'none',
+        schedule: 'none',
+        billing: 'read',
+        reports: 'read',
+        settings: 'none',
+    },
+    contabilidade_lab: {
+        dashboard: 'read',
+        clinics: 'read',
+        patients: 'none',
+        schedule: 'none',
+        billing: 'read',
+        reports: 'read',
         settings: 'none',
     },
 };
@@ -159,7 +165,8 @@ export const ACCESS_LABELS: Record<AccessLevel, string> = {
 export const ROLE_LABELS: Record<AppRole, string> = {
     admin: 'Administrador',
     doctor: 'Médico',
-    clinic_user: 'Utilizador Clínica',
     staff_clinic: 'Staff Clínica',
     staff_lab: 'Staff Lab',
+    contabilidade_clinic: 'Contabilidade Clínica',
+    contabilidade_lab: 'Contabilidade Lab',
 };

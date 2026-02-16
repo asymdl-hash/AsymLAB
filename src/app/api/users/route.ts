@@ -61,7 +61,8 @@ export async function GET() {
                 clinics: clinics.map(ca => ({
                     clinic_id: ca.clinic_id,
                     clinic_name: ca.clinics?.commercial_name || 'N/A',
-                    clinic_role: ca.role_at_clinic
+                    role_at_clinic: ca.role_at_clinic,
+                    tags: ca.tags || []
                 }))
             };
         });
@@ -80,7 +81,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { username, email, password, full_name, app_role, clinic_ids, phone } = body;
+        const { username, email, password, full_name, app_role, clinic_ids, phone, tags } = body;
 
         const isEmailAccount = !!email && !username;
         const isUsernameAccount = !!username;
@@ -110,9 +111,8 @@ export async function POST(request: NextRequest) {
 
         // Determinar o email para o Supabase Auth
         const authEmail = email || `${username!.toLowerCase().trim()}@asymlab.app`;
-        const validRole = ['admin', 'clinic_user', 'doctor', 'staff', 'staff_lab', 'staff_clinic'].includes(app_role)
-            ? app_role
-            : 'staff';
+        const validRoles = ['admin', 'doctor', 'staff_clinic', 'staff_lab', 'contabilidade_clinic', 'contabilidade_lab'];
+        const validRole = validRoles.includes(app_role) ? app_role : 'staff_lab';
 
         const admin = getAdminClient();
         let inviteLink: string | null = null;
@@ -149,7 +149,8 @@ export async function POST(request: NextRequest) {
                 const clinicRows = clinic_ids.map((cid: string) => ({
                     user_id: newUser.user.id,
                     clinic_id: cid,
-                    role_at_clinic: validRole === 'doctor' ? 'doctor' : 'staff'
+                    role_at_clinic: validRole,
+                    tags: Array.isArray(tags) ? tags : []
                 }));
                 await admin.from('user_clinic_access').insert(clinicRows);
             }
@@ -214,7 +215,8 @@ export async function POST(request: NextRequest) {
                 const clinicRows = clinic_ids.map((cid: string) => ({
                     user_id: newUser.user.id,
                     clinic_id: cid,
-                    role_at_clinic: validRole === 'doctor' ? 'doctor' : 'staff'
+                    role_at_clinic: validRole,
+                    tags: Array.isArray(tags) ? tags : []
                 }));
                 await admin.from('user_clinic_access').insert(clinicRows);
             }
@@ -278,9 +280,8 @@ export async function PATCH(request: NextRequest) {
             }
 
             case 'update_role': {
-                const validRole = ['admin', 'clinic_user', 'doctor', 'staff'].includes(data.app_role)
-                    ? data.app_role
-                    : 'staff';
+                const allRoles = ['admin', 'doctor', 'staff_clinic', 'staff_lab', 'contabilidade_clinic', 'contabilidade_lab'];
+                const validRole = allRoles.includes(data.app_role) ? data.app_role : 'staff_lab';
 
                 const { error } = await admin
                     .from('user_profiles')

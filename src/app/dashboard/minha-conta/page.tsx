@@ -24,8 +24,10 @@ interface AccountData {
 const ROLE_LABELS: Record<string, string> = {
     admin: 'Administrador',
     doctor: 'Médico',
-    clinic_user: 'Utilizador Clínica',
-    staff: 'Staff',
+    staff_clinic: 'Staff Clínica',
+    staff_lab: 'Staff Lab',
+    contabilidade_clinic: 'Contabilidade Clínica',
+    contabilidade_lab: 'Contabilidade Lab',
 };
 
 // Ícones SVG oficiais
