@@ -228,24 +228,22 @@ export default function ClinicTeamTab() {
                                                 </div>
                                             )}
 
-                                            {/* Role at clinic */}
+                                            {/* Tags / Funções na Clínica */}
                                             <div className="space-y-1">
                                                 <label className="text-xs text-gray-400 flex items-center gap-1">
-                                                    <Briefcase className="h-3 w-3" /> Função na Clínica
+                                                    <Briefcase className="h-3 w-3" /> Funções na Clínica
                                                 </label>
-                                                <select
-                                                    value={member.role_at_clinic || ''}
-                                                    onChange={(e) => handleUpdateRole(member.user_id, e.target.value)}
-                                                    className="flex h-8 w-full items-center rounded-md border border-input bg-background px-2 text-xs ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                                >
-                                                    <option value="">— Não definida —</option>
-                                                    <option value="doctor">Médico</option>
-                                                    <option value="assistant">Assistente</option>
-                                                    <option value="receptionist">Rececionista</option>
-                                                    <option value="accounting">Contabilidade</option>
-                                                    <option value="manager">Gestor</option>
-                                                    <option value="other">Outro</option>
-                                                </select>
+                                                {member.tags && member.tags.length > 0 ? (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {member.tags.map(tag => (
+                                                            <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium">
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-xs text-gray-400 italic">Sem funções atribuídas</p>
+                                                )}
                                             </div>
 
                                             {/* Toggle Contacto da Clínica */}

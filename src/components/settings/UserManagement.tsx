@@ -19,7 +19,7 @@ interface UserData {
     app_role: string;
     created_at: string;
     last_sign_in_at: string | null;
-    clinics: { clinic_id: string; clinic_name: string; clinic_role: string }[];
+    clinics: { clinic_id: string; clinic_name: string; clinic_role: string; tags: string[] }[];
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -236,16 +236,16 @@ export default function UserManagement() {
                     <span className="ml-2 text-sm text-gray-400">A carregar utilizadores...</span>
                 </div>
             ) : (
-                <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto shadow-sm">
-                    <table className="w-full" style={{ minWidth: '720px' }}>
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <table className="w-full">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-200">
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ width: '22%' }}>Utilizador</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ width: '12%' }}>Login</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ width: '14%' }}>Role</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ width: '18%' }}>Clínicas</th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ width: '14%' }}>Último Login</th>
-                                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ width: '20%' }}>Ações</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Utilizador</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Login</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Clínicas</th>
+                                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Último Login</th>
+                                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -287,7 +287,7 @@ export default function UserManagement() {
                                             {ROLE_LABELS[user.app_role] || user.app_role}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-3 hidden md:table-cell">
                                         {user.clinics.length > 0 ? (
                                             <div className="flex flex-wrap gap-1">
                                                 {user.clinics.map((c, i) => (
@@ -301,7 +301,7 @@ export default function UserManagement() {
                                             <span className="text-xs text-gray-400">—</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-3 hidden lg:table-cell">
                                         <span className="text-xs text-gray-500">
                                             {user.last_sign_in_at
                                                 ? new Date(user.last_sign_in_at).toLocaleDateString('pt-PT', {
@@ -1176,6 +1176,15 @@ function EditUserModal({
     const [selectedClinics, setSelectedClinics] = useState<string[]>(user.clinics.map(c => c.clinic_id));
     const [loadingClinics, setLoadingClinics] = useState(true);
     const [showClinicDropdown, setShowClinicDropdown] = useState(false);
+
+    // Tags / Funções
+    const allUserTags = user.clinics.flatMap(c => c.tags || []);
+    const uniqueInitialTags = [...new Set(allUserTags)];
+    const [tags, setTags] = useState<string[]>(uniqueInitialTags);
+    const [tagInput, setTagInput] = useState('');
+    const [showTagDropdown, setShowTagDropdown] = useState(false);
+    const tagDropdownRef = useRef<HTMLDivElement>(null);
+    const PRESET_TAGS = ['Rececionista', 'Assistente', 'Gerente', 'Coordenador', 'Técnico', 'Secretária'];
     const originalClinics = user.clinics.map(c => c.clinic_id);
 
     useEffect(() => {
@@ -1201,7 +1210,8 @@ function EditUserModal({
     };
 
     const clinicsChanged = JSON.stringify([...selectedClinics].sort()) !== JSON.stringify([...originalClinics].sort());
-    const hasChanges = fullName !== user.full_name || appRole !== user.app_role || clinicsChanged;
+    const tagsChanged = JSON.stringify([...tags].sort()) !== JSON.stringify([...uniqueInitialTags].sort());
+    const hasChanges = fullName !== user.full_name || appRole !== user.app_role || clinicsChanged || tagsChanged;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -1265,6 +1275,19 @@ function EditUserModal({
                 }
 
                 updates.push('clínicas');
+            }
+
+            // Atualizar tags se mudaram
+            if (tagsChanged && selectedClinics.length > 0) {
+                const { supabase } = await import('@/lib/supabase');
+                for (const clinicId of selectedClinics) {
+                    await supabase
+                        .from('user_clinic_access')
+                        .update({ tags })
+                        .eq('user_id', user.id)
+                        .eq('clinic_id', clinicId);
+                }
+                updates.push('funções');
             }
 
             onSuccess(`Utilizador "${fullName}" atualizado (${updates.join(' e ')})`);
@@ -1417,6 +1440,84 @@ function EditUserModal({
                                     </div>
                                 )}
                             </>
+                        )}
+                    </div>
+
+                    {/* Tags / Funções - Creatable Multi-Select */}
+                    <div className="space-y-1.5 relative" ref={tagDropdownRef}>
+                        <label className="text-sm font-medium text-gray-700">Funções / Tags <span className="text-gray-400 font-normal">(opcional)</span></label>
+                        <div
+                            onClick={() => setShowTagDropdown(!showTagDropdown)}
+                            className="w-full min-h-[40px] rounded-lg border border-gray-300 px-3 py-2 text-sm cursor-pointer bg-white hover:border-gray-400 transition-colors flex items-center flex-wrap gap-1.5"
+                        >
+                            {tags.length === 0 && <span className="text-gray-400">Selecionar ou criar funções...</span>}
+                            {tags.map(tag => (
+                                <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium">
+                                    {tag}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); setTags(tags.filter(t => t !== tag)); }}
+                                        className="hover:text-red-500 transition-colors"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                        {showTagDropdown && (
+                            <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-1 max-h-60 overflow-y-auto">
+                                {/* Input para criar nova tag */}
+                                <div className="flex gap-1.5 mb-1">
+                                    <input
+                                        type="text"
+                                        value={tagInput}
+                                        onChange={e => setTagInput(e.target.value)}
+                                        onKeyDown={e => {
+                                            if (e.key === 'Enter' && tagInput.trim()) {
+                                                e.preventDefault();
+                                                const newTag = tagInput.trim();
+                                                if (!tags.includes(newTag)) {
+                                                    setTags([...tags, newTag]);
+                                                }
+                                                setTagInput('');
+                                            }
+                                        }}
+                                        placeholder="Escrever nova função..."
+                                        className="flex-1 h-8 rounded border border-gray-200 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                        onClick={e => e.stopPropagation()}
+                                    />
+                                    {tagInput.trim() && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newTag = tagInput.trim();
+                                                if (!tags.includes(newTag)) {
+                                                    setTags([...tags, newTag]);
+                                                }
+                                                setTagInput('');
+                                            }}
+                                            className="h-8 px-2 text-xs font-medium text-white bg-primary rounded hover:bg-primary/90 transition-colors"
+                                        >
+                                            + Criar
+                                        </button>
+                                    )}
+                                </div>
+                                {/* Opções predefinidas */}
+                                {PRESET_TAGS.filter(t => !tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase())).map(tag => (
+                                    <label key={tag} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                                        <input
+                                            type="checkbox"
+                                            checked={false}
+                                            onChange={() => setTags([...tags, tag])}
+                                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                                        />
+                                        <span className="text-gray-700">{tag}</span>
+                                    </label>
+                                ))}
+                                {PRESET_TAGS.filter(t => !tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase())).length === 0 && !tagInput.trim() && (
+                                    <p className="text-xs text-gray-400 px-2 py-1">Todas as opções predefinidas selecionadas</p>
+                                )}
+                            </div>
                         )}
                     </div>
 

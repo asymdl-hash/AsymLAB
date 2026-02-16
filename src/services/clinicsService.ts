@@ -15,6 +15,7 @@ export interface ClinicTeamMember {
     app_role: string;
     is_contact: boolean;
     role_at_clinic: string | null;
+    tags: string[];
 }
 
 export type ClinicFullDetails = Clinic & {
@@ -105,7 +106,7 @@ export const clinicsService = {
     async getClinicTeam(clinicId: string): Promise<ClinicTeamMember[]> {
         const { data, error } = await supabase
             .from('user_clinic_access')
-            .select('user_id, is_contact, role_at_clinic, user_profiles!user_clinic_access_user_id_profiles_fkey(full_name, phone, app_role)')
+            .select('user_id, is_contact, role_at_clinic, tags, user_profiles!user_clinic_access_user_id_profiles_fkey(full_name, phone, app_role)')
             .eq('clinic_id', clinicId);
 
         if (error) throw error;
@@ -116,6 +117,7 @@ export const clinicsService = {
             app_role: d.user_profiles?.app_role || '',
             is_contact: d.is_contact,
             role_at_clinic: d.role_at_clinic,
+            tags: d.tags || [],
         }));
     },
 
@@ -123,7 +125,7 @@ export const clinicsService = {
     async getClinicTeamContacts(clinicId: string): Promise<ClinicTeamMember[]> {
         const { data, error } = await supabase
             .from('user_clinic_access')
-            .select('user_id, is_contact, role_at_clinic, user_profiles!user_clinic_access_user_id_profiles_fkey(full_name, phone, app_role)')
+            .select('user_id, is_contact, role_at_clinic, tags, user_profiles!user_clinic_access_user_id_profiles_fkey(full_name, phone, app_role)')
             .eq('clinic_id', clinicId)
             .eq('is_contact', true);
 
@@ -135,6 +137,7 @@ export const clinicsService = {
             app_role: d.user_profiles?.app_role || '',
             is_contact: d.is_contact,
             role_at_clinic: d.role_at_clinic,
+            tags: d.tags || [],
         }));
     },
 
