@@ -23,7 +23,9 @@
             "delivery_point_contacts",
             "organization_settings",
             "user_profiles",
-            "user_clinic_access"
+            "user_clinic_access",
+            "doctor_profiles",
+            "doctor_clinic_partners"
         ]
     },
     "notes": {

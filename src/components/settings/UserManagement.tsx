@@ -5,7 +5,7 @@ import {
     UserPlus, RefreshCw, Key, Trash2, Edit3,
     User, Shield, CheckCircle, AlertCircle, X, Eye, EyeOff,
     Building2, Loader2, AlertTriangle, Save, MessageCircle, Smartphone, ExternalLink, Copy, Check,
-    HelpCircle, ChevronDown, ChevronUp, Info, Mail, Phone, Send, Plus
+    HelpCircle, ChevronDown, ChevronUp, Info, Mail, Phone, Send, Plus, Stethoscope
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -260,7 +260,17 @@ export default function UserManagement() {
                                                 {user.full_name.charAt(0).toUpperCase()}
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="font-medium text-gray-900 text-sm truncate">{user.full_name}</p>
+                                                {user.app_role === 'doctor' ? (
+                                                    <a
+                                                        href={`/dashboard/doctors/${user.id}`}
+                                                        className="font-medium text-blue-600 hover:text-blue-800 hover:underline text-sm truncate block"
+                                                        title="Ver Ficha do Médico"
+                                                    >
+                                                        {user.full_name}
+                                                    </a>
+                                                ) : (
+                                                    <p className="font-medium text-gray-900 text-sm truncate">{user.full_name}</p>
+                                                )}
                                                 <p className="text-xs text-gray-400 truncate">{user.email}</p>
                                             </div>
                                         </div>
@@ -1266,6 +1276,17 @@ function EditUserModal({
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
                 updates.push('role');
+
+                // Auto-criar perfil profissional se mudou para médico
+                if (appRole === 'doctor') {
+                    try {
+                        const { doctorsService } = await import('@/services/doctorsService');
+                        await doctorsService.createDoctorProfile(user.id);
+                        window.dispatchEvent(new CustomEvent('doctor-profile-created'));
+                    } catch (e) {
+                        console.error('Erro ao criar perfil de médico:', e);
+                    }
+                }
             }
 
             // Atualizar telemóvel se mudou

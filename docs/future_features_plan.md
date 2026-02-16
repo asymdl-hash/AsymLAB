@@ -1,6 +1,19 @@
 
 # Plano de Implementação: Backup, NAS e Segurança
 
+> [!IMPORTANT]
+> **Regra Operacional — Verificação de Backup:**
+> Sempre que uma implementação **crie, edite ou elimine tabelas** (ou outras estruturas) no Supabase, deve-se verificar se o script de backup (`scripts/backup-supabase.js`) precisa de ser actualizado para incluir/remover essas tabelas. Consultar a lista `TABLES` no script e actualizar conforme necessário. Isto aplica-se também a alterações em storage buckets, edge functions, e RLS policies.
+
+> [!WARNING]
+> **Regra Operacional — Integridade e Sincronização de Dados:**
+> Sempre que se implementem funcionalidades que leiam ou escrevam dados, verificar:
+> 1. **Fonte Única de Verdade (Single Source of Truth):** Cada dado deve ter **uma única fonte** — nunca ler de um sítio e escrever noutro (ex: o bug `auth.users.phone` vs `user_profiles.phone`).
+> 2. **Dados Duplicados:** Confirmar que não existem dados armazenados em dois locais diferentes sem sincronização automática.
+> 3. **Dados Orphan:** Ao eliminar registos, verificar se existem referências noutras tabelas (usar `ON DELETE CASCADE` quando aplicável).
+> 4. **Campos Obrigatórios:** Garantir que campos essenciais (nome, telefone, email) são populados durante o fluxo de criação do utilizador e guardados na tabela correcta (`user_profiles`).
+> 5. **Migração de Dados Legacy:** Se existem dados antigos em locais diferentes (ex: `auth.users.phone`), criar um script de migração para unificar.
+
 ---
 
 ## 1. Redundância de Dados — Backup Local ✅ IMPLEMENTADO (V1.7.0 → V1.9.0)
@@ -395,3 +408,87 @@ Adicionados indexes de `clinic_id` nas tabelas filhas para acelerar queries de f
 14. [ ] Role Contabilidade (quando Faturação existir — ver §3.5)
 15. [ ] Migração NAS (quando adquirida)
 16. [ ] Reanálise de Performance (quando app crescer — ver §6)
+17. [x] Módulo Médicos — Base (V1.13.0)
+18. [ ] Módulo Médicos — Analytics (ver §7)
+19. [ ] Módulo Médicos — WhatsApp Permissions (ver §8)
+20. [ ] Sidebar Reordenável por Utilizador (V1.14.0)
+
+---
+
+## 7. Módulo Médicos — Analytics 🔜 (FUTURO)
+
+**Objetivo:** Dashboard analítico na aba Analytics do perfil do médico.
+
+### Métricas sugeridas:
+- Total de pacientes ativos / inativos
+- Nº de consultas por período
+- Taxa de adesão ao tratamento
+- Evolução de novos pacientes por mês
+- Distribuição por clínica
+- Tempo médio de tratamento
+
+> **Implementar quando:** módulo de Pacientes e Agenda estiverem completos com dados reais.
+
+---
+
+## 8. Módulo Médicos — WhatsApp Permissions 🔜 (FUTURO)
+
+**Objetivo:** Configurar permissões granulares de WhatsApp por médico.
+
+### Funcionalidades planeadas:
+- Toggle global: Z-API ignora / avisa / responde
+- Controlo por comando @ (ex: @iniciar, @ficheiro, etc.)
+- Notificações: ativar/desactivar tipos específicos
+- Modo "Férias" — Z-API responde automaticamente com mensagem pré-definida
+
+### Tabela sugerida:
+```sql
+CREATE TABLE doctor_whatsapp_permissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  doctor_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  command TEXT NOT NULL,             -- ex: '@iniciar', '@ficheiro', 'global'
+  action TEXT DEFAULT 'respond',     -- 'ignore', 'warn', 'respond'
+  enabled BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+> **Implementar quando:** sistema de comandos WhatsApp estiver estabilizado.
+
+---
+
+## 9. Email de Contacto vs Email de Login ✅ (V1.13.1)
+
+**Objetivo:** Separar o email de login do email de contacto para permitir comunicações com utilizadores criados por username.
+
+### Conceito
+
+| Tipo de conta | Email de Login | Email de Contacto |
+|---|---|---|
+| **Criada por Email** | `user@gmail.com` | Auto-preenchido = `user@gmail.com` |
+| **Criada por Username** | `username@asymlab.app` (virtual) | Vazio — editável na ficha |
+
+### Regras
+1. `contact_email` é uma coluna em `user_profiles`
+2. Para utilizadores por email, o `contact_email` é **auto-preenchido** na criação
+3. Para utilizadores por username, o `contact_email` é **editável** na ficha do médico
+4. O `contact_email` é usado para **comunicações** (notificações, relatórios, etc.)
+5. O email de login nunca é exposto na ficha do médico
+
+### Migração SQL
+```sql
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS contact_email TEXT;
+-- Auto-preencher para contas email existentes
+UPDATE public.user_profiles up
+SET contact_email = au.email
+FROM auth.users au
+WHERE up.user_id = au.id
+  AND au.email NOT LIKE '%@asymlab.app'
+  AND up.contact_email IS NULL;
+```
+
+### Implementação futura
+- [ ] Auto-preencher `contact_email` na criação de novos utilizadores por email (UserManagement)
+- [ ] Usar `contact_email` para envio de emails/notificações
+- [ ] Validar unicidade do email de contacto (opcional)

@@ -21,7 +21,8 @@ import {
     X,
     UserCircle,
     PanelLeft,
-    Lock
+    Lock,
+    Stethoscope
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +36,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
     { icon: Home, label: 'Dashboard', href: '/dashboard', module: 'dashboard' },
     { icon: Building2, label: 'Clínicas', href: '/dashboard/clinics', module: 'clinics' },
+    { icon: Stethoscope, label: 'Médicos', href: '/dashboard/doctors', module: 'doctors' },
     { icon: Users, label: 'Pacientes', href: '/dashboard/patients', module: 'patients' },
     { icon: Calendar, label: 'Agenda', href: '/dashboard/schedule', module: 'schedule' },
     { icon: Euro, label: 'Faturação', href: '/dashboard/billing', module: 'billing' },

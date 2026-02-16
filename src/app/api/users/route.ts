@@ -46,7 +46,7 @@ export async function GET() {
             return {
                 id: u.id,
                 email: u.email,
-                phone: u.phone,
+                phone: profile?.phone || u.phone || null,
                 created_at: u.created_at,
                 last_sign_in_at: u.last_sign_in_at,
                 // Username: extrair do email se for @asymlab.app

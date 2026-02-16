@@ -8,6 +8,7 @@ export type AppRole = 'admin' | 'doctor' | 'staff_clinic' | 'staff_lab' | 'conta
 export type AppModule =
     | 'dashboard'
     | 'clinics'
+    | 'doctors'
     | 'patients'
     | 'schedule'
     | 'billing'
@@ -18,6 +19,7 @@ export type AppModule =
 export const MODULE_PATHS: Record<AppModule, string> = {
     dashboard: '/dashboard',
     clinics: '/dashboard/clinics',
+    doctors: '/dashboard/doctors',
     patients: '/dashboard/patients',
     schedule: '/dashboard/schedule',
     billing: '/dashboard/billing',
@@ -61,6 +63,7 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
     admin: {
         dashboard: 'full',
         clinics: 'full',
+        doctors: 'full',
         patients: 'full',
         schedule: 'full',
         billing: 'full',
@@ -70,6 +73,7 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
     doctor: {
         dashboard: 'none',
         clinics: 'read',
+        doctors: 'read',
         patients: 'full',
         schedule: 'none',
         billing: 'none',
@@ -79,6 +83,7 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
     staff_clinic: {
         dashboard: 'none',
         clinics: 'read',
+        doctors: 'read',
         patients: 'read',
         schedule: 'none',
         billing: 'none',
@@ -88,6 +93,7 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
     staff_lab: {
         dashboard: 'read',
         clinics: 'read',
+        doctors: 'read',
         patients: 'read',
         schedule: 'none',
         billing: 'none',
@@ -97,6 +103,7 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
     contabilidade_clinic: {
         dashboard: 'none',
         clinics: 'read',
+        doctors: 'none',
         patients: 'none',
         schedule: 'none',
         billing: 'read',
@@ -106,6 +113,7 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
     contabilidade_lab: {
         dashboard: 'read',
         clinics: 'read',
+        doctors: 'none',
         patients: 'none',
         schedule: 'none',
         billing: 'read',
