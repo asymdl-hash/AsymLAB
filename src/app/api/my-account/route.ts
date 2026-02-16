@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
             clinics: (clinics || []).map(c => ({
                 clinic_id: c.clinic_id,
                 clinic_name: c.clinics?.commercial_name || 'N/A',
-                clinic_role: c.clinic_role
+                clinic_role: c.role_at_clinic
             }))
         });
     } catch (error: any) {

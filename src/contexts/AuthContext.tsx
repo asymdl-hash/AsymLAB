@@ -15,7 +15,7 @@ interface UserProfile {
     full_name: string;
     app_role: AppRole;
     avatar_url: string | null;
-    clinics: { clinic_id: string; clinic_name: string; clinic_role: string }[];
+    clinics: { clinic_id: string; clinic_name: string; role_at_clinic: string }[];
 }
 
 interface AuthContextType {
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Buscar as clínicas associadas
             const { data: clinicAccess } = await supabase
                 .from('user_clinic_access')
-                .select('clinic_id, clinic_role, clinics(commercial_name)')
+                .select('clinic_id, role_at_clinic, clinics(commercial_name)')
                 .eq('user_id', authUser.id);
 
             const isUsernameAccount = authUser.email?.endsWith('@asymlab.app') || false;
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 clinics: (clinicAccess || []).map((ca: any) => ({
                     clinic_id: ca.clinic_id,
                     clinic_name: ca.clinics?.commercial_name || 'N/A',
-                    clinic_role: ca.clinic_role
+                    role_at_clinic: ca.role_at_clinic
                 }))
             });
         } catch (error) {
