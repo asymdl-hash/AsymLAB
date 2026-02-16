@@ -3,57 +3,18 @@ import { useFormContext } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-import { Upload, X, MapPin, Pencil, Check } from 'lucide-react'; // Placeholder para Upload de Logo
+import { MapPin, Pencil, Check } from 'lucide-react';
 import { ClinicFullDetails } from '@/services/clinicsService';
 import ClinicContactsList from './ClinicContactsList';
 
 export default function ClinicInfoTab() {
     const { register, formState: { errors }, watch, setValue } = useFormContext<ClinicFullDetails>();
 
-    // Estado local para upload (mock)
-    const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [isEditingMap, setIsEditingMap] = useState(false);
 
-    const existingLogo = watch('logo_url');
     const hqMapsLink = watch('hq_maps_link');
-
-    useEffect(() => {
-        if (existingLogo) setLogoPreview(existingLogo);
-    }, [existingLogo]);
-
-    const processFile = (file: File) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const base64 = reader.result as string;
-            setLogoPreview(base64);
-            setValue('logo_url', base64, { shouldDirty: true, shouldValidate: true });
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) processFile(file);
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        const file = e.dataTransfer.files?.[0];
-        if (file) processFile(file);
-    };
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-    };
-
-    const removeLogo = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Impede abrir o file dialog
-        setLogoPreview(null);
-        setValue('logo_url', "", { shouldDirty: true });
-    };
 
     return (
         <div className="grid gap-6">
@@ -63,83 +24,41 @@ export default function ClinicInfoTab() {
                     <CardDescription>Dados legais e comerciais da clínica.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex gap-6 items-start">
-                        {/* Logo Upload */}
+                    {/* Campos Principais */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                        <div className="w-32 flex flex-col items-center gap-2">
-                            <Label className="sr-only" htmlFor="logo-upload">Logo</Label>
-                            <div
-                                className="h-32 w-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 cursor-pointer overflow-hidden relative group transition-colors"
-                                onClick={() => document.getElementById('logo-upload')?.click()}
-                                onDrop={handleDrop}
-                                onDragOver={handleDragOver}
-                            >
-                                {logoPreview ? (
-                                    <>
-                                        <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Upload className="h-6 w-6 text-white" />
-                                        </div>
-                                        <button
-                                            onClick={removeLogo}
-                                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
-                                            title="Remover Logo"
-                                        >
-                                            <X className="h-3 w-3" />
-                                        </button>
-                                    </>
-                                ) : (
-                                    <div className="flex flex-col items-center">
-                                        <Upload className="h-6 w-6 mb-1" />
-                                        <span className="text-xs text-center px-2">Arraste ou clique</span>
-                                    </div>
-                                )}
-                            </div>
-                            <input
-                                id="logo-upload"
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={handleLogoUpload}
+                        <div className="space-y-2">
+                            <Label htmlFor="commercial_name">Nome Comercial *</Label>
+                            <Input
+                                id="commercial_name"
+                                {...(() => {
+                                    const { onBlur, ...rest } = register("commercial_name", { required: true });
+                                    return {
+                                        ...rest,
+                                        onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
+                                            onBlur(e);
+                                            window.dispatchEvent(new CustomEvent('clinic-updated'));
+                                        }
+                                    };
+                                })()}
                             />
+                            {errors.commercial_name && <span className="text-xs text-red-500">Obrigatório</span>}
                         </div>
-
-                        {/* Campos Principais */}
-                        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                            <div className="space-y-2">
-                                <Label htmlFor="commercial_name">Nome Comercial *</Label>
-                                <Input
-                                    id="commercial_name"
-                                    {...(() => {
-                                        const { onBlur, ...rest } = register("commercial_name", { required: true });
-                                        return {
-                                            ...rest,
-                                            onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
-                                                onBlur(e);
-                                                window.dispatchEvent(new CustomEvent('clinic-updated'));
-                                            }
-                                        };
-                                    })()}
-                                />
-                                {errors.commercial_name && <span className="text-xs text-red-500">Obrigatório</span>}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="legal_name">Razão Social</Label>
-                                <Input id="legal_name" {...register("legal_name")} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="nif">NIF</Label>
-                                <Input id="nif" {...register("nif")} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email Geral</Label>
-                                <Input id="email" type="email" {...register("email")} />
-                            </div>
-                            <div className="space-y-2 relative">
-                                <Label htmlFor="website">Website</Label>
-                                <Input id="website" {...register("website")} placeholder="https://..." />
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="legal_name">Razão Social</Label>
+                            <Input id="legal_name" {...register("legal_name")} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="nif">NIF</Label>
+                            <Input id="nif" {...register("nif")} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email Geral</Label>
+                            <Input id="email" type="email" {...register("email")} />
+                        </div>
+                        <div className="space-y-2 relative">
+                            <Label htmlFor="website">Website</Label>
+                            <Input id="website" {...register("website")} placeholder="https://..." />
                         </div>
                     </div>
                 </CardContent>
