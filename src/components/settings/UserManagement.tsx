@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     UserPlus, RefreshCw, Key, Trash2, Edit3,
     User, Shield, CheckCircle, AlertCircle, X, Eye, EyeOff,
@@ -496,6 +496,19 @@ function CreateUserModal({
     const [selectedClinics, setSelectedClinics] = useState<string[]>([]);
     const [loadingClinics, setLoadingClinics] = useState(true);
     const [showClinicDropdown, setShowClinicDropdown] = useState(false);
+    const clinicDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Fechar dropdown ao clicar fora
+    useEffect(() => {
+        if (!showClinicDropdown) return;
+        const handleClickOutside = (e: MouseEvent) => {
+            if (clinicDropdownRef.current && !clinicDropdownRef.current.contains(e.target as Node)) {
+                setShowClinicDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showClinicDropdown]);
 
     // Estado pós-criação
     const [created, setCreated] = useState<{
@@ -821,7 +834,7 @@ function CreateUserModal({
                         </div>
 
                         {/* Clinic Selection - Dropdown Multi-select */}
-                        <div className="space-y-1.5 relative">
+                        <div className="space-y-1.5 relative" ref={clinicDropdownRef}>
                             <label className="text-sm font-medium text-gray-700">Clínicas Associadas <span className="text-gray-400 font-normal">(opcional)</span></label>
                             {loadingClinics ? (
                                 <div className="flex items-center gap-2 text-xs text-gray-400 py-2">

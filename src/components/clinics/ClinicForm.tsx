@@ -12,7 +12,6 @@ import ClinicInfoTab from './tabs/ClinicInfoTab';
 import ClinicDeliveryTab from './tabs/ClinicDeliveryTab';
 import ClinicTeamTab from './tabs/ClinicTeamTab';
 import ClinicDiscountsTab from './tabs/ClinicDiscountsTab';
-import ClinicSecurityTab from './tabs/ClinicSecurityTab';
 
 
 interface ClinicFormProps {
@@ -144,9 +143,6 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
                         {isAdmin && (
                             <TabsTrigger value="discounts" className="flex-shrink-0">Descontos</TabsTrigger>
                         )}
-                        {isAdmin && (
-                            <TabsTrigger value="permissions" className="flex-shrink-0 whitespace-nowrap">Acesso & Segurança</TabsTrigger>
-                        )}
                     </TabsList>
 
                     <div className="mt-6">
@@ -165,12 +161,6 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
                         {isAdmin && (
                             <TabsContent value="discounts">
                                 <ClinicDiscountsTab />
-                            </TabsContent>
-                        )}
-
-                        {isAdmin && (
-                            <TabsContent value="permissions">
-                                <ClinicSecurityTab />
                             </TabsContent>
                         )}
                     </div>
