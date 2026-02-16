@@ -39,6 +39,8 @@ function ClinicHeroHeader({ initialData, canEdit }: { initialData: ClinicFullDet
             const base64 = reader.result as string;
             setLogoPreview(base64);
             setValue('logo_url', base64, { shouldDirty: true, shouldValidate: true });
+            // Disparar save manual — setValue programático não dispara o watch com type 'change'
+            window.dispatchEvent(new CustomEvent('clinic-logo-changed'));
         };
         reader.readAsDataURL(file);
     };
@@ -63,6 +65,7 @@ function ClinicHeroHeader({ initialData, canEdit }: { initialData: ClinicFullDet
         e.preventDefault();
         setLogoPreview(null);
         setValue('logo_url', "", { shouldDirty: true });
+        window.dispatchEvent(new CustomEvent('clinic-logo-changed'));
     };
 
     return (
@@ -211,9 +214,21 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
                 }, 1500); // 1.5s debounce para dar tempo de acabar de escrever
             }
         });
+
+        // Listener para mudanças de logo (setValue programático não dispara o watch com type 'change')
+        const handleLogoChanged = () => {
+            setSaving(true);
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                handleAutoSave(methods.getValues());
+            }, 500);
+        };
+        window.addEventListener('clinic-logo-changed', handleLogoChanged);
+
         return () => {
             subscription.unsubscribe();
             clearTimeout(timeoutId);
+            window.removeEventListener('clinic-logo-changed', handleLogoChanged);
         };
     }, [methods.watch]);
 
