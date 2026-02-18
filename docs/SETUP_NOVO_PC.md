@@ -15,7 +15,7 @@
 | 4 | 🤖 Antigravity | Verificar ambiente e dependências | Após configurar |
 | 5 | 🤖 Antigravity | Testar dev server e funcionalidades | Após verificar |
 | 6 | 🤖 Antigravity | Optimizações proactivas | Após tudo funcionar |
-| 7 | 👤 Utilizador | Task Scheduler para backup diário | Quando conveniente |
+| 7 | 🤖 Antigravity | Configurar Task Scheduler para backup | Após optimizações |
 
 ---
 
@@ -288,19 +288,21 @@ Após todas as verificações, apresentar um relatório ao utilizador com:
 
 ---
 
-## Fase 7 — Task Scheduler para Backup (👤 Manual)
+## Fase 7 — Configurar Task Scheduler para Backup (🤖 Executar)
 
-1. `Win + R` → `taskschd.msc` → Enter
-2. Criar Tarefa Básica:
+Criar a tarefa agendada para backup diário automático:
 
-| Campo | Valor |
-|-------|-------|
-| Nome | `AsymLAB - Backup Diário Supabase` |
-| Trigger | Diariamente às **03:00** |
-| Programa | `F:\AsymLAB\scripts\backup-daily.bat` |
-| Iniciar em | `F:\AsymLAB` |
+```powershell
+schtasks /create /tn "AsymLAB - Backup Diario Supabase" /tr "F:\AsymLAB\scripts\backup-daily.bat" /sc daily /st 03:00 /f
+```
 
-3. Condições: ✅ "Iniciar apenas se rede disponível"
+Verificar que a tarefa foi criada:
+
+```powershell
+schtasks /query /tn "AsymLAB - Backup Diario Supabase" /fo LIST
+```
+
+Resultado esperado: tarefa listada com trigger diário às 03:00.
 
 ---
 
