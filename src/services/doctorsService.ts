@@ -196,24 +196,4 @@ export const doctorsService = {
             }));
     },
 
-    // 9. Criar perfil profissional (chamado automaticamente quando role muda para doctor)
-    async createDoctorProfile(userId: string) {
-        // Verificar se já existe
-        const { data: existing } = await supabase
-            .from('doctor_profiles')
-            .select('id')
-            .eq('user_id', userId)
-            .single();
-
-        if (existing) return existing;
-
-        const { data, error } = await supabase
-            .from('doctor_profiles')
-            .insert({ user_id: userId })
-            .select()
-            .single();
-
-        if (error) throw error;
-        return data;
-    },
 };

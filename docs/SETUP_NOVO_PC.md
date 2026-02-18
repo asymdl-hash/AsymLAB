@@ -1,107 +1,86 @@
 # 🚀 Guia de Setup — AsymLAB num Novo PC
 
 > [!IMPORTANT]
-> **Para o Antigravity:** Este documento contém TODAS as instruções para configurar o ambiente de desenvolvimento no novo PC. O utilizador já completou as Fases 1 e 2. O teu trabalho é executar **sequencialmente da Fase 3 em diante**.
+> **Para o Antigravity:** Este documento contém o estado actual do setup no novo PC. **Todas as Fases 1-7 estão concluídas (V2.2.5).** Quando retomares, lê a secção "Estado de Configuração" no final deste documento antes de começar qualquer trabalho.
+>
+> **Acção imediata:** Verificar se o MCP Supabase tem acesso total (apply_migration, execute_sql) — o token foi actualizado e pode precisar de reiniciar o VS Code.
 
 ---
 
-## 📋 Ordem Cronológica
+## 📋 Estado Actual (18/02/2026)
 
-| Fase | Quem | O quê | Quando |
-|------|------|-------|--------|
-| 1 | 👤 Utilizador | Instalar Node, Git, VS Code + Antigravity | Antes de tudo |
-| 2 | 👤 Utilizador | Copiar `F:\AsymLAB` para o novo PC | Após instalar |
-| 3 | 🤖 Antigravity | Configurar ficheiros do Antigravity | 1ª coisa a executar |
-| 4 | 🤖 Antigravity | Verificar ambiente e dependências | Após configurar |
-| 5 | 🤖 Antigravity | Testar dev server e funcionalidades | Após verificar |
-| 6 | 🤖 Antigravity | Optimizações proactivas | Após tudo funcionar |
-| 7 | 🤖 Antigravity | Configurar Task Scheduler para backup | Após optimizações |
+| Fase | Estado | Resultado |
+|------|--------|-----------|
+| 1 | ✅ Concluída | Node.js v24.13.1, npm 11.8.0, Git 2.53.0, ExecutionPolicy RemoteSigned |
+| 2 | ✅ Concluída | Projecto copiado para `F:\AsymLAB` |
+| 3 | ✅ Concluída | `GEMINI.md` + `mcp_config.json` criados (Supabase + GitHub MCP sem Docker) |
+| 4 | ✅ Concluída | Versões OK, git clean (main), `.env.local` existe, `npm install` OK (406 pkgs) |
+| 5.1 | ✅ Concluída | Dev server arranca, HTTP 200, página login carrega |
+| 5.2 | ✅ Concluída | Login OK — redireccionou para `/dashboard`, utilizador "Fabio Dias" autenticado |
+| 5.3 | ✅ Concluída | `npx next build` → exit 0 |
+| 5.4 | ✅ Concluída | Backup `status=success` — `doctor_profiles` removida do config, `updated_at` adicionada a `delivery_point_contacts` |
+| 5.5 | ✅ Concluída | MCP Supabase OK — 9 tabelas listadas |
+| 6.1 | ✅ Concluída | `git fsck` + `git gc --aggressive` sem erros |
+| 6.2 | ✅ Concluída | `npx tsc --noEmit` sem erros |
+| 6.3 | ✅ Concluída | RLS activo em 9/9 tabelas. 18 warnings documentados em `future_features_plan.md §10.4` |
+| 6.4 | ✅ Concluída | `doctor_profiles` removida do código e config (V2.2.4) — ver `future_features_plan.md §10.1` |
+| 6.5 | ✅ Concluída | 1 telefone desincronizado documentado em `future_features_plan.md §10.3` |
+| 6.6 | ✅ Concluída | Next.js **14.2.28 → 14.2.34** (resolve SSRF, DoS, cache leak) |
+| 7 | ✅ Concluída | `AsymLAB_Backup_Supabase` criado — diário às 03:00. Testado manualmente com sucesso |
+| Acessos | ✅ Concluída | psql 17.8 instalado, Supabase CLI autenticado, MCP token actualizado (V2.2.5) |
 
 ---
 
-## Fase 1 — Instalar Ferramentas (👤 Manual — Já feito)
+## 🔧 O que foi feito antes de reiniciar
 
-| Ferramenta | Versão | Download |
-|-----------|--------|----------|
-| **Node.js** | v24+ | https://nodejs.org |
-| **Git** | 2.53+ | https://git-scm.com/download/win |
-| **VS Code** | Latest | https://code.visualstudio.com |
-| **Gemini Code Assist** | Latest | VS Code Extensions (Ctrl+Shift+X) |
+### Fase 1 — Instalar Ferramentas ✅
 
-Após instalar:
+Instalado via `winget`:
+
+| Ferramenta | Versão | Comando |
+|-----------|--------|---------|
+| Node.js | v24.13.1 | `winget install OpenJS.NodeJS.LTS` |
+| npm | 11.8.0 | (incluído com Node.js) |
+| Git | 2.53.0 | `winget install Git.Git` |
+
+Configurações adicionais:
 ```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 git config --global user.name "Fábio Dias"
 git config --global user.email "asymdl@gmail.com"
 ```
 
----
-
-## Fase 2 — Copiar o Projecto (👤 Manual — Já feito)
-
-Copiar **toda** a pasta `F:\AsymLAB` do PC antigo para `F:\AsymLAB` no novo portátil.
-
-Isto inclui: código, `.env.local`, `node_modules`, `DB/`, `.agent/`, `docs/`, `.git/`, tudo.
-
----
-
-## Fase 3 — Configurar Ficheiros do Antigravity (🤖 Executar)
-
-> [!CAUTION]
-> Estes ficheiros ficam na pasta do **utilizador do Windows**, NÃO no projecto. Têm de ser criados com os comandos abaixo.
-
-### 3.1 Criar directória
-
+Variável `HOME` definida para o Playwright funcionar:
 ```powershell
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.gemini\antigravity"
+[System.Environment]::SetEnvironmentVariable("HOME", $env:USERPROFILE, "User")
 ```
 
-### 3.2 Criar `GEMINI.md` (Regras Globais)
+VS Code + Gemini Code Assist já estavam instalados (via download Antigravity).
 
-Criar `$env:USERPROFILE\.gemini\GEMINI.md` com este conteúdo exacto:
+---
 
-```
-Responde-me sempre em português
+### Fase 2 — Copiar o Projecto ✅
 
-Controlo de Versão (Git/GitHub):
+Projecto copiado pelo utilizador para `F:\AsymLAB` com todos os ficheiros.
 
-Toda a alteração significativa deve ser acompanhada de um comando de commit.
+---
 
-Padrão de Versão: As versões devem seguir rigorosamente o formato V1.0.0 (Semantic Versioning).
+### Fase 3 — Configurar Ficheiros do Antigravity ✅
 
-Commits: Cada funcionalidade finalizada deve gerar uma sugestão de commit com a versão atualizada (ex: git commit -m "V1.1.0: Implementação do modo Full Screen na Ficha do Paciente").
+#### Ficheiros criados:
 
-Regra de Arquitetura PWA e Responsividade Total
-"O projeto deve ser desenvolvido como uma PWA (Progressive Web App) de alto desempenho, seguindo estas diretrizes rigorosas:
+**`%USERPROFILE%\.gemini\GEMINI.md`** — Regras globais (português, semver, PWA mobile-first)
 
-1. Compatibilidade Multi-dispositivo (Obrigatório):
-
-A interface deve ser totalmente responsiva e adaptável, garantindo uma experiência nativa em Desktop, Tablets e Smartphones.
-
-Deves utilizar uma abordagem Mobile-first para a estrutura base, mas implementar breakpoints específicos para otimizar o layout em Desktop (aproveitando o espaço horizontal) e Tablets (modo híbrido).
-
-2. Funcionalidades PWA:
-
-Implementação obrigatória de um manifest.json completo (ícones, cores de tema, modo standalone).
-
-Configuração de Service Workers com estratégia de cache offline eficiente, permitindo que as funcionalidades críticas (como consulta da Ficha do Paciente) funcionem mesmo sem internet.
-```
-
-### 3.3 Criar `mcp_config.json` (MCP Servers)
-
-Criar `$env:USERPROFILE\.gemini\antigravity\mcp_config.json` com este JSON:
+**`%USERPROFILE%\.gemini\antigravity\mcp_config.json`** — MCP Servers:
 
 ```json
 {
   "mcpServers": {
     "github-mcp-server": {
-      "command": "docker",
-      "args": [
-        "run", "-i", "--rm", "-e",
-        "GITHUB_PERSONAL_ACCESS_TOKEN",
-        "ghcr.io/github/github-mcp-server"
-      ],
+      "command": "C:\\Users\\asyml\\AppData\\Local\\github-mcp-server\\github-mcp-server.exe",
+      "args": ["stdio"],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": ""
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
       }
     },
     "supabase-mcp-server": {
@@ -110,7 +89,7 @@ Criar `$env:USERPROFILE\.gemini\antigravity\mcp_config.json` com este JSON:
         "-y",
         "@supabase/mcp-server-supabase@latest",
         "--access-token",
-        "sbp_19289a665899b9203afd42fc46e38388e9d9abbf"
+        "sbp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
       ],
       "env": {}
     }
@@ -118,90 +97,58 @@ Criar `$env:USERPROFILE\.gemini\antigravity\mcp_config.json` com este JSON:
 }
 ```
 
-### 3.4 Verificar criação
-
-```powershell
-Test-Path "$env:USERPROFILE\.gemini\GEMINI.md"                    # True
-Test-Path "$env:USERPROFILE\.gemini\antigravity\mcp_config.json"  # True
-```
-
 > [!NOTE]
-> Após criar estes ficheiros, **reiniciar o VS Code** para o Antigravity carregar as novas configurações. Depois voltar a pedir para continuar com a Fase 4.
-
-### MCP Servers
-
-| Server | Para que serve | Requisitos |
-|--------|---------------|------------|
-| **supabase-mcp-server** | SQL, tabelas, migrações, logs, edge functions | Node.js + npx |
-| **github-mcp-server** | Repos, issues, PRs | Docker (opcional) |
+> O GitHub MCP server usa **binário local** (sem Docker). Descarregado de https://github.com/github/github-mcp-server/releases/tag/v0.30.3 para `%LOCALAPPDATA%\github-mcp-server\github-mcp-server.exe`
 
 ---
 
-## Fase 4 — Verificar Ambiente e Dependências (🤖 Executar)
+### Fase 4 — Verificar Ambiente ✅
 
-### 4.1 Verificar versões
+| Verificação | Resultado |
+|------------|-----------|
+| `node --version` | v24.13.1 ✅ |
+| `npm --version` | 11.8.0 ✅ |
+| `git --version` | 2.53.0 ✅ |
+| `git status` | Branch `main`, up to date ✅ |
+| `git log -n 3` | V2.2.1 commits presentes ✅ |
+| `.env.local` | Existe ✅ |
+| `npm install` | 406 pacotes instalados ✅ |
 
-```powershell
-cd F:\AsymLAB
-node --version   # v24+
-npm --version    # 11+
-git --version    # 2.53+
+> [!WARNING]
+> `npm install` reportou que Next.js 14.2.28 tem uma vulnerabilidade de segurança. Investigar na Fase 6.
+> Há pastas untracked no git (M2 Test, Permanent Com tubeira, etc.) — são ficheiros CAD/laboratoriais, não do projecto web.
+
+---
+
+### Fase 5.1 — Dev Server ✅
+
 ```
-
-### 4.2 Verificar repositório
-
-```powershell
-git status       # Deve estar clean
-git log -n 3     # Últimos 3 commits
-```
-
-### 4.3 Verificar `.env.local` existe
-
-```powershell
-Test-Path "F:\AsymLAB\.env.local"  # Deve ser True
-```
-
-Se `False`, criar com estas variáveis:
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://kfnrstxrhaetgrujyjyk.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmbnJzdHhyaGFldGdydWp5anlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4NTYwMjAsImV4cCI6MjA4NjQzMjAyMH0.qEIPkMsveSzj9WxVg1cTH3MYa3-HNoCplPgzXxElZRU
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmbnJzdHhyaGFldGdydWp5anlrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDg1NjAyMCwiZXhwIjoyMDg2NDMyMDIwfQ.nJK6WilQl0VSdd4w0BpHeLycQjF9lnWTkRBVtL_coKY
-GMAIL_USER=asymdl@gmail.com
-GMAIL_APP_PASSWORD=hgaqezeqlqoipjvv
-```
-
-### 4.4 Se `node_modules` estiver corrompido ou em falta
-
-```powershell
-Remove-Item -Recurse -Force F:\AsymLAB\.next -ErrorAction SilentlyContinue
-Remove-Item -Recurse -Force F:\AsymLAB\node_modules -ErrorAction SilentlyContinue
-cd F:\AsymLAB
-npm install
+npm run dev → Next.js 14.2.28 pronto em 8s
+HTTP GET http://localhost:3000 → Status 200, página de login presente
 ```
 
 ---
 
-## Fase 5 — Testar Dev Server e Funcionalidades (🤖 Executar)
+## 🤖 O que o próximo agente deve fazer (após reiniciar VS Code)
 
-### 5.1 Arrancar dev server
+> [!IMPORTANT]
+> Antes de tudo, verificar se o browser funciona tentando abrir http://localhost:3000.
+> Se o browser continuar a falhar, pedir ao utilizador para testar manualmente no seu browser.
 
-```powershell
-cd F:\AsymLAB
-npm run dev
-```
+### Fase 5.2 — Testar no Browser
 
-### 5.2 Abrir no browser e verificar
+1. Arrancar dev server: `npm run dev` (a partir de `F:\AsymLAB`)
+2. Abrir http://localhost:3000 no browser
+3. Testar:
+   - [ ] Login: `asymdl@gmail.com` / `FabioDias123?!`
+   - [ ] Dashboard carrega correctamente
+   - [ ] Sidebar mostra todos os módulos
+   - [ ] Definições → Utilizadores → "Dr. João Alves" é link azul clicável
+   - [ ] Clicar no nome → Ficha do médico com hero header
+   - [ ] Tab "Dados" → Clínicas e parceiros carregam
+   - [ ] Modal parceiros → Adicionar/remover funciona
 
-Abrir http://localhost:3000 e testar:
-- [ ] Login: `asymdl@gmail.com` / `FabioDias123?!`
-- [ ] Dashboard carrega correctamente
-- [ ] Sidebar mostra todos os módulos
-- [ ] Definições → Utilizadores → "Dr. João Alves" é link azul clicável
-- [ ] Clicar no nome → Ficha do médico com hero header
-- [ ] Tab "Dados" → Clínicas e parceiros carregam
-- [ ] Modal parceiros → Adicionar/remover funciona
-
-### 5.3 Testar build de produção
+### Fase 5.3 — Build de Produção
 
 ```powershell
 npx next build
@@ -209,25 +156,22 @@ npx next build
 
 > ⚠️ **NUNCA** usar pipes (`|`, `Select-Object`) com `next build` no PowerShell — bloqueia!
 
-### 5.4 Testar backup
+### Fase 5.4 — Testar Backup
 
 ```powershell
 node scripts/backup-supabase.js
 ```
 
-### 5.5 Testar MCP Supabase
+### Fase 5.5 — Testar MCP Supabase
 
 Executar internamente: listar tabelas do Supabase via MCP.
 Resultado esperado: 10 tabelas no schema public.
 
 ---
 
-## Fase 6 — Optimizações Proactivas (🤖 Executar)
+### Fase 6 — Optimizações Proactivas
 
-> [!TIP]
-> Estamos num PC novo — é a oportunidade de resolver issues e começar limpo.
-
-### 6.1 Integridade do Git
+#### 6.1 Integridade do Git
 
 ```powershell
 cd F:\AsymLAB
@@ -235,17 +179,16 @@ git fsck --full
 git gc --aggressive
 ```
 
-### 6.2 Verificar TypeScript
+#### 6.2 Verificar TypeScript
 
 ```powershell
 npx tsc --noEmit
 ```
 
-Se houver erros, analisar e corrigir. Notas:
 - `supabase/functions/` tem `@ts-nocheck` — ignorar
 - `tsconfig.json` inclui apenas `src/**/*.ts` — nunca alterar para `**/*.ts`
 
-### 6.3 Verificar Supabase — RLS e segurança
+#### 6.3 Verificar Supabase — RLS e segurança
 
 Usar MCP para executar:
 ```sql
@@ -256,12 +199,12 @@ WHERE schemaname = 'public';
 
 Depois usar a tool `get_advisors` para security e performance.
 
-### 6.4 Verificar config de backup
+#### 6.4 Verificar config de backup
 
 Abrir `DB/Supabase/config.json` e confirmar que todas as 10 tabelas estão listadas:
 `clinics`, `clinic_contacts`, `clinic_delivery_points`, `clinic_discounts`, `delivery_point_contacts`, `organization_settings`, `user_profiles`, `user_clinic_access`, `doctor_profiles`, `doctor_clinic_partners`
 
-### 6.5 Verificar sincronização de dados
+#### 6.5 Verificar sincronização de dados
 
 ```sql
 -- Users sem profile
@@ -277,32 +220,30 @@ JOIN auth.users au ON up.user_id = au.id
 WHERE au.phone IS NOT NULL AND (up.phone IS NULL OR up.phone = '');
 ```
 
-Se encontrar dados desincronizados, corrigir.
+#### 6.6 Investigar vulnerabilidade Next.js
 
-### 6.6 Relatório final
+O `npm install` reportou: Next.js 14.2.28 tem vulnerabilidade de segurança.
+Ver https://nextjs.org/blog/security-update-2025-12-11 e avaliar se é necessário actualizar.
 
-Após todas as verificações, apresentar um relatório ao utilizador com:
+#### 6.7 Relatório final
+
+Apresentar relatório com:
 - ✅ O que passou
 - ⚠️ O que precisou de correcção (e o que foi feito)
 - ❌ O que ainda precisa de atenção manual
 
 ---
 
-## Fase 7 — Configurar Task Scheduler para Backup (🤖 Executar)
-
-Criar a tarefa agendada para backup diário automático:
+### Fase 7 — Configurar Task Scheduler para Backup
 
 ```powershell
 schtasks /create /tn "AsymLAB - Backup Diario Supabase" /tr "F:\AsymLAB\scripts\backup-daily.bat" /sc daily /st 03:00 /f
 ```
 
-Verificar que a tarefa foi criada:
-
+Verificar:
 ```powershell
 schtasks /query /tn "AsymLAB - Backup Diario Supabase" /fo LIST
 ```
-
-Resultado esperado: tarefa listada com trigger diário às 03:00.
 
 ---
 
@@ -329,12 +270,24 @@ F:\AsymLAB\
 │   ├── DEPLOY.md              # Guia de deploy
 │   ├── future_features_plan.md # Roadmap + regras operacionais
 │   ├── SETUP_NOVO_PC.md       # 👈 ESTE FICHEIRO
-│   └── MANUAL_EDGE_FUNCTION_DEPLOY.md
+│   ├── MANUAL_EDGE_FUNCTION_DEPLOY.md
+│   └── _archive/              # 📦 Ficheiros históricos (não no Git)
+│       ├── inspiration/       # Imagens de referência visual
+│       ├── sql/               # Migrations antigas (pré-DB/)
+│       ├── LOGO_Creation/     # Briefing do logo
+│       ├── DEPLOYMENT_GUIDE_V1.2.0.md
+│       ├── IMPLEMENTATION_SUMMARY_V1.2.0.md
+│       ├── system_architecture_fixes.md
+│       ├── system_architecture_update_clinics.md
+│       ├── system_architecture_update_ux.md
+│       └── roadmap_and_decisions.md
 │
 ├── scripts/
 │   ├── backup-daily.bat       # Task Scheduler
 │   ├── backup-supabase.js     # Engine backup FULL + Incremental
-│   └── deploy-vercel.ps1      # Deploy alternativo
+│   ├── psql.js                # Wrapper psql → Supabase (node scripts/psql.js "SQL")
+│   ├── deploy-vercel.ps1      # Deploy alternativo
+│   └── generate-icons.js      # Gerar ícones PWA
 │
 ├── src/
 │   ├── app/
@@ -393,13 +346,12 @@ F:\AsymLAB\
 | `organization_settings` | Config da organização | — |
 | `user_profiles` | Perfis (extensão auth.users) | → `auth.users.id` |
 | `user_clinic_access` | User ↔ Clínica | → `user_profiles`, → `clinics` |
-| `doctor_profiles` | Dados extra médicos | → `user_profiles.user_id` |
 | `doctor_clinic_partners` | Parceiros por clínica | → `user_profiles` (x2), → `clinics` |
 
 ### Roles RBAC
 
 | Role | Permissões |
-|------|-----------|
+|------|-----------| 
 | `admin` | Tudo |
 | `doctor` | Ficha própria, clínicas |
 | `staff_clinic` | Acesso à clínica |
@@ -408,7 +360,7 @@ F:\AsymLAB\
 ### Edge Functions
 
 | Função | Deploy | Descrição |
-|--------|--------|-----------|
+|--------|--------|-----------| 
 | `invite-clinic-user` | Supabase Dashboard | Convite users (auth + profile + access) |
 
 ---
@@ -418,17 +370,25 @@ F:\AsymLAB\
 ### Supabase
 - **Project URL:** `https://kfnrstxrhaetgrujyjyk.supabase.co`
 - **Dashboard:** https://supabase.com/dashboard/project/kfnrstxrhaetgrujyjyk
-- **Anon Key:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmbnJzdHhyaGFldGdydWp5anlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4NTYwMjAsImV4cCI6MjA4NjQzMjAyMH0.qEIPkMsveSzj9WxVg1cTH3MYa3-HNoCplPgzXxElZRU`
-- **Service Role Key:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmbnJzdHhyaGFldGdydWp5anlrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDg1NjAyMCwiZXhwIjoyMDg2NDMyMDIwfQ.nJK6WilQl0VSdd4w0BpHeLycQjF9lnWTkRBVtL_coKY`
-- **MCP Access Token:** `sbp_19289a665899b9203afd42fc46e38388e9d9abbf`
+- **Anon Key:** `[ver docs/ACESSOS.md]`
+- **Service Role Key:** `[ver docs/ACESSOS.md]`
+- **MCP Access Token:** `[ver docs/ACESSOS.md]` *(AsymLAB-Dev-PC, sem expiração — gerado 18/02/2026)*
+- **DB Password:** `[ver docs/ACESSOS.md]` *(resetada 18/02/2026)*
+- **Session Pooler:** `aws-1-eu-west-2.pooler.supabase.com:5432` | User: `postgres.kfnrstxrhaetgrujyjyk`
+
+### GitHub
+- **Conta:** `asymdl-hash`
+- **Repo:** https://github.com/asymdl-hash/AsymLAB
+- **Personal Access Token (MCP):** `[ver docs/ACESSOS.md]`
+- **GitHub MCP Binary:** `%LOCALAPPDATA%\github-mcp-server\github-mcp-server.exe`
 
 ### Admin
 - **Email:** `asymdl@gmail.com`
-- **Password:** `FabioDias123?!`
+- **Password:** `[ver docs/ACESSOS.md]`
 
 ### Gmail SMTP
 - **User:** `asymdl@gmail.com`
-- **App Password:** `hgaqezeqlqoipjvv`
+- **App Password:** `[ver docs/ACESSOS.md]`
 
 ### Links
 
@@ -463,10 +423,10 @@ F:\AsymLAB\
 
 ## 🧩 Contexto do Projecto
 
-**AsymLAB** é uma PWA de gestão clínica odontológica. **Versão actual: V2.2.1**
+**AsymLAB** é uma PWA de gestão clínica odontológica. **Versão actual: V2.2.5**
 
 ### Stack
-- Next.js 14.2.28 (App Router) + React 18 + TypeScript 5.3
+- Next.js 14.2.34 (App Router) + React 18 + TypeScript 5.3
 - TailwindCSS 4 (`@tailwindcss/postcss`)
 - Supabase (Auth com RBAC, PostgreSQL com RLS, Edge Functions)
 - Deploy: Vercel (auto-deploy push `main`, região Paris)
@@ -508,4 +468,95 @@ F:\AsymLAB\
 
 ---
 
-*Última actualização: 18/02/2026 (V2.2.1)*
+## 🖥️ O que é o psql e para que serve
+
+### Definição
+
+**`psql`** é o cliente de linha de comandos oficial do PostgreSQL — a base de dados que o Supabase usa internamente. É uma ferramenta de **desenvolvimento e administração**, não faz parte da aplicação em si.
+
+### Analogia simples
+
+| Ferramenta | Para quê |
+|-----------|----------|
+| Supabase Dashboard (browser) | Interface visual para gerir a base de dados |
+| **psql** | A mesma coisa, mas em linha de comandos — mais rápido e automatizável |
+| `@supabase/supabase-js` | O que a *aplicação* usa para ler/escrever dados |
+
+### Quando usamos o psql
+
+O psql é usado **exclusivamente durante o desenvolvimento** — nunca pela aplicação em produção. Usamos quando:
+
+1. **Aplicar migrações DDL** — `CREATE TABLE`, `ALTER TABLE`, `CREATE INDEX` — operações que alteram a estrutura da base de dados
+2. **Depurar problemas** — verificar dados directamente, testar queries SQL complexas
+3. **Automatizar tarefas** — o Antigravity pode executar SQL sem precisar do browser do Supabase
+4. **Verificar o estado** — confirmar que uma migração foi aplicada correctamente
+
+### O que NÃO é
+
+- ❌ Não é parte da aplicação web
+- ❌ Não é usado pelos utilizadores finais
+- ❌ Não substitui o Supabase Dashboard para tarefas visuais
+- ❌ Não é necessário para o deploy ou para o servidor de desenvolvimento
+
+### Como usar no AsymLAB
+
+Como a password tem caracteres especiais (`?!`), usamos um script wrapper:
+
+```powershell
+# Executar SQL directamente
+node scripts/psql.js "SELECT count(*) FROM clinics;"
+
+# Modo interactivo (prompt psql)
+node scripts/psql.js
+
+# Aplicar uma migração
+node scripts/psql.js "ALTER TABLE clinics ADD COLUMN notes TEXT;"
+```
+
+O script `scripts/psql.js` já tem as credenciais configuradas e resolve automaticamente os problemas de caracteres especiais na password e SSL obrigatório.
+
+> [!NOTE]
+> O psql conecta via **Session Pooler** do Supabase (`aws-1-eu-west-2.pooler.supabase.com:5432`) com SSL obrigatório. A conexão directa à base de dados não está disponível nesta rede (requer IPv6).
+
+---
+
+## 🔧 Estado de Configuração (18/02/2026 — V2.2.5)
+
+### ✅ Configurado e funcional
+
+| Ferramenta | Versão/Estado | Como verificar |
+|-----------|--------------|----------------|
+| **Node.js** | v24.13.1 | `node --version` |
+| **npm** | 11.8.0 | `npm --version` |
+| **Git** | 2.53.0 | `git --version` |
+| **Next.js** | 14.2.34 | `node -e "console.log(require('./package.json').dependencies.next)"` |
+| **psql** | 17.8 | `node scripts/psql.js "SELECT 1;"` |
+| **Supabase CLI** | 2.76.8 | `npx supabase projects list` |
+| **MCP GitHub** | ✅ | Funciona (token em `mcp_config.json`) |
+| **MCP Supabase** | ✅ | Funciona após reiniciar VS Code (token em `mcp_config.json`) |
+| **Backup diário** | ✅ | Task Scheduler `AsymLAB_Backup_Supabase` às 03:00 |
+| **Dev server** | ✅ | `npm run dev` → http://localhost:3000 |
+
+### ⚠️ Pendente / Requer atenção
+
+| Item | Descrição | Onde está documentado |
+|------|-----------|----------------------|
+| **MCP Supabase token** | Actualizado mas requer **reiniciar o VS Code** para activar | `%USERPROFILE%\.gemini\antigravity\mcp_config.json` |
+| **Telefone desincronizado** | `ivoassistente@asymlab.app` tem phone no auth mas não no profile | `future_features_plan.md §10.3` |
+| **18 warnings segurança** | RLS policies a corrigir gradualmente | `future_features_plan.md §10.4` |
+| **28 warnings performance** | FK sem índices, políticas duplicadas | `future_features_plan.md §10.4` |
+
+### 🗂️ Ficheiros de configuração importantes
+
+| Ficheiro | O que contém |
+|---------|-------------|
+| `.env.local` | Chaves Supabase, DATABASE_URL — **não está no Git** |
+| `%USERPROFILE%\.gemini\antigravity\mcp_config.json` | Tokens MCP (GitHub + Supabase) |
+| `DB/Supabase/config.json` | Lista de tabelas para backup (9 tabelas) |
+| `scripts/psql.js` | Wrapper psql com credenciais Supabase |
+| `docs/ACESSOS_DIRECTOS.md` | Guia completo de acessos directos |
+| `docs/ACESSOS.md` | Credenciais completas do projecto |
+
+---
+
+*Última actualização: 18/02/2026 — Setup completo V2.2.5 (Fases 1-7 + Acessos directos)*

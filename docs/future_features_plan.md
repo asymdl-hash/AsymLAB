@@ -492,3 +492,74 @@ WHERE up.user_id = au.id
 - [ ] Auto-preencher `contact_email` na criação de novos utilizadores por email (UserManagement)
 - [ ] Usar `contact_email` para envio de emails/notificações
 - [ ] Validar unicidade do email de contacto (opcional)
+
+---
+
+## 10. Manutenção Técnica — Itens Pendentes (Setup 18/02/2026)
+
+> [!IMPORTANT]
+> Estes itens foram identificados durante o setup do novo PC (V2.2.2) e devem ser resolvidos antes de avançar para novas funcionalidades.
+
+### 10.1 — `config.json` desactualizado (Backup)
+- **Problema:** `DB/Supabase/config.json` lista a tabela `doctor_profiles` que **não existe** no Supabase
+- **Impacto:** O script de backup falha com erro ao tentar fazer backup desta tabela
+- **Acção:** Remover `doctor_profiles` do array `tables` em `config.json`
+- **Ficheiro:** `DB/Supabase/config.json`
+- **Prioridade:** Alta (bloqueia backup limpo)
+
+### 10.2 — Coluna `updated_at` em falta (`delivery_point_contacts`)
+- **Problema:** A tabela `delivery_point_contacts` não tem coluna `updated_at`, mas o script de backup tenta usá-la para backup incremental
+- **Impacto:** Erro no backup incremental desta tabela
+- **Acção:** Adicionar coluna `updated_at` com trigger automático (igual às outras tabelas)
+- **SQL:**
+  ```sql
+  ALTER TABLE public.delivery_point_contacts
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
+
+  CREATE TRIGGER handle_updated_at_delivery_point_contacts
+    BEFORE UPDATE ON public.delivery_point_contacts
+    FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
+  ```
+- **Prioridade:** Alta (bloqueia backup incremental)
+
+### 10.3 — Telefone desincronizado (`ivoassistente@asymlab.app`)
+- **Problema:** O utilizador `ivoassistente@asymlab.app` tem `phone = 914511165` em `auth.users` mas `phone = null` em `user_profiles`
+- **Impacto:** Dados inconsistentes — viola a regra de Single Source of Truth
+- **Acção:** Sincronizar o telefone para `user_profiles` (fonte de verdade) e limpar `auth.users.phone`
+- **SQL:**
+  ```sql
+  -- 1. Copiar phone para user_profiles
+  UPDATE public.user_profiles up
+  SET phone = au.phone
+  FROM auth.users au
+  WHERE up.user_id = au.id
+    AND au.email = 'ivoassistente@asymlab.app'
+    AND up.phone IS NULL;
+
+  -- 2. Verificar resultado
+  SELECT up.phone FROM public.user_profiles up
+  JOIN auth.users au ON up.user_id = au.id
+  WHERE au.email = 'ivoassistente@asymlab.app';
+  ```
+- **Prioridade:** Média
+
+### 10.4 — Advisors Supabase (Segurança & Performance)
+Identificados durante o setup. Corrigir gradualmente:
+
+#### Segurança (WARN)
+| Problema | Qtd | Acção |
+|----------|-----|-------|
+| `function_search_path_mutable` | 12 funções | Adicionar `SET search_path = ''` a cada função |
+| `rls_policy_always_true` | 5 tabelas | Rever policies — adicionar filtro por `auth.uid()` |
+| `auth_leaked_password_protection` | Global | Activar em Supabase Dashboard → Auth → Settings |
+
+#### Performance (INFO)
+| Problema | Qtd | Acção |
+|----------|-----|-------|
+| `unindexed_foreign_keys` | 4 FKs | Criar índices nas FKs em falta |
+| `auth_rls_initplan` | 5 policies | Substituir `auth.uid()` por `(SELECT auth.uid())` nas policies |
+| `unused_index` | 3 índices | Avaliar e remover índices não usados |
+| `multiple_permissive_policies` | 16 | Consolidar policies duplicadas |
+
+> **Referência:** [Supabase Database Linter](https://supabase.com/docs/guides/database/database-linter)
+- **Prioridade:** Baixa (não bloqueiam funcionalidade, mas melhoram segurança e performance)

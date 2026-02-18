@@ -49,3 +49,7 @@ docs/ACESSOS.md
 # Database Backups (dados sensíveis - não versionar)
 DB/Supabase/backups/
 DB/Supabase/logs/
+
+# Ficheiros arquivados (referência histórica, não código do projecto)
+docs/_archive/
+Inspiration/
