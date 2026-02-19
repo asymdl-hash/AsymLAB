@@ -500,27 +500,13 @@ WHERE up.user_id = au.id
 > [!IMPORTANT]
 > Estes itens foram identificados durante o setup do novo PC (V2.2.2) e devem ser resolvidos antes de avançar para novas funcionalidades.
 
-### 10.1 — `config.json` desactualizado (Backup)
-- **Problema:** `DB/Supabase/config.json` lista a tabela `doctor_profiles` que **não existe** no Supabase
-- **Impacto:** O script de backup falha com erro ao tentar fazer backup desta tabela
-- **Acção:** Remover `doctor_profiles` do array `tables` em `config.json`
-- **Ficheiro:** `DB/Supabase/config.json`
-- **Prioridade:** Alta (bloqueia backup limpo)
+### 10.1 — ~~`config.json` desactualizado (Backup)~~ ✅ RESOLVIDO (V2.2.4)
+- `doctor_profiles` removida de `config.json` e da função `createDoctorProfile` em `doctorsService.ts`
+- Decisão: tabela não vai ser criada — `specialty` e `license_number` não são necessários no projecto
 
-### 10.2 — Coluna `updated_at` em falta (`delivery_point_contacts`)
-- **Problema:** A tabela `delivery_point_contacts` não tem coluna `updated_at`, mas o script de backup tenta usá-la para backup incremental
-- **Impacto:** Erro no backup incremental desta tabela
-- **Acção:** Adicionar coluna `updated_at` com trigger automático (igual às outras tabelas)
-- **SQL:**
-  ```sql
-  ALTER TABLE public.delivery_point_contacts
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
-
-  CREATE TRIGGER handle_updated_at_delivery_point_contacts
-    BEFORE UPDATE ON public.delivery_point_contacts
-    FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
-  ```
-- **Prioridade:** Alta (bloqueia backup incremental)
+### 10.2 — ~~Coluna `updated_at` em falta (`delivery_point_contacts`)~~ ✅ RESOLVIDO (V2.2.4)
+- Coluna `updated_at` adicionada via SQL Editor do Supabase Dashboard
+- Trigger `handle_updated_at_delivery_point_contacts` criado automaticamente
 
 ### 10.3 — Telefone desincronizado (`ivoassistente@asymlab.app`)
 - **Problema:** O utilizador `ivoassistente@asymlab.app` tem `phone = 914511165` em `auth.users` mas `phone = null` em `user_profiles`
@@ -563,3 +549,87 @@ Identificados durante o setup. Corrigir gradualmente:
 
 > **Referência:** [Supabase Database Linter](https://supabase.com/docs/guides/database/database-linter)
 - **Prioridade:** Baixa (não bloqueiam funcionalidade, mas melhoram segurança e performance)
+
+---
+
+## 11. Arquitectura do Phone — Regra Permanente 🔜 A IMPLEMENTAR (V2.3.0)
+
+> [!IMPORTANT]
+> **Regra Arquitectural — Phone (Telefone):**
+> `auth.users.phone` é **sempre** a fonte de verdade (master). `user_profiles.phone` é **sempre** um mirror sincronizado.
+> Esta regra aplica-se a **todos os utilizadores**, independentemente do método de registo (email, username, convite).
+> **Nunca** permitir edição directa do `user_profiles.phone` sem passar pela API protegida.
+
+### Conceito
+
+| Campo | Localização | Papel |
+|-------|-------------|-------|
+| `phone` | `auth.users` | **Master** — fonte de verdade. Só editável via API com `service_role_key` (admin) |
+| `phone` | `user_profiles` | **Mirror** — cópia automática. Nunca editado directamente pelo frontend |
+
+### Comportamento por cenário (universalmente aplicável)
+
+| Cenário | auth.phone | profile.phone | Comportamento na app |
+|---------|-----------|--------------|----------------------|
+| **Sem número** | `null` | `null` | Campo editável → ao gravar, actualiza **ambos** via API |
+| **Auth tem, profile não** | `914xxxxxx` | `null` | Trigger copia automaticamente. Campo bloqueado (read-only) |
+| **Ambos preenchidos** | `914xxxxxx` | `914xxxxxx` | Campo bloqueado (read-only) |
+| **User tenta editar campo bloqueado (tem permissão admin)** | — | — | Modal: "Só editável em Definições → Utilizadores" + link directo para esse utilizador |
+| **User tenta editar campo bloqueado (sem permissão)** | — | — | Modal: "Sem permissão. Contacta o administrador." |
+
+### Implementação técnica — 3 componentes
+
+#### A) Trigger PostgreSQL (automático — permanente)
+Quando admin actualiza `auth.users.phone` nas Definições → espelha para `user_profiles.phone`:
+
+```sql
+CREATE OR REPLACE FUNCTION sync_auth_phone_to_profile()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  IF NEW.phone IS DISTINCT FROM OLD.phone THEN
+    UPDATE public.user_profiles SET phone = NEW.phone WHERE user_id = NEW.id;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_auth_user_phone_update
+  AFTER UPDATE ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION sync_auth_phone_to_profile();
+```
+
+#### B) API Route server-side (`/api/users/phone`)
+O frontend **não consegue ler `auth.users.phone` directamente** (protegido pelo Supabase).
+Criamos uma API route com `SUPABASE_SERVICE_ROLE_KEY`:
+
+- `GET /api/users/[id]/phone` → devolve `{ hasAuthPhone: boolean }` (sem expor o número)
+- `POST /api/users/[id]/phone` → actualiza `auth.users.phone` + `user_profiles.phone` em simultâneo (só admin)
+
+#### C) Lógica no componente de perfil (ficha do utilizador)
+1. Ao carregar a ficha → chama `GET /api/users/[id]/phone`
+2. Se `hasAuthPhone = true` → campo phone bloqueado (read-only) + ícone de cadeado + link
+3. Se `hasAuthPhone = false` → campo editável → ao gravar chama `POST /api/users/[id]/phone`
+4. Verificação de role: se `app_role === 'admin'` → link para Definições → Utilizadores → perfil; caso contrário → "Contacta o administrador"
+
+### Estado de implementação
+
+| Componente | Estado |
+|-----------|--------|
+| Correcção imediata (`ivoassistente@asymlab.app`) | 🔜 Pendente (SQL directo) |
+| Trigger PostgreSQL | 🔜 Pendente |
+| API Route `/api/users/[id]/phone` | 🔜 Pendente |
+| Frontend — campo bloqueado + modal | 🔜 Pendente |
+
+### Correcção imediata — Ivo Assistente
+
+```sql
+-- Sincronizar phone de auth → profile para ivoassistente@asymlab.app
+UPDATE public.user_profiles up
+SET phone = au.phone
+FROM auth.users au
+WHERE up.user_id = au.id
+  AND au.email = 'ivoassistente@asymlab.app'
+  AND up.phone IS NULL;
+```
+
+- **Prioridade:** Média (implementar antes de edição de perfis ser exposta a utilizadores finais)

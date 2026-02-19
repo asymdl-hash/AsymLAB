@@ -4,17 +4,77 @@ import { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building2, Users, ChevronRight, Mail, Save, Check } from 'lucide-react';
+import { Building2, Users, ChevronRight, Mail, Save, Check, Lock, ExternalLink, X, Phone } from 'lucide-react';
 import { doctorsService, DoctorProfile, DoctorClinic } from '@/services/doctorsService';
 import ClinicPartnersModal from '../ClinicPartnersModal';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
 
 interface DoctorDataTabProps {
     doctorId: string;
 }
 
+// ============ MODAL DE AVISO DO PHONE ============
+function PhoneLockedModal({
+    isAdmin,
+    doctorId,
+    onClose,
+}: {
+    isAdmin: boolean;
+    doctorId: string;
+    onClose: () => void;
+}) {
+    return (
+        <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={onClose}
+        >
+            <div
+                className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                            <Lock className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <h3 className="font-semibold text-gray-900">Telefone protegido</h3>
+                    </div>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                        <X className="h-5 w-5" />
+                    </button>
+                </div>
+
+                <p className="text-sm text-gray-600 mb-4">
+                    O número de telefone está associado à conta de autenticação.
+                    {isAdmin
+                        ? ' Para alterá-lo, acede às Definições de Utilizadores.'
+                        : ' Apenas o administrador pode alterá-lo.'}
+                </p>
+
+                {isAdmin ? (
+                    <Link
+                        href={`/dashboard/settings?tab=users&userId=${doctorId}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors w-full justify-center"
+                        onClick={onClose}
+                    >
+                        <ExternalLink className="h-4 w-4" />
+                        Ir para Definições → Utilizadores
+                    </Link>
+                ) : (
+                    <div className="bg-red-50 rounded-lg px-4 py-3 text-sm text-red-600 text-center">
+                        ⛔ Sem permissão. Contacta o administrador.
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
 export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
-    const { register, watch } = useFormContext<DoctorProfile>();
+    const { register, watch, setValue } = useFormContext<DoctorProfile>();
+    const { isAdmin } = useAuth();
     const [clinics, setClinics] = useState<DoctorClinic[]>([]);
     const [loadingClinics, setLoadingClinics] = useState(true);
     const [selectedClinic, setSelectedClinic] = useState<DoctorClinic | null>(null);
@@ -24,6 +84,13 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
     const [contactEmail, setContactEmail] = useState(watch('contact_email') || '');
     const [savingEmail, setSavingEmail] = useState(false);
     const [emailSaved, setEmailSaved] = useState(false);
+
+    // Estado do phone (arquitectura §11: auth.users.phone = master)
+    const [hasAuthPhone, setHasAuthPhone] = useState<boolean | null>(null); // null = a carregar
+    const [phoneValue, setPhoneValue] = useState(watch('phone') || '');
+    const [savingPhone, setSavingPhone] = useState(false);
+    const [phoneSaved, setPhoneSaved] = useState(false);
+    const [phoneModalOpen, setPhoneModalOpen] = useState(false);
 
     // Carregar clínicas do médico
     useEffect(() => {
@@ -38,6 +105,28 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
             }
         };
         load();
+    }, [doctorId]);
+
+    // Verificar se auth.users.phone existe (via API protegida)
+    // Arquitectura §11: nunca ler auth.phone directamente — usar API com service role
+    useEffect(() => {
+        const checkAuthPhone = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const res = await fetch(`/api/users/${doctorId}/phone`, {
+                    headers: {
+                        Authorization: `Bearer ${session?.access_token || ''}`,
+                    },
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    setHasAuthPhone(json.hasAuthPhone);
+                }
+            } catch {
+                setHasAuthPhone(false); // sem resposta → assumir editável
+            }
+        };
+        checkAuthPhone();
     }, [doctorId]);
 
     // Sincronizar contact_email do form
@@ -75,6 +164,38 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
         }
     };
 
+    // Gravar phone via API (actualiza auth + profile automaticamente via trigger)
+    const handleSavePhone = async () => {
+        if (!phoneValue.trim()) return;
+        setSavingPhone(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const res = await fetch(`/api/users/${doctorId}/phone`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session?.access_token || ''}`,
+                },
+                body: JSON.stringify({ phone: phoneValue.trim() }),
+            });
+            if (res.ok) {
+                setValue('phone', phoneValue.trim());
+                setHasAuthPhone(true); // agora fica bloqueado (tem auth.phone)
+                setPhoneSaved(true);
+                setTimeout(() => setPhoneSaved(false), 2000);
+            } else {
+                console.error('Erro ao guardar telefone');
+            }
+        } catch (err) {
+            console.error('Erro ao guardar telefone:', err);
+        } finally {
+            setSavingPhone(false);
+        }
+    };
+
+    const phoneIsLocked = hasAuthPhone === true;
+    const phoneIsLoading = hasAuthPhone === null;
+
     return (
         <div className="space-y-8">
             {/* ============ DADOS PESSOAIS ============ */}
@@ -86,9 +207,76 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                         <Input id="full_name" {...register('full_name')} disabled className="bg-gray-50" />
                         <p className="text-xs text-gray-400 mt-1">Editável nas Definições &gt; Utilizadores</p>
                     </div>
+
+                    {/* ---- Campo Phone com lógica de bloqueio (arquitectura §11) ---- */}
                     <div>
-                        <Label htmlFor="phone">Telefone</Label>
-                        <Input id="phone" value={watch('phone') || ''} disabled className="bg-gray-50" />
+                        <Label htmlFor="phone" className="flex items-center gap-1.5">
+                            <Phone className="h-3.5 w-3.5" />
+                            Telefone
+                            {phoneIsLocked && (
+                                <Lock className="h-3 w-3 text-amber-500 ml-0.5" aria-label="Gerido pelo sistema de autenticação" />
+                            )}
+                        </Label>
+
+                        {phoneIsLoading ? (
+                            <div className="h-10 bg-gray-100 rounded-md animate-pulse" />
+                        ) : phoneIsLocked ? (
+                            // Campo bloqueado: auth.phone existe
+                            <div className="relative">
+                                <Input
+                                    id="phone"
+                                    value={watch('phone') || ''}
+                                    readOnly
+                                    className="bg-gray-50 cursor-pointer pr-10"
+                                    onClick={() => setPhoneModalOpen(true)}
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-400 hover:text-amber-600"
+                                    onClick={() => setPhoneModalOpen(true)}
+                                    aria-label="Gerido pelo sistema de autenticação"
+                                >
+                                    <Lock className="h-4 w-4" />
+                                </button>
+                            </div>
+                        ) : (
+                            // Campo editável: sem auth.phone
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    id="phone"
+                                    type="tel"
+                                    placeholder="9XX XXX XXX"
+                                    value={phoneValue}
+                                    onChange={(e) => setPhoneValue(e.target.value)}
+                                    className="flex-1"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleSavePhone}
+                                    disabled={savingPhone || !phoneValue.trim()}
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all h-10 flex-shrink-0"
+                                >
+                                    {phoneSaved ? (
+                                        <><Check className="h-4 w-4" /> Guardado</>
+                                    ) : (
+                                        <><Save className="h-4 w-4" /> Guardar</>
+                                    )}
+                                </button>
+                            </div>
+                        )}
+
+                        {phoneIsLocked && (
+                            <button
+                                type="button"
+                                className="text-xs text-amber-600 hover:underline mt-1 text-left"
+                                onClick={() => setPhoneModalOpen(true)}
+                            >
+                                {isAdmin ? 'Alterar nas Definições →' : 'Contactar administrador'}
+                            </button>
+                        )}
+                        {!phoneIsLocked && !phoneIsLoading && (
+                            <p className="text-xs text-gray-400 mt-1">Será também associado à conta de autenticação.</p>
+                        )}
                     </div>
                 </div>
             </div>
@@ -153,7 +341,6 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        {/* Logo da Clínica */}
                                         {clinic.clinic_logo ? (
                                             <img
                                                 src={clinic.clinic_logo}
@@ -178,7 +365,6 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                                     <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-primary transition-colors" />
                                 </div>
 
-                                {/* Tags / Funções */}
                                 {clinic.tags.length > 0 && (
                                     <div className="mt-3 pt-3 border-t border-gray-100">
                                         <p className="text-xs text-gray-400 mb-1.5">Funções / Tags</p>
@@ -195,7 +381,6 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                                     </div>
                                 )}
 
-                                {/* Preview dos parceiros */}
                                 {clinic.partners.length > 0 && (
                                     <div className="mt-3 pt-3 border-t border-gray-100">
                                         <div className="flex flex-wrap gap-2">
@@ -227,6 +412,15 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                     doctorId={doctorId}
                     clinic={selectedClinic}
                     onUpdated={handlePartnersUpdated}
+                />
+            )}
+
+            {/* Modal do Phone Bloqueado */}
+            {phoneModalOpen && (
+                <PhoneLockedModal
+                    isAdmin={isAdmin}
+                    doctorId={doctorId}
+                    onClose={() => setPhoneModalOpen(false)}
                 />
             )}
         </div>
