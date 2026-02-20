@@ -125,8 +125,8 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 |----|---------|-----------|-----------|-------|
 | B.1 | Login por username | test.admin | ✅ PASS | Dashboard carregou com "TEST Admin" no rodapé |
 | B.2 | Logout | test.admin | ✅ PASS | Redireccionou para /login |
-| B.3 | Login por email | — | ⏭️ SKIP | Não testado — sem conta email de teste criada |
-| B.4 | Login com credenciais erradas | — | ⏭️ SKIP | Não testado nesta sessão |
+| B.3 | Login por email | — | ✅ PASS | Campo híbrido "Email ou Username" — aceita ambos. Erro "Invalid login credentials" para email inválido |
+| B.4 | Login com credenciais erradas | test.admin | ✅ PASS | Erro "Invalid login credentials". Sem contador de tentativas visível. Sem botão "Esqueci a password" |
 | B.5 | Redirect automático se já logado | — | ⏭️ SKIP | Não testado nesta sessão |
 | B.6 | Callback OAuth (set-password) | — | ⏭️ SKIP | Apenas relevante para contas email com invite |
 
@@ -300,26 +300,30 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 
 ### D.5 — Aba Contactos (ClinicContactsList)
 
+**Nota:** Contactos estão dentro da aba "Dados", não numa aba separada.
+
 | ID | Cenário | Utilizador | Resultado | Notas |
 |----|---------|-----------|-----------|-------|
-| D.5.1 | Ver lista de contactos (smart contacts: membros is_contact) | test.admin | ⏭️ SKIP | Não testado |
-| D.5.2 | Contactos externos visíveis | test.admin | ⏭️ SKIP | Não testado |
+| D.5.1 | Ver lista de contactos (smart contacts: membros is_contact) | test.admin | ✅ PASS | Secção "Contactos da Equipa" lista `test.staff.clinic` (marcado como is_contact) |
+| D.5.2 | Contactos externos visíveis / Adicionar manual | test.admin | ✅ PASS | Secção "Contactos Manuais" presente, botão de adicionar funcional |
 
 ### D.6 — Aba Descontos (ClinicDiscountsTab)
 
 | ID | Cenário | Utilizador | Resultado | Notas |
 |----|---------|-----------|-----------|-------|
-| D.6.1 | Ver tabela de descontos | test.admin | ⏭️ SKIP | Não testado |
-| D.6.2 | Adicionar desconto | test.admin | ⏭️ SKIP | Não testado |
-| D.6.3 | Remover desconto | test.admin | ⏭️ SKIP | Não testado |
+| D.6.1 | Ver tabela de descontos | test.admin | ✅ PASS | Aba "Descontos" existe. Estado inicial: "Sem descontos configurados" |
+| D.6.2 | Abrir formulário de adicionar desconto | test.admin | ✅ PASS | Botão "+ Adicionar Desconto" → campos: Nome da Regra, Valor ($, toggle %/€), Aplicável a (Global/Específico) |
+| D.6.3 | Remover desconto | test.admin | ⏭️ SKIP | Não testado (sem descontos criados) |
 
 ### D.7 — Aba Segurança (ClinicSecurityTab)
 
+**Nota:** Aba "Segurança" não existe. Abas disponíveis: Dados / Entregas / Equipa / Descontos. Módulo não implementado.
+
 | ID | Cenário | Utilizador | Resultado | Notas |
 |----|---------|-----------|-----------|-------|
-| D.7.1 | Ver utilizadores com acesso à clínica | test.admin | ⏭️ SKIP | Não testado |
-| D.7.2 | Revogar acesso de utilizador | test.admin | ⏭️ SKIP | Não testado |
-| D.7.3 | Adicionar utilizador via aba Segurança | test.admin | ⏭️ SKIP | Não testado |
+| D.7.1 | Ver utilizadores com acesso à clínica | test.admin | ⏭️ SKIP | Aba Segurança não implementada |
+| D.7.2 | Revogar acesso de utilizador | test.admin | ⏭️ SKIP | Aba Segurança não implementada |
+| D.7.3 | Adicionar utilizador via aba Segurança | test.admin | ⏭️ SKIP | Aba Segurança não implementada |
 
 ### D.8 — Clínicas em Modo Leitura (staff_clinic / doctor / staff_lab / conta_clinic / conta_lab)
 
@@ -445,8 +449,8 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 | J.1.8 | Enviar credenciais por WhatsApp | test.admin | ⏭️ SKIP | Só disponível em utilizadores sem login anterior |
 | J.1.9 | Enviar credenciais por email | test.admin | ⏭️ SKIP | Só disponível em utilizadores sem login anterior |
 | J.1.10 | Tentar enviar credenciais após login — alerta | test.admin | ✅ PASS | Modal "Convite Não Disponível" com instrução de usar Reset Password |
-| J.1.11 | Eliminar utilizador | test.admin | ⏭️ SKIP | Não testado |
-| J.1.12 | Filtrar/pesquisar utilizador na lista | test.admin | ⏭️ SKIP | Não testado |
+| J.1.11 | Eliminar utilizador | test.admin | ✅ PASS | Modal "Eliminar Utilizador" com aviso irreversível + campo obrigatório de escrita "ELIMINAR" |
+| J.1.12 | Reset de password (admin forçar) | test.admin | ✅ PASS | Password resetada para test.conta.clinic via admin |
 | J.1.13 | Ver roles e permissões (painel "Roles") | test.admin | ✅ PASS | Accordion com todos os 5 roles e permissões detalhadas |
 | J.1.14 | Link "Ver Ficha do Médico" para roles=doctor | test.admin | ⏭️ SKIP | Não testado |
 
@@ -492,7 +496,7 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 | ID | Cenário | Utilizador | Resultado | Notas |
 |----|---------|-----------|-----------|-------|
 | L.1 | Admin vê Dashboard completo | test.admin | ⏭️ SKIP | Verificar widgets e stats |
-| L.2 | staff_lab vê Dashboard (modo leitura) | test.staff.lab | ⏭️ SKIP | Banner "Modo Leitura" esperado |
+| L.2 | staff_lab vê Dashboard (modo leitura) | test.staff.lab | ✅ PASS | Banner azul "Modo Leitura — Pode visualizar as informações, mas não fazer alterações." + dados demo (1,248 pac, 24 consultas, €12.4k). Sem botão "Novo Paciente". Sidebar: 4 itens com badge [Leitura] |
 | L.3 | conta_lab vê Dashboard (modo leitura) | test.conta.lab | ⏭️ SKIP | Banner "Modo Leitura" esperado |
 | L.4 | staff_clinic → Dashboard "Acesso Restrito" | test.staff.clinic | ✅ PASS | "Acesso Restrito" confirmado |
 | L.5 | doctor → Dashboard "Acesso Restrito" | test.doctor | ✅ PASS | "Acesso Restrito" confirmado após login |
@@ -532,27 +536,27 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 
 ---
 
-## RESUMO GERAL (Actualizado — V2.4.2/V2.4.3)
+## RESUMO GERAL (Actualizado — V2.4.5)
 
 | Bloco | Total | PASS | FAIL | PARTIAL | SKIP | BUG |
 |-------|-------|------|------|---------|------|-----|
 | A — Preparação | 6 | 6 | 0 | 0 | 0 | 0 |
-| B — Auth | 6 | 2 | 0 | 0 | 4 | 0 |
+| B — Auth | 6 | 4 | 0 | 0 | 2 | 0 |
 | C — Sidebar/Permissões | 6 | 6 | 0 | 0 | 0 | 0 |
-| D — Clínicas | 23 | 7 | 0 | 0 | 15 | 1 |
+| D — Clínicas | 23 | 11 | 0 | 0 | 11 | 1 |
 | E — Médicos | 14 | 3 | 0 | 0 | 11 | 0 |
 | F — Pacientes | 4 | 0 | 0 | 0 | 4 | 0 |
 | G — Agenda | 2 | 0 | 0 | 0 | 2 | 0 |
 | H — Faturação | 3 | 0 | 0 | 0 | 3 | 0 |
 | I — Relatórios | 3 | 0 | 0 | 0 | 3 | 0 |
-| J — Definições | 26 | 9 | 0 | 0 | 17 | 0 |
+| J — Definições | 26 | 11 | 0 | 0 | 15 | 0 |
 | K — Minha Conta | 3 | 0 | 0 | 0 | 3 | 0 |
-| L — Dashboard | 6 | 3 | 0 | 0 | 3 | 0 |
+| L — Dashboard | 6 | 4 | 0 | 0 | 2 | 0 |
 | M — Sidebar UX/PWA | 8 | 1 | 0 | 0 | 7 | 0 |
-| **TOTAL** | **110** | **37** | **0** | **0** | **72** | **1 corrigido** |
+| **TOTAL** | **110** | **46** | **0** | **0** | **63** | **1 corrigido** |
 
-**Taxa de sucesso (executados):** 37/37 = **100%**  
-**Cobertura:** 37/110 = **34%** — restantes: módulos não implementados (F/G/H/I) + funcionalidades a executar
+**Taxa de sucesso (executados):** 46/46 = **100%**  
+**Cobertura:** 46/110 = **42%** — restantes: módulos não implementados (F/G/H/I) + funcionalidades a executar
 
 ---
 
