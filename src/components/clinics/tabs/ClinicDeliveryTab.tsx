@@ -75,7 +75,6 @@ export default function ClinicDeliveryTab() {
                 address: '',
                 zip_code: '',
                 city: '',
-                country: 'Portugal',
                 distance_km: 0
             });
             append(newPoint);
@@ -404,8 +403,8 @@ export default function ClinicDeliveryTab() {
                                                     <div
                                                         key={ac.id}
                                                         className={`flex items-center gap-2 px-3 py-1.5 border rounded-full text-sm ${ac.is_external
-                                                                ? 'bg-blue-50 border-blue-200'
-                                                                : 'bg-primary/5 border-primary/15'
+                                                            ? 'bg-blue-50 border-blue-200'
+                                                            : 'bg-primary/5 border-primary/15'
                                                             }`}
                                                     >
                                                         {ac.is_external
