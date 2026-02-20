@@ -5,6 +5,23 @@
 
 ---
 
+## Regras de Execução QA
+
+### 🔄 Política de Retry — Browser Automation
+
+Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT`, crash ou timeout):
+
+1. **Reiniciar automaticamente** uma nova sessão de browser e voltar a executar os testes afetados
+2. Repetir até um **máximo de 3 tentativas** por bloco de testes
+3. Após 3 tentativas sem sucesso, **parar e informar o utilizador** com:
+   - Qual o bloco/teste que falhou
+   - Qual o erro encontrado
+   - Quantas tentativas foram feitas
+
+> **Nota:** Cada tentativa deve ser registada no log com o número de retry (ex: `⏭️ SKIP — Browser fail, tentativa 2/3`). Só se marca como `SKIP` definitivo após esgotar as 3 tentativas.
+
+---
+
 ## Legenda de Resultados
 
 | Símbolo | Significado |
