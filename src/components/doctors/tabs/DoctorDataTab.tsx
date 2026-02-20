@@ -296,21 +296,25 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                             type="email"
                             placeholder="email@exemplo.com"
                             value={contactEmail}
-                            onChange={(e) => setContactEmail(e.target.value)}
+                            onChange={isAdmin ? (e) => setContactEmail(e.target.value) : undefined}
+                            readOnly={!isAdmin}
+                            className={!isAdmin ? 'bg-gray-50 cursor-not-allowed' : ''}
                         />
                     </div>
-                    <button
-                        type="button"
-                        onClick={handleSaveContactEmail}
-                        disabled={savingEmail}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all h-10"
-                    >
-                        {emailSaved ? (
-                            <><Check className="h-4 w-4" /> Guardado</>
-                        ) : (
-                            <><Save className="h-4 w-4" /> Guardar</>
-                        )}
-                    </button>
+                    {isAdmin && (
+                        <button
+                            type="button"
+                            onClick={handleSaveContactEmail}
+                            disabled={savingEmail}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all h-10"
+                        >
+                            {emailSaved ? (
+                                <><Check className="h-4 w-4" /> Guardado</>
+                            ) : (
+                                <><Save className="h-4 w-4" /> Guardar</>
+                            )}
+                        </button>
+                    )}
                 </div>
             </div>
 

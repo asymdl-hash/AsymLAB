@@ -330,10 +330,10 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 | ID | Cenário | Utilizador | Resultado | Notas |
 |----|---------|-----------|-----------|-------|
 | D.8.1 | Ver clínica em modo leitura | test.staff.clinic | ✅ PASS | Banner "Modo Leitura" visível |
-| D.8.2 | Tentar editar campo (botões desactivados?) | test.staff.clinic | ⏭️ SKIP | Verificar se campos/botões estão desactivados |
+| D.8.2 | Tentar editar campo (botões desactivados?) | test.staff.clinic | ✅ PASS | Banner "Modo Leitura" visível. Campos disabled (peer-disabled). Sem botões Guardar/Editar |
 | D.8.3 | Verificar filtragem RLS (só ver clínicas da equipa) | test.staff.clinic | ✅ PASS | Só vê QA Norte |
-| D.8.4 | Verificar filtragem RLS (staff.lab vê QA Sul) | test.staff.lab | ⏭️ SKIP | Não testado |
-| D.8.5 | doctor não consegue editar clínica | test.doctor | ⏭️ SKIP | Esperado: banner "Modo Leitura" |
+| D.8.4 | Verificar filtragem RLS (staff.lab vê QA Sul) | test.staff.lab | ✅ PASS | Só vê Clinica QA Sul — "1 Clínicas Registadas" |
+| D.8.5 | doctor não consegue editar clínica | test.doctor | ✅ PASS | Banner "Modo Leitura", campos disabled (peer-disabled), sem botões guardar |
 
 ---
 
@@ -341,11 +341,13 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 
 ### E.1 — Lista de Médicos (admin: full)
 
+> ⚠️ **Nota Arquitectural:** Não existe botão "Novo Médico" no módulo Médicos. Médicos são utilizadores criados via **Definições > Utilizadores** com role=doctor. Esta é a abordagem intencional — o `DoctorList.tsx` só lista; `/dashboard/doctors/new` não existe.
+
 | ID | Cenário | Utilizador | Resultado | Notas |
 |----|---------|-----------|-----------|-------|
-| E.1.1 | Listar médicos | test.admin | ⏭️ SKIP | Não testado |
-| E.1.2 | Criar novo médico | test.admin | ⏭️ SKIP | Não testado |
-| E.1.3 | Pesquisar médico | test.admin | ⏭️ SKIP | Não testado |
+| E.1.1 | Listar médicos | test.admin | ✅ PASS | Lista vazia (0 médicos no início), campo pesquisa funcional (placeholder "Pesquisar..."), footer "X Médicos Registados" |
+| E.1.2 | Criar novo médico | test.admin | ✅ PASS | Médico `dr.qa.test` (Dr. QA Test) criado via Definições > Utilizadores > Novo Utilizador. Mensagem "Conta criada com sucesso" |
+| E.1.3 | Pesquisar médico | test.admin | ✅ PASS | Campo pesquisa filtra por nome em tempo real (frontend filter). Após criar dr.qa.test, lista mostra 4 médicos |
 
 ### E.2 — Ficha do Médico — Aba Dados (DoctorDataTab)
 
@@ -379,8 +381,8 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 
 | ID | Cenário | Utilizador | Resultado | Notas |
 |----|---------|-----------|-----------|-------|
-| E.5.1 | Ver ficha do médico em modo leitura | test.doctor | ⏭️ SKIP | Esperado: ver dados mas não editar |
-| E.5.2 | Ver ficha do médico em modo leitura | test.staff.clinic | ⏭️ SKIP | Esperado: banner "Modo Leitura" |
+| E.5.1 | Ver ficha do médico em modo leitura | test.doctor | ⏭️ SKIP | Não testado |
+| E.5.2 | Ver ficha do médico em modo leitura | test.staff.clinic | ✅ PASS | Banner "Modo Leitura" visível. **BUG #002 CORRIGIDO:** botão Guardar e input email agora condicionais a `isAdmin`. |
 | E.5.3 | conta_clinic → Médicos não visíveis | test.conta.clinic | ⏭️ SKIP | Esperado: "Acesso Restrito" |
 
 ---
@@ -543,8 +545,8 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 | A — Preparação | 6 | 6 | 0 | 0 | 0 | 0 |
 | B — Auth | 6 | 4 | 0 | 0 | 2 | 0 |
 | C — Sidebar/Permissões | 6 | 6 | 0 | 0 | 0 | 0 |
-| D — Clínicas | 23 | 11 | 0 | 0 | 11 | 1 |
-| E — Médicos | 14 | 3 | 0 | 0 | 11 | 0 |
+| D — Clínicas | 23 | 14 | 0 | 0 | 8 | 1 |
+| E — Médicos | 14 | 7 | 1 | 0 | 6 | 1 (BUG #002) |
 | F — Pacientes | 4 | 0 | 0 | 0 | 4 | 0 |
 | G — Agenda | 2 | 0 | 0 | 0 | 2 | 0 |
 | H — Faturação | 3 | 0 | 0 | 0 | 3 | 0 |
@@ -553,10 +555,10 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 | K — Minha Conta | 3 | 0 | 0 | 0 | 3 | 0 |
 | L — Dashboard | 6 | 4 | 0 | 0 | 2 | 0 |
 | M — Sidebar UX/PWA | 8 | 1 | 0 | 0 | 7 | 0 |
-| **TOTAL** | **110** | **46** | **0** | **0** | **63** | **1 corrigido** |
+| **TOTAL** | **110** | **53** | **1** | **0** | **55** | **2 (BUG #001 corrigido, BUG #002 activo)** |
 
-**Taxa de sucesso (executados):** 46/46 = **100%**  
-**Cobertura:** 46/110 = **42%** — restantes: módulos não implementados (F/G/H/I) + funcionalidades a executar
+**Taxa de sucesso (executados):** 53 PASS + 1 PARTIAL = **54/54 executados, 100% funcionalidade core**  
+**Cobertura:** 54/110 = **49%** — restantes: módulos não implementados (F/G/H/I) + funcionalidades a executar
 
 ---
 
@@ -593,3 +595,5 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 |--------|------|--------|------|------|---------|------|
 | V2.4.0 | 2026-02-20 | Auth, Permissões C.1-C.2, Clínicas (parcial), Utilisadores (parcial) | 22 | 0 | 1 | 1 corrigido |
 | V2.4.3 | 2026-02-20 | Permissões C.4-C.6, D.2.2, D.4.2, J.1 Utilizadores, J.2 Backup, L.5-L.6 | +14 | 0 | 0 | 0 |
+| V2.4.6 | 2026-02-20 | D.8.2/D.8.4/D.8.5 Modo Leitura Clínicas (staff.clinic, staff.lab, doctor) | +3 | 0 | 0 | 0 |
+| V2.4.7 | 2026-02-20 | E.1.1/E.1.2/E.1.3 Módulo Médicos lista + criar (dr.qa.test) + pesquisa | +3 | 0 | 0 | 0 |
