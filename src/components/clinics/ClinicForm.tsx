@@ -7,12 +7,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { clinicsService, ClinicFullDetails } from '@/services/clinicsService';
 import { useModulePermission } from '@/components/PermissionGuard';
 import { useAuth } from '@/contexts/AuthContext';
-import { Upload, X, Camera } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { Upload, X, Camera, Loader2 } from 'lucide-react';
 
 import ClinicInfoTab from './tabs/ClinicInfoTab';
 import ClinicDeliveryTab from './tabs/ClinicDeliveryTab';
 import ClinicTeamTab from './tabs/ClinicTeamTab';
 import ClinicDiscountsTab from './tabs/ClinicDiscountsTab';
+import ClinicSecurityTab from './tabs/ClinicSecurityTab';
 
 
 interface ClinicFormProps {
@@ -23,6 +25,8 @@ interface ClinicFormProps {
 function ClinicHeroHeader({ initialData, canEdit }: { initialData: ClinicFullDetails; canEdit: boolean }) {
     const { watch, setValue } = useFormContext<ClinicFullDetails>();
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const existingLogo = watch('logo_url');
@@ -33,21 +37,59 @@ function ClinicHeroHeader({ initialData, canEdit }: { initialData: ClinicFullDet
         if (existingLogo) setLogoPreview(existingLogo);
     }, [existingLogo]);
 
-    const processFile = (file: File) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const base64 = reader.result as string;
-            setLogoPreview(base64);
-            setValue('logo_url', base64, { shouldDirty: true, shouldValidate: true });
-            // Disparar save manual — setValue programático não dispara o watch com type 'change'
+    const processFile = async (file: File) => {
+        // Validar tipo
+        if (!file.type.startsWith('image/')) {
+            setUploadError('Por favor seleciona uma imagem (JPG, PNG, etc.)');
+            return;
+        }
+        // Validar tamanho (2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            setUploadError('A imagem deve ter no máximo 2MB');
+            return;
+        }
+
+        setUploading(true);
+        setUploadError(null);
+
+        // Preview local imediato
+        const localUrl = URL.createObjectURL(file);
+        setLogoPreview(localUrl);
+
+        try {
+            const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+            const filePath = `logos/${initialData.id}.${ext}`;
+
+            // Upload para Supabase Storage
+            const { error: uploadErr } = await supabase.storage
+                .from('clinic-logos')
+                .upload(filePath, file, { upsert: true, contentType: file.type });
+
+            if (uploadErr) throw uploadErr;
+
+            // Obter URL pública com cache-buster
+            const { data: urlData } = supabase.storage
+                .from('clinic-logos')
+                .getPublicUrl(filePath);
+
+            const logoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+            setLogoPreview(logoUrl);
+            setValue('logo_url', logoUrl, { shouldDirty: true, shouldValidate: true });
             window.dispatchEvent(new CustomEvent('clinic-logo-changed'));
-        };
-        reader.readAsDataURL(file);
+        } catch (err: any) {
+            console.error('Logo upload failed:', err);
+            setUploadError(err.message || 'Erro ao fazer upload do logo');
+            setLogoPreview(existingLogo || null);
+        } finally {
+            setUploading(false);
+            URL.revokeObjectURL(localUrl);
+        }
     };
 
     const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) processFile(file);
+        if (e.target) e.target.value = '';
     };
 
     const handleDrop = (e: React.DragEvent) => {
@@ -60,12 +102,25 @@ function ClinicHeroHeader({ initialData, canEdit }: { initialData: ClinicFullDet
         e.preventDefault();
     };
 
-    const removeLogo = (e: React.MouseEvent) => {
+    const removeLogo = async (e: React.MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
+        setUploading(true);
+
+        try {
+            // Tentar apagar do Storage (ignorar erro se não existir)
+            const extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            for (const ext of extensions) {
+                await supabase.storage.from('clinic-logos').remove([`logos/${initialData.id}.${ext}`]);
+            }
+        } catch (err) {
+            console.error('Logo delete warning:', err);
+        }
+
         setLogoPreview(null);
-        setValue('logo_url', "", { shouldDirty: true });
+        setValue('logo_url', '', { shouldDirty: true });
         window.dispatchEvent(new CustomEvent('clinic-logo-changed'));
+        setUploading(false);
     };
 
     return (
@@ -78,10 +133,10 @@ function ClinicHeroHeader({ initialData, canEdit }: { initialData: ClinicFullDet
             <div className="relative z-10 flex items-center gap-6">
                 {/* Logo editável */}
                 <div
-                    className={`relative group flex-shrink-0 ${canEdit ? 'cursor-pointer' : ''}`}
-                    onClick={() => canEdit && fileInputRef.current?.click()}
-                    onDrop={canEdit ? handleDrop : undefined}
-                    onDragOver={canEdit ? handleDragOver : undefined}
+                    className={`relative group flex-shrink-0 ${canEdit && !uploading ? 'cursor-pointer' : ''}`}
+                    onClick={() => canEdit && !uploading && fileInputRef.current?.click()}
+                    onDrop={canEdit && !uploading ? handleDrop : undefined}
+                    onDragOver={canEdit && !uploading ? handleDragOver : undefined}
                 >
                     {logoPreview ? (
                         <>
@@ -90,7 +145,12 @@ function ClinicHeroHeader({ initialData, canEdit }: { initialData: ClinicFullDet
                                 alt={commercialName}
                                 className="h-32 w-32 rounded-full object-cover ring-[3px] ring-primary/40 shadow-xl shadow-primary/10"
                             />
-                            {canEdit && (
+                            {uploading && (
+                                <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center z-20">
+                                    <Loader2 className="h-8 w-8 text-white animate-spin" />
+                                </div>
+                            )}
+                            {canEdit && !uploading && (
                                 <>
                                     {/* Overlay de edição ao hover */}
                                     <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -122,14 +182,20 @@ function ClinicHeroHeader({ initialData, canEdit }: { initialData: ClinicFullDet
                         </div>
                     )}
 
-                    {canEdit && (
+                    {canEdit && !uploading && (
                         <input
                             ref={fileInputRef}
                             type="file"
-                            accept="image/*"
+                            accept="image/jpeg,image/png,image/gif,image/webp"
                             className="hidden"
                             onChange={handleLogoUpload}
                         />
+                    )}
+                    {/* Mensagem de erro de upload */}
+                    {uploadError && (
+                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-red-500/90 text-white text-xs px-3 py-1 rounded-full shadow-lg">
+                            {uploadError}
+                        </div>
                     )}
                 </div>
 
@@ -295,6 +361,9 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
                                     {isAdmin && (
                                         <TabsTrigger value="discounts" className="flex-shrink-0">Descontos</TabsTrigger>
                                     )}
+                                    {isAdmin && (
+                                        <TabsTrigger value="security" className="flex-shrink-0">Segurança</TabsTrigger>
+                                    )}
                                 </TabsList>
 
                                 <div className="mt-6">
@@ -313,6 +382,11 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
                                     {isAdmin && (
                                         <TabsContent value="discounts">
                                             <ClinicDiscountsTab />
+                                        </TabsContent>
+                                    )}
+                                    {isAdmin && (
+                                        <TabsContent value="security">
+                                            <ClinicSecurityTab />
                                         </TabsContent>
                                     )}
                                 </div>

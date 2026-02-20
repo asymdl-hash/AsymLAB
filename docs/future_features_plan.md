@@ -14,6 +14,23 @@
 > 4. **Campos Obrigatórios:** Garantir que campos essenciais (nome, telefone, email) são populados durante o fluxo de criação do utilizador e guardados na tabela correcta (`user_profiles`).
 > 5. **Migração de Dados Legacy:** Se existem dados antigos em locais diferentes (ex: `auth.users.phone`), criar um script de migração para unificar.
 
+> [!IMPORTANT]
+> **Regra Operacional — Testes Obrigatórios Pré-Commit:**
+> Antes de qualquer `git commit`, o agente deve testar o fluxo alterado no browser simulando um utilizador real. Ver workflow detalhada em `.agent/workflows/pre-commit-test.md`.
+>
+> **Contas de Teste Exclusivas** (nunca usar contas reais de produção nos testes automáticos):
+>
+> | Role | Username | Password |
+> |---|---|---|
+> | `admin` | `test.admin` | `Teste1234` |
+> | `doctor` | `test.doctor` | `Teste1234` |
+> | `staff_clinic` | `test.staff.clinic` | `Teste1234` |
+> | `staff_lab` | `test.staff.lab` | `Teste1234` |
+> | `contabilidade_clinic` | `test.conta.clinic` | `Teste1234` |
+> | `contabilidade_lab` | `test.conta.lab` | `Teste1234` |
+>
+> Todos os usernames acima usam o sufixo `@asymlab.app` internamente (ex: `test.admin@asymlab.app`).
+
 ---
 
 ## 1. Redundância de Dados — Backup Local ✅ IMPLEMENTADO (V1.7.0 → V1.9.0)
