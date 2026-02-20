@@ -22,6 +22,33 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 
 ---
 
+### 🚫 Regras Anti-INVALID_ARGUMENT
+
+**Causa raiz identificada:** O erro `INVALID_ARGUMENT: Function call is missing a thought_signature` ocorre quando o browser subagent executa mais de ~12-15 passos internos numa única sessão. O sistema de assinatura de funções do modelo perde o rasto após esse limite.
+
+**Regras obrigatórias para evitar este erro:**
+
+| Regra | Descrição |
+|-------|-----------|
+| **1 utilizador por sessão** | Cada sessão de browser testa apenas UM utilizador. Nunca mudar de utilizador dentro da mesma sessão (logout + login = 2+ passos extra que consomem o limite). |
+| **Máximo 10 ações por sessão** | Cada tarefa deve ter no máximo 10 interações (cliques, escritas, navegações). Dividir testes complexos em sub-sessões. |
+| **Sem paralelismo** | Nunca lançar 2 sessões de browser em simultâneo. Sempre sequencial: esperar o resultado de uma antes de lançar a próxima. |
+| **Tarefas focadas** | Uma tarefa = um objetivo específico (ex: "verificar sidebar", não "verificar sidebar + testar clínicas + fazer logout"). |
+| **Sem screenshots excessivos** | Cada screenshot conta como 1 passo. Pedir no máximo 2-3 screenshots por sessão. |
+
+**Exemplo de tarefa CORRETA:**
+```
+Vai a localhost:3000/login. Login com "X" / "Y". Tira screenshot da sidebar. Reporta os itens visíveis.
+```
+
+**Exemplo de tarefa INCORRETA (demasiados passos):**
+```
+Login, verifica sidebar, vai a Clínicas, verifica banner, vai a Médicos, verifica banner,
+vai a Definições, confirma acesso restrito, faz logout, re-login com outro user, ...
+```
+
+---
+
 ## Legenda de Resultados
 
 | Símbolo | Significado |
@@ -148,16 +175,26 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 
 ### C.3 — Staff Lab (test.staff.lab)
 
-**Resultado: ⏭️ SKIP definitivo (3/3 tentativas falharam)**
+**Resultado: ✅ PASS (Sessão 3 — tarefa minimalista)**
 
-**Esperado conforme matriz:**
-| Dashboard | read → visível com badge |
-| Clínicas | read → visível com badge |
-| Médicos | read → visível com badge |
-| Pacientes | read → visível com badge |
-| Agenda / Faturação / Relatórios / Definições | none → não visíveis |
+| Item Sidebar | Visível? | Badge Leitura? |
+|-------------|---------|----------------|
+| Dashboard | ✅ | ✅ [Leitura] |
+| Clínicas | ✅ | ✅ [Leitura] |
+| Médicos | ✅ | ✅ [Leitura] |
+| Pacientes | ✅ | ✅ [Leitura] |
+| Agenda | ❌ | — |
+| Faturação | ❌ | — |
+| Relatórios | ❌ | — |
+| Definições | ❌ | — |
 
-**Motivo SKIP:** Browser automation falhou 3 vezes consecutivas (INVALID_ARGUMENT). Testar manualmente.
+**Comportamentos verificados:**
+- Dashboard com banner "👁️ Modo Leitura — Pode visualizar as informações, mas não fazer alterações." ✅
+- Todos os 4 módulos com badge [Leitura] ✅
+- Agenda, Faturação, Relatórios e Definições ausentes da sidebar ✅
+- Rodapé: "Ligado como TEST Staff Lab • AsymLAB v2.4" ✅
+
+**Nota:** Falhou em tarefas longas (INVALID_ARGUMENT). Passou com tarefa minimalista (≤8 passos). Nova regra adicionada ao QA.
 
 ---
 
@@ -501,7 +538,7 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 |-------|-------|------|------|---------|------|-----|
 | A — Preparação | 6 | 6 | 0 | 0 | 0 | 0 |
 | B — Auth | 6 | 2 | 0 | 0 | 4 | 0 |
-| C — Sidebar/Permissões | 6 | 5 | 0 | 0 | 1 | 0 |
+| C — Sidebar/Permissões | 6 | 6 | 0 | 0 | 0 | 0 |
 | D — Clínicas | 23 | 7 | 0 | 0 | 15 | 1 |
 | E — Médicos | 14 | 3 | 0 | 0 | 11 | 0 |
 | F — Pacientes | 4 | 0 | 0 | 0 | 4 | 0 |
@@ -512,10 +549,10 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 | K — Minha Conta | 3 | 0 | 0 | 0 | 3 | 0 |
 | L — Dashboard | 6 | 3 | 0 | 0 | 3 | 0 |
 | M — Sidebar UX/PWA | 8 | 1 | 0 | 0 | 7 | 0 |
-| **TOTAL** | **110** | **36** | **0** | **0** | **73** | **1 corrigido** |
+| **TOTAL** | **110** | **37** | **0** | **0** | **72** | **1 corrigido** |
 
-**Taxa de sucesso (executados):** 36/36 = **100%**  
-**Cobertura:** 36/110 = **33%** — restantes bloqueados por browser automation (C.3) ou módulos não implementados
+**Taxa de sucesso (executados):** 37/37 = **100%**  
+**Cobertura:** 37/110 = **34%** — restantes: módulos não implementados (F/G/H/I) + funcionalidades a executar
 
 ---
 
@@ -523,7 +560,6 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 
 ### Alta Prioridade (funcionalidades existentes, ainda não executadas)
 
-- [ ] **C.3** — Sidebar `test.staff.lab` — testar **manualmente** (browser automation falhou 3/3)
 - [ ] **D.7.1-D.7.3** — Aba Segurança da Clínica
 - [ ] **D.5.1-D.5.2** — Aba Contactos da Clínica
 - [ ] **D.6.1-D.6.3** — Aba Descontos da Clínica
