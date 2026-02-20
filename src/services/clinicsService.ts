@@ -183,29 +183,53 @@ export const clinicsService = {
         if (error) throw error;
     },
 
-    // 9. Buscar contactos associados a um delivery point
+    // 9. Buscar contactos associados a um delivery point (membros e externos)
     async getDeliveryPointContacts(deliveryPointId: string) {
         const { data, error } = await supabase
             .from('delivery_point_contacts')
-            .select('id, user_id, user_profiles(full_name, phone, app_role)')
+            .select('id, user_id, name, phone, role_label, user_profiles(full_name, phone, app_role)')
             .eq('delivery_point_id', deliveryPointId);
 
         if (error) throw error;
         return (data || []).map((d: any) => ({
             id: d.id,
-            user_id: d.user_id,
-            name: d.user_profiles?.full_name || '',
-            phone: d.user_profiles?.phone || null,
-            role: d.user_profiles?.app_role || null,
+            user_id: d.user_id ?? null,
+            // Membro: usa dados do perfil; Externo: usa dados directos da tabela
+            name: d.user_profiles?.full_name || d.name || '',
+            phone: d.user_profiles?.phone || d.phone || null,
+            role: d.role_label || d.user_profiles?.app_role || null,
+            is_external: !d.user_id,
         }));
     },
 
-    // 10. Associar contacto a delivery point
+    // 10a. Associar membro da equipa a delivery point
     async addDeliveryPointContact(deliveryPointId: string, userId: string) {
         const { data, error } = await supabase
             .from('delivery_point_contacts')
             .insert({ delivery_point_id: deliveryPointId, user_id: userId })
             .select('id, user_id')
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    // 10b. Adicionar contacto externo a delivery point (sem conta no sistema)
+    async addExternalDeliveryPointContact(
+        deliveryPointId: string,
+        name: string,
+        phone: string,
+        roleLabel?: string
+    ) {
+        const { data, error } = await supabase
+            .from('delivery_point_contacts')
+            .insert({
+                delivery_point_id: deliveryPointId,
+                name,
+                phone,
+                role_label: roleLabel || null,
+            })
+            .select('id, name, phone, role_label')
             .single();
 
         if (error) throw error;

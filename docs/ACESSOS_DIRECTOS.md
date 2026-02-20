@@ -1,4 +1,16 @@
-# 🔧 Acessos Directos — AsymLAB (Estado: 18/02/2026)
+# 🔧 Acessos Directos — AsymLAB (Actualizado: 20/02/2026)
+
+---
+
+## 🧑‍💻 Credenciais da Aplicação (http://localhost:3000)
+
+| Utilizador | Email / Username | Password | Role |
+|-----------|-----------------|----------|------|
+| **Fabio Dias** | `asymdl@gmail.com` | `FabioDias123?!` | Admin |
+| **Dr. João Alves** | `joaoalves` | — | Doctor |
+| **Ivo Assistente** | `ivoassistente` | — | Staff Clinic |
+
+> **URL Produção:** https://asymlab.vercel.app
 
 > Configurações de acesso directo ao Supabase para o Antigravity trabalhar de forma autónoma.
 

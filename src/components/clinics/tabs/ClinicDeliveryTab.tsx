@@ -4,16 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Trash2, MapPin, Navigation, Pencil, Check, Phone, User, Users, ChevronDown, X } from 'lucide-react';
+import { Plus, Trash2, MapPin, Navigation, Pencil, Check, Phone, User, Users, ChevronDown, X, UserPlus } from 'lucide-react';
 import { ClinicFullDetails, ClinicTeamMember, clinicsService } from '@/services/clinicsService';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 interface AssignedContact {
     id: string;
-    user_id: string;
+    user_id: string | null;
     name: string;
     phone: string | null;
     role: string | null;
+    is_external?: boolean;
 }
 
 export default function ClinicDeliveryTab() {
@@ -22,6 +23,8 @@ export default function ClinicDeliveryTab() {
     const [editingMapIndex, setEditingMapIndex] = useState<number | null>(null);
     const [teamContacts, setTeamContacts] = useState<ClinicTeamMember[]>([]);
     const [showContactDropdown, setShowContactDropdown] = useState<number | null>(null);
+    const [showExternalForm, setShowExternalForm] = useState<number | null>(null);
+    const [externalForm, setExternalForm] = useState({ name: '', phone: '', roleLabel: '' });
     const [assignedContacts, setAssignedContacts] = useState<Record<string, AssignedContact[]>>({});
     const deliveryPoints = watch('clinic_delivery_points');
 
@@ -122,6 +125,24 @@ export default function ClinicDeliveryTab() {
             }));
         } catch (error) {
             console.error("Erro ao remover contacto", error);
+        }
+    };
+
+    const handleAddExternalContact = async (dpId: string, dpIndex: number) => {
+        if (!externalForm.name.trim()) return;
+        try {
+            await clinicsService.addExternalDeliveryPointContact(
+                dpId,
+                externalForm.name.trim(),
+                externalForm.phone.trim(),
+                externalForm.roleLabel.trim() || undefined
+            );
+            await loadAssignedContacts(dpId);
+            setExternalForm({ name: '', phone: '', roleLabel: '' });
+            setShowExternalForm(null);
+            setShowContactDropdown(null);
+        } catch (error) {
+            console.error("Erro ao adicionar contacto externo", error);
         }
     };
 
@@ -275,39 +296,105 @@ export default function ClinicDeliveryTab() {
                                             <Label className="text-xs text-gray-400 flex items-center gap-1">
                                                 <Phone className="h-3 w-3" /> Contactos para Entregas
                                             </Label>
-                                            {availableContacts.length > 0 && (
-                                                <div className="relative">
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="gap-1 text-xs h-7"
-                                                        onClick={() => setShowContactDropdown(showContactDropdown === index ? null : index)}
-                                                    >
-                                                        <Users className="h-3 w-3" />
-                                                        Adicionar contacto
-                                                        <ChevronDown className="h-3 w-3" />
-                                                    </Button>
-                                                    {showContactDropdown === index && (
-                                                        <div className="absolute right-0 top-8 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[220px]">
-                                                            {availableContacts.map((tc) => (
-                                                                <button
-                                                                    key={tc.user_id}
-                                                                    type="button"
-                                                                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                                                                    onClick={() => dpId && handleAddContact(dpId, tc.user_id)}
-                                                                >
-                                                                    <User className="h-3 w-3 text-gray-400" />
-                                                                    <span className="flex-1 truncate">{tc.full_name}</span>
-                                                                    {tc.phone && (
-                                                                        <span className="text-xs text-gray-400">{tc.phone}</span>
-                                                                    )}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
+                                            <div className="relative">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-1 text-xs h-7"
+                                                    onClick={() => {
+                                                        setShowContactDropdown(showContactDropdown === index ? null : index);
+                                                        setShowExternalForm(null);
+                                                    }}
+                                                >
+                                                    <Users className="h-3 w-3" />
+                                                    Adicionar contacto
+                                                    <ChevronDown className="h-3 w-3" />
+                                                </Button>
+                                                {showContactDropdown === index && (
+                                                    <div className="absolute right-0 top-8 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[240px]">
+                                                        {/* Membros da equipa */}
+                                                        {availableContacts.length > 0 && (
+                                                            <>
+                                                                <p className="px-3 pt-2 pb-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Equipa</p>
+                                                                {availableContacts.map((tc) => (
+                                                                    <button
+                                                                        key={tc.user_id}
+                                                                        type="button"
+                                                                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                                                        onClick={() => dpId && handleAddContact(dpId, tc.user_id)}
+                                                                    >
+                                                                        <User className="h-3 w-3 text-gray-400" />
+                                                                        <span className="flex-1 truncate">{tc.full_name}</span>
+                                                                        {tc.phone && (
+                                                                            <span className="text-xs text-gray-400">{tc.phone}</span>
+                                                                        )}
+                                                                    </button>
+                                                                ))}
+                                                                <hr className="my-1 border-gray-100" />
+                                                            </>
+                                                        )}
+                                                        {/* Botão para adicionar externo */}
+                                                        {showExternalForm !== index ? (
+                                                            <button
+                                                                type="button"
+                                                                className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 flex items-center gap-2 text-blue-600"
+                                                                onClick={() => {
+                                                                    setShowExternalForm(index);
+                                                                    setExternalForm({ name: '', phone: '', roleLabel: '' });
+                                                                }}
+                                                            >
+                                                                <UserPlus className="h-3 w-3" />
+                                                                <span>Contacto externo...</span>
+                                                            </button>
+                                                        ) : (
+                                                            <div className="px-3 py-2 space-y-2">
+                                                                <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider flex items-center gap-1">
+                                                                    <UserPlus className="h-3 w-3" /> Novo Externo
+                                                                </p>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Nome *"
+                                                                    value={externalForm.name}
+                                                                    onChange={e => setExternalForm(f => ({ ...f, name: e.target.value }))}
+                                                                    className="w-full text-sm px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                                                />
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Telefone"
+                                                                    value={externalForm.phone}
+                                                                    onChange={e => setExternalForm(f => ({ ...f, phone: e.target.value }))}
+                                                                    className="w-full text-sm px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                                                />
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Cargo (opcional)"
+                                                                    value={externalForm.roleLabel}
+                                                                    onChange={e => setExternalForm(f => ({ ...f, roleLabel: e.target.value }))}
+                                                                    className="w-full text-sm px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                                                />
+                                                                <div className="flex gap-1">
+                                                                    <button
+                                                                        type="button"
+                                                                        disabled={!externalForm.name.trim()}
+                                                                        onClick={() => dpId && handleAddExternalContact(dpId, index)}
+                                                                        className="flex-1 text-xs py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                    >
+                                                                        Adicionar
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setShowExternalForm(null)}
+                                                                        className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50"
+                                                                    >
+                                                                        Cancelar
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {/* Chips de contactos associados */}
@@ -316,10 +403,19 @@ export default function ClinicDeliveryTab() {
                                                 {dpContacts.map((ac) => (
                                                     <div
                                                         key={ac.id}
-                                                        className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 border border-primary/15 rounded-full text-sm"
+                                                        className={`flex items-center gap-2 px-3 py-1.5 border rounded-full text-sm ${ac.is_external
+                                                                ? 'bg-blue-50 border-blue-200'
+                                                                : 'bg-primary/5 border-primary/15'
+                                                            }`}
                                                     >
-                                                        <User className="h-3 w-3 text-primary/60" />
+                                                        {ac.is_external
+                                                            ? <UserPlus className="h-3 w-3 text-blue-500" />
+                                                            : <User className="h-3 w-3 text-primary/60" />
+                                                        }
                                                         <span className="font-medium text-gray-700">{ac.name}</span>
+                                                        {ac.role && (
+                                                            <span className="text-[10px] text-gray-400 italic">{ac.role}</span>
+                                                        )}
                                                         {ac.phone && (
                                                             <span className="text-xs text-gray-400">{ac.phone}</span>
                                                         )}
