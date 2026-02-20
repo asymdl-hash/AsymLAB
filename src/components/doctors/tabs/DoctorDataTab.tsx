@@ -205,7 +205,7 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                     <div>
                         <Label htmlFor="full_name">Nome Completo</Label>
                         <Input id="full_name" {...register('full_name')} disabled className="bg-gray-50" />
-                        <p className="text-xs text-gray-400 mt-1">Editável nas Definições &gt; Utilizadores</p>
+                        <p className="text-xs text-gray-400 mt-1">{isAdmin ? 'Editável nas Definições > Utilizadores' : 'Gerido pelo administrador'}</p>
                     </div>
 
                     {/* ---- Campo Phone com lógica de bloqueio (arquitectura §11) ---- */}
@@ -332,7 +332,7 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                         <Building2 className="h-8 w-8 text-gray-300 mx-auto mb-2" />
                         <p className="text-sm text-gray-500">Nenhuma clínica associada.</p>
                         <p className="text-xs text-gray-400 mt-1">
-                            Associe este médico a uma clínica nas Definições &gt; Utilizadores
+                            {isAdmin ? 'Associe este médico a uma clínica nas Definições > Utilizadores' : 'Sem clínicas associadas. Contacte o administrador.'}
                         </p>
                     </div>
                 ) : (
