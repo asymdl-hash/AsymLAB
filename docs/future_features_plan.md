@@ -508,51 +508,33 @@ WHERE up.user_id = au.id
 - Coluna `updated_at` adicionada via SQL Editor do Supabase Dashboard
 - Trigger `handle_updated_at_delivery_point_contacts` criado automaticamente
 
-### 10.3 — Telefone desincronizado (`ivoassistente@asymlab.app`)
-- **Problema:** O utilizador `ivoassistente@asymlab.app` tem `phone = 914511165` em `auth.users` mas `phone = null` em `user_profiles`
-- **Impacto:** Dados inconsistentes — viola a regra de Single Source of Truth
-- **Acção:** Sincronizar o telefone para `user_profiles` (fonte de verdade) e limpar `auth.users.phone`
-- **SQL:**
-  ```sql
-  -- 1. Copiar phone para user_profiles
-  UPDATE public.user_profiles up
-  SET phone = au.phone
-  FROM auth.users au
-  WHERE up.user_id = au.id
-    AND au.email = 'ivoassistente@asymlab.app'
-    AND up.phone IS NULL;
+### ~~10.3 — Telefone desincronizado (`ivoassistente@asymlab.app`)~~ ✅ RESOLVIDO (V2.3.0)
+- Arquitectura phone reformulada: `auth.users.phone` é agora o Master e `user_profiles.phone` o Mirror (via trigger)
+- Trigger `sync_auth_phone_to_profile` activo em produção
+- Dados do Ivo corrigidos manualmente via SQL (19/02/2026)
 
-  -- 2. Verificar resultado
-  SELECT up.phone FROM public.user_profiles up
-  JOIN auth.users au ON up.user_id = au.id
-  WHERE au.email = 'ivoassistente@asymlab.app';
-  ```
-- **Prioridade:** Média
+### ~~10.4 — Advisors Supabase (Segurança & Performance)~~ ✅ RESOLVIDO (V2.3.1, 20/02/2026)
 
-### 10.4 — Advisors Supabase (Segurança & Performance)
-Identificados durante o setup. Corrigir gradualmente:
+#### Segurança — todos resolvidos
+| Problema | Qtd | Estado |
+|----------|-----|--------|
+| `function_search_path_mutable` | 12 funções | ✅ Migration `security_fix_function_search_path` |
+| `rls_policy_always_true` | 5 tabelas | ✅ Migration `security_fix_rls_policies_tables` |
+| `multiple_permissive_policies` | 16 policies | ✅ Limpeza via SQL directo |
+| `auth_leaked_password_protection` | Global | ⚠️ **Só disponível no Supabase Pro** — ver secção 12 |
 
-#### Segurança (WARN)
-| Problema | Qtd | Acção |
-|----------|-----|-------|
-| `function_search_path_mutable` | 12 funções | Adicionar `SET search_path = ''` a cada função |
-| `rls_policy_always_true` | 5 tabelas | Rever policies — adicionar filtro por `auth.uid()` |
-| `auth_leaked_password_protection` | Global | Activar em Supabase Dashboard → Auth → Settings |
-
-#### Performance (INFO)
-| Problema | Qtd | Acção |
-|----------|-----|-------|
-| `unindexed_foreign_keys` | 4 FKs | Criar índices nas FKs em falta |
-| `auth_rls_initplan` | 5 policies | Substituir `auth.uid()` por `(SELECT auth.uid())` nas policies |
-| `unused_index` | 3 índices | Avaliar e remover índices não usados |
-| `multiple_permissive_policies` | 16 | Consolidar policies duplicadas |
+#### Performance — todos resolvidos
+| Problema | Qtd | Estado |
+|----------|-----|--------|
+| `unindexed_foreign_keys` | 4 FKs | ✅ Migration `perf_add_missing_fk_indexes` |
+| `auth_rls_initplan` | 5 policies | ✅ Incluído nas migrations de RLS |
+| `unused_index` | 3 índices | ✅ Removidos via SQL directo |
 
 > **Referência:** [Supabase Database Linter](https://supabase.com/docs/guides/database/database-linter)
-- **Prioridade:** Baixa (não bloqueiam funcionalidade, mas melhoram segurança e performance)
 
 ---
 
-## 11. Arquitectura do Phone — Regra Permanente 🔜 A IMPLEMENTAR (V2.3.0)
+## 11. Arquitectura do Phone — Regra Permanente ✅ IMPLEMENTADO (V2.3.0)
 
 > [!IMPORTANT]
 > **Regra Arquitectural — Phone (Telefone):**
@@ -615,21 +597,34 @@ Criamos uma API route com `SUPABASE_SERVICE_ROLE_KEY`:
 
 | Componente | Estado |
 |-----------|--------|
-| Correcção imediata (`ivoassistente@asymlab.app`) | 🔜 Pendente (SQL directo) |
-| Trigger PostgreSQL | 🔜 Pendente |
-| API Route `/api/users/[id]/phone` | 🔜 Pendente |
-| Frontend — campo bloqueado + modal | 🔜 Pendente |
+| Correcção imediata (`ivoassistente@asymlab.app`) | ✅ Feito (SQL directo, 19/02/2026) |
+| Trigger PostgreSQL | ✅ Activo em produção |
+| API Route `/api/users/[id]/phone` | ✅ `GET` + `POST` implementados |
+| Frontend `DoctorDataTab` — campo bloqueado + modal | ✅ Implementado (V2.3.0) |
 
-### Correcção imediata — Ivo Assistente
+### ✅ Testes validados manualmente (20/02/2026)
 
-```sql
--- Sincronizar phone de auth → profile para ivoassistente@asymlab.app
-UPDATE public.user_profiles up
-SET phone = au.phone
-FROM auth.users au
-WHERE up.user_id = au.id
-  AND au.email = 'ivoassistente@asymlab.app'
-  AND up.phone IS NULL;
-```
+| # | Cenário | Resultado |
+|---|---------|----------|
+| 1 | **Admin sem phone** (Fabio Dias) | ✅ Campo editável + placeholder `9XX XXX XXX` |
+| 2 | **Admin vê doctor com phone** (Dr. João Alves) | ✅ Campo 🔒 + "Alterar nas Definições →" |
+| 3 | **Staff sem permissão** (Ivo Assistente) | ✅ Campo 🔒 + "Contactar administrador" + banner "Modo Leitura" |
 
-- **Prioridade:** Média (implementar antes de edição de perfis ser exposta a utilizadores finais)
+---
+
+## 12. Upgrade Supabase Pro 🔜 FUTURO
+
+> [!NOTE]
+> A funcionalidade de **Leaked Password Protection** (integração com HaveIBeenPwned.org) está disponível apenas no **plano Pro** do Supabase. Activar quando for feito o upgrade.
+
+### O que fica desbloqueado no Pro:
+- **`auth_leaked_password_protection`** — verifica se as passwords dos utilizadores estão em bases de dados de fugas conhecidas
+- Activar em: Supabase Dashboard → Authentication → Sign In / Up → **Password Strength** → Leaked passwords protection: `ON`
+
+### Outros benefícios do Pro relevantes para o AsymLAB:
+- Backups diários automáticos (actualmente só temos o nosso script custom)
+- PITR (Point-In-Time Recovery)
+- Mais throughput de API
+- SLA garantido
+
+- **Prioridade:** Futura — considerar quando a clínica tiver utilizadores reais em produção
