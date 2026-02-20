@@ -148,7 +148,7 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 
 ### C.3 — Staff Lab (test.staff.lab)
 
-**Resultado: ⏭️ SKIP**
+**Resultado: ⏭️ SKIP definitivo (3/3 tentativas falharam)**
 
 **Esperado conforme matriz:**
 | Dashboard | read → visível com badge |
@@ -157,56 +157,70 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 | Pacientes | read → visível com badge |
 | Agenda / Faturação / Relatórios / Definições | none → não visíveis |
 
-**Motivo SKIP:** Browser automation indisponível. A executar em sessão futura.
+**Motivo SKIP:** Browser automation falhou 3 vezes consecutivas (INVALID_ARGUMENT). Testar manualmente.
 
 ---
 
 ### C.4 — Doctor (test.doctor)
 
-**Resultado: ⏭️ SKIP**
+**Resultado: ✅ PASS (Sessão 2)**
 
-**Esperado conforme matriz:**
-| Dashboard | none → não visível |
-| Clínicas | read → visível com badge |
-| Médicos | read → visível com badge |
-| Pacientes | full → visível sem badge |
-| Agenda / Faturação / Relatórios / Definições | none → não visíveis |
+| Item Sidebar | Visível? | Badge Leitura? |
+|-------------|---------|----------------|
+| Dashboard | ❌ | — (none → Acesso Restrito ao entrar) |
+| Clínicas | ✅ | ✅ [Leitura] |
+| Médicos | ✅ | ✅ [Leitura] |
+| Pacientes | ✅ | ❌ (full — sem badge) |
+| Agenda | ❌ | — |
+| Faturação | ❌ | — |
+| Relatórios | ❌ | — |
+| Definições | ❌ | — |
 
-**Motivo SKIP:** Browser automation indisponível.
+**Comportamentos verificados:**
+- Redirect para /dashboard → banner "Acesso Restrito" ✅
+- Clínicas e Médicos em modo leitura ✅
+- Pacientes sem badge (acesso full) ✅
+- RLS filtragem: vê apenas Clinica QA Norte ✅
 
 ---
 
 ### C.5 — Contabilidade Clínica (test.conta.clinic)
 
-**Resultado: ⏭️ SKIP**
+**Resultado: ✅ PASS (Sessão 2)**
 
-**Esperado conforme matriz:**
-| Dashboard | none → não visível |
-| Clínicas | read → visível com badge |
-| Médicos | none → não visível |
-| Pacientes | none → não visível |
-| Faturação | read → visível com badge |
-| Relatórios | read → visível com badge |
-| Agenda / Definições | none → não visíveis |
+| Item Sidebar | Visível? | Badge Leitura? |
+|-------------|---------|----------------|
+| Dashboard | ❌ | — (Acesso Restrito) |
+| Clínicas | ✅ | ✅ [Leitura] |
+| Médicos | ❌ | — |
+| Pacientes | ❌ | — |
+| Faturação | ✅ | ✅ [Leitura] |
+| Relatórios | ✅ | ✅ [Leitura] |
+| Agenda / Definições | ❌ | — |
 
-**Motivo SKIP:** Browser automation indisponível.
+**Comportamentos verificados:**
+- Dashboard → "Acesso Restrito" ✅
+- Password resetada via admin antes do teste ✅
 
 ---
 
 ### C.6 — Contabilidade Lab (test.conta.lab)
 
-**Resultado: ⏭️ SKIP**
+**Resultado: ✅ PASS (Sessão 2)**
 
-**Esperado conforme matriz:**
-| Dashboard | read → visível com badge |
-| Clínicas | read → visível com badge |
-| Médicos | none → não visível |
-| Pacientes | none → não visível |
-| Faturação | read → visível com badge |
-| Relatórios | read → visível com badge |
-| Agenda / Definições | none → não visíveis |
+| Item Sidebar | Visível? | Badge Leitura? |
+|-------------|---------|----------------|
+| Dashboard | ✅ | ✅ [Leitura] |
+| Clínicas | ✅ | ✅ [Leitura] |
+| Médicos | ❌ | — |
+| Pacientes | ❌ | — |
+| Faturação | ✅ | ✅ [Leitura] |
+| Relatórios | ✅ | ✅ [Leitura] |
+| Agenda / Definições | ❌ | — |
 
-**Motivo SKIP:** Conta não testada nesta sessão.
+**Comportamentos verificados:**
+- Dashboard em modo leitura (banner "Modo Leitura") ✅
+- Só vê módulos de contabilidade + Dashboard ✅
 
 ---
 
@@ -225,7 +239,7 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 | ID | Cenário | Utilizador | Resultado | Notas |
 |----|---------|-----------|-----------|-------|
 | D.2.1 | Editar nome da clínica (auto-save) | test.admin | ✅ PASS | "Clinica QA Norte" guardado |
-| D.2.2 | Editar email geral (auto-save via RHF watch) | test.admin | ⚠️ PARTIAL | Limitação de teste JS; verificar manualmente |
+| D.2.2 | Editar email geral (auto-save via RHF watch) | test.admin | ✅ PASS | `qa.norte@test.com` guardado e persistido após renavegação |
 | D.2.3 | Upload de logo da clínica | test.admin | ⏭️ SKIP | Não testado |
 | D.2.4 | Editar morada / NIF | test.admin | ⏭️ SKIP | Não testado |
 
@@ -243,7 +257,7 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 | ID | Cenário | Utilizador | Resultado | Notas |
 |----|---------|-----------|-----------|-------|
 | D.4.1 | Criar ponto de entrega básico | test.admin | 🐛 BUG #001 → ✅ CORRIGIDO | Erro `country column not found` — corrigido |
-| D.4.2 | Criar ponto com contacto externo | test.admin | ⏭️ SKIP | Desbloqueado após BUG-001 — testar em sessão futura |
+| D.4.2 | Criar ponto com contacto externo | test.admin | ✅ PASS | "Ponto QA Externo" criado, distância 010km, guardado 07:20:56 |
 | D.4.3 | Editar ponto de entrega | test.admin | ⏭️ SKIP | Não testado |
 | D.4.4 | Eliminar ponto de entrega | test.admin | ⏭️ SKIP | Não testado |
 
@@ -384,27 +398,27 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 
 | ID | Cenário | Utilizador | Resultado | Notas |
 |----|---------|-----------|-----------|-------|
-| J.1.1 | Ver lista de utilizadores | test.admin | ⏭️ SKIP | Verificar tabela com todos os campos |
+| J.1.1 | Ver lista de utilizadores | test.admin | ✅ PASS | Lista com todos os 6 utilizadores test.* + outros |
 | J.1.2 | Criar utilizador por username | test.admin | ✅ PASS | 6 utilizadores test.* criados |
-| J.1.3 | Criar utilizador por email (invite link) | test.admin | ⏭️ SKIP | Não testado |
+| J.1.3 | Criar utilizador por email (invite link) | test.admin | ✅ PASS | Modal com tabs Username/Email; tab Email envia link de convite sem password |
 | J.1.4 | Seleccionar clínicas ao criar utilizador | test.admin | ⏭️ SKIP | Dropdown de clínicas no modal criar |
 | J.1.5 | Adicionar tags/funções ao criar utilizador | test.admin | ⏭️ SKIP | Ex: "Rececionista", "Assistente" |
-| J.1.6 | Editar utilizador (nome, role, clínicas) | test.admin | ⏭️ SKIP | Botão ✏️ na lista |
-| J.1.7 | Resetar password | test.admin | ✅ PASS | Reset executado em múltiplos utilizadores |
+| J.1.6 | Editar utilizador (nome, role, clínicas) | test.admin | ✅ PASS | Campos: Nome, Telemóvel, Perfil/Role, Clínicas, Tags |
+| J.1.7 | Resetar password | test.admin | ✅ PASS | Reset executado para conta.clinic e conta.lab com sucesso |
 | J.1.8 | Enviar credenciais por WhatsApp | test.admin | ⏭️ SKIP | Só disponível em utilizadores sem login anterior |
 | J.1.9 | Enviar credenciais por email | test.admin | ⏭️ SKIP | Só disponível em utilizadores sem login anterior |
-| J.1.10 | Tentar enviar credenciais após login — alerta | test.admin | ⏭️ SKIP | Deve mostrar modal "Convite Não Disponível" |
+| J.1.10 | Tentar enviar credenciais após login — alerta | test.admin | ✅ PASS | Modal "Convite Não Disponível" com instrução de usar Reset Password |
 | J.1.11 | Eliminar utilizador | test.admin | ⏭️ SKIP | Não testado |
 | J.1.12 | Filtrar/pesquisar utilizador na lista | test.admin | ⏭️ SKIP | Não testado |
-| J.1.13 | Ver roles e permissões (painel "Roles") | test.admin | ⏭️ SKIP | Botão "Roles" com accordeon explicativo |
-| J.1.14 | Link "Ver Ficha do Médico" para roles=doctor | test.admin | ⏭️ SKIP | Nome na lista é link azul para /dashboard/doctors/:id |
+| J.1.13 | Ver roles e permissões (painel "Roles") | test.admin | ✅ PASS | Accordion com todos os 5 roles e permissões detalhadas |
+| J.1.14 | Link "Ver Ficha do Médico" para roles=doctor | test.admin | ⏭️ SKIP | Não testado |
 
 ### J.2 — Backup (BackupSettings)
 
 | ID | Cenário | Utilizador | Resultado | Notas |
 |----|---------|-----------|-----------|-------|
-| J.2.1 | Ver painel de Backup | test.admin | ⏭️ SKIP | Verificar stats cards e histórico |
-| J.2.2 | Fazer backup manual "Auto" | test.admin | ⏭️ SKIP | Botão "Backup Agora" |
+| J.2.1 | Ver painel de Backup | test.admin | ✅ PASS | Stats: 7 backups (1 Full + 6 Incr), 9 tabelas monitorizadas, modo Auto |
+| J.2.2 | Fazer backup manual "Auto" | test.admin | ✅ PASS | Backup executado: 8 backups após — entrada `20/02/2026 07:29:17` |
 | J.2.3 | Fazer backup "Forçar Full" | test.admin | ⏭️ SKIP | Dropdown > Forçar Full |
 | J.2.4 | Fazer backup "Forçar Incremental" | test.admin | ⏭️ SKIP | Dropdown > Forçar Incremental |
 | J.2.5 | Alterar diretório de backup e guardar | test.admin | ⏭️ SKIP | Campo "Diretório" + botão "Guardar Alterações" |
@@ -413,7 +427,7 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 | J.2.8 | Alterar retenção (dias) | test.admin | ⏭️ SKIP | Campo numérico |
 | J.2.9 | Alterar intervalo Full (dias) | test.admin | ⏭️ SKIP | Campo numérico (desactivado em modo Full) |
 | J.2.10 | Toggle backup automático ON/OFF | test.admin | ⏭️ SKIP | Switch ON/OFF |
-| J.2.11 | Confirmar histórico de backups | test.admin | ⏭️ SKIP | Lista de backups com badges FULL/INCR/Manual |
+| J.2.11 | Confirmar histórico de backups | test.admin | ✅ PASS | Histórico actualizado em tempo real, tags FULL/INCR correctas |
 | J.2.12 | Reconfigurar backup (BackupWizard) | test.admin | ⏭️ SKIP | Botão "Reconfigurar" → wizard |
 
 ### J.3 — Outros módulos das Definições
@@ -444,8 +458,8 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 | L.2 | staff_lab vê Dashboard (modo leitura) | test.staff.lab | ⏭️ SKIP | Banner "Modo Leitura" esperado |
 | L.3 | conta_lab vê Dashboard (modo leitura) | test.conta.lab | ⏭️ SKIP | Banner "Modo Leitura" esperado |
 | L.4 | staff_clinic → Dashboard "Acesso Restrito" | test.staff.clinic | ✅ PASS | "Acesso Restrito" confirmado |
-| L.5 | doctor → Dashboard "Acesso Restrito" | test.doctor | ⏭️ SKIP | Esperado pelo matriz de permissões |
-| L.6 | conta_clinic → Dashboard "Acesso Restrito" | test.conta.clinic | ⏭️ SKIP | Esperado pelo matriz de permissões |
+| L.5 | doctor → Dashboard "Acesso Restrito" | test.doctor | ✅ PASS | "Acesso Restrito" confirmado após login |
+| L.6 | conta_clinic → Dashboard "Acesso Restrito" | test.conta.clinic | ✅ PASS | "Acesso Restrito" confirmado após login |
 
 ---
 
@@ -481,27 +495,27 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 
 ---
 
-## RESUMO GERAL (Sessão V2.4.0)
+## RESUMO GERAL (Actualizado — V2.4.2/V2.4.3)
 
 | Bloco | Total | PASS | FAIL | PARTIAL | SKIP | BUG |
 |-------|-------|------|------|---------|------|-----|
 | A — Preparação | 6 | 6 | 0 | 0 | 0 | 0 |
 | B — Auth | 6 | 2 | 0 | 0 | 4 | 0 |
-| C — Sidebar/Permissões | 6 | 2 | 0 | 0 | 4 | 0 |
-| D — Clínicas | 23 | 5 | 0 | 1 | 16 | 1 |
+| C — Sidebar/Permissões | 6 | 5 | 0 | 0 | 1 | 0 |
+| D — Clínicas | 23 | 7 | 0 | 0 | 15 | 1 |
 | E — Médicos | 14 | 3 | 0 | 0 | 11 | 0 |
 | F — Pacientes | 4 | 0 | 0 | 0 | 4 | 0 |
 | G — Agenda | 2 | 0 | 0 | 0 | 2 | 0 |
 | H — Faturação | 3 | 0 | 0 | 0 | 3 | 0 |
 | I — Relatórios | 3 | 0 | 0 | 0 | 3 | 0 |
-| J — Definições | 26 | 2 | 0 | 0 | 24 | 0 |
+| J — Definições | 26 | 9 | 0 | 0 | 17 | 0 |
 | K — Minha Conta | 3 | 0 | 0 | 0 | 3 | 0 |
-| L — Dashboard | 6 | 1 | 0 | 0 | 5 | 0 |
+| L — Dashboard | 6 | 3 | 0 | 0 | 3 | 0 |
 | M — Sidebar UX/PWA | 8 | 1 | 0 | 0 | 7 | 0 |
-| **TOTAL** | **110** | **22** | **0** | **1** | **86** | **1 corrigido** |
+| **TOTAL** | **110** | **36** | **0** | **0** | **73** | **1 corrigido** |
 
-**Taxa de sucesso (executados):** 22/23 = **96%**  
-**Cobertura:** 23/110 = **21%** — restantes bloqueados por browser automation ou módulos não implementados
+**Taxa de sucesso (executados):** 36/36 = **100%**  
+**Cobertura:** 36/110 = **33%** — restantes bloqueados por browser automation (C.3) ou módulos não implementados
 
 ---
 
@@ -509,24 +523,18 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 
 ### Alta Prioridade (funcionalidades existentes, ainda não executadas)
 
-- [ ] **D.2.2** — Verificar manualmente email da clínica (digitar no campo → auto-save confirmar)
-- [ ] **C.3** — Sidebar `test.staff.lab` (Dashboard=read, Clínicas/Médicos/Pacientes=read)
-- [ ] **C.4** — Sidebar `test.doctor` (Pacientes=full, Clínicas/Médicos=read)
-- [ ] **C.5** — Sidebar `test.conta.clinic` (Clínicas/Faturação/Relatórios=read)
-- [ ] **C.6** — Sidebar `test.conta.lab` (Dashboard/Clínicas/Faturação/Relatórios=read)
-- [ ] **D.4.2** — Criação de ponto de entrega com contacto externo (após BUG-001 corrigido)
+- [ ] **C.3** — Sidebar `test.staff.lab` — testar **manualmente** (browser automation falhou 3/3)
 - [ ] **D.7.1-D.7.3** — Aba Segurança da Clínica
 - [ ] **D.5.1-D.5.2** — Aba Contactos da Clínica
-- [ ] **J.1.6** — Editar utilizador existente (role, nome, clínicas)
+- [ ] **D.6.1-D.6.3** — Aba Descontos da Clínica
 - [ ] **J.1.11** — Eliminar utilizador
-- [ ] **J.2.1-J.2.12** — Bloco completo de Backup
-- [ ] **L.2, L.3** — Dashboard em modo leitura (staff.lab e conta.lab)
+- [ ] **J.2.3-J.2.10** — Backup: Forçar Full/Incr, configurações, toggle, wizard
+- [ ] **L.2** — Dashboard modo leitura (staff.lab)
 
 ### Média Prioridade
 
 - [ ] **E.2.6-E.2.10** — Guardar telefone, email, parceiros no médico
-- [ ] **J.1.3-J.1.5** — Criar utilizador por email + clínicas + tags
-- [ ] **D.6.1-D.6.3** — Aba Descontos da Clínica
+- [ ] **J.1.4, J.1.5** — Clínicas + Tags ao criar utilizador
 - [ ] **K.1-K.3** — Página Minha Conta
 - [ ] **M.1-M.8** — UX da Sidebar e PWA
 
@@ -543,4 +551,5 @@ Sempre que o browser subagent falhar com um erro técnico (ex: `INVALID_ARGUMENT
 
 | Versão | Data | Âmbito | PASS | FAIL | PARTIAL | Bugs |
 |--------|------|--------|------|------|---------|------|
-| V2.4.0 | 2026-02-20 | Auth, Permissões, Clínicas, Utilizadores (parcial) | 22 | 0 | 1 | 1 corrigido |
+| V2.4.0 | 2026-02-20 | Auth, Permissões C.1-C.2, Clínicas (parcial), Utilisadores (parcial) | 22 | 0 | 1 | 1 corrigido |
+| V2.4.3 | 2026-02-20 | Permissões C.4-C.6, D.2.2, D.4.2, J.1 Utilizadores, J.2 Backup, L.5-L.6 | +14 | 0 | 0 | 0 |
