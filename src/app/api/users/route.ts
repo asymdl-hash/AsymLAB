@@ -155,10 +155,12 @@ export async function POST(request: NextRequest) {
                 await admin.from('user_clinic_access').insert(clinicRows);
             }
 
-            // Gerar link de convite
+            // Gerar link de convite (recovery porque user já foi criado com email_confirm:true)
+            // Nota: 'invite' falha se o utilizador já está confirmado — usar 'recovery' tem o mesmo efeito
+            // O callback em /auth/callback redireciona ambos 'invite' e 'recovery' para /auth/set-password
             const appUrl = request.headers.get('origin') || 'https://asym-lab-2.vercel.app';
             const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-                type: 'invite',
+                type: 'recovery',
                 email: authEmail,
                 options: {
                     redirectTo: `${appUrl}/auth/callback`
