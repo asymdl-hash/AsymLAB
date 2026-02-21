@@ -34,3 +34,15 @@ npx tsc --noEmit
 - O `tsconfig.json` tem `include` restrito a `src/**/*.ts` — NÃO usar `**/*.ts` (apanha edge functions Deno)
 - A edge function `supabase/functions/invite-clinic-user/index.ts` tem `// @ts-nocheck` para evitar conflitos com o tsc do Next.js
 - O Vercel faz o build automaticamente no push — prefira usar o Vercel para validação de produção
+
+## ⚠️ Regra Crítica — PowerShell e Encadeamento de Comandos
+
+> **NUNCA usar `&&` no PowerShell!** O operador `&&` não é suportado no PowerShell clássico.
+> Usar **sempre `;`** (ponto-e-vírgula) para encadear comandos.
+
+| ❌ Errado (Bash / PowerShell 7+) | ✅ Correcto (PowerShell) |
+|----------------------------------|--------------------------|
+| `git add . && git commit -m "msg"` | `git add .; git commit -m "msg"` |
+| `npm install && npm run dev` | `npm install; npm run dev` |
+| `mkdir test && cd test` | `mkdir test; cd test` |
+
