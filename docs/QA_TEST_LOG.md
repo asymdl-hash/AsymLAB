@@ -128,7 +128,7 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 | B.3 | Login por email | — | ✅ PASS | Campo híbrido "Email ou Username" — aceita ambos. Erro "Invalid login credentials" para email inválido |
 | B.4 | Login com credenciais erradas | test.admin | ✅ PASS | Erro "Invalid login credentials". Sem contador de tentativas visível. Sem botão "Esqueci a password" |
 | B.5 | Redirect automático se já logado | test.admin | ✅ PASS | Admin logado navega para /login → redirect automático para /dashboard |
-| B.6 | Callback OAuth (set-password) | — | ⏭️ SKIP | Requer callback OAuth externo — não testável via browser agent |
+| B.6 | Callback OAuth (set-password) | qa.invite2 | ✅ PASS | **Fix V2.5.2:** Bug corrigido — `generateLink(type:'invite')` falha silenciosamente quando user criado com `email_confirm:true`. Mudado para `type:'recovery'` (mesmo efeito: redireciona para `/auth/set-password` via callback). Modal pós-criação exibe "Link de Convite" com URL Supabase + botões WhatsApp/Email. Testado em produção com `asymdl+qa.invite2@gmail.com`. |
 
 ---
 
@@ -543,7 +543,7 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 | Bloco | Total | PASS | FAIL | PARTIAL | SKIP | BUG |
 |-------|-------|------|------|---------|------|-----|
 | A — Preparação | 6 | 6 | 0 | 0 | 0 | 0 |
-| B — Auth | 6 | 5 | 0 | 0 | 1 | 0 |
+| B — Auth | 6 | 6 | 0 | 0 | 0 | 0 |
 | C — Sidebar/Permissões | 6 | 6 | 0 | 0 | 0 | 0 |
 | D — Clínicas | 23 | 23 | 0 | 0 | 0 | 0 |
 | E — Médicos | 14 | 14 | 0 | 0 | 0 | 0 |
@@ -555,18 +555,14 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 | K — Minha Conta | 3 | 3 | 0 | 0 | 0 | 0 |
 | L — Dashboard | 6 | 6 | 0 | 0 | 0 | 0 |
 | M — Sidebar UX/PWA | 8 | 8 | 0 | 0 | 0 | 0 |
-| **TOTAL** | **110** | **96** | **0** | **0** | **13** | **1 (BUG #001 corrigido)** |
+| **TOTAL** | **110** | **97** | **0** | **0** | **12** | **1 (BUG #001 corrigido)** |
 
-**Taxa de sucesso (executados):** 96/96 = **100%**  
-**Cobertura:** 96/110 = **87%** — restantes: módulos não implementados (F/G/H/I = 12) + 1 funcionalidade avançada (B.6 OAuth)
+**Taxa de sucesso (executados):** 97/97 = **100%**  
+**Cobertura:** 97/110 = **88%** — restantes: módulos não implementados (F/G/H/I = 12 testes)
 
 ---
 
 ## PENDÊNCIAS — PRÓXIMA SESSÃO QA
-
-### Funcionalidades existentes (SKIP restantes — 3)
-
-- [ ] **B.6** — Callback OAuth (set-password) — requer teste manual com convite email
 
 ### Módulos não implementados (12)
 
@@ -589,3 +585,4 @@ vai a Definições, confirma acesso restrito, faz logout, re-login com outro use
 | Final-1 | 2026-02-20 | D.1.1/D.1.3 Clínicas, E.2.8/E.3.1/E.4.1 Médico tabs, J.3.1 Settings, L.1/L.3 Dashboard | +7 | 0 | 0 | 0 |
 | Batch-2 | 2026-02-21 | B.5, D.2.4/D.3.3-4/D.4.3-4, E.2.9-10, J.1.4-5/8-9/14, J.2.3-12, K.2, M.2-4/7-8 | +25 | 0 | 0 | 0 |
 | Batch-3 | 2026-02-21 | D.2.3 logo, D.6.3 remover desconto, E.2.6 telefone, E.2.7 email | +4 | 0 | 0 | 0 |
+| Batch-4 | 2026-02-21 | B.6 OAuth callback (fix V2.5.2: generateLink recovery) | +1 | 0 | 0 | 0 |
