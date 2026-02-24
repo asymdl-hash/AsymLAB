@@ -1551,6 +1551,426 @@ Plano concluído → Botão "Reabrir Plano"
 
 ---
 
+### 4.12 — F6: Fila de Pedidos ✅
+
+> **Complexidade:** 🟡 Média — centraliza a UX da inbox de pedidos.
+> **Dependências:** F1 (criação), F2 (plano), F3 (fases), F4 (considerações).
+
+#### 📌 Tipos de Pedido
+
+| Tipo | Ícone | Origem | Exemplo |
+|------|-------|--------|---------|
+| 📋 **Novo Paciente** | 🆕 | F1 (criação via app ou WA por clínica) | @criarpaciente |
+| 📋 **Novo Plano** | 📋 | F2 (@novotratamento ou via app) | Novo plano em paciente existente |
+| 📋 **Edição de Plano** | ✏️ | F3/F4 (alteração de fases, agendamentos, considerações) | Adicionar fase, remarcar, editar |
+
+#### 📌 Ordem na Fila
+
+```
+PRIORIDADE DA FILA:
+
+  1. 🔴 URGENTES (marcados com @urgente) — sempre no topo
+     └─ Entre urgentes: ordem de chegada (FIFO)
+
+  2. ⬜ NORMAIS — por ordem de chegada (FIFO)
+     └─ Primeiro a chegar = primeiro na fila
+```
+
+> Urgente pode ser marcado via WA (@urgente) ou via app (botão "Marcar Urgente" na ficha do paciente).
+> Não existe atribuição de pedidos a funcionários — qualquer membro do lab pode processar.
+
+#### 📌 Filtros da Inbox
+
+| Filtro | Opções |
+|--------|--------|
+| **Tipo** | Novo Paciente / Novo Plano / Edição de Plano / Todos |
+| **Clínica** | Lista de clínicas activas |
+| **Médico** | Lista de médicos |
+| **Data** | Intervalo de datas (de — até) |
+| **Urgência** | Urgente / Normal / Todos |
+| **Estado** | Pendente / Visto / Todos |
+
+#### 📌 Fluxo de Processamento
+
+```
+Pedido chega à Inbox
+  │
+  ├─ Estado: 🔴 Pendente (+ badge com contador no menu)
+  │
+  ├─ Funcionário do lab abre o pedido
+  │   ├─ Estado: 🟡 Visto (registado quem viu e quando)
+  │   ├─ Pode ver toda a informação submetida
+  │   ├─ Anti-duplicação já correu automaticamente (resultado visível)
+  │   │
+  │   └─ 3 Acções:
+  │       ├─ ✅ Aceitar → confirma (ver detalhes F1 — 4.6)
+  │       ├─ 🔀 Transitar → duplicado (ver detalhes F1 — 4.6)
+  │       └─ ❌ Cancelar → rejeita (soft delete 48h)
+  │
+  └─ Estado final: 🟢 Concluído (sai da fila activa, vai para histórico)
+```
+
+> **Histórico de pedidos:** Todos os pedidos processados ficam no histórico (filtráveis). Útil para auditar decisões.
+
+#### 📌 Contadores e Badges no Menu
+
+```
+┌──────────────────────┐
+│ 📋 Pedidos      (7)  │ ← badge vermelho com total de pendentes
+│  ├─ 🆕 Novos    (3)  │
+│  ├─ 📋 Planos   (2)  │
+│  └─ ✏️ Edições  (2)  │
+└──────────────────────┘
+```
+
+---
+
+### 4.13 — F7: Merge de Paciente Duplicado ✅
+
+> **Complexidade:** 🟡 Média — envolve merge de dados, grupos WA, e cleanup.
+> **Trigger:** Funcionário do lab detecta duplicado (via anti-duplicação ou manualmente).
+
+#### 📌 Quem sobrevive
+
+> O paciente **mais antigo** (primeiro a ser criado) sobrevive sempre.
+> Os dados do paciente mais recente (duplicado) são migrados para o mais antigo.
+
+#### 📌 Fluxo de Merge
+
+```
+Lab detecta duplicado (via Inbox "Transitar" ou manualmente na ficha)
+  │
+  ├─ Sistema mostra comparação lado-a-lado:
+  │   ┌──────────────────┬──────────────────┐
+  │   │ 👤 SOBREVIVE      │ 👤 DUPLICADO     │
+  │   │ T-0042            │ T-0089           │
+  │   │ "João Silva"      │ "João R. Silva"  │
+  │   │ Desde: Jan 2024   │ Desde: Fev 2026  │
+  │   │ 2 planos activos  │ 1 plano activo   │
+  │   │ Clínica Sorriso   │ Clínica Sorriso  │
+  │   └──────────────────┴──────────────────┘
+  │
+  ├─ Escolher planos a migrar:
+  │   ☑️ Coroa #46 — migrar para T-0042
+  │   (se houver apenas 1 plano, migra automaticamente)
+  │
+  ├─ Confirmar merge → sistema executa:
+  │
+  │   DADOS:
+  │   ├─ Planos seleccionados migrados para paciente sobrevivente
+  │   ├─ Considerações, ficheiros, agendamentos migrados junto
+  │   ├─ Pastas NAS movidas: /T-0089/plano-x/ → /T-0042/plano-x/
+  │   ├─ Paciente duplicado → soft delete (48h para reverter)
+  │   └─ Registo de merge: quem, quando, motivo
+  │
+  │   GRUPO WA:
+  │   ├─ Verificar membros do grupo duplicado
+  │   ├─ Membros novos (não existem no grupo sobrevivente):
+  │   │   → Adicionar ao grupo sobrevivente (delay 10-30s entre cada)
+  │   ├─ Enviar mensagem no grupo duplicado:
+  │   │   "ℹ️ Este paciente foi unificado com T-0042.
+  │   │    Toda a informação foi migrada para o grupo existente.
+  │   │    Este grupo será eliminado."
+  │   ├─ Aguardar 60s
+  │   └─ Eliminar grupo duplicado
+  │
+  └─ Mensagem fixa do grupo sobrevivente actualizada com novos planos
+```
+
+#### 📌 Desfazer Merge (48h)
+
+```
+Dentro de 48h → botão "Desfazer Merge" no histórico
+  │
+  ├─ Paciente duplicado restaurado
+  ├─ Planos voltam ao paciente original
+  ├─ Pastas NAS restauradas
+  ├─ Grupo WA: NÃO é recriado (já foi eliminado)
+  │   → Aviso: "Grupo WA terá de ser recriado manualmente"
+  └─ Após 48h: merge é permanente, soft delete expira
+```
+
+#### 📌 Gestão de Perfil — Desactivação e Remoção de Grupos
+
+> Funcionalidade no perfil de cada utilizador.
+
+```
+Perfil do utilizador → Opção "Desactivar conta"
+  │
+  ├─ Conta desactivada (login bloqueado, dados mantidos)
+  │
+  └─ Botão "Remover de todos os grupos WA":
+      ├─ Lista todos os grupos WA onde o utilizador está
+      ├─ Confirmação: "Vai ser removido de [X] grupos. Confirmar?"
+      ├─ Remoção sequencial com delay aleatório 10-30s entre cada
+      ├─ Progresso: "Removido de 5/12 grupos..."
+      └─ Conclusão: "✅ Removido de todos os grupos"
+```
+
+> **Anti-spam:** O delay aleatório 10-30s entre operações evita que o WhatsApp detecte comportamento automatizado.
+
+---
+
+### 4.14 — F10: Acesso NAS / Ficheiros ✅
+
+> **Complexidade:** 🟡 Média — envolve NAS, Cloudflare Tunnel, upload/download.
+> **Infraestrutura:** NAS local + Cloudflare Tunnel para acesso externo.
+
+#### 📌 ID do Paciente — Formato T-xxxx
+
+| Regra | Detalhe |
+|-------|---------|
+| **Formato** | `T-xxxx` (T = Trabalho, xxxx = números sequenciais) |
+| **Auto-increment** | Ao aceitar pedido de criação → atribui o nº mais alto existente + 1 |
+| **Edição manual** | O funcionário do lab pode alterar o nº (para transição para a app) |
+| **Unicidade** | Sistema nunca permite 2 pacientes com o mesmo T-xxxx |
+| **Exemplos** | T-0001, T-0042, T-1337 |
+
+> Durante a transição para a app, o lab pode criar pacientes com IDs específicos para manter continuidade com o sistema anterior.
+
+#### 📌 Estrutura de Pastas NAS
+
+```
+/asymlab/
+  └─ /pacientes/
+      ├─ /T-0001/
+      │   ├─ /plano-1/
+      │   │   ├─ /fase-1/
+      │   │   │   ├─ foto_troquel.jpg
+      │   │   │   ├─ scan_inicial.stl
+      │   │   │   └─ scan_inicial(2).stl    ← versionamento
+      │   │   └─ /fase-2/
+      │   │       └─ scan_estrutura.stl
+      │   └─ /plano-2/
+      │       └─ /fase-1/
+      │           └─ impressao_digital.stl
+      └─ /T-0042/
+          └─ ...
+```
+
+#### 📌 Upload de Ficheiros
+
+```
+Upload de ficheiro (via app ou formulário WA)
+  │
+  ├─ Ficheiro normal (foto, STL, vídeo, PDF):
+  │   ├─ Upload para NAS na pasta correcta
+  │   ├─ Metadata guardada no Supabase (nome, tipo, tamanho, data, autor)
+  │   ├─ Thumbnail gerado (≤200KB) e guardado no Supabase Storage
+  │   └─ Se o nome já existe na mesma pasta → versionamento:
+  │       scan.stl → scan(2).stl → scan(3).stl
+  │
+  ├─ Ficheiro comprimido (ZIP, RAR, 7z):
+  │   ├─ Upload para NAS (pasta temporária)
+  │   ├─ Auto-extracção:
+  │   │   ├─ Extrair conteúdo para a pasta de destino
+  │   │   ├─ Aplicar regras de versionamento a cada ficheiro
+  │   │   ├─ Gerar metadata e thumbnails para cada ficheiro
+  │   │   └─ Eliminar ficheiro comprimido original
+  │   ├─ Se falhar extracção → manter comprimido + aviso ao utilizador
+  │   └─ Confirmação: "📦 5 ficheiros extraídos de arquivo.zip"
+  │
+  └─ Sem limite de tamanho por ficheiro
+      (STLs podem ter 100MB+, vídeos podem ter GB)
+```
+
+#### 📌 Download e Acesso
+
+| Cenário | Acesso |
+|---------|--------|
+| **Na app (rede local)** | Directo ao NAS via rede interna (mais rápido) |
+| **Na app (externo)** | Via Cloudflare Tunnel (encriptado, sem expor portas) |
+| **Via link WA** | URL tokenizado (validade configurável) via Cloudflare Tunnel |
+| **Formulário público** | Token 24h — download via Cloudflare Tunnel |
+
+#### 📌 Backup de Metadata
+
+> Regra global (já definida na Etapa 3.10): export periódico dos metadados da BD para a NAS.
+
+| Item | Formato | Frequência |
+|------|---------|------------|
+| **Metadata de ficheiros** | JSON + CSV | Diário |
+| **Lista de pacientes** | JSON + CSV | Diário |
+| **Planos e fases** | JSON + CSV | Diário |
+| **Considerações** | JSON | Diário |
+| **Histórico de edições** | JSON | Semanal |
+
+> Garante portabilidade: se migrar do Supabase, toda a informação está na NAS.
+
+---
+
+### 4.15 — F8: Avisos e Notificações ✅
+
+> **Complexidade:** 🟡 Média — envolve múltiplos canais e tipos de notificação.
+> **Canais:** App (badges + toasts + push) + WhatsApp (F5) + Email.
+
+#### 📌 Tipos de Notificação na App
+
+| Tipo | O que é | Quando usar | Exemplo |
+|------|---------|-------------|---------|
+| **Badge** 🔴 | Bolinha com número num ícone/menu | Indicar itens pendentes | "Pedidos (7)" no menu |
+| **Toast** 📢 | Pop-up pequeno no canto do ecrã, desaparece após 3-5s | Confirmar acções, avisos rápidos | "✅ Paciente criado com sucesso" |
+| **Push** 🔔 | Notificação do browser (aparece mesmo fora da app) | Eventos importantes em tempo real | "🔴 Novo pedido urgente: João Silva" |
+
+#### 📌 Centro de Notificações (🔔)
+
+> Ícone de sino no header da app, com badge de contagem.
+
+```
+🔔 (5)
+┌─────────────────────────────────────────┐
+│ NOTIFICAÇÕES                    [Limpar]│
+├─────────────────────────────────────────┤
+│                                         │
+│ 🔴 Novo pedido: João Silva       2 min │
+│    📋 Novo Paciente — Dr. Ferreira      │
+│                                         │
+│ 📅 Prova remarcada: Maria Costa  1h    │
+│    28/02 → 03/03                        │
+│                                         │
+│ ✅ Fase concluída: Pedro Santos  3h    │
+│    Moldagem → Prova Estrutura           │
+│                                         │
+│ 📝 Nova nota: Clínica Sorriso    5h    │
+│    "Paciente pede cor mais clara"       │
+│                                         │
+│ 📦 Material recebido: Ana Costa  1d    │
+│                                         │
+│              [Ver todas →]              │
+└─────────────────────────────────────────┘
+```
+
+#### 📌 Configurações de Notificação (perfil)
+
+> No perfil do utilizador → secção "Notificações".
+
+| Configuração | Opções | Onde |
+|-------------|--------|------|
+| **Mutar tudo** | On/Off | Perfil → Notificações |
+| **Mutar por tipo** | Pedidos / Agendamentos / Notas / Material | Perfil → Notificações |
+| **Push browser** | Activar/Desactivar | Perfil → Notificações |
+| **Email** | Activar/Desactivar | Perfil → Notificações |
+| **Som** | On/Off + escolher som | Perfil → Notificações |
+| **Horário silêncio** | De — Até (ex: 22:00–08:00) | Perfil → Notificações |
+
+#### 📌 Relatório Semanal Obrigatório (Email + PDF)
+
+> **NÃO pode ser mutado pelo utilizador.** Só o admin pode desactivar.
+> Enviado semanalmente para cada médico e clínica associada.
+
+```
+📧 Email semanal — Relatório de Trabalhos em Aberto
+
+Para: Dr. Ferreira (Clínica Sorriso)
+Assunto: "AsymLAB — Relatório semanal: 3 trabalhos em aberto"
+
+📎 Anexo: relatorio_semanal_2026-02-24.pdf
+
+CONTEÚDO DO PDF:
+┌─────────────────────────────────────────────────┐
+│ 🔬 AsymLAB — Relatório Semanal                  │
+│ Dr. Ferreira — Clínica Sorriso                   │
+│ Semana de 17/02 a 24/02/2026                     │
+├─────────────────────────────────────────────────┤
+│                                                   │
+│ 📋 TRABALHOS EM ABERTO: 3                        │
+│                                                   │
+│ ┌─ T-0042 João Silva ─────────────────────────┐  │
+│ │ Plano: Coroa Zircónia #46                    │  │
+│ │ Fase: Prova Estrutura                        │  │
+│ │ Status: 🟡 Para Prova — 28/02 15:00         │  │
+│ │ ⚠️ PENDENTE DA CLÍNICA:                     │  │
+│ │    • Material em falta há 5 dias             │  │
+│ └──────────────────────────────────────────────┘  │
+│                                                   │
+│ ┌─ T-0089 Maria Costa ────────────────────────┐  │
+│ │ Plano: Implante #36                          │  │
+│ │ Fase: Cicatrização                           │  │
+│ │ Status: ⬜ Sem agendamentos — s/ data        │  │
+│ │ ⚠️ PENDENTE DA CLÍNICA:                     │  │
+│ │    • Data de próxima consulta não definida    │  │
+│ └──────────────────────────────────────────────┘  │
+│                                                   │
+│ ┌─ T-0103 Pedro Santos ──────────────────────┐   │
+│ │ Plano: Facetas #11-21                       │   │
+│ │ Fase: Acabamento                            │   │
+│ │ Status: 🟢 Para Colocar — data não definida │   │
+│ └─────────────────────────────────────────────┘   │
+│                                                   │
+│ 📊 Resumo: 1 urgente, 2 pendentes da clínica     │
+└─────────────────────────────────────────────────┘
+```
+
+**Regras do relatório:**
+
+| Regra | Detalhe |
+|-------|---------|
+| **Frequência** | Semanal (dia configurável pelo admin, default: segunda) |
+| **Destinatários** | Cada médico + cada clínica (emails separados) |
+| **Conteúdo** | Todos os planos não-concluídos associados ao médico/clínica |
+| **Destaque** | Items pendentes da clínica (material, datas, informação) com ⚠️ |
+| **Mutável** | ❌ Não — utilizador não pode desactivar. Só admin pode |
+| **Formato** | Email com resumo + PDF completo em anexo |
+| **Horário** | Configurável pelo admin (default: segunda 08:00) |
+
+---
+
+### 4.16 — F9: Documentação e Billing ✅
+
+> **Complexidade:** 🟡 Média — envolve geração de documentos e facturação.
+> **Nota:** Esta secção define a estrutura. Detalhes de facturação serão refinados durante implementação.
+
+#### 📌 Tipos de Documento
+
+| Documento | Quando | Gerado por | Formato |
+|-----------|--------|-----------|---------|
+| **Guia de Transporte** | Trabalho enviado para a clínica | Staff Lab (manual ou auto) | PDF |
+| **Guia de Recepção** | Material/trabalho recebido no lab | Staff Lab | PDF |
+| **Relatório Semanal** | Semanalmente (automático) | Sistema | PDF (ver F8) |
+| **Relatório de Plano** | Plano concluído | Sistema | PDF |
+| **Considerações (impressão)** | A pedido | Qualquer (ver F4) | PDF |
+| **Factura** | Por definir | Por definir | PDF |
+| **Recibo** | Por definir | Por definir | PDF |
+
+#### 📌 Guia de Transporte (detalhe)
+
+```
+Trabalho pronto para envio → Staff Lab gera Guia de Transporte
+  │
+  ├─ Auto-preenchido:
+  │   ├─ Dados do lab (nome, morada, NIF)
+  │   ├─ Dados da clínica destinatária
+  │   ├─ Paciente: T-xxxx + nome
+  │   ├─ Plano: tipo de trabalho
+  │   ├─ Conteúdo: lista de items enviados
+  │   ├─ Data de envio
+  │   └─ Nº da guia (sequencial)
+  │
+  ├─ 3 Opções:
+  │   ├─ 🖨️ Imprimir (acompanha trabalho fisicamente)
+  │   ├─ 📤 Enviar por WA (PDF no grupo do paciente)
+  │   └─ 📧 Enviar por email
+  │
+  └─ Guardada no histórico do paciente + NAS
+```
+
+#### 📌 Facturação (estrutura base)
+
+> ⚠️ **A detalhar durante implementação.** Estrutura base definida:
+
+| Conceito | Proposta |
+|----------|----------|
+| **Unidade de facturação** | Por plano de tratamento |
+| **Preço** | Definido por tipo de trabalho (tabela de preços configurável) |
+| **Orçamento** | Gerado ao criar plano, pode ser revisto |
+| **Factura** | Gerada ao concluir plano (ou parcial ao concluir fase) |
+| **Histórico** | Todas as facturas guardadas na NAS + BD |
+| **Integração contabilística** | A definir (export CSV/PDF para software de contabilidade) |
+
+> A tabela de preços é configurável pelo admin: tipo de trabalho × material × complexidade.
+
+---
+
 ## Etapa 5 — Definir a Informação
 
 *(Por definir — campos detalhados de cada entidade)*
