@@ -239,11 +239,12 @@ PACIENTE
 | Comando | Acção | Quem pode usar (default) |
 |---------|-------|-------------------------|
 | @criarpaciente | Gera formulário para criar paciente + plano (ver F1 — 4.6) | Todos |
-| @entregue | Marca trabalho como entregue | Staff Lab |
-| @recolher | Pede recolha do trabalho | Médico, Staff Clínica |
-| @recolhido | Confirma que trabalho foi recolhido | Staff Lab |
-| @urgente | Marca trabalho como urgente | Todos |
-| @material | Notifica material em falta | Sistema automático |
+| @novotratamento | Gera formulário para novo plano em paciente existente (ver F2 — 4.11) | Todos |
+| @entregue | Confirma agendamento e muda status para "[tipo] Entregue" | Staff Lab |
+| @recolher | Marca para recolha (bidirecional: lab ou clínica) | Todos |
+| @recolhido | Confirma que trabalho foi recolhido pela clínica | Staff Lab |
+| @urgente | Marca como urgente — topo de widgets (toggle) | Staff Lab |
+| @nota | Adiciona nota rápida às Considerações do plano activo | Todos |
 
 > **Permissões por comando:** Além dos defaults por role, o admin pode definir excepções por médico individual.
 > Exemplo: @recolher pode ser autorizado para Dr. Silva mas ignorado para Dr. Costa.
@@ -1333,6 +1334,220 @@ Staff Lab cria consideração na app
 | **Formulário @criarpaciente** | Preview 3D dos STLs anexados |
 
 > **Performance:** STLs grandes (>50MB) carregam com loading progressivo. Thumbnails 2D gerados automaticamente para listagens.
+
+---
+
+### 4.11 — F2: Plano de Tratamento (Lifecycle) ✅
+
+> **Complexidade:** 🔴 Alta — envolve estados, múltiplos planos, reabertura, analytics, e @novotratamento.
+> **Dependências:** F1 (criação), F3 (fases), F4 (considerações), F5 (automações WA).
+
+#### 📌 Conceito: Soft Delete
+
+> **Soft delete** = os dados **não são apagados** da base de dados. Recebem uma flag `deleted_at` com timestamp. Isto permite **recuperar** dentro de um prazo (48h por defeito). Após esse prazo, uma tarefa agendada (cron job) apaga definitivamente.
+> Usado em: cancelamento de plano, cancelamento de pedido, merge de duplicados.
+
+#### 📌 Estados do Plano
+
+```
+                    ┌──────────────┐
+                    │  🟡 Rascunho │ ← Criado via WA (antes do lab aceitar)
+                    └──────┬───────┘
+                           │ Lab aceita pedido
+                    ┌──────▼───────┐
+             ┌──────│  🔵 Activo   │◄───────────────────┐
+             │      └──────┬───────┘                     │
+             │             │                             │
+             │    ┌────────┼────────┐                    │
+             │    ▼        ▼        ▼                    │
+         ┌───────┐  ┌──────────┐  ┌───────────┐         │
+         │⏸️Paus.│  │✅Concl.  │  │❌Cancel.  │         │
+         └───┬───┘  └────┬─────┘  └───────────┘         │
+             │           │ Reabrir                       │
+             │      ┌────▼─────┐                         │
+             └──────│🔄Reaberto│─────────────────────────┘
+                    └──────────┘
+```
+
+| Estado | Significado | Quem pode mudar |
+|--------|-------------|-----------------|
+| 🟡 **Rascunho** | Criado via WA, aguarda aceitação do lab | Automático (criação WA) |
+| 🔵 **Activo** | Em produção — fases e agendamentos em curso | Lab (aceitar pedido) |
+| ⏸️ **Pausado** | Temporariamente parado (ex: paciente viajou, problema) | Todos (lab directo, clínica como pedido) |
+| ✅ **Concluído** | Todas as fases terminadas | Automático (última fase concluída) |
+| ❌ **Cancelado** | Soft delete — recuperável por 48h | Lab/Admin |
+| 🔄 **Reaberto** | Plano reaberto como Correcção ou Remake | Lab/Admin |
+
+> Planos criados directamente na app (não via WA) entram como **Activo** se criados pelo lab, ou **Rascunho** se criados pela clínica.
+
+#### 📌 Múltiplos Planos Simultâneos
+
+> Um paciente pode ter **vários planos activos ao mesmo tempo**.
+> Caso de uso: médicos diferentes a tratar dentes diferentes no mesmo paciente.
+
+**Regras de múltiplos planos:**
+
+| Regra | Detalhe |
+|-------|---------|
+| **Grupo WA** | 1 grupo por paciente (não por plano) — todos os planos no mesmo grupo |
+| **Mensagem fixa** | Mostra **todos os planos activos** com resumo de cada |
+| **Badges** | Cada plano tem os seus badges independentes |
+| **Médico principal** | Pode ser diferente por plano |
+| **NAS** | Cada plano tem a sua pasta: `/pacientes/[id]/[plano-1]/`, `/pacientes/[id]/[plano-2]/` |
+| **Facturação** | Independente por plano |
+
+**Mensagem fixa com múltiplos planos:**
+
+```
+╔══════════════════════════════════════════╗
+║ 👤 João Silva — Clínica Sorriso         ║
+╠══════════════════════════════════════════╣
+║                                          ║
+║ 📋 PLANO 1: Coroa Zircónia #46          ║
+║ 👨‍⚕️ Dr. Ferreira (principal)              ║
+║ 🔵 Fase activa: Prova Estrutura         ║
+║ 📅 Prova — 28/02 15:00                  ║
+║ 🟡 Para Prova                            ║
+║                                          ║
+║ ────────────────────────────────         ║
+║                                          ║
+║ 📋 PLANO 2: Implante #36                ║
+║ 👨‍⚕️ Dra. Santos (principal)               ║
+║ 🔵 Fase activa: Cicatrização            ║
+║ ⬜ Sem agendamentos pendentes            ║
+║                                          ║
+║ 🕐 Última actualização: 24/02 15:30     ║
+╚══════════════════════════════════════════╝
+```
+
+#### 📌 Edição do Plano
+
+| Quem edita | O que pode editar | Como |
+|------------|-------------------|------|
+| **Staff Lab / Admin** | Tudo (tipo, descrição, info técnica, fases) | Directo na app |
+| **Médico / Staff Clínica** | Tudo | Via app → gera **Pedido E📋 tipo "Edição de Plano"** |
+
+> Edições incluem **diff** das alterações: "Descrição alterada: ~~zircónia~~ → dissilicato de lítio"
+> Histórico de edições visível na ficha do plano.
+
+#### 📌 Pausar Plano
+
+```
+Pausar plano
+  │
+  ├─ Motivo obrigatório (texto livre): "Paciente viajou 3 meses"
+  ├─ Todos os agendamentos pendentes ficam "em espera"
+  ├─ Badges de produção pausados (deixam de aparecer nos widgets)
+  ├─ Mensagem fixa actualizada: "⏸️ PLANO PAUSADO: [motivo]"
+  ├─ Aviso no grupo WA: "⏸️ Plano [nome] pausado: [motivo]"
+  │
+  └─ Para retomar:
+      ├─ Botão "Retomar plano" na ficha
+      ├─ Motivo de pausa limpo, badges reaparecem
+      ├─ Aviso WA: "▶️ Plano [nome] retomado"
+      └─ Se clínica retoma → gera pedido
+```
+
+#### 📌 Histórico do Paciente (sidebar)
+
+> Quando o utilizador abre a ficha de um paciente, a **barra lateral** mostra:
+
+```
+┌─────────────────────────────┐
+│ 👤 João Silva               │
+│ Clínica Sorriso             │
+├─────────────────────────────┤
+│                             │
+│ 📋 PLANOS ACTIVOS           │
+│ ├─ Coroa Zircónia #46 🔵   │
+│ └─ Implante #36 🔵         │
+│                             │
+│ 📜 HISTÓRICO                │
+│ ├─ Ponte #34-36 ✅ (2025)  │
+│ ├─ Prótese parcial ✅(2024)│
+│ └─ Coroa #46 🔄 (2023)     │
+│   └─ Reaberto: Remake       │
+│                             │
+└─────────────────────────────┘
+```
+
+> **Ao clicar** num plano do histórico → abre a ficha do paciente **nesse plano**, com todas as fases, agendamentos, considerações e ficheiros **read-only** (não editável).
+> Planos reabertos mostram a classificação (Correcção/Remake) e link para o plano original.
+
+#### 📌 Reabertura de Plano Concluído
+
+> Quando um paciente volta com um problema num trabalho anterior, o plano pode ser reaberto.
+
+```
+Plano concluído → Botão "Reabrir Plano"
+  │
+  ├─ OBRIGATÓRIO escolher tipo de reabertura:
+  │
+  │   ┌─────────────────────────────────────────┐
+  │   │ 🔄 Reabrir Plano: Coroa Zircónia #46    │
+  │   │                                          │
+  │   │ Tipo de reabertura:                      │
+  │   │ ○ 🔧 Correcção — ajuste minor            │
+  │   │   (ex: ajuste oclusal, polimento)        │
+  │   │                                          │
+  │   │ ○ 🔄 Remake — refazer total/parcial      │
+  │   │   (ex: fratura, adaptação incorrecta)    │
+  │   │                                          │
+  │   │ Motivo: [texto obrigatório]              │
+  │   │                                          │
+  │   │ [Confirmar reabertura]                   │
+  │   └─────────────────────────────────────────┘
+  │
+  ├─ Plano volta a estado 🔵 Activo
+  ├─ Nova fase criada automaticamente: "[Correcção]" ou "[Remake]"
+  ├─ Badge "🔄 Reaberto" no plano (permanente)
+  ├─ Referência ao plano original mantida
+  │
+  ├─ Mensagem fixa WA actualizada
+  ├─ Aviso WA: "🔄 Plano [nome] reaberto como [tipo]: [motivo]"
+  │
+  └─ ANALYTICS (registados automaticamente):
+      ├─ Tipo: Correcção ou Remake
+      ├─ Clínica associada
+      ├─ Médico associado
+      ├─ Tipo de trabalho original
+      ├─ Tempo desde conclusão original
+      └─ Motivo (texto livre)
+```
+
+> **Analytics futuros:** Dashboard com métricas de remakes/correcções por clínica, médico, tipo de trabalho, período.
+> Permite identificar padrões: "Clínica X tem 3× mais remakes em coroas" → investigar.
+
+#### 📌 @novotratamento — Criar Novo Plano via WA
+
+> Usado nos grupos WA de pacientes **já existentes** para adicionar um novo plano de tratamento.
+
+```
+@novotratamento no grupo WA do paciente
+  │
+  ├─ Sistema identifica o paciente pelo grupo WA
+  ├─ Verifica permissão do @comando
+  │
+  ├─ Gera token único (24h validade)
+  ├─ Envia link no grupo:
+  │   "📋 Novo plano de tratamento para [paciente]
+  │    Criado por [nome]
+  │    🔗 [link com token]
+  │    ⏰ Válido por 24h"
+  │
+  └─ FORMULÁRIO PÚBLICO (sem login):
+      ├─ Paciente: já preenchido (read-only)
+      ├─ Clínica: auto (mesma do grupo)
+      ├─ Médicos: auto-adicionado quem fez @novotratamento
+      ├─ Blocos: Plano, Fases, Agendamentos, Info Técnica, Anexos
+      │   (mesmos blocos do F1, sem dados do paciente)
+      │
+      ├─ 3 Botões: Guardar / Submeter / Cancelar
+      └─ Ao submeter → Pedido E📋 tipo "Novo Plano"
+```
+
+> Variantes de @novotratamento seguem as mesmas regras do @criarpaciente:
+> Com texto → descrição do plano. Com anexos → ficheiros anexados. Como resposta → inclui texto da msg original.
 
 ---
 
