@@ -238,6 +238,7 @@ PACIENTE
 
 | Comando | Acção | Quem pode usar (default) |
 |---------|-------|-------------------------|
+| @criarpaciente | Gera formulário para criar paciente + plano (ver F1 — 4.6) | Todos |
 | @entregue | Marca trabalho como entregue | Staff Lab |
 | @recolher | Pede recolha do trabalho | Médico, Staff Clínica |
 | @recolhido | Confirma que trabalho foi recolhido | Staff Lab |
@@ -601,6 +602,212 @@ Plano criado → 📦 Badge "Criar Caixa" aparece
 3. **Status multi-badge** integrado em cada fluxo (quando badges aparecem/desaparecem)
 4. **Prioridade:** F1 → F3 → F5 → F4 → F2 → F6 → F7 → F10 → F8 → F9
 5. **Estimativa:** ~1 sessão por fluxo complexo (🔴), ~½ sessão por simples (🟢)
+
+---
+
+### 4.6 — F1: Criação de Paciente ✅
+
+> **Complexidade:** 🔴 Alta — envolve Paciente, Plano, Anti-duplicação, Grupo WA, Caixa, Pedido, NAS, Z-API.
+> **Quem pode criar:** Todos os roles (Admin, Staff Lab, Médico, Staff Clínica).
+> **2 vias de criação:** Via App e Via WhatsApp (@criarpaciente).
+
+#### 📌 Via 1 — Criação na App (standard)
+
+**Auto-preenchimento por role:**
+
+| Quem cria | Clínica | Médico principal | Médicos associados |
+|-----------|---------|-----------------|-------------------|
+| **Médico** | Auto (a sua clínica) | Auto (ele próprio) | Auto (ele + colaboradores) — pode adicionar mais |
+| **Staff Clínica** | Auto (a sua clínica) | Tem de escolher | — |
+| **Staff Lab** | Tem de escolher | Tem de escolher | — |
+| **Admin** | Tem de escolher | Tem de escolher | — |
+
+> **Instrução UX:** O primeiro médico seleccionado é automaticamente o médico principal.
+
+**Formulário — Blocos:**
+
+| # | Bloco | Campos principais |
+|---|-------|-------------------|
+| 1 | **Dados Paciente** | Nome completo, Clínica, ID Paciente Clínica (opcional), Notas lab |
+| 2 | **Equipa Médica** | Médicos associados (multi-select), Médico principal (1º seleccionado) |
+| 3 | **Plano de Tratamento** | Tipo de trabalho, Descrição, Nome do plano |
+| 4 | **Fases** | Nome da fase, Ordem |
+| 5 | **Agendamentos** | Tipo (Prova/Colocação/Ajuste/Outro), Data prevista |
+| 6 | **Info Técnica** | Informação técnica relevante para o lab |
+| 7 | **Considerações** | Notas técnicas iniciais (visíveis para clínica + lab) |
+| 8 | **Anexos** | Upload de ficheiros (fotos, STL, vídeos) — armazenados na NAS |
+
+> Anti-duplicação (ver regras 3.3) corre em **tempo real** ao preencher Nome + Clínica + ID Paciente Clínica.
+
+**Ao GRAVAR:**
+
+```
+GRAVAR
+  ├─ ✅ Paciente + Plano + Fases + Agendamentos criados na BD
+  ├─ 📁 Pastas NAS criadas: /pacientes/[id-paciente]/[id-plano]/
+  ├─ 📎 Ficheiros anexados movidos para NAS
+  ├─ 💬 Badge "Criar Grupo" aparece (lembrete para grupo WA)
+  ├─ 📦 Badge "Criar Caixa" aparece (se plano criado)
+  ├─ 📋 Pedido E📋 auto-gerado (se Médico/Staff Clínica criou)
+  └─ → Redireccionado para a ficha do paciente
+```
+
+> Se **Admin/Staff Lab** cria, **não** gera Pedido E📋 (o lab já sabe).
+
+---
+
+#### 📌 Via 2 — Criação via WhatsApp (@criarpaciente)
+
+> Permite criar pacientes directamente do WhatsApp, gerando um formulário público (sem login) acessível via link tokenizado.
+
+##### Variantes do @criarpaciente
+
+| Variante | Exemplo | Resultado |
+|----------|---------|-----------|
+| **Isolado** | `@criarpaciente` | Envia link do formulário no grupo |
+| **Com anexos** | Enviar fotos com legenda `@criarpaciente` | Link + fotos auto-inseridas nos anexos do plano |
+| **Com texto** | `@criarpaciente zirconia coroa 46` | Link + texto vai para descrição do plano |
+| **Como resposta** | Responder a uma mensagem com `@criarpaciente` | Link + texto da msg original + texto da resposta → descrição do plano |
+
+> Em todos os casos: o sistema regista **quem** fez o @criarpaciente e **de quem** era a mensagem respondida (se aplicável).
+> Se admin responde a mensagem de um médico → clínicas filtradas pelas do médico autor da mensagem original.
+
+##### Fluxo técnico @criarpaciente
+
+```
+@criarpaciente no grupo WA
+  │
+  ├─ Z-API webhook recebe mensagem
+  │   ├─ Identifica: quem enviou, grupo, texto extra, anexos, msg respondida
+  │   └─ Verifica permissão do @comando para este utilizador
+  │
+  ├─ Gera token único (24h validade, multi-uso até submeter)
+  ├─ Envia link no grupo WA:
+  │   "📋 Formulário de novo paciente criado por [nome]
+  │    🔗 [link com token]
+  │    ⏰ Válido por 24h"
+  │
+  ├─ FILA DE DOWNLOAD (se há anexos):
+  │   ├─ Descarrega um ficheiro de cada vez (sequencial)
+  │   ├─ Se falhar → retry automático (3 tentativas com backoff)
+  │   ├─ Quando todas terminam → confirma no WA:
+  │   │   "✅ 5/5 ficheiros processados"
+  │   └─ Se algum falhar 3× → avisa:
+  │       "⚠️ 2 ficheiros falharam. Anexe manualmente no formulário: [link]"
+  │
+  └─ FORMULÁRIO PÚBLICO (sem login, acesso via token):
+      ├─ Mesmo layout e blocos da app (Dados, Equipa, Plano, Fases,
+      │   Agendamentos, Info Técnica, Considerações, Anexos)
+      ├─ Clínica: só mostra clínicas do utilizador que fez @criarpaciente
+      │   (ou do médico da msg respondida, se admin respondeu)
+      ├─ Médico: auto-adicionado se médico; 1º seleccionado = principal
+      ├─ Descrição do plano: pré-preenchida com texto do WA
+      ├─ Anexos: pré-visualização (thumbnails) dos já descarregados
+      │   + botão "Adicionar mais ficheiros" (upload manual)
+      │
+      ├─ 3 Botões:
+      │   ├─ 💾 Guardar — salva rascunho, avisa no WA, não submete
+      │   ├─ ✅ Submeter Pedido — envia para o lab
+      │   └─ ❌ Cancelar — cancela e avisa no WA
+      │
+      └─ Avisos automáticos no WA:
+           ├─ Ao guardar: "[nome] guardou o formulário — falta submeter"
+           └─ 3h antes de expirar: "⚠️ O formulário expira em 3h"
+```
+
+> **Edição colaborativa:** Múltiplas pessoas podem aceder ao formulário antes de submeter. Ex: médico cria, assistente anexa fotos do PC da clínica.
+> **1 plano por formulário.** Para adicionar mais planos, criar na app depois.
+
+##### Ao SUBMETER o formulário
+
+```
+SUBMETER
+  ├─ ✅ Paciente + Plano + Fases + Agendamentos criados na BD (como rascunho/pendente)
+  ├─ 📁 Pastas NAS criadas: /pacientes/[id-paciente]/[id-plano]/
+  ├─ 📎 Ficheiros movidos para NAS
+  ├─ 💬 Grupo WA do paciente criado via Z-API:
+  │     Nome: "AsymLAB - [nome paciente]"
+  │     Membros: todos médicos associados + staff lab + colaboradores
+  │     (Z-API usa autoInvite para quem não está nos contactos)
+  ├─ 📋 Pedido E📋 gerado para o lab
+  └─ Confirmação enviada no grupo WA de origem:
+       "✅ Paciente [nome] submetido com sucesso"
+```
+
+---
+
+#### 📌 Inbox de Pedidos — Como o Lab Processa
+
+> Os pedidos aparecem numa **secção dedicada** na app (badge com contador de pendentes).
+> O sistema já correu a **anti-duplicação automaticamente** em cada pedido.
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║  📋 PEDIDOS — Inbox do Laboratório                          ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║  🔴 NOVO  │ Paciente: "João Silva"                          ║
+║           │ Criado por: Dr. Ferreira (Clínica Sorriso)      ║
+║           │ Via: WhatsApp @criarpaciente                     ║
+║           │ Há 15 minutos                                    ║
+║           │                                                  ║
+║           │ ⚠️ POSSÍVEL DUPLICADO DETECTADO:                ║
+║           │ ┌─────────────────────────────────────┐          ║
+║           │ │ "João R. Silva" — Clínica Sorriso   │          ║
+║           │ │ ID Clínica: PAC-0412                │          ║
+║           │ │ 2 planos activos                    │          ║
+║           │ │ [👁️ Ver ficha]                      │          ║
+║           │ └─────────────────────────────────────┘          ║
+║           │                                                  ║
+║           │ [✅ Aceitar]  [🔀 Transitar]  [❌ Cancelar]     ║
+║                                                              ║
+║  🟡 VISTO │ Paciente: "Maria Costa"                         ║
+║           │ Sem duplicados encontrados ✅                    ║
+║           │ [✅ Aceitar]  [❌ Cancelar]                      ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+##### 3 Acções sobre o Pedido
+
+| Acção | O que acontece |
+|-------|----------------|
+| ✅ **Aceitar** | Paciente + plano confirmados (saem de rascunho). Pedido sai da fila. Badges normais de workflow aparecem. Grupo WA mantém-se |
+| 🔀 **Transitar** | Paciente **já existe** → sistema pergunta: "Criar novo plano neste paciente?" ou "Adicionar agendamento a plano activo [nome]?". Migra informação para o paciente existente. Avisa no grupo WA criado: "Este paciente já existe — info migrada para grupo existente." Elimina o grupo WA do pedido e redireciona participantes |
+| ❌ **Cancelar** | Avisa grupo WA: "Pedido cancelado. Contacte admin para mais info." **Soft delete com 48h para reverter.** Elimina grupo WA do pedido |
+
+---
+
+#### 📌 Integração WhatsApp — Z-API
+
+> **Serviço actual:** [Z-API](https://developer.z-api.io/) (REST API sobre WhatsApp Web).
+> Custo: ~€17/mês. Sem limite de mensagens. Fila interna + webhooks para delivery/status.
+
+**Capacidades Z-API usadas:**
+
+| Feature | Endpoint Z-API | Uso no AsymLAB |
+|---------|---------------|----------------|
+| Receber mensagens | Webhook `on-message-received` | Detectar @comandos, capturar texto e anexos |
+| Enviar mensagens | `send-message-text` | Confirmações, lembretes, links de formulário |
+| Criar grupo | `create-group` + `autoInvite` | Grupo WA do paciente (com convite automático) |
+| Enviar ficheiros | `send-message-image/document/video` | Enviar confirmações com media |
+| Download de media | URLs dos webhooks | Descarregar ficheiros enviados pelos utilizadores |
+
+**Alternativas mais baratas / gratuitas:**
+
+| Serviço | Preço | Vantagem | Desvantagem |
+|---------|-------|----------|-------------|
+| **Z-API** (actual) | ~€17/mês | Simples, docs bons, sem limite | Pago |
+| **Evolution-API** | **Grátis** (open-source) | Self-hosted, Docker, sem custos | Requer servidor + manutenção |
+| **WAHA** | **Grátis** (Core) | Self-hosted, dashboard, integra n8n | Requer servidor + manutenção |
+
+> **Recomendação:** Manter Z-API para MVP. Quando estável, testar Evolution-API ou WAHA na NAS/VPS.
+
+---
+
+#### 📌 Future Feature: @novotratamento
+
+> Nos grupos WA de pacientes **já existentes**, o comando `@novotratamento` criará um novo plano de tratamento, usando o mesmo mecanismo de formulário tokenizado.
+> A detalhar no fluxo F2 (Plano de Tratamento — lifecycle).
 
 ---
 
