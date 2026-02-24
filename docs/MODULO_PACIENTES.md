@@ -811,6 +811,170 @@ SUBMETER
 
 ---
 
+### 4.7 — F3: Fases e Agendamentos ✅
+
+> **Complexidade:** 🔴 Alta — envolve Fase, Agendamento, Status multi-badge, Pedido, Grupo WA, Mensagem fixa.
+> **Quem pode criar/editar:** Todos os roles.
+> **Regra:** Criação/edição após a criação inicial do paciente → gera Pedido E📋.
+
+#### 📌 Conceitos Fundamentais
+
+**Fases:**
+- Sempre **sequenciais** (ordem fixa definida na criação)
+- Cada plano tem pelo menos 1 fase
+- Apenas 1 fase pode estar activa de cada vez
+- Transição entre fases: **prompt ao utilizador** (não automática)
+
+**Agendamentos:**
+- Cada agendamento pertence a 1 fase
+- **Data opcional** — pode ser criado sem data (ex: "Prova" pedida mas sem data marcada)
+- Múltiplos agendamentos por fase
+
+**Tipos de Agendamento:**
+
+| Tipo | Visível para | Badge auto | Exemplo |
+|------|-------------|------------|---------|
+| **Prova** | Todos | 🟡 Para Prova / Em Prova | Prova de estrutura na clínica |
+| **Colocação** | Todos | 🟢 Para Colocar | Cimentação final |
+| **Ajuste** | Todos | 🟠 Para Ajustar | Ajuste oclusal |
+| **Marco Lab** 🆕 | **Só Staff Lab + Admin** | 🔵 (interno) | Produção da estrutura, scan concluído |
+| **Outro** | Todos | ⚪ (genérico) | Qualquer outro tipo |
+
+> O tipo **Marco Lab** é um marco interno do laboratório — invisível para Médico e Staff Clínica. Útil para organizar o workflow de produção sem expor para a clínica.
+
+#### 📌 Criação de Fases e Agendamentos
+
+**Cenário 1 — Na criação do paciente (F1):**
+- Fases e agendamentos criados directamente no formulário de criação
+- Não gera pedido adicional (já está no fluxo F1)
+
+**Cenário 2 — Edição posterior (paciente já existe):**
+- Qualquer alteração (adicionar fase, criar agendamento, editar, remover) → gera **Pedido E📋**
+- O pedido é classificado por tipo:
+
+##### Tipos de Pedido (distinção)
+
+| Tipo Pedido | Quando | Exemplo |
+|-------------|--------|---------|
+| 📋 **Novo Paciente** | Criação via @criarpaciente ou app (por clínica) | F1 standard |
+| 📋 **Novo Plano** | Adicionar novo plano a paciente existente | @novotratamento (futuro) ou via app |
+| 📋 **Edição de Plano** | Alterar fases, agendamentos, info técnica de plano existente | Adicionar fase, remarcar, editar descrição |
+
+> Na Inbox de Pedidos, cada pedido mostra a **etiqueta do tipo** para o lab saber rapidamente o contexto.
+> Pedidos de edição incluem **diff** das alterações (o que mudou vs estado anterior).
+
+#### 📌 Lifecycle de um Agendamento
+
+```
+CRIAÇÃO
+  │
+  ├─ Tipo escolhido (Prova/Colocação/Ajuste/Marco Lab/Outro)
+  ├─ Data: opcional (pode ser definida depois)
+  ├─ Badge auto-aparece conforme tipo:
+  │   Ex: Tipo "Prova" → Badge "Para Prova" (sem data: "Para Prova — s/ data")
+  │
+  ├─ Notificação WA: mensagem fixa actualizada
+  └─ Se via edição posterior → gera Pedido E📋 tipo "Edição de Plano"
+
+DURANTE
+  │
+  ├─ Data definida/alterada → Badge mantém tipo, data actualizada
+  ├─ Remarcação → Badge NÃO muda (mesmo tipo)
+  │   ├─ Aviso no grupo WA: "📅 Agendamento [tipo] remarcado: [data antiga] → [data nova]"
+  │   └─ Mensagem fixa actualizada
+  │
+  ├─ Tipo alterado → Badge MUDA
+  │   Ex: "Prova" → "Colocação" = Badge "Para Prova" → "Para Colocar"
+  │   └─ Aviso no WA: "🔄 Agendamento alterado de [Prova] para [Colocação]"
+  │
+  └─ Cancelamento → Badge removido + aviso WA
+
+CONCLUSÃO
+  │
+  ├─ Agendamento marcado como concluído
+  ├─ Badge desaparece
+  └─ Sistema verifica: "Todos os agendamentos desta fase estão concluídos?"
+      │
+      ├─ SIM → PROMPT ao utilizador:
+      │   ┌─────────────────────────────────────────┐
+      │   │ ✅ Fase "[nome]" — todos os             │
+      │   │ agendamentos concluídos!                 │
+      │   │                                          │
+      │   │ [▶️ Avançar para fase seguinte]          │
+      │   │ [➕ Criar novo agendamento nesta fase]   │
+      │   └─────────────────────────────────────────┘
+      │
+      └─ NÃO → Nada acontece (há agendamentos pendentes)
+```
+
+#### 📌 Transição entre Fases
+
+```
+FASE ACTIVA: "Moldagem"
+  │
+  ├─ Todos agendamentos concluídos
+  ├─ Utilizador escolhe "Avançar para fase seguinte"
+  │
+  ├─ Fase "Moldagem" → estado: Concluída ✅
+  ├─ Fase seguinte ("Prova Estrutura") → estado: Activa 🔵
+  │
+  ├─ Badges da nova fase aparecem automaticamente
+  ├─ Mensagem fixa WA actualizada
+  └─ Aviso WA: "✅ Fase [Moldagem] concluída → Agora em [Prova Estrutura]"
+
+ÚLTIMA FASE:
+  │
+  ├─ Todos agendamentos concluídos
+  ├─ Prompt: "Avançar" → Plano marcado como concluído
+  └─ Congratulação no WA: "🎉 Plano [nome] concluído!"
+```
+
+#### 📌 Mensagem Fixa no Grupo WA
+
+> Cada grupo WA de paciente tem uma **mensagem fixada (pinned)** com o resumo actualizado do plano.
+> Actualizada a cada mudança relevante.
+
+**Conteúdo da mensagem fixa:**
+
+```
+╔══════════════════════════════════════════╗
+║ 📋 PLANO: Coroa Zircónia #46            ║
+╠══════════════════════════════════════════╣
+║                                          ║
+║ 👤 Paciente: João Silva                  ║
+║ 🏥 Clínica: Sorriso                     ║
+║ 👨‍⚕️ Dr. Ferreira (principal)              ║
+║                                          ║
+║ ── FASES ──────────────────────────      ║
+║ ✅ 1. Moldagem (concluída)               ║
+║ 🔵 2. Prova Estrutura (activa)           ║
+║    └ 📅 Prova — 28/02 15:00             ║
+║ ⬜ 3. Acabamento                         ║
+║ ⬜ 4. Colocação                          ║
+║                                          ║
+║ ── INFO TÉCNICA ─────────────────        ║
+║ Zircónia monolítica, cor A2, preparo     ║
+║ com chanfro, antagonista natural         ║
+║                                          ║
+║ ── STATUS ───────────────────────        ║
+║ 🟡 Para Prova                            ║
+║                                          ║
+║ 🕐 Última actualização: 24/02 15:30     ║
+╚══════════════════════════════════════════╝
+```
+
+**Regras técnicas da mensagem fixa:**
+
+| Regra | Detalhe |
+|-------|---------|
+| **Actualização** | A cada mudança: novo agendamento, transição de fase, alteração de status, remarcação |
+| **Método** | **Eliminar mensagem anterior + criar nova + fixar** (não editar — WA limita edição a ~15 min) |
+| **Pin duration** | Pins no WA expiram (30 dias máx). Ao recriar, o timer reinicia |
+| **Fallback** | Se a mensagem não puder ser fixada (limite de pins), enviar como mensagem normal |
+| **Visibilidade Marco Lab** | Marcos internos do lab **NÃO aparecem** na mensagem fixa (só visíveis na app) |
+
+---
+
 ## Etapa 5 — Definir a Informação
 
 *(Por definir — campos detalhados de cada entidade)*
