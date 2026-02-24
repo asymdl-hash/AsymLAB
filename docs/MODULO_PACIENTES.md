@@ -972,6 +972,229 @@ FASE ACTIVA: "Moldagem"
 | **Pin duration** | Pins no WA expiram (30 dias máx). Ao recriar, o timer reinicia |
 | **Fallback** | Se a mensagem não puder ser fixada (limite de pins), enviar como mensagem normal |
 | **Visibilidade Marco Lab** | Marcos internos do lab **NÃO aparecem** na mensagem fixa (só visíveis na app) |
+---
+
+### 4.8 — F5: Automações WhatsApp ✅
+
+> **Complexidade:** 🔴 Alta — centraliza toda a lógica de comunicação WA.
+> **Dependências:** F1 (criação), F3 (fases/agendamentos), Módulo Configurações.
+> **Princípio:** O admin pode configurar todos os templates e permissões de @comandos.
+
+#### 📌 Tabela de @Comandos Completa
+
+| Comando | Quem pode usar | Onde funciona | Acção |
+|---------|---------------|---------------|-------|
+| `@criarpaciente` | Todos (configurável) | Grupo geral | Cria formulário tokenizado → novo paciente (ver F1 — 4.6) |
+| `@entregue` | Staff Lab, Admin | Grupo do paciente | Confirma agendamento activo como concluído + muda status |
+| `@recolher` | Todos | Grupo do paciente | Marca trabalho para recolha (bidirecional) |
+| `@recolhido` | Staff Lab, Admin | Grupo do paciente | Confirma que trabalho foi recolhido pela clínica |
+| `@urgente` | **Só Staff Lab, Admin** | Grupo do paciente | Marca como urgente — topo de todas as listas |
+| `@nota` | Todos | Grupo do paciente | Adiciona nota rápida ao plano activo |
+
+> **@material** — Removido dos @comandos. É uma automação de app (ver secção abaixo).
+> **@foto** — Implícito no pedido de material em falta (app envia pedido com detalhe).
+> **@status** — Já coberto pela mensagem fixa (sempre visível no grupo).
+
+---
+
+#### 📌 @entregue — Confirmar Entrega
+
+```
+Staff Lab envia @entregue no grupo WA do paciente
+  │
+  ├─ Sistema identifica o agendamento activo da fase activa
+  ├─ Confirma agendamento como concluído
+  ├─ Status muda automaticamente conforme tipo:
+  │
+  │   Tipo do Agendamento    →    Status resultante
+  │   ─────────────────────────────────────────────
+  │   Prova                  →    "Prova Entregue" ✅
+  │   Colocação              →    "Colocação Entregue" ✅
+  │   Ajuste                 →    "Ajuste Entregue" ✅
+  │   Outro                  →    "Entregue" ✅
+  │   Marco Lab              →    "Concluído" (interno)
+  │
+  ├─ Mensagem fixa actualizada
+  ├─ Verifica: "Todos agendamentos da fase concluídos?"
+  │   └─ Se SIM → prompt de transição de fase (ver F3 — 4.7)
+  └─ Confirmação no grupo: "✅ [tipo] entregue — agendamento concluído"
+```
+
+> Se houver **múltiplos agendamentos activos** na fase, o sistema pergunta qual:
+> "Qual agendamento quer confirmar? 1. Prova 28/02 | 2. Ajuste 01/03"
+
+---
+
+#### 📌 @recolher — Marcar para Recolha (bidirecional)
+
+```
+CENÁRIO A — Lab marca trabalho pronto para recolha:
+  │
+  Staff Lab envia @recolher
+  ├─ Status → "Para Recolher" 📦
+  ├─ Aparece no widget da clínica como trabalho pendente de recolha
+  ├─ Mensagem fixa actualizada
+  └─ Aviso no grupo: "📦 Trabalho pronto para recolha"
+
+CENÁRIO B — Clínica pede para recolher:
+  │
+  Médico/Staff Clínica envia @recolher
+  ├─ Pedido de recolha registado
+  ├─ Aparece no widget do lab como "Recolha pedida pela clínica"
+  └─ Aviso no grupo: "🏥 [nome] pediu recolha do trabalho"
+
+EM AMBOS OS CASOS:
+  │
+  └─ Clínica vai ao lab buscar → Lab envia @recolhido
+      ├─ Status → "Recolhido" ✅
+      ├─ Badges de recolha removidos
+      ├─ Mensagem fixa actualizada
+      └─ Confirmação: "✅ Trabalho recolhido por [nome]"
+```
+
+> **Status de recolha no widget:**
+
+| Status | Visível para | Significado |
+|--------|-------------|-------------|
+| 📦 **Para Recolher** | Todos | Lab marcou como pronto |
+| 🏥 **Recolha Pedida** | Staff Lab + Admin | Clínica pediu para vir buscar |
+| ✅ **Recolhido** | Todos | Confirmado — trabalho foi levantado |
+
+---
+
+#### 📌 @urgente — Marcar como Urgente (só lab)
+
+```
+Staff Lab envia @urgente no grupo WA
+  │
+  ├─ Badge "🔴 Urgente" adicionado ao paciente/plano
+  ├─ Em todos os widgets onde este trabalho aparece:
+  │   → vai para o TOPO da lista
+  │   → highlight visual (borda vermelha / fundo tintado)
+  │
+  ├─ Mensagem fixa actualizada (com 🔴 no topo)
+  ├─ Aviso no grupo: "🔴 Trabalho marcado como URGENTE por [nome]"
+  │
+  └─ Para remover urgência:
+      Staff Lab envia @urgente novamente (toggle)
+      ├─ Badge removido
+      ├─ Volta à posição normal nos widgets
+      └─ Aviso: "✅ Urgência removida por [nome]"
+```
+
+> **Só Staff Lab e Admin** podem usar @urgente.
+> Na app: botão "Marcar Urgente" na ficha do paciente (mesma lógica do @).
+
+---
+
+#### 📌 @nota — Adicionar Nota Rápida
+
+```
+Qualquer membro envia @nota <texto> no grupo WA
+  │
+  ├─ Texto adicionado às Considerações do plano activo
+  ├─ Prefixado com: "[nome] via WA — [data hora]:"
+  │   Ex: "Dr. Ferreira via WA — 24/02 15:30: Paciente pede cor mais clara"
+  │
+  ├─ Visível na ficha do paciente (secção Considerações)
+  ├─ Mensagem fixa NÃO actualizada (notas são detalhe, não status)
+  └─ Confirmação no grupo: "📝 Nota adicionada ao plano"
+```
+
+> Sem texto após @nota → sistema responde: "⚠️ Use: @nota seguido do texto"
+> @nota como resposta a uma mensagem → inclui o texto da mensagem respondida + texto extra.
+
+---
+
+#### 📌 Automação de Material em Falta (app, não @comando)
+
+> Esta automação é disparada pela **app**, não por @comando no WA.
+> O funcionário do lab faz check do material e marca o que falta.
+
+```
+Staff Lab na app → secção Material → marca item em falta
+  │
+  ├─ Sistema inicia cadência de avisos automáticos no WA:
+  │
+  │   FASE 1 — A cada 2 dias (máximo 3 avisos):
+  │   ├─ Dia 0: "⚠️ Material em falta para [paciente]: [lista]"
+  │   ├─ Dia 2: "⚠️ Lembrete: material em falta para [paciente]"
+  │   └─ Dia 4: "⚠️ Último lembrete (fase 1): material em falta"
+  │
+  │   FASE 2 — A cada 7 dias (máximo 3 avisos):
+  │   ├─ Dia 11: "⚠️ Material ainda em falta para [paciente]"
+  │   ├─ Dia 18: "⚠️ Lembrete: material em falta há 18 dias"
+  │   └─ Dia 25: "🔴 ÚLTIMO AVISO: material em falta para [paciente].
+  │               Este é o último aviso automático."
+  │
+  └─ Após dia 25: automação para. Escalação para admin na app.
+
+  RESOLUÇÃO:
+  ├─ Clínica entrega material → Lab marca como recebido
+  ├─ Automação de avisos cancelada
+  └─ Confirmação: "✅ Material recebido para [paciente]"
+```
+
+> **Anti-spam — Throttling de mensagens:**
+
+| Regra | Detalhe |
+|-------|---------|
+| **Intervalo mínimo** | 30s entre mensagens automáticas para o mesmo grupo |
+| **Intervalo entre grupos** | 5-10s entre mensagens para grupos diferentes |
+| **Fila sequencial** | Todas as mensagens automáticas entram numa fila (FIFO) |
+| **Horário** | Mensagens automáticas só saem entre 08:00-20:00 (configurável) |
+| **Limite diário** | Máximo de mensagens automáticas por dia (configurável, default 50) |
+
+> Se o sistema detecta que várias automações de material coincidem, agrupa num resumo:
+> "⚠️ Material em falta para 3 pacientes: [lista resumida]"
+
+---
+
+#### 📌 Descrição do Grupo WA
+
+> A descrição do grupo WA do paciente contém instruções dos @comandos.
+> Actualizada automaticamente quando novos comandos são configurados.
+
+**Exemplo de descrição:**
+
+```
+🔬 AsymLAB — Grupo do paciente
+
+📋 Comandos disponíveis:
+@entregue — Confirmar entrega do trabalho
+@recolher — Marcar para recolha / pedir recolha
+@recolhido — Confirmar que trabalho foi levantado
+@urgente — Marcar como urgente (só lab)
+@nota <texto> — Adicionar nota ao plano
+
+ℹ️ A mensagem fixada contém o resumo actualizado do plano.
+```
+
+---
+
+#### 📌 Templates Configuráveis
+
+> Todos os templates de mensagem são configuráveis pelo admin no **Módulo Configurações**.
+> Isso permite melhorar com o uso e escalar a app para venda.
+
+| Template | Variáveis disponíveis | Exemplo default |
+|----------|----------------------|-----------------|
+| Criação de paciente | `{paciente}`, `{medico}`, `{link}` | "📋 Formulário criado por {medico}. 🔗 {link}" |
+| Entrega confirmada | `{tipo}`, `{paciente}` | "✅ {tipo} entregue — agendamento concluído" |
+| Para recolher | `{paciente}` | "📦 Trabalho pronto para recolha" |
+| Recolhido | `{nome}` | "✅ Trabalho recolhido por {nome}" |
+| Urgente ON | `{nome}` | "🔴 Trabalho marcado como URGENTE por {nome}" |
+| Urgente OFF | `{nome}` | "✅ Urgência removida por {nome}" |
+| Nota adicionada | — | "📝 Nota adicionada ao plano" |
+| Material em falta | `{paciente}`, `{lista}`, `{fase}` | "⚠️ Material em falta para {paciente}: {lista}" |
+| Material último aviso | `{paciente}` | "🔴 ÚLTIMO AVISO: material em falta para {paciente}" |
+| Fase concluída | `{fase_antiga}`, `{fase_nova}` | "✅ Fase {fase_antiga} concluída → Agora em {fase_nova}" |
+| Plano concluído | `{plano}` | "🎉 Plano {plano} concluído!" |
+| Remarcação | `{tipo}`, `{data_antiga}`, `{data_nova}` | "📅 {tipo} remarcado: {data_antiga} → {data_nova}" |
+| Formulário guardado | `{nome}` | "{nome} guardou o formulário — falta submeter" |
+| Formulário a expirar | — | "⚠️ O formulário expira em 3h" |
+
+> O admin pode editar texto, emojis, e variáveis. O sistema valida que variáveis obrigatórias estão presentes.
 
 ---
 
