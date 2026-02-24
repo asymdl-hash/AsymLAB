@@ -90,26 +90,32 @@ PACIENTE
 
 | Campo | Tipo | Obrigatório | Notas |
 |-------|------|-------------|-------|
-| Nome completo | texto | ✅ | — |
-| Data de nascimento | data | ❌ | — |
-| Género | enum | ❌ | M / F / Outro |
-| Contacto telefone | texto | ❌ | Para WA futuro |
-| Email | texto | ❌ | — |
-| Clínica associada | FK | ✅ | Ligação à clínica |
-| Médico responsável | FK | ✅ | Ligação ao médico |
-| Notas internas | texto | ❌ | Só visível Staff Lab |
-| Estado do registo | enum | ✅ | Completo / Incompleto |
+| Nome completo | texto | ✅ | Nome que o lab conhece o paciente |
+| ID Paciente Clínica | texto | ❌ | Código interno da clínica para este paciente (ex: "PAC-0412"). Opcional mas recomendado para anti-duplicação |
+| Clínica associada | FK | ✅ | Clínica de origem |
+| Médicos associados | array FK | ✅ | Todos os médicos que trabalham com este paciente |
+| Médico principal | FK | ✅ | Um dos médicos associados — o que está a receber o paciente. Pode ser alterado a qualquer momento |
+| Notas lab | texto | ❌ | Só visível Staff Lab — observações internas livres sobre este paciente (ex: "alérgico ao níquel", "paciente exige acabamento perfeito") |
+
+> **Equipa do paciente** = todos os médicos associados + os colaboradores (Staff Clínica) de cada médico + todo o Staff Lab.
+> Esta equipa define quem vê o paciente e quem entra no grupo WA.
 
 ### 3.3 — Anti-Duplicação de Pacientes
 
 > Sistema de detecção inteligente para evitar duplicações na criação de pacientes.
+> Usa o **ID Paciente Clínica** como critério principal e o **nome** como critério secundário.
 
-**Como funciona:**
-- Ao preencher nome + clínica, o sistema procura correspondências
-- Se encontrar nomes semelhantes na mesma clínica → mostra aviso
-- O utilizador decide: "É o mesmo" (abre ficha) ou "É diferente" (continua a criar)
+**Regras de criação:**
 
-**Algoritmo:** Correspondência fuzzy (Levenshtein distance ≤ 3) + mesma clínica.
+| Situação | Resultado |
+|----------|-----------|
+| Mesmo nome + **ambos têm ID Paciente Clínica** + IDs **diferentes** | ✅ Pode criar — são pacientes diferentes |
+| Mesmo nome + **ambos têm ID Paciente Clínica** + IDs **iguais** | ❌ Bloqueia — é duplicação |
+| Mesmo nome + **nenhum** tem ID Paciente Clínica | ❌ Bloqueia — pede ao utilizador para preencher o ID Paciente Clínica ou o nome completo do paciente para confirmar |
+| Mesmo nome + **só um** tem ID Paciente Clínica | ⚠️ Avisa — sugere preencher o ID no outro para confirmar que são diferentes |
+| Nomes **diferentes** | ✅ Pode criar — sem conflito |
+
+**Algoritmo:** Correspondência fuzzy no nome (Levenshtein distance ≤ 3) + comparação de ID Paciente Clínica dentro da mesma clínica.
 
 ### 3.4 — Entidade: Plano de Tratamento
 
@@ -177,23 +183,38 @@ PACIENTE
 
 ### 3.9 — Entidade: Pedido (E📋)
 
-> Pedidos são solicitações internas que passam por aprovação.
+> Pedidos são **notificações automáticas** geradas quando médicos ou staff clínica fazem alterações no sistema.
+> O objectivo é que o laboratório saiba **exactamente o que foi criado ou alterado** sem ficar perdido.
+
+**Quando é gerado um pedido:**
+
+| Acção do médico/staff clínica | Pedido gerado |
+|-------------------------------|---------------|
+| Cria um paciente novo | 📋 "Novo paciente criado: [nome]" |
+| Cria um plano de tratamento | 📋 "Novo plano criado: [nome plano] para [paciente]" |
+| Cria uma fase ou agendamento | 📋 "Nova fase/agendamento criado em [plano]" |
+| Edita dados de um paciente, plano, fase ou agendamento | 📋 "[campo] alterado de [valor antigo] para [valor novo] em [contexto]" |
+| Outro pedido manual | 📋 Texto livre do utilizador |
 
 | Campo | Tipo | Obrigatório | Notas |
 |-------|------|-------------|-------|
-| Tipo de pedido | enum | ✅ | Material / Serviço / Informação / Outro |
-| Descrição | texto | ✅ | O que é necessário |
+| Tipo de pedido | enum | ✅ | Criação / Edição / Material / Outro |
+| Descrição | texto | ✅ | Auto-gerada ou texto livre |
+| Entidade afectada | FK | ❌ | Link directo ao paciente, plano, fase ou agendamento alterado |
+| O que mudou | JSON | ❌ | Diff automático: campo + valor antigo + valor novo |
 | Prioridade | enum | ✅ | Normal / Urgente |
-| Estado | enum | ✅ | Pendente / Aprovado / Rejeitado / Concluído |
-| Criado por | FK | ✅ | Qualquer role |
-| Aprovado por | FK | ❌ | Admin ou Staff Lab |
-| Paciente associado | FK | ❌ | Opcional |
+| Estado | enum | ✅ | Pendente / Visto / Concluído |
+| Criado por | FK | ✅ | Médico ou Staff Clínica (auto) |
+| Visto por | FK | ❌ | Admin ou Staff Lab que abriu o pedido |
 | Data criação | datetime | ✅ | Auto |
-| Data resolução | datetime | ❌ | Quando concluído |
+
+> O lab recebe estes pedidos como uma **fila de notificações** — pode marcar como "Visto" ou "Concluído".
+> Isto garante que nenhuma alteração passa despercebida.
 
 ### 3.10 — Entidade: Ficheiro (Metadados — referência à NAS)
 
-> Os ficheiros físicos estão na NAS. O Supabase guarda apenas metadados e thumbnails.
+> Os ficheiros físicos estão na NAS. O Supabase guarda metadados e thumbnails.
+> **Backup de metadados na NAS:** Uma cópia dos metadados é exportada periodicamente para a NAS (JSON/CSV), garantindo portabilidade total caso se migre de plataforma. Aplica-se a **todos os módulos**.
 
 | Campo | Tipo | Obrigatório | Notas |
 |-------|------|-------------|-------|
@@ -206,19 +227,26 @@ PACIENTE
 | Enviado por | FK | ✅ | — |
 | Data upload | datetime | ✅ | Auto |
 
+> ⚠️ **Regra global de portabilidade:** Todos os módulos devem ter export periódico dos metadados para a NAS. Se um dia se migrar do Supabase, toda a informação está na NAS.
+
 ### 3.11 — Comunicação WhatsApp
 
 > O sistema envia mensagens automáticas via WhatsApp usando @comandos e templates.
+> **Configurável:** No módulo Configurações, o admin pode criar novos @comandos, definir a automação associada, e controlar **quem pode usar cada comando** (por role e por médico individual).
 
-#### @Comandos Principais
+#### @Comandos Principais (defaults)
 
-| Comando | Acção | Exemplo |
-|---------|-------|---------|
-| @entregue | Marca trabalho como entregue | Funcionário escreve no grupo WA |
-| @recolher | Clínica pede recolha do trabalho | Médico escreve no grupo WA |
-| @recolhido | Confirma que trabalho foi recolhido | Funcionário escreve no grupo WA |
-| @urgente | Marca trabalho como urgente | Qualquer membro do grupo |
+| Comando | Acção | Quem pode usar (default) |
+|---------|-------|-------------------------|
+| @entregue | Marca trabalho como entregue | Staff Lab |
+| @recolher | Pede recolha do trabalho | Médico, Staff Clínica |
+| @recolhido | Confirma que trabalho foi recolhido | Staff Lab |
+| @urgente | Marca trabalho como urgente | Todos |
 | @material | Notifica material em falta | Sistema automático |
+
+> **Permissões por comando:** Além dos defaults por role, o admin pode definir excepções por médico individual.
+> Exemplo: @recolher pode ser autorizado para Dr. Silva mas ignorado para Dr. Costa.
+> Comandos não autorizados são **ignorados silenciosamente** (sem erro, sem resposta).
 
 #### Templates de Mensagem
 
@@ -229,14 +257,18 @@ PACIENTE
 | Trabalho pronto | Status "Pronto" | "O trabalho do paciente X está pronto para entrega" |
 | Prova entregue | @entregue | "A prova do paciente X foi entregue na clínica" |
 
+> 👉 Tanto os @comandos como os templates serão **trabalhados em mais detalhe** nas próximas etapas.
+
 ### 3.12 — Grupo WhatsApp por Paciente
 
-> Cada paciente tem um grupo WA dedicado com a equipa relevante.
+> Cada paciente tem um grupo WA dedicado com a **equipa completa**.
 
 **Membros do grupo:**
-- Médico responsável
-- Staff Lab atribuído
-- Admin (opcional)
+- **Todos** os médicos associados ao paciente (não só o principal)
+- **Todo** o Staff Lab (todos os funcionários do laboratório)
+- Colaboradores (Staff Clínica) de cada médico associado
+
+> Quando um novo médico é associado ao paciente, é automaticamente adicionado ao grupo.
 
 **Criação automática:** Quando um paciente é criado, o sistema sugere a criação do grupo WA. Badge "Criar Grupo" aparece até ser feito.
 
@@ -251,18 +283,11 @@ PACIENTE
 | **Agendamento** | Mensagens podem ser programadas |
 | **Prioridade** | Urgentes primeiro, depois FIFO |
 
-### 3.14 — Entidade: Caixa (Recurso Físico)
+### 3.14 — Caixa (É um Badge, NÃO uma Entidade)
 
-> A caixa é um recurso reutilizável do laboratório para transportar trabalhos.
-
-| Campo | Tipo | Obrigatório | Notas |
-|-------|------|-------------|-------|
-| Número/Nome | texto | ✅ | Identificação única |
-| Estado | enum | ✅ | Disponível / Em uso / Manutenção |
-| Paciente actual | FK | ❌ | Null se disponível |
-| Plano actual | FK | ❌ | Null se disponível |
-
-> Quando um plano é fechado, a caixa é libertada automaticamente.
+> A caixa **não é uma entidade na BD** — é apenas o **badge de status "Criar Caixa"** (status #1 no sistema multi-badge).
+> Quando se cria um paciente ou um plano novo, o badge "📦 Criar Caixa" aparece para lembrar o funcionário de preparar a caixa física.
+> Quando o funcionário marca como feito, o badge desaparece. Sem entidade, sem tabela na BD.
 
 ### 3.15 — Merge de Pacientes Duplicados
 
@@ -307,29 +332,15 @@ PACIENTE
 
 ### 3.19 — Billing e Facturação
 
-> Rastreamento de custos e facturação por paciente/plano.
-
-| Campo | Tipo | Obrigatório | Notas |
-|-------|------|-------------|-------|
-| Plano associado | FK | ✅ | — |
-| Valor total | número | ✅ | Em euros |
-| Estado | enum | ✅ | Pendente / Facturado / Pago |
-| Número factura | texto | ❌ | Referência externa |
-| Data facturação | data | ❌ | — |
-| Notas | texto | ❌ | — |
+> ⬜ **Por definir** — secção reservada para quando o utilizador decidir como gerir facturação.
+> Pode incluir: rastreamento de custos por plano, integração com software de facturação, ou gestão manual.
+> Será discutido em detalhe após o MVP.
 
 ### 3.20 — Documentação (Notas e Relatórios)
 
-> Documentação técnica associada a cada paciente ou plano.
-
-| Campo | Tipo | Obrigatório | Notas |
-|-------|------|-------------|-------|
-| Tipo | enum | ✅ | Relatório / Nota clínica / Orçamento / Outro |
-| Conteúdo | texto rico | ✅ | Suporta formatação |
-| Autor | FK | ✅ | — |
-| Data | datetime | ✅ | Auto |
-| Paciente associado | FK | ✅ | — |
-| Plano associado | FK | ❌ | Opcional |
+> ⬜ **Por definir** — secção reservada para documentação técnica associada a pacientes.
+> Pode incluir: relatórios, notas clínicas, orçamentos exportados, etc.
+> Será discutido em detalhe após o MVP.
 
 ### 3.21 — Estratégia de Ficheiros: NAS-First
 
@@ -412,9 +423,8 @@ PACIENTE
 | 3 | **Fase** | Pendente · Em Curso · Concluída | Exclusivo |
 | 4 | **Agendamento** | Agendado · Concluído · Cancelado · Remarcado | Exclusivo |
 | 5 | **Estado do Trabalho** | 33 status multi-badge (ver 4.3) | **Multi-badge** |
-| 6 | **Pedido (E📋)** | Pendente · Aprovado · Rejeitado · Concluído | Exclusivo |
+| 6 | **Pedido (E📋)** | Pendente · Visto · Concluído | Exclusivo |
 | 7 | **Aviso** | Activo · Finalizado | Exclusivo |
-| 8 | **Registo do Paciente** | Completo · Incompleto | Exclusivo |
 
 ### 4.3 — Status do Trabalho — Sistema Multi-Badge
 
