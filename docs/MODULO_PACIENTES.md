@@ -1198,6 +1198,144 @@ Staff Lab na app → secção Material → marca item em falta
 
 ---
 
+### 4.9 — F4: Considerações ✅
+
+> **Complexidade:** 🟡 Média — envolve permissões por lado, programação de envio, e integração com pedidos.
+> **Visibilidade:** Todas as considerações são visíveis para todos os roles.
+> **Edição:** Apenas editáveis pelo lado que as criou (clínica edita as da clínica, lab edita as do lab).
+
+#### 📌 Estrutura das Considerações
+
+As considerações são **agrupadas por fase/agendamento**, criando um histórico organizado por momento do tratamento.
+
+```
+📋 PLANO: Coroa Zircónia #46
+
+── Fase 1: Moldagem ──────────────────────────
+  📅 Agendamento: Impressão — 20/02
+  │
+  ├─ 🏥 Dr. Ferreira — 20/02 10:30
+  │   "Preparo com chanfro, margem subgengival no vestibular"
+  │
+  └─ 🔬 Lab (Ana) — 20/02 15:00
+      "Troquel limpo, margem nítida. Proceder com enceramento."
+      📎 foto_troquel.jpg
+
+── Fase 2: Prova Estrutura (activa) ──────────
+  📅 Agendamento: Prova — 28/02
+  │
+  ├─ 🔬 Lab (João) — 27/02 09:00  ⏰ Programado: 27/02 18:00
+  │   "Estrutura pronta. Verificar adaptação cervical e contactos."
+  │   📎 scan_estrutura.stl
+  │
+  └─ (sem considerações da clínica ainda)
+```
+
+#### 📌 Tipos de Consideração
+
+| Tipo | Conteúdo | Exemplo |
+|------|----------|---------|
+| **Texto livre** | Apenas texto | "Paciente pede cor mais clara" |
+| **Com anexo** | Ficheiro(s) + texto opcional | Foto do troquel + "Margem irregular no distal" |
+| **Com anexo sem texto** | Apenas ficheiro(s) | 3 fotos intraorais |
+
+> Não existe tipo "alerta" — os avisos já são cobertos pelo sistema de Avisos (F8).
+
+#### 📌 Quem cria e como
+
+| Quem cria | Na app | No WA |
+|-----------|--------|-------|
+| **Staff Lab / Admin** | Directo na ficha do paciente | `@nota <texto>` (ver F5) |
+| **Médico / Staff Clínica** | Directo na app → **gera Pedido E📋 tipo "Edição de Plano"** | `@nota <texto>` → gera Pedido também |
+
+> As considerações da clínica **aparecem logo na app** (para o lab ver), mas com badge de "Pedido pendente" até o lab confirmar.
+
+#### 📌 Envio para WhatsApp — Manual com Programação
+
+> As considerações **NÃO são enviadas automaticamente** para o WhatsApp.
+> O autor escolhe se e quando enviar.
+
+```
+Staff Lab cria consideração na app
+  │
+  ├─ Consideração guardada na BD
+  ├─ Visível na ficha do paciente (para o lab)
+  │
+  └─ 3 Opções de envio:
+      │
+      ├─ 📤 Enviar agora para WA
+      │   └─ Envia imediatamente para o grupo + todos vêem na app
+      │
+      ├─ ⏰ Programar envio
+      │   ├─ Escolher data/hora de envio
+      │   ├─ Na app: visível APENAS para o lab até à hora programada
+      │   ├─ Clínica SÓ vê na app após a hora programada
+      │   └─ Ícone ⏰ indica "programado" (visível só para o lab)
+      │
+      └─ 💾 Guardar sem enviar
+          └─ Fica só na app, não envia para WA
+```
+
+> **Caso de uso**: Lab descobre um problema às 22h. Programa o envio para as 08:00 do dia seguinte. A clínica não vê nada até essa hora.
+
+#### 📌 Impressão
+
+> Qualquer consideração pode ser impressa directamente da app.
+> O lab usa isto para notas internas que ficam junto à caixa do trabalho.
+
+| Acção | Resultado |
+|-------|-----------|
+| 🖨️ **Imprimir consideração** | Gera PDF formatado com: paciente, fase, data, autor, texto, anexos |
+| 🖨️ **Imprimir todas da fase** | PDF com todas as considerações da fase activa |
+| 🖨️ **Imprimir resumo do plano** | PDF com considerações de todas as fases |
+
+#### 📌 Edição e Permissões
+
+| Acção | Quem pode |
+|-------|-----------|
+| **Criar** | Todos |
+| **Editar** | Só o lado que criou (clínica edita da clínica, lab edita do lab) |
+| **Eliminar** | Só o autor original + Admin |
+| **Ver** | Todos (excepto programadas que ainda não "chegaram") |
+| **Enviar para WA** | Só o autor original |
+| **Imprimir** | Todos |
+
+> Edições são registadas com histórico: "Editado por [nome] em [data]"
+
+---
+
+### 4.10 — Visualizador STL (Feature Transversal) ✅
+
+> **Tecnologia:** Three.js + STLLoader (browser-native, sem plugins).
+> **Onde aparece:** Em qualquer lugar onde um ficheiro `.stl` é referenciado.
+
+#### 📌 Funcionalidades do Visualizador
+
+| Feature | Detalhe |
+|---------|---------|
+| **Renderização 3D** | Visualização do modelo STL no browser |
+| **Rotação/Zoom/Pan** | Controlos de rato/touch standard |
+| **Medição** | Régua básica para medir distâncias no modelo |
+| **Corte** | Plano de corte para ver secções transversais |
+| **Cores** | Trocar cor do modelo (material, gengiva, etc.) |
+| **Comparação** | Side-by-side de 2 STLs (antes/depois) |
+| **Anotações** | Marcar pontos no modelo com texto (salvos na BD) |
+| **Partilha** | Gerar link de visualização (com token, sem login) |
+| **Fullscreen** | Modo ecrã inteiro para apresentação |
+
+#### 📌 Onde aparece
+
+| Local | Comportamento |
+|-------|---------------|
+| **Ficha do paciente → Anexos** | Click no `.stl` abre o visualizador inline |
+| **Considerações** | Se a consideração tem `.stl` anexado, preview 3D inline |
+| **Mensagem WA** | STL enviado no WA → link para visualizador web (token) |
+| **Formulário @criarpaciente** | Preview 3D dos STLs anexados |
+
+> **Performance:** STLs grandes (>50MB) carregam com loading progressivo. Thumbnails 2D gerados automaticamente para listagens.
+
+---
+
 ## Etapa 5 — Definir a Informação
 
 *(Por definir — campos detalhados de cada entidade)*
