@@ -16,7 +16,7 @@
 | 4 | Mapear os Fluxos | ✅ Concluída (10 fluxos + 2 transversais) |
 | 5 | Definir a Informação | ✅ Concluída (28 tabelas + 8 auxiliares) |
 | 6 | Desenhar a Interface | ✅ Concluída (17 subsecções — layouts, componentes, a11y) |
-| 7 | Priorizar e Fasear | ⬜ Por definir |
+| 7 | Priorizar e Fasear | ✅ Concluída (4 fases — MVP→Comunicação→Billing→Premium) |
 
 ---
 
@@ -3765,4 +3765,266 @@ AGENDAMENTOS:
 
 ## Etapa 7 — Priorizar e Fasear
 
-*(Por definir — MVP vs futuro)*
+> Define a ordem de implementação, o MVP (Minimum Viable Product) e as fases seguintes.
+> Critérios de priorização: **dependências técnicas** → **valor de negócio** → **complexidade**.
+> Estimativas: em semanas-dev (1 dev full-stack, ritmo sustentável).
+
+---
+
+### 7.1 — Roadmap Visual
+
+```
+              MVP                    Comunicação           Billing            Premium
+           (Fase 1)                   (Fase 2)            (Fase 3)           (Fase 4)
+        ┌───────────┐            ┌───────────┐        ┌───────────┐      ┌───────────┐
+        │ Pacientes │            │ WhatsApp  │        │ Facturas  │      │ STL 3D    │
+        │ Planos    │ ────────>  │ Grupos WA │  ───>  │ TOConline │ ──>  │ Merge     │
+        │ Fases     │            │ Templates │        │ Recibos   │      │ Câmara HD │
+        │ Ficheiros │            │ Notific.  │        │ Relatórios│      │ ML Sugest.│
+        │ Consider. │            │ Anti-spam │        │ Audit Log │      │ Offline   │
+        └───────────┘            └───────────┘        └───────────┘      └───────────┘
+         ~6 semanas               ~4 semanas           ~4 semanas        ~4 semanas
+
+                    ────────────── Total estimado: ~18 semanas ──────────────
+```
+
+---
+
+### 7.2 — Fase 1: MVP (Core)
+
+> **Objectivo:** Gerir pacientes, planos e fases com ficheiros e considerações.
+> **Duração estimada:** ~6 semanas
+> **Resultado:** O laboratório pode registar e acompanhar pacientes sem papel.
+
+#### Funcionalidades MVP
+
+| # | Feature | Tabelas | UI (Etapa 6) | Prioridade |
+|---|---------|---------|-------------|-----------|
+| 1 | CRUD Pacientes | `patients` | 6.2 Lista + 6.4 Ficha | 🔴 Crítica |
+| 2 | CRUD Planos de Tratamento | `treatment_plans` | 6.4 Tab Planos + 6.5 Detalhe | 🔴 Crítica |
+| 3 | Lifecycle dos Planos | `treatment_plans` (estados) | 6.17 Estados Visuais | 🔴 Crítica |
+| 4 | CRUD Fases | `phases`, `phase_materials` | 6.5 Timeline | 🔴 Crítica |
+| 5 | Agendamentos básicos | `appointments` | 6.5 Detalhe Fase | 🔴 Crítica |
+| 6 | Upload de ficheiros | `files` | 6.4 Tab Ficheiros | 🟡 Alta |
+| 7 | Considerações (texto + anexo) | `considerations`, `consideration_attachments` | 6.6 Componente | 🟡 Alta |
+| 8 | Pesquisa e filtros | — | 6.2 Barra pesquisa | 🟡 Alta |
+| 9 | Soft delete pacientes | `patients` (deleted_at) | 6.2 Menu ••• | 🟢 Média |
+| 10 | Urgência toggle | `patients` (urgente) | 6.2 Badge 🔴 | 🟢 Média |
+
+#### Tabelas necessárias (Fase 1)
+
+```
+patients
+treatment_plans
+phases
+phase_materials
+appointments
+considerations
+consideration_attachments
+files
+users (extensão — já existe base do Supabase Auth)
+clinics (seed com dados iniciais)
+work_types (seed com catálogo básico)
+system_settings (seed com defaults)
+```
+
+> **Total: 12 tabelas** (+ seeds de configuração)
+
+#### Critérios de Aceitação MVP
+
+- [ ] Criar paciente com T-ID sequencial automático
+- [ ] Criar plano de tratamento com estados (Rascunho → Activo → Concluído)
+- [ ] Criar fases dentro de um plano (+ reordenar)
+- [ ] Criar agendamentos dentro de uma fase
+- [ ] Adicionar considerações (texto + 1 anexo mínimo)
+- [ ] Upload de ficheiros (imagem, PDF, STL — sem viewer 3D)
+- [ ] Pesquisar por T-ID e nome (debounced)
+- [ ] Filtrar por clínica e médico
+- [ ] Layout responsivo (desktop + mobile)
+- [ ] Permissões básicas por role (admin, staff, doctor)
+
+---
+
+### 7.3 — Fase 2: Comunicação
+
+> **Objectivo:** Automações WhatsApp, notificações e templates.
+> **Duração estimada:** ~4 semanas
+> **Dependência:** Fase 1 completa + conta Z-API activa.
+
+#### Funcionalidades
+
+| # | Feature | Tabelas | UI (Etapa 6) | Prioridade |
+|---|---------|---------|-------------|-----------|
+| 1 | Criação automática grupo WA | `wa_groups` | — (automático) | 🔴 Crítica |
+| 2 | Comandos @ no WhatsApp | `wa_groups` (mensagem pinned) | — (WA nativo) | 🔴 Crítica |
+| 3 | Templates de mensagem | `message_templates` | Definições (admin) | 🟡 Alta |
+| 4 | Fila anti-spam FIFO | `wa_message_queue` | — (background) | 🟡 Alta |
+| 5 | Notificações in-app | `notifications` | 6.12 Centro Notificações | 🟡 Alta |
+| 6 | Configuração notificações | `user_notification_settings` | Definições (user) | 🟢 Média |
+| 7 | Enviar consideração via WA | — | 6.6 Botão "Enviar WA" | 🟢 Média |
+| 8 | Descrição grupo WA auto | `wa_groups` | — (automático) | 🟢 Média |
+
+#### Tabelas adicionais (Fase 2)
+
+```
+wa_groups
+wa_message_queue
+message_templates
+notifications
+user_notification_settings
+```
+
+> **Total incremental: +5 tabelas** (acumulado: 17)
+
+#### Critérios de Aceitação
+
+- [ ] Grupo WA criado automaticamente ao criar paciente (via Z-API)
+- [ ] Comandos @moldagem, @provaEstrutura, etc. reconhecidos
+- [ ] Mensagens enviadas via fila anti-spam (intervalo mínimo, limite diário)
+- [ ] Notificações in-app para novos pedidos, fases concluídas, material em falta
+- [ ] Admin pode editar templates de mensagem
+- [ ] User pode configurar mute, do-not-disturb hours
+
+---
+
+### 7.4 — Fase 3: Billing & Documentação
+
+> **Objectivo:** Facturação, guias de transporte/recepção, relatórios.
+> **Duração estimada:** ~4 semanas
+> **Dependência:** Fase 1 completa + conta TOConline (opcional).
+
+#### Funcionalidades
+
+| # | Feature | Tabelas | UI (Etapa 6) | Prioridade |
+|---|---------|---------|-------------|-----------|
+| 1 | Guia de Transporte | `transport_guides`, `transport_guide_items` | 6.8 Modal câmara | 🔴 Crítica |
+| 2 | Guia de Recepção | `reception_guides`, `reception_guide_items` | 6.9 Modal | 🔴 Crítica |
+| 3 | Catálogo itens guia | `guide_items` | Admin (definições) | 🟡 Alta |
+| 4 | Emitir Factura | `invoices`, `invoice_lines` | 6.10 Modal | 🟡 Alta |
+| 5 | Tabela de Preços | `price_table` | Admin (definições) | 🟡 Alta |
+| 6 | Sincronização TOConline | `invoices` (toconline_id) | 6.10 Checkbox | 🟢 Média |
+| 7 | Recibos | `receipts` | 6.4 Tab Documentação | 🟢 Média |
+| 8 | Outros Documentos | `documents` | 6.4 Tab Documentação | 🟢 Média |
+| 9 | Relatório Semanal auto | `weekly_report_logs` | — (email/WA) | 🟢 Média |
+| 10 | Aviso fechar sem factura | `audit_logs` | 6.13 Modals restritivos | 🟡 Alta |
+| 11 | Audit Log | `audit_logs` | 6.4 Tab Histórico | 🟢 Média |
+
+#### Tabelas adicionais (Fase 3)
+
+```
+transport_guides
+transport_guide_items
+reception_guides
+reception_guide_items
+guide_items
+invoices
+invoice_lines
+price_table
+receipts
+documents
+weekly_report_logs
+audit_logs
+```
+
+> **Total incremental: +12 tabelas** (acumulado: 29)
+
+#### Critérios de Aceitação
+
+- [ ] Criar guia de transporte com itens pré-seleccionados + fotos
+- [ ] Criar guia de recepção com estado do material
+- [ ] Emitir factura com linhas auto-preenchidas (price_table × desconto)
+- [ ] Sincronizar factura com TOConline (se activo)
+- [ ] Aviso obrigatório ao fechar fase sem factura (2 modals)
+- [ ] Audit log regista todas as acções críticas
+- [ ] Relatório semanal enviado automaticamente (WA ou email)
+
+---
+
+### 7.5 — Fase 4: Premium & Advanced
+
+> **Objectivo:** Features avançadas de alto valor mas não essenciais para operação.
+> **Duração estimada:** ~4 semanas
+> **Dependência:** Fase 1 + Fase 3 (guias com câmara).
+
+#### Funcionalidades
+
+| # | Feature | Tabelas | UI (Etapa 6) | Prioridade |
+|---|---------|---------|-------------|-----------|
+| 1 | Visualizador STL 3D | — | 6.7 Modal Three.js | 🟡 Alta |
+| 2 | Merge de pacientes | `patients` (merge fields) | 6.11 Wizard 3 passos | 🟡 Alta |
+| 3 | Câmara desktop HD | — | 6.8 Interface câmara | 🟢 Média |
+| 4 | Sugestão ML para itens guia | `guide_items` (frequências) | 6.8 Checklist auto | 🟢 Média |
+| 5 | Fila de pedidos | `requests` | 6.3 Drawer | 🟢 Média |
+| 6 | Materiais e caixas | `materials`, `boxes`, `box_items` | Detalhe fase | 🟢 Média |
+| 7 | Ajuda integrada | `help_contents` | Tooltip/drawer contextual | 🔵 Nice-to-have |
+| 8 | Email como canal alternativo | — (canal_comunicacao) | Definições | 🔵 Nice-to-have |
+| 9 | Exportação NAS periódica | — (cron job) | — (background) | 🔵 Nice-to-have |
+| 10 | PWA offline (Service Worker) | — | — (cache strategy) | 🔵 Nice-to-have |
+
+#### Tabelas adicionais (Fase 4)
+
+```
+requests
+materials
+boxes
+box_items
+help_contents
+```
+
+> **Total incremental: +5 tabelas** (acumulado: 34 + ~2 auxiliares = ~36)
+
+#### Critérios de Aceitação
+
+- [ ] Visualizador STL com rotação, zoom, wireframe, medições
+- [ ] Merge de pacientes com preview + confirmação textual
+- [ ] Câmara desktop com selecção de dispositivo e "lembrar câmara"
+- [ ] Itens da guia sugeridos automaticamente (frequência > threshold)
+- [ ] Fila de pedidos com badge e navegação
+- [ ] PWA instável e funcional offline (cache de ficha do paciente)
+
+---
+
+### 7.6 — Resumo por Fase
+
+| Fase | Foco | Tabelas | Estimativa | Dependências |
+|------|------|---------|-----------|-------------|
+| **1 — MVP** | Pacientes, planos, fases, ficheiros, considerações | 12 | ~6 sem | Supabase Auth (já existe) |
+| **2 — Comunicação** | WhatsApp, notificações, templates, anti-spam | +5 = 17 | ~4 sem | Fase 1 + Z-API |
+| **3 — Billing** | Guias, facturas, TOConline, relatórios, audit | +12 = 29 | ~4 sem | Fase 1 + TOConline (opcional) |
+| **4 — Premium** | STL viewer, merge, câmara, ML, offline | +5 = 34 | ~4 sem | Fase 1 + Fase 3 |
+| **TOTAL** | | ~36 tabelas | **~18 sem** | |
+
+> Fases 2 e 3 podem ser desenvolvidas em **paralelo** se houver 2 devs.
+> Cada fase termina com uma release estável e testada.
+
+---
+
+### 7.7 — Critérios de Qualidade (todas as fases)
+
+| Critério | Requisito |
+|---------|----------|
+| **Testes** | Cada feature com testes funcionais manuais no browser (pré-commit) |
+| **Responsividade** | Testar em 3 breakpoints antes de merge |
+| **Permissões** | Verificar cada ecrã com role admin, staff e doctor |
+| **Performance** | Lista de pacientes < 1s com 1000+ registos |
+| **Segurança** | RLS habilitado em todas as tabelas Supabase |
+| **Zero data loss** | Soft deletes em pacientes e planos |
+| **Commits** | Semantic versioning: V1.x.0 (features), V1.x.y (fixes) |
+| **Documentação** | Cada feature documentada antes de implementar |
+
+---
+
+### 7.8 — Riscos e Mitigações
+
+| Risco | Impacto | Mitigação |
+|-------|---------|----------|
+| Z-API instável ou com breaking changes | Fase 2 bloqueada | Implementar fallback para envio manual + abstracção do provider |
+| TOConline sem API funcional | Facturação manual | Facturação local funciona sem TOConline (sync é opcional) |
+| Three.js pesado para mobile | STL viewer lento | Lazy loading, LOD (Level of Detail), optimização de mesh |
+| Volume de dados > 10k pacientes | Performance de pesquisa | Índices Supabase + pesquisa server-side com debounce |
+| Câmara não disponível (desktop sem webcam) | Guias sem foto | Fallback para upload de ficheiro |
+| Service Worker complexo | Offline incompleto | Priorizar cache read-only (consulta), não cache write |
+
+---
+
+> **Próximo passo após a documentação:** Iniciar implementação da **Fase 1 (MVP)** — começar pela migração Supabase das 12 tabelas core.
