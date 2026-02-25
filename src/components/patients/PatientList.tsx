@@ -29,6 +29,7 @@ export default function PatientList() {
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [clinicFilter, setClinicFilter] = useState<string | null>(null);
+    const [doctorFilter, setDoctorFilter] = useState<string | null>(null);
     const [showFilters, setShowFilters] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
@@ -62,6 +63,15 @@ export default function PatientList() {
         return Array.from(clinicMap.entries()).sort((a, b) => a[1].localeCompare(b[1]));
     }, [patients]);
 
+    // Médicos únicos para o filtro
+    const uniqueDoctors = useMemo(() => {
+        const docMap = new Map<string, string>();
+        patients.forEach(p => {
+            if (p.medico) docMap.set(p.medico.user_id, p.medico.full_name);
+        });
+        return Array.from(docMap.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+    }, [patients]);
+
     // Filtros aplicados
     const filteredPatients = useMemo(() => {
         let result = patients;
@@ -81,8 +91,13 @@ export default function PatientList() {
             result = result.filter(p => p.clinica?.id === clinicFilter);
         }
 
+        // Filtro por médico
+        if (doctorFilter) {
+            result = result.filter(p => p.medico?.user_id === doctorFilter);
+        }
+
         return result;
-    }, [patients, search, clinicFilter]);
+    }, [patients, search, clinicFilter, doctorFilter]);
 
     // Separar urgentes no topo
     const sortedPatients = useMemo(() => {
@@ -154,10 +169,20 @@ export default function PatientList() {
                                 <option key={id} value={id}>{name}</option>
                             ))}
                         </select>
-                        {clinicFilter && (
+                        <select
+                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            value={doctorFilter || ''}
+                            onChange={(e) => setDoctorFilter(e.target.value || null)}
+                        >
+                            <option value="">Todos os Médicos</option>
+                            {uniqueDoctors.map(([id, name]) => (
+                                <option key={id} value={id}>Dr. {name}</option>
+                            ))}
+                        </select>
+                        {(clinicFilter || doctorFilter) && (
                             <button
                                 className="text-xs text-primary hover:underline flex items-center gap-1"
-                                onClick={() => setClinicFilter(null)}
+                                onClick={() => { setClinicFilter(null); setDoctorFilter(null); }}
                             >
                                 <X className="h-3 w-3" /> Limpar filtros
                             </button>
@@ -242,7 +267,7 @@ export default function PatientList() {
             {/* Footer */}
             <div className="p-3 border-t border-gray-100 text-xs text-center text-gray-400 bg-gray-50/50">
                 {filteredPatients.length} {filteredPatients.length === 1 ? 'Paciente' : 'Pacientes'}
-                {clinicFilter && ' (filtrado)'}
+                {(clinicFilter || doctorFilter) && ' (filtrado)'}
             </div>
         </div>
     );
