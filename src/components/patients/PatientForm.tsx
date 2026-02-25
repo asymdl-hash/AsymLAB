@@ -22,6 +22,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { patientsService, PatientFullDetails } from '@/services/patientsService';
 import NewPlanModal from '@/components/patients/NewPlanModal';
 import ConsiderationsTab from '@/components/patients/ConsiderationsTab';
+import FilesTab from '@/components/patients/FilesTab';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -425,13 +426,9 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     </div>
                 </TabsContent>
 
-                {/* === Tab: Ficheiros (placeholder) === */}
+                {/* === Tab: Ficheiros === */}
                 <TabsContent value="ficheiros" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
-                    <div className="text-center py-16 text-gray-400">
-                        <FolderOpen className="h-12 w-12 mx-auto mb-3 opacity-40" />
-                        <p className="text-sm font-medium">Ficheiros</p>
-                        <p className="text-xs mt-1">Implementação na próxima iteração</p>
-                    </div>
+                    <FilesTab patientId={patient.id} plans={patient.treatment_plans || []} />
                 </TabsContent>
 
                 {/* === Tab: Considerações === */}
