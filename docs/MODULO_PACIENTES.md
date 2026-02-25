@@ -15,7 +15,7 @@
 | 3 | Definir as Entidades | ✅ Concluída (23 secções) |
 | 4 | Mapear os Fluxos | ✅ Concluída (10 fluxos + 2 transversais) |
 | 5 | Definir a Informação | ✅ Concluída (28 tabelas + 8 auxiliares) |
-| 6 | Desenhar a Interface | ⬜ Por definir |
+| 6 | Desenhar a Interface | ✅ Concluída (17 subsecções — layouts, componentes, a11y) |
 | 7 | Priorizar e Fasear | ⬜ Por definir |
 
 ---
@@ -3051,9 +3051,717 @@ audit_logs (auditoria)
 
 ## Etapa 6 — Desenhar a Interface
 
-*(Por definir — mockups e layouts)*
+> Define a estrutura visual, navegação e layouts do Módulo Pacientes.
+> Abordagem: **Mobile-first** com breakpoints para tablet e desktop.
+> Contexto: A app já existe com sidebar dark mode, primary amber (#f59e0b), background `#111827`.
+> Rota base: `/dashboard/patients`
 
 ---
+
+### 6.1 — Mapa de Navegação
+
+```
+Sidebar → Pacientes (/dashboard/patients)
+  │
+  ├─ 📋 Lista de Pacientes (/dashboard/patients)
+  │     └─ Clicar paciente → Ficha do Paciente
+  │
+  ├─ 👤 Ficha do Paciente (/dashboard/patients/[id])
+  │     ├─ Tab: Planos
+  │     │     └─ Clicar plano → Detalhe do Plano
+  │     ├─ Tab: Ficheiros
+  │     ├─ Tab: Considerações (todas as fases)
+  │     ├─ Tab: Documentação (facturas, recibos, docs)
+  │     └─ Tab: Histórico
+  │
+  ├─ 📑 Detalhe do Plano (/dashboard/patients/[id]/plans/[planId])
+  │     ├─ Timeline de fases
+  │     │     └─ Clicar fase → Detalhe da Fase
+  │     └─ Logística / Materiais
+  │
+  ├─ 📦 Detalhe da Fase (/dashboard/patients/[id]/plans/[planId]/phases/[phaseId])
+  │     ├─ Agendamentos
+  │     ├─ Considerações
+  │     ├─ Caixa / Logística
+  │     └─ Materiais
+  │
+  └─ Componentes transversais (modals/drawers):
+        ├─ 🆕 Criar Paciente (modal)
+        ├─ 🆕 Criar Plano (modal)
+        ├─ 🆕 Criar Fase (modal)
+        ├─ 🆕 Criar Agendamento (modal)
+        ├─ ✍️ Nova Consideração (drawer lateral)
+        ├─ 📎 Upload Ficheiros (modal)
+        ├─ 🚚 Guia de Transporte (modal full + câmara)
+        ├─ 📦 Guia de Recepção (modal full)
+        ├─ 💰 Emitir Factura (modal)
+        ├─ 🔀 Merge Pacientes (wizard modal)
+        ├─ 🔍 Visualizador STL (modal full screen)
+        └─ 🔔 Centro de Notificações (drawer lateral)
+```
+
+---
+
+### 6.2 — Lista de Pacientes (página principal)
+
+> Rota: `/dashboard/patients`
+
+#### Layout Desktop (≥1024px)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ HEADER                                                  │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 👥 Pacientes                    [+ Novo Paciente]   │ │
+│ │ 1.247 pacientes                 [📦 Fila Pedidos]   │ │
+│ └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│ FILTROS (barra horizontal)                              │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 🔍 [Pesquisa T-xxxx ou nome]  [Clínica ▼] [Médico ▼]│ │
+│ │ [Urgentes ○]  [Com plano activo ○]  [Ordenar: ▼]   │ │
+│ └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│ TABELA DE PACIENTES                                     │
+│ ┌─────┬───────────┬──────────┬──────────┬──────┬─────┐ │
+│ │ T-ID│ Nome      │ Clínica  │ Médico   │Planos│ ••• │ │
+│ ├─────┼───────────┼──────────┼──────────┼──────┼─────┤ │
+│ │🔴T42│ João Silva│ Sorriso  │ Dr.Ferr. │ 2    │ ••• │ │
+│ │  T43│ Ana Costa │ DentPlus │ Dra.Lima │ 1    │ ••• │ │
+│ │🔴T44│ Pedro M.  │ Sorriso  │ Dr.Ferr. │ 3    │ ••• │ │
+│ └─────┴───────────┴──────────┴──────────┴──────┴─────┘ │
+│                                                         │
+│ Paginação: [← Anterior]  Pág 1 de 42  [Seguinte →]     │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### Layout Mobile (<768px)
+
+```
+┌───────────────────────────┐
+│ 👥 Pacientes     [+ Novo] │
+│ 🔍 [Pesquisar...]         │
+│ [Filtros ▼]               │
+│                           │
+│ ┌─────────────────────┐   │
+│ │ 🔴 T-0042           │   │
+│ │ João Silva          │   │
+│ │ Sorriso · Dr.Ferr.  │   │
+│ │ 2 planos activos    │   │
+│ └─────────────────────┘   │
+│ ┌─────────────────────┐   │
+│ │    T-0043           │   │
+│ │ Ana Costa           │   │
+│ │ DentPlus · Dra.Lima │   │
+│ │ 1 plano activo      │   │
+│ └─────────────────────┘   │
+│                           │
+│ [Carregar mais ↓]         │
+└───────────────────────────┘
+```
+
+**Componentes:**
+
+| Componente | Descrição |
+|-----------|-----------|
+| Badge urgente | 🔴 Círculo vermelho ao lado do T-ID |
+| Badge planos | Número com cor: 0=cinza, 1+=azul |
+| Menu `•••` | Editar, Eliminar (soft), Merge, Urgente toggle |
+| Pesquisa | Debounced 300ms, pesquisa em T-ID + nome + id_clinica |
+| Filtros mobile | Expandem abaixo da barra de pesquisa |
+| Desktop: tabela | Colunas ordenáveis por click no header |
+| Mobile: cards | Card com info compacta, tap → ficha |
+| Paginação desktop | Números de página |
+| Paginação mobile | Infinite scroll (carregar mais) |
+
+---
+
+### 6.3 — Fila de Pedidos (drawer lateral)
+
+> Abre sobre a lista de pacientes (ou qualquer página). Drawer do lado direito.
+> Rota: componente overlay, sem rota própria.
+
+```
+┌─────────────────────────────────────────────┐
+│                              ┌────────────┐ │
+│   (conteúdo da página)       │ FILA PEDID.│ │
+│                              │            │ │
+│                              │ 📋 3 pend. │ │
+│                              │            │ │
+│                              │ ┌────────┐ │ │
+│                              │ │🔴URGENT│ │ │
+│                              │ │ Novo PT │ │ │
+│                              │ │ Dr.Ferr │ │ │
+│                              │ │ há 5min │ │ │
+│                              │ └────────┘ │ │
+│                              │ ┌────────┐ │ │
+│                              │ │ Normal │ │ │
+│                              │ │ Edit PT│ │ │
+│                              │ │ há 2h  │ │ │
+│                              │ └────────┘ │ │
+│                              │            │ │
+│                              │ [Marcar ✓] │ │
+│                              └────────────┘ │
+└─────────────────────────────────────────────┘
+```
+
+**Comportamento:**
+- Badge no botão `📦 Fila Pedidos` mostra count de pendentes
+- Cada pedido: tipo, descrição, quem criou, há quanto tempo
+- Click no pedido → navega para a entidade (paciente/plano/fase)
+- Swipe left (mobile) → Marcar como visto/concluído
+
+---
+
+### 6.4 — Ficha do Paciente (full screen)
+
+> Rota: `/dashboard/patients/[id]`
+> Abre em **full screen** (substitui a vista da lista).
+> Botão ← voltar para lista.
+
+#### Layout Desktop
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│ ← Voltar    👤 T-0042 João Silva    🔴 URGENTE    [••• Menu] │
+│ Clínica Sorriso · Dr. Ferreira · 3 planos                    │
+├───────────────────────────────────────────────────────────────┤
+│                                                               │
+│ [Planos] [Ficheiros] [Considerações] [Documentação] [Histór.]│
+│ ─────────────────────────────────────────────────────────────│
+│                                                               │
+│ TAB ACTIVA: PLANOS                                           │
+│                                                               │
+│ ┌───────────────────────────────────┐                        │
+│ │ 📑 Coroa Zircónia #46            │  [+ Novo Plano]        │
+│ │ Estado: 🟢 Activo                │                        │
+│ │ Fases: 2/3 completas             │                        │
+│ │ Início: 15/01/2026               │                        │
+│ │ [Ver detalhes →]                 │                        │
+│ └───────────────────────────────────┘                        │
+│ ┌───────────────────────────────────┐                        │
+│ │ 📑 Facetas anteriores            │                        │
+│ │ Estado: 🟡 Rascunho              │                        │
+│ │ Fases: 0/0                       │                        │
+│ │ [Ver detalhes →]                 │                        │
+│ └───────────────────────────────────┘                        │
+│                                                               │
+│ ┌───────────────────────────────────┐                        │
+│ │ 📑 Implante #36 (CONCLUÍDO)      │                        │
+│ │ Estado: ⚫ Concluído             │                        │
+│ │ Período: 01/06 — 15/09/2025      │                        │
+│ └───────────────────────────────────┘                        │
+│                                                               │
+└───────────────────────────────────────────────────────────────┘
+```
+
+#### Tabs da Ficha
+
+| Tab | Conteúdo |
+|-----|---------|
+| **Planos** | Lista de planos (activos no topo, concluídos em baixo). Cards com estado, progresso, datas |
+| **Ficheiros** | Galeria: STL (com ícone 3D), fotos (thumbnails), documentos. Filtros por fase. Upload drag&drop |
+| **Considerações** | Timeline de todas as considerações (todas as fases). Filtro por fase. Lado lab vs clínica |
+| **Documentação** | Facturas + Recibos (visível para todos). Outros Documentos (só lab). Botão emitir factura |
+| **Histórico** | Audit log filtrado para este paciente. Merge history. Criação, edições |
+
+#### Layout Mobile
+
+```
+┌───────────────────────────┐
+│ ← T-0042 João S.  🔴 [•••]│
+│ Sorriso · Dr. Ferreira    │
+├───────────────────────────┤
+│ [Planos▼] scroll horizontal│
+│ de tabs                    │
+├───────────────────────────┤
+│                           │
+│ ┌─────────────────────┐   │
+│ │ 📑 Coroa Zirc. #46  │   │
+│ │ 🟢 Activo · 2/3     │   │
+│ │ [Ver →]             │   │
+│ └─────────────────────┘   │
+│                           │
+└───────────────────────────┘
+```
+
+> No mobile, tabs viram scroll horizontal (swipeable).
+
+---
+
+### 6.5 — Detalhe do Plano de Tratamento
+
+> Rota: `/dashboard/patients/[id]/plans/[planId]`
+
+#### Layout Desktop
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ ← T-0042 João Silva  ·  📑 Coroa Zircónia #46              │
+│ 🟢 Activo  ·  Início: 15/01  ·  Dr. Ferreira               │
+│                                                [Acções ▼]   │
+├─────────────────────────────────┬────────────────────────────┤
+│                                 │                            │
+│ TIMELINE DE FASES (esquerda)    │ DETALHE DA FASE (direita)  │
+│                                 │                            │
+│ ┌───────┐                      │ 📦 Fase 2: Prova Estrutura │
+│ │ F1 ✅ │ Moldagem             │ Estado: 🟡 Em curso        │
+│ │ ──── │                      │                            │
+│ │ F2 🟡│ Prova Estrutura ← ● │ Agendamentos:              │
+│ │ ──── │                      │ ┌──────────────────────┐   │
+│ │ F3 ⬜│ Colocação            │ │ 📅 Para Prova        │   │
+│ └───────┘                      │ │ 25/02 · 🟢 Entregue │   │
+│                                 │ │ [Recolher] [Detalhes]│   │
+│ [+ Nova Fase]                  │ └──────────────────────┘   │
+│                                 │                            │
+│                                 │ Considerações: (3)         │
+│                                 │ ┌──────────────────────┐   │
+│                                 │ │ 🔵 Lab: "Verificar   │   │
+│                                 │ │ oclusão vestibular"  │   │
+│                                 │ │ há 2h · 📎 1 anexo   │   │
+│                                 │ └──────────────────────┘   │
+│                                 │                            │
+│                                 │ [+ Consideração]           │
+│                                 │                            │
+│                                 │ Materiais:                 │
+│                                 │ · Zircónia Katana UTML     │
+│                                 │ · Dentes: 46               │
+│                                 │                            │
+├─────────────────────────────────┴────────────────────────────┤
+│ Acções rápidas:                                              │
+│ [🚚 Guia Transporte] [📦 Guia Recepção] [💰 Factura] [📋 Rel]│
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Estrutura:**
+- **Esquerda (30%):** Timeline vertical de fases com ícones de estado
+- **Direita (70%):** Detalhe da fase seleccionada
+- **Barra inferior:** Acções rápidas contextuais
+
+#### Layout Mobile
+
+```
+┌───────────────────────────┐
+│ ← Coroa Zirc. #46  [•••] │
+│ 🟢 Activo · Dr. Ferreira  │
+├───────────────────────────┤
+│ Fases: (scroll horizontal)│
+│ [✅ F1] [🟡 F2 ●] [⬜ F3] │
+├───────────────────────────┤
+│                           │
+│ 📦 Fase 2: Prova Estrutura│
+│ 🟡 Em curso               │
+│                           │
+│ ┌─────────────────────┐   │
+│ │ 📅 Para Prova       │   │
+│ │ 25/02 · 🟢 Entregue │   │
+│ └─────────────────────┘   │
+│                           │
+│ Considerações (3) [+ Nova]│
+│ (...)                     │
+│                           │
+│ ┌─────────────────────┐   │
+│ │ 🚚 │ 📦 │ 💰 │ 📋  │   │
+│ │Guia│Rec.│Fact│Relat│   │
+│ └─────────────────────┘   │
+└───────────────────────────┘
+```
+
+> No mobile: fases viram chips horizontais scroll, detalhe em accordion vertical.
+> Barra de acções rápidas = FAB (floating action bar) no fundo.
+
+---
+
+### 6.6 — Considerações (componente reutilizável)
+
+> Usado na ficha do paciente (tab), no detalhe da fase e como drawer lateral.
+
+```
+CONSIDERAÇÃO (card individual)
+┌──────────────────────────────────────────────┐
+│ 🔵 Lab · João (Staff Lab) · há 2h     [•••] │
+│                                              │
+│ "Verificar oclusão vestibular. A estrutura   │
+│  está com 0.3mm de sobre-contorno."          │
+│                                              │
+│ 📎 scan_check.stl  📷 oclusal.jpg            │
+│                                              │
+│ v2 · Editado há 1h                           │
+│ [📤 Enviar WA]                               │
+└──────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────┐
+│ 🟠 Clínica · Dra. Lima · há 1d        [•••] │
+│                                              │
+│ "Paciente queixa-se de sensibilidade na zona │
+│  do provisório. Ajustar oclusão."            │
+│                                              │
+│ (sem anexos)                                 │
+└──────────────────────────────────────────────┘
+```
+
+**Regras visuais:**
+- 🔵 Fundo azul claro → Lab
+- 🟠 Fundo laranja claro → Clínica
+- Lado lab à esquerda, lado clínica à direita (como chat) — **desktop only**
+- Mobile: todas empilhadas, com badge de lado
+- Menu `•••`: Editar (só próprias, janela 1h), Enviar WA, Agendar envio, Ver versões
+
+---
+
+### 6.7 — Visualizador STL (modal full screen)
+
+> Abre ao clicar ficheiro `.stl` em qualquer parte da app.
+
+```
+┌───────────────────────────────────────────────────────┐
+│ ✕ Fechar    scan_superior.stl    v2    [⬇ Download]  │
+├───────────────────────────────────────────────────────┤
+│                                                       │
+│                                                       │
+│                 ┌───────────────────┐                 │
+│                 │                   │                 │
+│                 │   [Modelo 3D]     │                 │
+│                 │   Rotação: drag   │                 │
+│                 │   Zoom: scroll    │                 │
+│                 │   Pan: shift+drag │                 │
+│                 │                   │                 │
+│                 └───────────────────┘                 │
+│                                                       │
+├───────────────────────────────────────────────────────┤
+│ Controlos:                                            │
+│ [🔄 Reset] [📐 Wireframe] [🎨 Cor] [📏 Medições]    │
+│ [💡 Luz] [📸 Screenshot]                              │
+└───────────────────────────────────────────────────────┘
+```
+
+**Tecnologia:** Three.js (ou react-three-fiber)
+**Funcionalidades:**
+- Rotação, zoom, pan com touch/mouse
+- Wireframe toggle
+- Alteração de cor do modelo
+- Ferramenta de medição (distância entre 2 pontos)
+- Controlo de iluminação
+- Screenshot (exporta PNG)
+- Funciona em mobile com gestos touch
+
+---
+
+### 6.8 — Guia de Transporte (modal com câmara)
+
+> Modal large que abre ao clicar `🚚 Guia Transporte`.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ ✕  🚚 Nova Guia de Transporte — GT-0087                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ Paciente: T-0042 João Silva (auto)                          │
+│ Clínica:  Sorriso (auto)                                    │
+│ Fase:     Prova Estrutura (auto)                            │
+│ Agend.:   Para Prova — 25/02 (auto)                         │
+│                                                             │
+│ ──── Itens a enviar ────                                    │
+│ ☑️ Prova de estrutura           (95% — pré-seleccionado)    │
+│ ☑️ Modelo antagonista           (87% — pré-seleccionado)    │
+│ ☐  Registo de mordida           (45% — sugerido)            │
+│ [+ Adicionar item manual]                                   │
+│                                                             │
+│ ──── Fotos do envio ────                                    │
+│ ┌─────────────────────────────┐                             │
+│ │  📸 Abrir Câmara            │  ou  📁 Anexar ficheiros    │
+│ └─────────────────────────────┘                             │
+│                                                             │
+│ [min1] [min2] [min3] — 3 fotos tiradas                      │
+│                                                             │
+│ Notas: [________________________]                           │
+│                                                             │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │ [💾 Guardar] [📤 Guardar + Enviar WA] [🖨️ Imprimir]  │ │
+│ └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Interface de câmara (quando aberta):**
+
+```
+┌─────────────────────────────────┐
+│    ┌───────────────────────┐    │
+│    │                       │    │
+│    │   [Preview câmara]    │    │
+│    │                       │    │
+│    └───────────────────────┘    │
+│                                 │
+│  Fotos: [min1] [min2] [+]     │
+│                                 │
+│  [📸 Tirar Foto]  [✅ Pronto]  │
+│                                 │
+│  Câmara: [Webcam ▼]            │
+│  ☑ Lembrar câmara              │
+└─────────────────────────────────┘
+```
+
+> No mobile, a câmara usa a nativa do dispositivo via MediaStream API.
+
+---
+
+### 6.9 — Guia de Recepção (similar à guia de transporte)
+
+> Mesma estrutura visual que a guia de transporte, com campos adicionais:
+
+- Cenário: `Pós @recolhido` (auto) ou `Entrega directa` (manual)
+- Estado do material: `OK` | `Danificado` | `Incompleto`
+- Se cenário `Entrega directa`: campo pesquisa paciente com auto-complete
+- Checklist de itens recebidos (pré-preenchido pelo mesmo sistema de frequência)
+- Fotos do que chegou (câmara/anexo)
+- Acções: `Guardar`, `Guardar + Enviar WA`, `Imprimir`
+
+---
+
+### 6.10 — Emitir Factura (modal)
+
+> Modal com formulário de facturação. Rota: modal sem URL.
+
+```
+┌──────────────────────────────────────────────────────┐
+│ ✕  💰 Emitir Factura — Fase: Prova Estrutura        │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│ Clínica: Sorriso (NIF: 501234567)       (auto)      │
+│ Paciente: T-0042 João Silva             (auto)      │
+│ Desconto clínica: 10%                   (auto)      │
+│                                                      │
+│ ──── Linhas da factura ────                          │
+│ ┌────────────────────┬────┬────────┬────────┬──────┐│
+│ │ Descrição          │Qtd │Preço un│ IVA    │Total ││
+│ ├────────────────────┼────┼────────┼────────┼──────┤│
+│ │ Coroa Zircónia     │ 1  │ 180,00 │ 23%    │221,40││
+│ │  (auto: price_table)                              │
+│ └────────────────────┴────┴────────┴────────┴──────┘│
+│ [+ Adicionar linha]                                  │
+│                                                      │
+│ Subtotal: 180,00 €     Desconto: -18,00 €           │
+│ IVA (23%): 37,26 €     Total: 199,26 €              │
+│                                                      │
+│ ☐ Sincronizar com TOConline                          │
+│                                                      │
+│ [💾 Guardar rascunho]  [📄 Emitir factura]           │
+└──────────────────────────────────────────────────────┘
+```
+
+**Linha de factura auto-preenchida** a partir de: `price_table` (tipo trabalho × material × complexidade) × desconto clínica.
+**Editável:** O utilizador pode alterar todos os valores antes de emitir.
+
+---
+
+### 6.11 — Merge de Pacientes (wizard modal)
+
+> Wizard de 3 passos. Modal full screen.
+
+```
+Passo 1/3: Seleccionar duplicado
+┌────────────────────────────────────────────────────────┐
+│ 🔀 Merge de Pacientes — Passo 1 de 3                  │
+│                                                        │
+│ Paciente actual: T-0042 João Silva                     │
+│                                                        │
+│ Paciente duplicado:                                    │
+│ 🔍 [Pesquisar paciente...]                             │
+│                                                        │
+│ Resultado: T-0087 Joao Silva (Sorriso, Dr. Ferreira)   │
+│ ⚠️ Possível duplicado detectado (nome similar)         │
+│                                                        │
+│ [Cancelar]                          [Seguinte →]       │
+└────────────────────────────────────────────────────────┘
+
+Passo 2/3: Preview do merge
+┌────────────────────────────────────────────────────────┐
+│ 🔀 Merge — Passo 2 de 3: Preview                      │
+│                                                        │
+│ SURVIVOR (fica): T-0042 João Silva                     │
+│ MERGEADO (desaparece): T-0087 Joao Silva               │
+│                                                        │
+│ O que vai ser transferido:                             │
+│ ├─ 2 planos de tratamento                              │
+│ ├─ 5 ficheiros                                         │
+│ ├─ 1 grupo WhatsApp (será fundido)                     │
+│ └─ 3 considerações                                     │
+│                                                        │
+│ ⚠️ ATENÇÃO: Esta acção não pode ser desfeita.          │
+│                                                        │
+│ [← Voltar]                          [Seguinte →]       │
+└────────────────────────────────────────────────────────┘
+
+Passo 3/3: Confirmação
+┌────────────────────────────────────────────────────────┐
+│ 🔴 CONFIRMAÇÃO OBRIGATÓRIA                            │
+│                                                        │
+│ Escreva "MERGE T-0087" para confirmar:                 │
+│ [__________________]                                   │
+│                                                        │
+│ [← Voltar]                     [🔀 Confirmar Merge]   │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 6.12 — Centro de Notificações (drawer)
+
+> Drawer lateral direito. Acessível via ícone 🔔 no header da app.
+
+```
+┌─────────────────────────────────┐
+│ 🔔 Notificações (5 novas)      │
+│ [Marcar todas lidas] [⚙ Config]│
+├─────────────────────────────────┤
+│                                 │
+│ HOJE                            │
+│ ┌─────────────────────────┐    │
+│ │ 🟢 Novo pedido          │    │
+│ │ Dr. Ferreira criou plano│    │
+│ │ T-0042 · há 5min        │    │
+│ └─────────────────────────┘    │
+│ ┌─────────────────────────┐    │
+│ │ 🟡 Material em falta    │    │
+│ │ Zircónia Katana UTML    │    │
+│ │ Stock baixo · há 2h     │    │
+│ └─────────────────────────┘    │
+│                                 │
+│ ONTEM                           │
+│ ┌─────────────────────────┐    │
+│ │ ⚫ Fase concluída       │    │
+│ │ T-0038 · Moldagem ✅    │    │
+│ │ ontem às 16:30          │    │
+│ └─────────────────────────┘    │
+│                                 │
+│ [Ver todas →]                   │
+└─────────────────────────────────┘
+```
+
+**Notificação:**
+- Click → navega para a entidade
+- Não lida: fundo ligeiramente highlight
+- Lida: fundo normal
+- Config: abre `user_notification_settings`
+
+---
+
+### 6.13 — Fechar Fase Sem Factura (fluxo de aviso)
+
+> Sequência de 2 modals restritivos para evitar erros.
+
+```
+MODAL 1 — Aviso
+┌──────────────────────────────────────┐
+│ ⚠️ ATENÇÃO                          │
+│                                      │
+│ Esta fase não tem factura associada. │
+│ Tem a certeza que quer fechar        │
+│ sem facturar?                        │
+│                                      │
+│       [Cancelar]  [Continuar →]      │
+└──────────────────────────────────────┘
+
+MODAL 2 — Confirmação com texto
+┌──────────────────────────────────────┐
+│ 🔴 CONFIRMAÇÃO OBRIGATÓRIA          │
+│                                      │
+│ Escreva "SEM FACTURA" para confirmar:│
+│ [__________________________]         │
+│                                      │
+│      [Cancelar]  [Confirmar]         │
+└──────────────────────────────────────┘
+```
+
+> Registado no `audit_logs`: quem, quando, sem factura.
+> Badge permanente na fase: `⚠️ Sem factura`.
+
+---
+
+### 6.14 — Componentes Reutilizáveis (Design System)
+
+| Componente | Uso | Variantes |
+|-----------|-----|-----------|
+| `PatientCard` | Lista pacientes, pesquisa | Compacto (lista), Expandido (ficha) |
+| `PlanCard` | Ficha paciente — tab planos | Com progresso, sem progresso |
+| `PhaseChip` | Timeline de fases | ✅ Completa, 🟡 Em curso, ⬜ Pendente, ❌ Cancelada |
+| `ConsiderationBubble` | Considerações | Lab (azul), Clínica (laranja) |
+| `FilePreview` | Galeria ficheiros | STL (ícone 3D), Foto (thumbnail), Doc (ícone) |
+| `GuideModal` | Guias transporte/recepção | Com câmara, sem câmara |
+| `InvoiceForm` | Facturação | Rascunho, Emissão |
+| `ConfirmDialog` | Acções destrutivas | Simples (2 botões), Com campo texto |
+| `Badge` | Estados, contadores | Urgente(🔴), Activo(🟢), Rascunho(🟡), Concluído(⚫) |
+| `NotificationItem` | Centro notificações | Lida, Não lida, Urgente |
+| `EmptyState` | Listas vazias | Com ícone + CTA |
+| `SearchBar` | Pesquisa global e local | Com filtros, sem filtros |
+| `CameraCapture` | Câmara nas guias | Mobile (nativa), Desktop (MediaStream) |
+| `STLViewer` | Visualizador 3D | Modal full screen |
+| `AuditTimeline` | Histórico | Timeline vertical com ícones |
+
+---
+
+### 6.15 — Breakpoints e Responsividade
+
+| Breakpoint | Dispositivo | Comportamento sidebar | Comportamento conteúdo |
+|-----------|-------------|----------------------|----------------------|
+| `< 640px` | Smartphone | Drawer overlay (hamburger) | Cards empilhados, tabs scroll horizontal, FAB inferior |
+| `640—1023px` | Tablet | Drawer overlay | Tabela compacta, 2 colunas onde possível |
+| `≥ 1024px` | Desktop | Sidebar fixa colapsável (64px / 256px) | Layout split (ex: timeline + detalhe), tabela completa |
+| `≥ 1440px` | Desktop large | Sidebar fixa expandida | Mais colunas, mais espaço entre blocos |
+
+**Regras globais:**
+- Tabelas → Cards no mobile
+- Modals → Full screen no mobile
+- Paginação → Infinite scroll no mobile
+- Tabs → Scroll horizontal no mobile
+- Split layout (30/70) → Stack vertical no mobile
+- FAB (floating action bar) no mobile para acções rápidas
+
+---
+
+### 6.16 — Acessibilidade (A11y)
+
+| Requisito | Implementação |
+|----------|--------------|
+| Contraste | WCAG AA mínimo (4.5:1 para texto, 3:1 para UI) |
+| Navegação teclado | Tab order lógico, focus visible, Escape fecha modals |
+| Screen reader | `aria-label` em botões ícone, `role` em elementos custom |
+| Touch targets | Mínimo 44×44px em mobile (WCAG 2.5.5) |
+| Reduzir movimento | `prefers-reduced-motion` → desactiva animações |
+| Labels de formulário | Todos os inputs com `<label>` associado |
+| Feedback de acções | Toast notifications para confirmação de acções |
+
+---
+
+### 6.17 — Estados Visuais dos Planos e Fases
+
+```
+PLANOS:
+  🟡 Rascunho    → border amarelo tracejado, texto cinza
+  🟢 Activo      → border verde, texto normal
+  ⏸️ Pausado     → border cinza, ícone pausa, texto dimmed
+  ⚫ Concluído   → border cinza sólido, fundo subtil, badge ✅
+  ❌ Cancelado   → border vermelho tracejado, texto strikethrough
+  🔄 Reaberto    → border azul, badge "Correcção" ou "Remake"
+
+FASES:
+  ⬜ Pendente    → chip com fundo cinza escuro
+  🟡 Em curso    → chip com fundo amber/primary, pulse animation
+  ✅ Concluída   → chip com fundo verde, check mark
+  ❌ Cancelada   → chip com fundo vermelho dimmed
+
+AGENDAMENTOS:
+  📅 Agendado        → ícone calendário, text normal
+  🟢 Prova entregue  → badge verde "Entregue"
+  🟢 Colocação entr. → badge verde "Colocação"
+  📦 Recolhido       → badge azul "Recolhido"
+  ✅ Concluído       → badge cinza "Concluído"
+  🔄 Remarcado       → badge laranja "Remarcado" + nova data
+  ❌ Cancelado       → badge vermelho "Cancelado"
+```
+
+> Todos os estados usam cores consistentes em toda a app para reconhecimento imediato.
+
 
 ## Etapa 7 — Priorizar e Fasear
 
