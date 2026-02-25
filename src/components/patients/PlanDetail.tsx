@@ -11,6 +11,8 @@ import {
     Clock,
     MoreVertical,
     ChevronRight,
+    ChevronUp,
+    ChevronDown,
     AlertTriangle,
     XCircle,
 } from 'lucide-react';
@@ -60,6 +62,7 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
     const [showAppointmentModal, setShowAppointmentModal] = useState(false);
     const [showActionsMenu, setShowActionsMenu] = useState(false);
     const [changingState, setChangingState] = useState(false);
+    const [reordering, setReordering] = useState(false);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sortedPhases = [...(plan.phases || [])].sort((a: any, b: any) => a.ordem - b.ordem);
@@ -98,6 +101,23 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
             console.error('Error changing appointment state:', err);
         }
     }, [onReload]);
+
+    const handleSwapPhase = useCallback(async (index: number, direction: 'up' | 'down') => {
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= sortedPhases.length) return;
+        try {
+            setReordering(true);
+            await patientsService.swapPhaseOrder(
+                { id: sortedPhases[index].id, ordem: sortedPhases[index].ordem },
+                { id: sortedPhases[targetIndex].id, ordem: sortedPhases[targetIndex].ordem }
+            );
+            onReload();
+        } catch (err) {
+            console.error('Error reordering phases:', err);
+        } finally {
+            setReordering(false);
+        }
+    }, [sortedPhases, onReload]);
 
     const completedPhases = sortedPhases.filter((p: { estado: string }) => p.estado === 'concluida').length;
     const totalPhases = sortedPhases.length;
@@ -211,28 +231,51 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                                 <div className="absolute left-[15px] top-[20px] bottom-[20px] w-0.5 bg-gray-700" />
                             )}
                             <div className="space-y-1">
-                                {sortedPhases.map((phase: { id: string; nome: string; estado: string; ordem: number }) => {
+                                {sortedPhases.map((phase: { id: string; nome: string; estado: string; ordem: number }, idx: number) => {
                                     const s = PHASE_STATE_CONFIG[phase.estado] || PHASE_STATE_CONFIG.pendente;
                                     const Icon = s.icon;
                                     const isSelected = selectedPhaseId === phase.id;
                                     return (
-                                        <button key={phase.id}
-                                            onClick={() => setSelectedPhaseId(phase.id)}
-                                            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left relative
-                                                ${isSelected ? 'bg-gray-700/70 ring-1 ring-amber-500/40' : 'hover:bg-gray-700/40'}`}>
-                                            <div className="relative z-10 flex-shrink-0">
-                                                <Icon className={`w-[30px] h-[30px] ${s.color}`} />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className={`text-sm font-medium truncate ${isSelected ? 'text-white' : 'text-gray-300'}`}>
-                                                    F{phase.ordem} · {phase.nome}
-                                                </p>
-                                                <p className="text-xs text-gray-500">{s.label}</p>
-                                            </div>
-                                            {isSelected && (
-                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+                                        <div key={phase.id} className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => setSelectedPhaseId(phase.id)}
+                                                className={`flex-1 flex items-center gap-3 p-3 rounded-lg transition-colors text-left relative
+                                                    ${isSelected ? 'bg-gray-700/70 ring-1 ring-amber-500/40' : 'hover:bg-gray-700/40'}`}>
+                                                <div className="relative z-10 flex-shrink-0">
+                                                    <Icon className={`w-[30px] h-[30px] ${s.color}`} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-sm font-medium truncate ${isSelected ? 'text-white' : 'text-gray-300'}`}>
+                                                        F{phase.ordem} · {phase.nome}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">{s.label}</p>
+                                                </div>
+                                                {isSelected && (
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+                                                )}
+                                            </button>
+                                            {/* Reorder buttons */}
+                                            {isSelected && sortedPhases.length > 1 && (
+                                                <div className="flex flex-col gap-0.5">
+                                                    <button
+                                                        onClick={() => handleSwapPhase(idx, 'up')}
+                                                        disabled={idx === 0 || reordering}
+                                                        className="p-0.5 rounded hover:bg-gray-700 text-gray-500 hover:text-amber-400 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-gray-500 transition-colors"
+                                                        title="Mover para cima"
+                                                    >
+                                                        <ChevronUp className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleSwapPhase(idx, 'down')}
+                                                        disabled={idx === sortedPhases.length - 1 || reordering}
+                                                        className="p-0.5 rounded hover:bg-gray-700 text-gray-500 hover:text-amber-400 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-gray-500 transition-colors"
+                                                        title="Mover para baixo"
+                                                    >
+                                                        <ChevronDown className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
                                             )}
-                                        </button>
+                                        </div>
                                     );
                                 })}
                             </div>
@@ -319,9 +362,9 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-400">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${phase.estado === 'concluida' ? 'bg-green-900/40 text-green-400' :
-                                phase.estado === 'em_curso' ? 'bg-amber-900/40 text-amber-400' :
-                                    phase.estado === 'cancelada' ? 'bg-red-900/40 text-red-400' :
-                                        'bg-gray-700 text-gray-400'
+                            phase.estado === 'em_curso' ? 'bg-amber-900/40 text-amber-400' :
+                                phase.estado === 'cancelada' ? 'bg-red-900/40 text-red-400' :
+                                    'bg-gray-700 text-gray-400'
                             }`}>
                             {phaseState.label}
                         </span>

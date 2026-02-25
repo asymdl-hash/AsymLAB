@@ -457,4 +457,21 @@ export const patientsService = {
 
         if (error) throw error;
     },
+
+    // 23. Reordenar fases (trocar ordem entre duas fases)
+    async swapPhaseOrder(phaseA: { id: string; ordem: number }, phaseB: { id: string; ordem: number }) {
+        // Update A com ordem de B
+        const { error: err1 } = await supabase
+            .from('phases')
+            .update({ ordem: phaseB.ordem })
+            .eq('id', phaseA.id);
+        if (err1) throw err1;
+
+        // Update B com ordem de A
+        const { error: err2 } = await supabase
+            .from('phases')
+            .update({ ordem: phaseA.ordem })
+            .eq('id', phaseB.id);
+        if (err2) throw err2;
+    },
 };
