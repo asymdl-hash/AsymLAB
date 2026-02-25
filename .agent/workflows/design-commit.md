@@ -18,10 +18,10 @@ Este workflow deve ser executado **automaticamente** sempre que:
 
 1. Adicionar ficheiros de documentação ao staging:
 ```powershell
-cd F:\Asymlab && git add docs/MODULO_PACIENTES.md docs/QA_TEST_LOG.md
+git add docs/MODULO_PACIENTES.md docs/QA_TEST_LOG.md
 ```
 
-2. Criar commit com versão e descrição da decisão:
+2. Criar commit com descrição da decisão:
 ```powershell
 git commit -m "docs: [DESCRIÇÃO CURTA DA DECISÃO]"
 ```
