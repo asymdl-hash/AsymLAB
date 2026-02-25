@@ -2,7 +2,7 @@
 
 > **Documento colaborativo de design.**  
 > Construído iterativamente — cada secção é discutida e validada antes de implementar.  
-> Última actualização: 24/02/2026
+> Última actualização: 25/02/2026
 
 ---
 
@@ -13,8 +13,8 @@
 | 1 | Definir o Problema | ✅ Concluída |
 | 2 | Identificar os Actores | ✅ Concluída |
 | 3 | Definir as Entidades | ✅ Concluída (23 secções) |
-| 4 | Mapear os Fluxos | 🟡 Em discussão |
-| 5 | Definir a Informação | ⬜ Por definir |
+| 4 | Mapear os Fluxos | ✅ Concluída (10 fluxos + 2 transversais) |
+| 5 | Definir a Informação | ✅ Concluída (22 tabelas + 8 auxiliares) |
 | 6 | Desenhar a Interface | ⬜ Por definir |
 | 7 | Priorizar e Fasear | ⬜ Por definir |
 
@@ -2309,7 +2309,609 @@ Módulo Configurações (Admin):
 
 ## Etapa 5 — Definir a Informação
 
-*(Por definir — campos detalhados de cada entidade)*
+> Define os campos detalhados de cada entidade da base de dados.
+> Cruza os campos com os fluxos (F1—F10) e features transversais documentados na Etapa 4.
+> Notação: **PK** = Primary Key, **FK** = Foreign Key, **auto** = gerado automaticamente.
+> Todos os campos `created_at`, `updated_at` são automáticos e não estão listados (presentes em todas as tabelas).
+
+---
+
+### 5.1 — Paciente (`patients`)
+
+> Referências: F1 (Criação), F2 (Plano), F7 (Merge), F10 (NAS)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `t_id` | TEXT | ✅ | auto | Formato `T-xxxx`. Sequencial, editável manualmente, **único** |
+| `nome` | TEXT | ✅ | — | Nome completo do paciente |
+| `id_paciente_clinica` | TEXT | ❌ | NULL | Código interno da clínica (ex: "PAC-0412"). Anti-duplicação |
+| `clinica_id` | FK → `clinics` | ✅ | — | Clínica de origem |
+| `medico_principal_id` | FK → `users` | ✅ | — | Médico que recebe o paciente |
+| `notas_lab` | TEXT | ❌ | NULL | Só visível Staff Lab. Observações internas |
+| `urgente` | BOOLEAN | ✅ | false | Toggle via `@urgente`. Destaque visual + topo da lista |
+| `merged_into_id` | FK → `patients` | ❌ | NULL | Se mergeado → aponta para o survivor |
+| `merged_at` | TIMESTAMP | ❌ | NULL | Data do merge |
+| `merged_by` | FK → `users` | ❌ | NULL | Quem executou o merge |
+| `deleted_at` | TIMESTAMP | ❌ | NULL | Soft delete (48h recoverável) |
+| `deleted_by` | FK → `users` | ❌ | NULL | Quem eliminou |
+| `origem` | ENUM | ✅ | 'app' | `app` \| `whatsapp` \| `formulario` |
+
+**Tabela auxiliar: `patient_doctors`** (N:N)
+
+| Campo | Tipo | Obrig. | Notas |
+|-------|------|--------|-------|
+| `patient_id` | FK → `patients` | ✅ | — |
+| `doctor_id` | FK → `users` | ✅ | — |
+
+> A equipa do paciente = todos os médicos em `patient_doctors` + Staff Clínica de cada + Staff Lab.
+
+---
+
+### 5.2 — Plano de Tratamento (`treatment_plans`)
+
+> Referências: F2 (Lifecycle), F3 (Fases), F5 (@novotratamento), F9 (Billing)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `patient_id` | FK → `patients` | ✅ | — | — |
+| `nome` | TEXT | ✅ | — | Ex: "Coroa Zircónia #46" |
+| `tipo_trabalho_id` | FK → `work_types` | ✅ | — | Configurável no módulo Configurações |
+| `estado` | ENUM | ✅ | 'rascunho' | `rascunho` \| `activo` \| `pausado` \| `concluido` \| `cancelado` \| `reaberto` |
+| `motivo_pausa` | TEXT | ❌ | NULL | Preenchido ao pausar |
+| `motivo_cancelamento` | TEXT | ❌ | NULL | Preenchido ao cancelar |
+| `tipo_reopen` | ENUM | ❌ | NULL | `correcao` \| `remake` (preenchido ao reabrir) |
+| `reopen_de_plano_id` | FK → `treatment_plans` | ❌ | NULL | Plano original que este reabre |
+| `medico_id` | FK → `users` | ✅ | — | Herda do paciente, editável |
+| `clinica_id` | FK → `clinics` | ✅ | — | Herda do paciente |
+| `data_inicio` | DATE | ✅ | auto (hoje) | — |
+| `data_conclusao` | DATE | ❌ | NULL | Preenchida ao concluir |
+| `notas` | TEXT | ❌ | NULL | — |
+| `urgente` | BOOLEAN | ✅ | false | Herda do paciente, toggle individual |
+| `origem` | ENUM | ✅ | 'app' | `app` \| `whatsapp` \| `formulario` |
+| `deleted_at` | TIMESTAMP | ❌ | NULL | Soft delete (48h) |
+| `deleted_by` | FK → `users` | ❌ | NULL | — |
+
+---
+
+### 5.3 — Fase (`phases`)
+
+> Referências: F3 (Fases), F9 (Facturação por fase, Relatório de fase)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `plan_id` | FK → `treatment_plans` | ✅ | — | — |
+| `nome` | TEXT | ✅ | — | Ex: "Moldagem", "Prova Estrutura", "Colocação" |
+| `ordem` | INTEGER | ✅ | auto | Posição na sequência (reordenável) |
+| `estado` | ENUM | ✅ | 'pendente' | `pendente` \| `em_curso` \| `concluida` \| `cancelada` |
+| `sem_factura` | BOOLEAN | ✅ | false | Se true → fechada sem factura (com aviso duplo) |
+| `sem_factura_por` | FK → `users` | ❌ | NULL | Quem confirmou fechar sem factura |
+| `sem_factura_em` | TIMESTAMP | ❌ | NULL | Quando confirmou |
+| `notas` | TEXT | ❌ | NULL | — |
+
+---
+
+### 5.4 — Agendamento (`appointments`)
+
+> Referências: F3 (Agendamentos), F5 (@entregue, @recolher), F9 (Guias, Relatórios)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `phase_id` | FK → `phases` | ✅ | — | — |
+| `tipo` | ENUM | ✅ | — | `moldagem` \| `para_prova` \| `para_colocacao` \| `reparacao` \| `ajuste` \| `outro` |
+| `data_prevista` | TIMESTAMP | ❌ | NULL | Pode ser "sem data" inicialmente |
+| `data_real` | TIMESTAMP | ❌ | NULL | Preenchida quando acontece |
+| `estado` | ENUM | ✅ | 'agendado' | `agendado` \| `prova_entregue` \| `colocacao_entregue` \| `recolhido` \| `concluido` \| `cancelado` \| `remarcado` |
+| `recolha_pronta` | BOOLEAN | ✅ | false | Lab marca pronto → envia mensagem WA |
+| `recolhido_em` | TIMESTAMP | ❌ | NULL | Quando @recolhido |
+| `recolhido_por` | FK → `users` | ❌ | NULL | — |
+| `notas` | TEXT | ❌ | NULL | — |
+| `ordem` | INTEGER | ✅ | auto | Posição dentro da fase |
+
+---
+
+### 5.5 — Consideração (`considerations`)
+
+> Referências: F4 (Considerações), F5 (@nota)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `phase_id` | FK → `phases` | ✅ | — | Agrupada por fase |
+| `appointment_id` | FK → `appointments` | ❌ | NULL | Opcionalmente associada ao agendamento |
+| `autor_id` | FK → `users` | ✅ | — | Quem escreveu |
+| `lado` | ENUM | ✅ | auto | `lab` \| `clinica` — determina quem pode editar |
+| `tipo` | ENUM | ✅ | 'texto' | `texto` \| `com_anexo` \| `so_anexo` |
+| `conteudo` | TEXT | ❌ | NULL | Texto livre (pode ser NULL se tipo `so_anexo`) |
+| `versao` | INTEGER | ✅ | 1 | Auto-incremento a cada edição |
+| `enviada_wa` | BOOLEAN | ✅ | false | Se já foi enviada para WA manualmente |
+| `enviada_wa_em` | TIMESTAMP | ❌ | NULL | Quando foi enviada |
+| `agendada_para` | TIMESTAMP | ❌ | NULL | Envio agendado (clínica só vê após esta data) |
+| `origem` | ENUM | ✅ | 'app' | `app` \| `whatsapp` (via @nota) |
+
+**Tabela auxiliar: `consideration_attachments`** (N:N)
+
+| Campo | Tipo | Obrig. | Notas |
+|-------|------|--------|-------|
+| `consideration_id` | FK → `considerations` | ✅ | — |
+| `file_id` | FK → `files` | ✅ | — |
+| `ordem` | INTEGER | ✅ | Ordem dos anexos |
+
+---
+
+### 5.6 — Pedido (`requests`)
+
+> Referências: F1 (Criação), F2 (Plano), F6 (Fila)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `tipo` | ENUM | ✅ | — | `novo_paciente` \| `novo_plano` \| `editar_plano` \| `editar_paciente` \| `nova_fase` \| `novo_agendamento` \| `editar_fase` \| `editar_agendamento` \| `consideracao` \| `outro` |
+| `descricao` | TEXT | ✅ | auto | Auto-gerada ou texto livre |
+| `patient_id` | FK → `patients` | ❌ | NULL | Se aplicável |
+| `plan_id` | FK → `treatment_plans` | ❌ | NULL | Se aplicável |
+| `phase_id` | FK → `phases` | ❌ | NULL | Se aplicável |
+| `appointment_id` | FK → `appointments` | ❌ | NULL | Se aplicável |
+| `diff_json` | JSONB | ❌ | NULL | Diff automático: `{campo, valor_antigo, valor_novo}` |
+| `prioridade` | ENUM | ✅ | 'normal' | `normal` \| `urgente` |
+| `estado` | ENUM | ✅ | 'pendente' | `pendente` \| `visto` \| `concluido` |
+| `criado_por` | FK → `users` | ✅ | auto | Médico ou Staff Clínica |
+| `visto_por` | FK → `users` | ❌ | NULL | Staff Lab que abriu |
+| `visto_em` | TIMESTAMP | ❌ | NULL | — |
+| `concluido_por` | FK → `users` | ❌ | NULL | — |
+| `concluido_em` | TIMESTAMP | ❌ | NULL | — |
+| `form_token` | TEXT | ❌ | NULL | Se via formulário WA (token para link público) |
+| `form_expiry` | TIMESTAMP | ❌ | NULL | Validade do token (24h) |
+| `origem` | ENUM | ✅ | 'app' | `app` \| `whatsapp` \| `formulario` |
+
+---
+
+### 5.7 — Ficheiro (`files`)
+
+> Referências: F4 (Anexos), F10 (NAS)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `nome_original` | TEXT | ✅ | — | Nome do ficheiro original |
+| `nome_nas` | TEXT | ✅ | — | Nome guardado na NAS (pode ter versionamento: `scan(2).stl`) |
+| `tipo` | ENUM | ✅ | — | `stl` \| `foto` \| `video` \| `documento` \| `comprimido` \| `outro` |
+| `mime_type` | TEXT | ✅ | — | Ex: `model/stl`, `image/jpeg` |
+| `caminho_nas` | TEXT | ✅ | — | Path relativo: `/pacientes/T-0042/plano-1/fase-1/scan.stl` |
+| `tamanho` | BIGINT | ✅ | — | Em bytes |
+| `thumbnail_url` | TEXT | ❌ | NULL | Supabase Storage (≤200KB). Auto-gerado |
+| `patient_id` | FK → `patients` | ✅ | — | — |
+| `plan_id` | FK → `treatment_plans` | ❌ | NULL | — |
+| `phase_id` | FK → `phases` | ❌ | NULL | — |
+| `enviado_por` | FK → `users` | ✅ | — | — |
+| `versao` | INTEGER | ✅ | 1 | Versionamento: 1, 2, 3... |
+| `origem` | ENUM | ✅ | 'app' | `app` \| `whatsapp` \| `formulario` |
+
+---
+
+### 5.8 — Grupo WhatsApp (`wa_groups`)
+
+> Referências: F1 (Criação de grupo), F5 (Automações), F7 (Merge)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `patient_id` | FK → `patients` | ✅ | — | 1 grupo por paciente |
+| `wa_group_id` | TEXT | ✅ | — | ID do grupo na Z-API |
+| `nome_grupo` | TEXT | ✅ | — | Formato: `T-xxxx Nome Paciente` |
+| `descricao` | TEXT | ❌ | NULL | Instruções de @comandos |
+| `mensagem_fixada` | TEXT | ❌ | NULL | Resumo de planos activos |
+| `activo` | BOOLEAN | ✅ | true | false → grupo eliminado (ex: merge) |
+
+**Tabela auxiliar: `wa_group_members`** (N:N)
+
+| Campo | Tipo | Obrig. | Notas |
+|-------|------|--------|-------|
+| `group_id` | FK → `wa_groups` | ✅ | — |
+| `user_id` | FK → `users` | ✅ | — |
+| `wa_phone` | TEXT | ✅ | Nº telefone no WA |
+| `added_at` | TIMESTAMP | ✅ | auto |
+
+---
+
+### 5.9 — Guia de Transporte (`transport_guides`)
+
+> Referências: F9 (Guia com câmara + sugestões)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `numero` | TEXT | ✅ | auto | Sequencial: GT-0001, GT-0002... |
+| `patient_id` | FK → `patients` | ✅ | — | — |
+| `plan_id` | FK → `treatment_plans` | ❌ | NULL | — |
+| `phase_id` | FK → `phases` | ❌ | NULL | — |
+| `appointment_id` | FK → `appointments` | ❌ | NULL | — |
+| `clinica_id` | FK → `clinics` | ✅ | — | Destinatário |
+| `data_envio` | TIMESTAMP | ✅ | auto (agora) | — |
+| `notas` | TEXT | ❌ | NULL | — |
+| `enviada_wa` | BOOLEAN | ✅ | false | — |
+| `enviada_wa_em` | TIMESTAMP | ❌ | NULL | — |
+| `impressa` | BOOLEAN | ✅ | false | — |
+| `pdf_path_nas` | TEXT | ❌ | NULL | Path do PDF na NAS |
+| `criado_por` | FK → `users` | ✅ | auto | — |
+
+**Tabela auxiliar: `transport_guide_items`** (itens enviados)
+
+| Campo | Tipo | Obrig. | Notas |
+|-------|------|--------|-------|
+| `id` | UUID | PK | auto |
+| `guide_id` | FK → `transport_guides` | ✅ | — |
+| `item_id` | FK → `guide_items` | ❌ | Referência ao catálogo (se existir) |
+| `descricao` | TEXT | ✅ | Nome do item |
+| `quantidade` | INTEGER | ✅ | 1 |
+
+**Tabela auxiliar: `transport_guide_photos`** (fotos do envio)
+
+| Campo | Tipo | Obrig. | Notas |
+|-------|------|--------|-------|
+| `id` | UUID | PK | auto |
+| `guide_id` | FK → `transport_guides` | ✅ | — |
+| `file_id` | FK → `files` | ✅ | Referência ao ficheiro na NAS |
+| `ordem` | INTEGER | ✅ | Ordem das fotos |
+
+---
+
+### 5.10 — Guia de Recepção (`reception_guides`)
+
+> Referências: F9 (Guia de recepção, 2 cenários), F5 (@recolhido)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `numero` | TEXT | ✅ | auto | Sequencial: GR-0001, GR-0002... |
+| `patient_id` | FK → `patients` | ❌ | NULL | NULL se recepção avulsa (paciente não existe) |
+| `plan_id` | FK → `treatment_plans` | ❌ | NULL | — |
+| `phase_id` | FK → `phases` | ❌ | NULL | — |
+| `appointment_id` | FK → `appointments` | ❌ | NULL | — |
+| `clinica_id` | FK → `clinics` | ❌ | NULL | — |
+| `nome_avulso` | TEXT | ❌ | NULL | Se paciente não existe: nome livre |
+| `cenario` | ENUM | ✅ | — | `pos_recolhido` \| `entrega_directa` |
+| `estado_material` | ENUM | ✅ | 'ok' | `ok` \| `danificado` \| `incompleto` |
+| `notas` | TEXT | ❌ | NULL | — |
+| `enviada_wa` | BOOLEAN | ✅ | false | — |
+| `impressa` | BOOLEAN | ✅ | false | — |
+| `pdf_path_nas` | TEXT | ❌ | NULL | — |
+| `criado_por` | FK → `users` | ✅ | auto | — |
+
+> Tabelas auxiliares de itens e fotos: mesma estrutura que a guia de transporte.
+
+---
+
+### 5.11 — Catálogo de Itens de Guia (`guide_items`)
+
+> Referências: F9 (Sugestões por contagem de frequência)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `nome` | TEXT | ✅ | — | Ex: "Prova de estrutura", "Modelo antagonista" |
+| `activo` | BOOLEAN | ✅ | true | — |
+
+**Tabela auxiliar: `guide_item_frequency`** (contagens para sugestões)
+
+| Campo | Tipo | Obrig. | Notas |
+|-------|------|--------|-------|
+| `id` | UUID | PK | auto |
+| `item_id` | FK → `guide_items` | ✅ | — |
+| `clinica_id` | FK → `clinics` | ✅ | — |
+| `medico_id` | FK → `users` | ❌ | NULL = qualquer médico desta clínica |
+| `tipo_trabalho_id` | FK → `work_types` | ❌ | NULL = qualquer tipo |
+| `tipo_agendamento` | ENUM | ❌ | NULL = qualquer tipo |
+| `contagem` | INTEGER | ✅ | 0 | Vezes que este item foi usado nesta combinação |
+| `total_guias` | INTEGER | ✅ | 0 | Total de guias nesta combinação |
+
+> `percentagem = contagem / total_guias × 100`. ≥80% → pré-seleccionado, ≥50% → sugerido, <50% → oculto.
+
+---
+
+### 5.12 — Factura (`invoices`)
+
+> Referências: F9 (Facturação por fase, TOConline)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `numero` | TEXT | ✅ | — | Ex: "F-2026-0042" |
+| `phase_id` | FK → `phases` | ✅ | — | Fatura é **por fase** |
+| `plan_id` | FK → `treatment_plans` | ✅ | — | Para referência rápida |
+| `patient_id` | FK → `patients` | ✅ | — | Para referência rápida |
+| `clinica_id` | FK → `clinics` | ✅ | — | Cliente da factura |
+| `valor_total` | DECIMAL(10,2) | ✅ | — | — |
+| `iva` | DECIMAL(5,2) | ✅ | — | Percentagem de IVA |
+| `valor_com_iva` | DECIMAL(10,2) | ✅ | — | — |
+| `estado` | ENUM | ✅ | 'emitida' | `rascunho` \| `emitida` \| `paga` \| `anulada` |
+| `toconline_id` | TEXT | ❌ | NULL | ID no TOConline (se criada via API) |
+| `toconline_sync` | BOOLEAN | ✅ | false | Se está sincronizada com TOConline |
+| `pdf_path_nas` | TEXT | ❌ | NULL | Path do PDF na NAS |
+| `data_emissao` | DATE | ✅ | auto (hoje) | — |
+| `data_vencimento` | DATE | ❌ | NULL | — |
+| `criado_por` | FK → `users` | ✅ | auto | — |
+
+**Tabela auxiliar: `invoice_items`** (linhas da factura)
+
+| Campo | Tipo | Obrig. | Notas |
+|-------|------|--------|-------|
+| `id` | UUID | PK | auto |
+| `invoice_id` | FK → `invoices` | ✅ | — |
+| `descricao` | TEXT | ✅ | Descrição do item |
+| `quantidade` | INTEGER | ✅ | — |
+| `preco_unitario` | DECIMAL(10,2) | ✅ | — |
+| `iva` | DECIMAL(5,2) | ✅ | — |
+| `total` | DECIMAL(10,2) | ✅ | — |
+
+---
+
+### 5.13 — Recibo (`receipts`)
+
+> Referências: F9 (Billing)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `numero` | TEXT | ✅ | — | Ex: "R-2026-0042" |
+| `invoice_id` | FK → `invoices` | ✅ | — | Associado à factura |
+| `valor` | DECIMAL(10,2) | ✅ | — | — |
+| `metodo_pagamento` | TEXT | ❌ | NULL | — |
+| `toconline_id` | TEXT | ❌ | NULL | — |
+| `pdf_path_nas` | TEXT | ❌ | NULL | — |
+| `data_emissao` | DATE | ✅ | auto | — |
+| `criado_por` | FK → `users` | ✅ | auto | — |
+
+---
+
+### 5.14 — Outros Documentos (`documents`)
+
+> Referências: F9 (Bloco Documentação — só lab)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `patient_id` | FK → `patients` | ✅ | — | — |
+| `plan_id` | FK → `treatment_plans` | ❌ | NULL | — |
+| `titulo` | TEXT | ✅ | — | — |
+| `tipo` | ENUM | ✅ | — | `encomenda` \| `digitalizacao` \| `outro` |
+| `file_id` | FK → `files` | ✅ | — | Referência ao ficheiro na NAS |
+| `notas` | TEXT | ❌ | NULL | — |
+| `criado_por` | FK → `users` | ✅ | auto | — |
+
+---
+
+### 5.15 — Notificação (`notifications`)
+
+> Referências: F8 (Avisos e Notificações)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `user_id` | FK → `users` | ✅ | — | Destinatário |
+| `tipo` | ENUM | ✅ | — | `pedido` \| `agendamento` \| `nota` \| `material` \| `fase` \| `plano` \| `sistema` |
+| `titulo` | TEXT | ✅ | — | Texto curto (ex: "Novo pedido: João Silva") |
+| `corpo` | TEXT | ❌ | NULL | Detalhe |
+| `link` | TEXT | ❌ | NULL | URL para navegar na app (ex: `/pacientes/T-0042`) |
+| `lida` | BOOLEAN | ✅ | false | — |
+| `lida_em` | TIMESTAMP | ❌ | NULL | — |
+| `push_enviada` | BOOLEAN | ✅ | false | — |
+| `email_enviado` | BOOLEAN | ✅ | false | — |
+
+---
+
+### 5.16 — Material e Componentes (`materials`)
+
+> Referências: F9 (Relatório de plano/fase com materiais)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `nome` | TEXT | ✅ | — | Ex: "Zircónia Katana UTML" |
+| `categoria` | ENUM | ✅ | — | `material` \| `componente` \| `dente` \| `parafuso` \| `cimento` \| `outro` |
+| `marca` | TEXT | ❌ | NULL | Ex: "Ivoclar", "3M" |
+| `referencia` | TEXT | ❌ | NULL | Código de referência |
+| `activo` | BOOLEAN | ✅ | true | — |
+
+**Tabela auxiliar: `phase_materials`** (materiais usados por fase)
+
+| Campo | Tipo | Obrig. | Notas |
+|-------|------|--------|-------|
+| `id` | UUID | PK | auto |
+| `phase_id` | FK → `phases` | ✅ | — |
+| `material_id` | FK → `materials` | ✅ | — |
+| `quantidade` | TEXT | ❌ | Ex: "1 bloco A2-HT" |
+| `dentes` | TEXT | ❌ | Ex: "14—24", "46" |
+| `notas` | TEXT | ❌ | Ex: "Cor confirmada pelo médico" |
+
+---
+
+### 5.17 — Logística / Caixa (`boxes`)
+
+> Referências: F3 (Caixa associada ao agendamento)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `appointment_id` | FK → `appointments` | ✅ | — | — |
+| `notas` | TEXT | ❌ | NULL | — |
+
+**Tabela auxiliar: `box_items`** (itens na caixa)
+
+| Campo | Tipo | Obrig. | Notas |
+|-------|------|--------|-------|
+| `id` | UUID | PK | auto |
+| `box_id` | FK → `boxes` | ✅ | — |
+| `descricao` | TEXT | ✅ | Nome do item |
+| `quantidade` | INTEGER | ✅ | 1 |
+| `estado` | ENUM | ✅ | `na_caixa` \| `entregue` \| `devolvido` |
+
+---
+
+### 5.18 — Template de Mensagem (`message_templates`)
+
+> Referências: F5 (Templates configuráveis pelo admin)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `comando` | TEXT | ✅ | — | Ex: "@criarpaciente", "@entregue", "notif_material" |
+| `nome` | TEXT | ✅ | — | Nome legível: "Criação de paciente" |
+| `template` | TEXT | ✅ | — | Template com variáveis: `{paciente}`, `{clinica}`, `{plano}` |
+| `variaveis` | JSONB | ✅ | — | Lista de variáveis disponíveis + descrições |
+| `activo` | BOOLEAN | ✅ | true | — |
+| `editado_por` | FK → `users` | ❌ | NULL | Último admin que editou |
+
+---
+
+### 5.19 — Relatório Semanal Log (`weekly_report_logs`)
+
+> Referências: F8 (Relatório semanal obrigatório, reenvio na ficha)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `clinica_id` | FK → `clinics` | ❌ | NULL | Se enviado para clínica |
+| `medico_id` | FK → `users` | ❌ | NULL | Se enviado para médico |
+| `tipo_envio` | ENUM | ✅ | 'auto' | `auto` \| `reenvio` \| `novo` |
+| `canal` | ENUM | ✅ | — | `email` \| `whatsapp` \| `ambos` |
+| `data_envio` | TIMESTAMP | ✅ | auto | — |
+| `enviado_por` | FK → `users` | ❌ | NULL | NULL = sistema (auto) |
+| `resumo_json` | JSONB | ✅ | — | Dados do relatório (para analytics, não gera PDF) |
+
+> PDF gerado on-the-fly quando preciso, a partir do `resumo_json`. Zero armazenamento no Supabase.
+
+---
+
+### 5.20 — Ajuda Integrada (`help_contents`)
+
+> Referências: 4.17 (Sistema de Ajuda Integrado)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `pagina_key` | TEXT | ✅ | — | Identificador único: `paciente_ficha`, `guia_transporte`, `login` |
+| `titulo` | TEXT | ✅ | — | Título da ajuda |
+| `conteudo` | TEXT | ✅ | — | Texto explicativo (markdown) |
+| `video_path_nas` | TEXT | ❌ | NULL | Path na NAS: `/asymlab/ajuda/modulo/pagina.webm` |
+| `video_duracao` | INTEGER | ❌ | NULL | Duração em segundos |
+| `links_relacionados` | JSONB | ❌ | NULL | Links para outras ajudas |
+| `ultima_gravacao_qa` | TIMESTAMP | ❌ | NULL | Quando o vídeo foi gravado nos testes QA |
+
+---
+
+### 5.21 — Log de Auditoria (`audit_logs`)
+
+> Referências: F8 (Logs de envio), F9 (Facturas), F7 (Merge)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `user_id` | FK → `users` | ✅ | — | Quem fez a acção |
+| `accao` | TEXT | ✅ | — | Ex: "criar_paciente", "fechar_fase_sem_factura", "merge" |
+| `entidade` | TEXT | ✅ | — | Nome da tabela afectada |
+| `entidade_id` | UUID | ✅ | — | ID do registo afectado |
+| `dados_antes` | JSONB | ❌ | NULL | Estado antes da alteração |
+| `dados_depois` | JSONB | ❌ | NULL | Estado depois da alteração |
+| `ip` | TEXT | ❌ | NULL | IP do utilizador |
+| `user_agent` | TEXT | ❌ | NULL | Browser/dispositivo |
+
+---
+
+### 5.22 — Configurações do Sistema (`system_settings`)
+
+> Referências: F5 (Anti-spam), F8 (Relatório semanal), F9 (TOConline)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `key` | TEXT | PK | — | Identificador único |
+| `value` | JSONB | ✅ | — | Valor da configuração |
+| `updated_by` | FK → `users` | ✅ | — | Último admin que editou |
+
+**Chaves pré-definidas:**
+
+| Key | Valor Default | Descrição |
+|-----|--------------|-----------|
+| `wa_antispam_intervalo_min` | `5` | Segundos mínimos entre mensagens WA |
+| `wa_antispam_limite_diario` | `200` | Máximo de mensagens WA por dia |
+| `wa_horario_inicio` | `"08:00"` | Início do horário de envio WA |
+| `wa_horario_fim` | `"20:00"` | Fim do horário de envio WA |
+| `relatorio_semanal_dia` | `"monday"` | Dia de envio do relatório |
+| `relatorio_semanal_hora` | `"08:00"` | Hora de envio |
+| `toconline_api_key` | `null` | Chave API do TOConline |
+| `toconline_activo` | `false` | Se a integração está activa |
+| `canal_comunicacao` | `"whatsapp"` | `whatsapp` \| `email` \| `ambos` |
+| `sugestao_threshold_pre` | `80` | % para pré-seleccionar itens nas guias |
+| `sugestao_threshold_mostrar` | `50` | % mínimo para mostrar sugestão |
+
+---
+
+### 5.23 — Diagrama de Relações (ER simplificado)
+
+```
+patients (T-xxxx)
+  ├─ 1:N → treatment_plans
+  │         ├─ 1:N → phases
+  │         │         ├─ 1:N → appointments
+  │         │         │         ├─ 1:1 → boxes → box_items
+  │         │         │         └─ N:N → transport/reception_guides
+  │         │         ├─ 1:N → considerations → consideration_attachments → files
+  │         │         ├─ 1:N → invoices → invoice_items
+  │         │         └─ N:N → phase_materials → materials
+  │         └─ 1:N → documents → files
+  ├─ 1:1 → wa_groups → wa_group_members → users
+  ├─ N:N → patient_doctors → users
+  └─ 1:N → files
+
+users
+  ├─ pertence a → clinics
+  ├─ recebe → notifications
+  └─ gera → audit_logs
+
+requests (fila de pedidos)
+  └─ referencia → patients, plans, phases, appointments
+
+system_settings (configurações globais)
+message_templates (templates WA)
+guide_items → guide_item_frequency (sugestões)
+help_contents (ajuda integrada + vídeos QA)
+weekly_report_logs (logs relatórios semanais)
+```
+
+---
+
+### 5.24 — Tabelas Resumo
+
+| # | Tabela | Tipo | Registos esperados |
+|---|--------|------|-------------------|
+| 1 | `patients` | Core | Milhares |
+| 2 | `treatment_plans` | Core | Milhares |
+| 3 | `phases` | Core | Milhares |
+| 4 | `appointments` | Core | Milhares |
+| 5 | `considerations` | Core | Dezenas de milhar |
+| 6 | `files` | Core | Dezenas de milhar |
+| 7 | `requests` | Core | Milhares |
+| 8 | `wa_groups` | Core | Milhares |
+| 9 | `transport_guides` | Documentação | Milhares |
+| 10 | `reception_guides` | Documentação | Milhares |
+| 11 | `invoices` | Billing | Milhares |
+| 12 | `receipts` | Billing | Milhares |
+| 13 | `documents` | Documentação | Centenas |
+| 14 | `notifications` | UX | Dezenas de milhar |
+| 15 | `materials` | Catálogo | Centenas |
+| 16 | `boxes` | Logística | Milhares |
+| 17 | `message_templates` | Config | Dezenas |
+| 18 | `guide_items` | Catálogo | Dezenas |
+| 19 | `help_contents` | Ajuda | Dezenas |
+| 20 | `weekly_report_logs` | Logs | Milhares |
+| 21 | `audit_logs` | Logs | Dezenas de milhar |
+| 22 | `system_settings` | Config | Dezenas |
+| — | *Tabelas auxiliares (N:N)* | Relações | — |
+
+> Total: **22 tabelas principais + ~8 tabelas auxiliares (N:N e itens)** ≈ **30 tabelas**.
 
 ---
 
