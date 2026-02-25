@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { patientsService, PatientFullDetails } from '@/services/patientsService';
+import NewPlanModal from '@/components/patients/NewPlanModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -48,10 +49,30 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const [patient, setPatient] = useState(initialData);
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [showNewPlan, setShowNewPlan] = useState(false);
+    const [clinics, setClinics] = useState<{ id: string; commercial_name: string }[]>([]);
+    const [doctors, setDoctors] = useState<{ user_id: string; full_name: string }[]>([]);
     const router = useRouter();
     const { isAdmin, isReadOnly: checkReadOnly } = useAuth();
     const readOnly = checkReadOnly('patients');
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Carregar dropdowns
+    useEffect(() => {
+        async function loadDropdowns() {
+            try {
+                const [cls, docs] = await Promise.all([
+                    patientsService.getClinics(),
+                    patientsService.getDoctors(),
+                ]);
+                setClinics(cls);
+                setDoctors(docs);
+            } catch (err) {
+                console.error('Erro ao carregar dropdowns:', err);
+            }
+        }
+        loadDropdowns();
+    }, []);
 
     // Auto-save com debounce
     const autoSave = useCallback(async (field: string, value: unknown) => {
@@ -179,17 +200,60 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     </div>
                 </div>
 
-                {/* Info secundária */}
-                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                    {patient.clinica && (
-                        <span>Clínica: <strong>{patient.clinica.commercial_name}</strong></span>
-                    )}
-                    {patient.medico && (
-                        <span>Dr. <strong>{patient.medico.full_name}</strong></span>
-                    )}
-                    {patient.id_paciente_clinica && (
-                        <span>ID Clínica: <strong>{patient.id_paciente_clinica}</strong></span>
-                    )}
+                {/* Info secundária — dropdowns editáveis */}
+                <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-gray-400">Clínica:</span>
+                        <select
+                            value={patient.clinica_id || ''}
+                            onChange={(e) => {
+                                const sel = clinics.find(c => c.id === e.target.value);
+                                setPatient(prev => ({
+                                    ...prev,
+                                    clinica_id: e.target.value,
+                                    clinica: sel ? { id: sel.id, commercial_name: sel.commercial_name } : prev.clinica,
+                                }));
+                                autoSave('clinica_id', e.target.value);
+                            }}
+                            disabled={readOnly}
+                            className="h-6 text-xs font-medium border border-gray-200 rounded px-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-primary/30"
+                        >
+                            {clinics.map(c => (
+                                <option key={c.id} value={c.id}>{c.commercial_name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-gray-400">Médico:</span>
+                        <select
+                            value={patient.medico_principal_id || ''}
+                            onChange={(e) => {
+                                const sel = doctors.find(d => d.user_id === e.target.value);
+                                setPatient(prev => ({
+                                    ...prev,
+                                    medico_principal_id: e.target.value,
+                                    medico: sel ? { user_id: sel.user_id, full_name: sel.full_name } : prev.medico,
+                                }));
+                                autoSave('medico_principal_id', e.target.value);
+                            }}
+                            disabled={readOnly}
+                            className="h-6 text-xs font-medium border border-gray-200 rounded px-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-primary/30"
+                        >
+                            {doctors.map(d => (
+                                <option key={d.user_id} value={d.user_id}>Dr. {d.full_name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-gray-400">ID Clínica:</span>
+                        <input
+                            value={patient.id_paciente_clinica || ''}
+                            onChange={(e) => handleFieldChange('id_paciente_clinica', e.target.value)}
+                            placeholder="—"
+                            disabled={readOnly}
+                            className="h-6 w-20 text-xs font-medium border border-gray-200 rounded px-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-primary/30"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -241,7 +305,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                     size="sm"
                                     variant="outline"
                                     className="h-7 text-xs gap-1.5"
-                                    onClick={() => {/* TODO: modal novo plano */ }}
+                                    onClick={() => setShowNewPlan(true)}
                                 >
                                     <Plus className="h-3 w-3" />
                                     Novo Plano
@@ -379,6 +443,26 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     </div>
                 </TabsContent>
             </Tabs>
+
+            {/* Modal Novo Plano */}
+            {showNewPlan && (
+                <NewPlanModal
+                    patientId={patient.id}
+                    patientClinicaId={patient.clinica_id}
+                    patientMedicoId={patient.medico_principal_id}
+                    onClose={() => setShowNewPlan(false)}
+                    onCreated={async () => {
+                        setShowNewPlan(false);
+                        // Reload patient data to show new plan
+                        try {
+                            const updated = await patientsService.getPatientDetails(patient.id);
+                            if (updated) setPatient(updated);
+                        } catch (err) {
+                            console.error('Erro ao recarregar:', err);
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 }
