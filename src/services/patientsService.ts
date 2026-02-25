@@ -205,7 +205,7 @@ export const patientsService = {
         const { data: phase, error } = await supabase
             .from('phases')
             .insert({
-                treatment_plan_id: data.treatment_plan_id,
+                plan_id: data.treatment_plan_id,
                 nome: data.nome,
                 ordem: data.ordem,
                 notas: data.notas || null,
@@ -277,46 +277,66 @@ export const patientsService = {
 
     // 16. Listar considerações de um paciente (com filtro por fase opcional)
     async getConsiderations(patientId: string, phaseId?: string) {
-        let query = supabase
+        // Considerations liga-se via phase_id, não tem patient_id directo
+        if (phaseId) {
+            // Filtro directo numa fase
+            const { data, error } = await supabase
+                .from('considerations')
+                .select(`
+                    *,
+                    autor:user_profiles!considerations_autor_id_fkey(user_id, full_name, app_role)
+                `)
+                .eq('phase_id', phaseId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        }
+
+        // Buscar todas as fases do paciente via planos
+        const { data: plans } = await supabase
+            .from('treatment_plans')
+            .select('id')
+            .eq('patient_id', patientId);
+
+        if (!plans || plans.length === 0) return [];
+
+        const { data: phases } = await supabase
+            .from('phases')
+            .select('id')
+            .in('plan_id', plans.map(p => p.id));
+
+        if (!phases || phases.length === 0) return [];
+
+        const { data, error } = await supabase
             .from('considerations')
             .select(`
                 *,
-                autor:user_profiles!considerations_autor_id_fkey(user_id, full_name, app_role),
-                appointment:appointments!considerations_appointment_id_fkey(
-                    id,
-                    phase:phases!appointments_phase_id_fkey(id, nome, treatment_plan_id)
-                )
+                autor:user_profiles!considerations_autor_id_fkey(user_id, full_name, app_role)
             `)
-            .eq('patient_id', patientId)
+            .in('phase_id', phases.map(p => p.id))
             .order('created_at', { ascending: false });
 
-        if (phaseId) {
-            query = query.eq('phase_id', phaseId);
-        }
-
-        const { data, error } = await query;
         if (error) throw error;
         return data || [];
     },
 
     // 17. Criar consideração
     async createConsideration(data: {
-        patient_id: string;
+        phase_id: string;
         appointment_id?: string;
-        phase_id?: string;
-        tipo: string;
+        lado: string;
         conteudo: string;
     }) {
         const { data: { user } } = await supabase.auth.getUser();
         const { data: consideration, error } = await supabase
             .from('considerations')
             .insert({
-                patient_id: data.patient_id,
                 appointment_id: data.appointment_id || null,
-                phase_id: data.phase_id || null,
-                tipo: data.tipo,
+                phase_id: data.phase_id,
+                lado: data.lado,
                 conteudo: data.conteudo,
-                autor_id: user?.id || null,
+                autor_id: user?.id || '',
                 versao: 1,
             })
             .select('*')
@@ -335,7 +355,6 @@ export const patientsService = {
                 enviado_por:user_profiles!files_enviado_por_fkey(user_id, full_name)
             `)
             .eq('patient_id', patientId)
-            .is('deleted_at', null)
             .order('created_at', { ascending: false });
 
         if (error) throw error;

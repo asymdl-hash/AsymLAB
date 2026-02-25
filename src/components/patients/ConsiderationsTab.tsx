@@ -75,11 +75,15 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
         try {
             setSubmitting(true);
             setError('');
+            if (!newPhaseId) {
+                setError('Selecione uma fase.');
+                setSubmitting(false);
+                return;
+            }
             await patientsService.createConsideration({
-                patient_id: patientId,
-                tipo: newTipo,
+                phase_id: newPhaseId,
+                lado: newTipo,
                 conteudo: newConteudo.trim(),
-                phase_id: newPhaseId || undefined,
             });
             setNewConteudo('');
             setNewPhaseId('');
@@ -208,15 +212,15 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                 <div className="space-y-3">
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {considerations.map((c: any) => {
-                        const tipoConfig = TIPO_CONFIG[c.tipo] || TIPO_CONFIG.lab;
+                        const tipoConfig = TIPO_CONFIG[c.lado] || TIPO_CONFIG.lab;
                         const TipoIcon = tipoConfig.icon;
                         const timeAgo = getTimeAgo(c.created_at);
 
                         return (
                             <div key={c.id}
-                                className={`border rounded-xl p-4 transition-colors ${c.tipo === 'lab'
-                                        ? 'border-blue-100 bg-blue-50/30'
-                                        : 'border-orange-100 bg-orange-50/30'
+                                className={`border rounded-xl p-4 transition-colors ${c.lado === 'lab'
+                                    ? 'border-blue-100 bg-blue-50/30'
+                                    : 'border-orange-100 bg-orange-50/30'
                                     }`}>
                                 {/* Header */}
                                 <div className="flex items-center justify-between mb-2">
