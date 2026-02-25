@@ -328,7 +328,8 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                 return (
                                     <div
                                         key={plan.id}
-                                        className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-all bg-white"
+                                        className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-all bg-white cursor-pointer hover:shadow-sm"
+                                        onClick={() => router.push(`/dashboard/patients/${patient.id}/plans/${plan.id}`)}
                                     >
                                         {/* Cabeçalho do plano */}
                                         <div className="flex items-start justify-between gap-3">
@@ -409,6 +410,13 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                                     })}
                                             </div>
                                         )}
+
+                                        {/* Ver detalhes link */}
+                                        <div className="mt-3 pt-2 border-t border-gray-100 text-right">
+                                            <span className="text-xs text-primary font-medium hover:underline">
+                                                Ver detalhes →
+                                            </span>
+                                        </div>
                                     </div>
                                 );
                             })

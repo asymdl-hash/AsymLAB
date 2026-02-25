@@ -1,0 +1,476 @@
+'use client';
+
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+    ArrowLeft,
+    Plus,
+    Calendar,
+    CheckCircle2,
+    Circle,
+    Clock,
+    MoreVertical,
+    ChevronRight,
+    AlertTriangle,
+    XCircle,
+} from 'lucide-react';
+import { patientsService } from '@/services/patientsService';
+import NewPhaseModal from './NewPhaseModal';
+import NewAppointmentModal from './NewAppointmentModal';
+
+// === Config de estados ===
+const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+    rascunho: { label: 'Rascunho', color: 'text-yellow-700', bg: 'bg-yellow-100' },
+    activo: { label: 'Activo', color: 'text-green-700', bg: 'bg-green-100' },
+    concluido: { label: 'Concluído', color: 'text-blue-700', bg: 'bg-blue-100' },
+    cancelado: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-100' },
+};
+
+const PHASE_STATE_CONFIG: Record<string, { label: string; icon: typeof CheckCircle2; color: string }> = {
+    pendente: { label: 'Pendente', icon: Circle, color: 'text-gray-400' },
+    em_curso: { label: 'Em Curso', icon: Clock, color: 'text-amber-500' },
+    concluida: { label: 'Concluída', icon: CheckCircle2, color: 'text-green-500' },
+    cancelada: { label: 'Cancelada', icon: XCircle, color: 'text-red-400' },
+};
+
+const APPOINTMENT_TYPE_CONFIG: Record<string, { label: string; emoji: string }> = {
+    prova: { label: 'Prova', emoji: '🔵' },
+    colocacao: { label: 'Colocação', emoji: '🟣' },
+    reparacao: { label: 'Reparação', emoji: '🔧' },
+    ajuste: { label: 'Ajuste', emoji: '⚙️' },
+    outro: { label: 'Outro', emoji: '📅' },
+};
+
+const APPOINTMENT_STATE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+    agendado: { label: 'Agendado', color: 'text-blue-700', bg: 'bg-blue-100' },
+    concluido: { label: 'Concluído', color: 'text-green-700', bg: 'bg-green-100' },
+    cancelado: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-100' },
+    remarcado: { label: 'Remarcado', color: 'text-orange-700', bg: 'bg-orange-100' },
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface PlanDetailProps { plan: any; patientId: string; onReload: () => void; }
+
+export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProps) {
+    const router = useRouter();
+    const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(
+        plan.phases?.sort((a: { ordem: number }, b: { ordem: number }) => a.ordem - b.ordem)[0]?.id || null
+    );
+    const [showPhaseModal, setShowPhaseModal] = useState(false);
+    const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+    const [showActionsMenu, setShowActionsMenu] = useState(false);
+    const [changingState, setChangingState] = useState(false);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sortedPhases = [...(plan.phases || [])].sort((a: any, b: any) => a.ordem - b.ordem);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const selectedPhase = sortedPhases.find((p: any) => p.id === selectedPhaseId) || null;
+
+    const planState = PLAN_STATE_CONFIG[plan.estado] || PLAN_STATE_CONFIG.rascunho;
+
+    const handleStateChange = useCallback(async (newState: string) => {
+        try {
+            setChangingState(true);
+            await patientsService.updatePlanState(plan.id, newState);
+            setShowActionsMenu(false);
+            onReload();
+        } catch (err) {
+            console.error('Error changing state:', err);
+        } finally {
+            setChangingState(false);
+        }
+    }, [plan.id, onReload]);
+
+    const handlePhaseStateChange = useCallback(async (phaseId: string, newState: string) => {
+        try {
+            await patientsService.updateRecord('phases', phaseId, { estado: newState });
+            onReload();
+        } catch (err) {
+            console.error('Error changing phase state:', err);
+        }
+    }, [onReload]);
+
+    const handleAppointmentStateChange = useCallback(async (appointmentId: string, newState: string) => {
+        try {
+            await patientsService.updateRecord('appointments', appointmentId, { estado: newState });
+            onReload();
+        } catch (err) {
+            console.error('Error changing appointment state:', err);
+        }
+    }, [onReload]);
+
+    const completedPhases = sortedPhases.filter((p: { estado: string }) => p.estado === 'concluida').length;
+    const totalPhases = sortedPhases.length;
+
+    return (
+        <div className="h-full flex flex-col bg-gray-900 text-white overflow-hidden">
+            {/* === HEADER === */}
+            <div className="p-4 md:p-6 border-b border-gray-700 bg-gray-800/50 flex-shrink-0">
+                <div className="flex items-center gap-3 mb-2">
+                    <button
+                        onClick={() => router.push(`/dashboard/patients/${patientId}`)}
+                        className="p-1.5 rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <span className="text-sm text-gray-400">
+                        {plan.patient?.t_id} {plan.patient?.nome}
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-gray-500" />
+                    <h1 className="text-lg font-bold truncate">{plan.nome}</h1>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 ml-9">
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${planState.bg} ${planState.color}`}>
+                        {planState.label}
+                    </span>
+                    {plan.work_type && (
+                        <span className="text-sm text-gray-400 flex items-center gap-1.5">
+                            {plan.work_type.cor && (
+                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: plan.work_type.cor }} />
+                            )}
+                            {plan.work_type.nome}
+                        </span>
+                    )}
+                    {plan.medico && (
+                        <span className="text-sm text-gray-400">· {plan.medico.full_name}</span>
+                    )}
+                    {totalPhases > 0 && (
+                        <span className="text-sm text-gray-400">· {completedPhases}/{totalPhases} fases</span>
+                    )}
+                    {/* Actions menu */}
+                    <div className="relative ml-auto">
+                        <button
+                            onClick={() => setShowActionsMenu(!showActionsMenu)}
+                            className="p-1.5 rounded-lg hover:bg-gray-700 transition-colors"
+                        >
+                            <MoreVertical className="w-5 h-5" />
+                        </button>
+                        {showActionsMenu && (
+                            <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
+                                {plan.estado !== 'activo' && (
+                                    <button onClick={() => handleStateChange('activo')} disabled={changingState}
+                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-green-400">
+                                        ✅ Marcar como Activo
+                                    </button>
+                                )}
+                                {plan.estado !== 'concluido' && (
+                                    <button onClick={() => handleStateChange('concluido')} disabled={changingState}
+                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-blue-400">
+                                        ☑️ Concluir Plano
+                                    </button>
+                                )}
+                                {plan.estado !== 'cancelado' && (
+                                    <button onClick={() => handleStateChange('cancelado')} disabled={changingState}
+                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-red-400">
+                                        ❌ Cancelar Plano
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* === BODY: Timeline + Detail === */}
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                {/* LEFT: Timeline de fases */}
+                <div className="md:w-[280px] lg:w-[320px] border-r border-gray-700 overflow-y-auto flex-shrink-0 bg-gray-800/30">
+                    {/* Mobile: horizontal chips */}
+                    <div className="md:hidden flex gap-2 p-3 overflow-x-auto">
+                        {sortedPhases.map((phase: { id: string; nome: string; estado: string }) => {
+                            const s = PHASE_STATE_CONFIG[phase.estado] || PHASE_STATE_CONFIG.pendente;
+                            const Icon = s.icon;
+                            return (
+                                <button key={phase.id}
+                                    onClick={() => setSelectedPhaseId(phase.id)}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors
+                                        ${selectedPhaseId === phase.id ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500' : 'bg-gray-700 text-gray-300'}`}>
+                                    <Icon className={`w-3.5 h-3.5 ${s.color}`} />
+                                    {phase.nome}
+                                </button>
+                            );
+                        })}
+                        <button onClick={() => setShowPhaseModal(true)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm whitespace-nowrap bg-gray-700 text-gray-400 hover:text-amber-400 transition-colors">
+                            <Plus className="w-3.5 h-3.5" /> Fase
+                        </button>
+                    </div>
+
+                    {/* Desktop: vertical timeline */}
+                    <div className="hidden md:block p-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Fases</h2>
+                            <button onClick={() => setShowPhaseModal(true)}
+                                className="p-1 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-amber-400 transition-colors">
+                                <Plus className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="relative">
+                            {/* Vertical line */}
+                            {sortedPhases.length > 1 && (
+                                <div className="absolute left-[15px] top-[20px] bottom-[20px] w-0.5 bg-gray-700" />
+                            )}
+                            <div className="space-y-1">
+                                {sortedPhases.map((phase: { id: string; nome: string; estado: string; ordem: number }) => {
+                                    const s = PHASE_STATE_CONFIG[phase.estado] || PHASE_STATE_CONFIG.pendente;
+                                    const Icon = s.icon;
+                                    const isSelected = selectedPhaseId === phase.id;
+                                    return (
+                                        <button key={phase.id}
+                                            onClick={() => setSelectedPhaseId(phase.id)}
+                                            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left relative
+                                                ${isSelected ? 'bg-gray-700/70 ring-1 ring-amber-500/40' : 'hover:bg-gray-700/40'}`}>
+                                            <div className="relative z-10 flex-shrink-0">
+                                                <Icon className={`w-[30px] h-[30px] ${s.color}`} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`text-sm font-medium truncate ${isSelected ? 'text-white' : 'text-gray-300'}`}>
+                                                    F{phase.ordem} · {phase.nome}
+                                                </p>
+                                                <p className="text-xs text-gray-500">{s.label}</p>
+                                            </div>
+                                            {isSelected && (
+                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        {sortedPhases.length === 0 && (
+                            <p className="text-sm text-gray-500 text-center py-8">Sem fases. Clique + para criar.</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* RIGHT: Detalhe da fase */}
+                <div className="flex-1 overflow-y-auto p-4 md:p-6">
+                    {selectedPhase ? (
+                        <PhaseDetail
+                            phase={selectedPhase}
+                            onReload={onReload}
+                            onAddAppointment={() => setShowAppointmentModal(true)}
+                            onStateChange={handlePhaseStateChange}
+                            onAppointmentStateChange={handleAppointmentStateChange}
+                        />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                            <Calendar className="w-12 h-12 mb-3 text-gray-600" />
+                            <p className="text-lg font-medium">Nenhuma fase seleccionada</p>
+                            <p className="text-sm mt-1">Crie a primeira fase para começar.</p>
+                            <button onClick={() => setShowPhaseModal(true)}
+                                className="mt-4 px-4 py-2 rounded-lg bg-amber-500 text-black font-medium hover:bg-amber-400 transition-colors flex items-center gap-2">
+                                <Plus className="w-4 h-4" /> Nova Fase
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Modals */}
+            {showPhaseModal && (
+                <NewPhaseModal
+                    planId={plan.id}
+                    currentPhaseCount={sortedPhases.length}
+                    onClose={() => setShowPhaseModal(false)}
+                    onCreated={() => { setShowPhaseModal(false); onReload(); }}
+                />
+            )}
+            {showAppointmentModal && selectedPhaseId && (
+                <NewAppointmentModal
+                    phaseId={selectedPhaseId}
+                    onClose={() => setShowAppointmentModal(false)}
+                    onCreated={() => { setShowAppointmentModal(false); onReload(); }}
+                />
+            )}
+        </div>
+    );
+}
+
+// === Sub-componente: Detalhe da Fase ===
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppointmentStateChange }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    phase: any;
+    onReload: () => void;
+    onAddAppointment: () => void;
+    onStateChange: (phaseId: string, newState: string) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onAppointmentStateChange: (appointmentId: string, newState: string) => void;
+}) {
+    const [showPhaseMenu, setShowPhaseMenu] = useState(false);
+    const phaseState = PHASE_STATE_CONFIG[phase.estado] || PHASE_STATE_CONFIG.pendente;
+    const PhaseIcon = phaseState.icon;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const appointments = phase.appointments || [];
+
+    // Suppress unused var lint
+    void onReload;
+
+    return (
+        <div>
+            {/* Phase header */}
+            <div className="flex items-start justify-between mb-6">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <PhaseIcon className={`w-5 h-5 ${phaseState.color}`} />
+                        <h2 className="text-xl font-bold">F{phase.ordem} · {phase.nome}</h2>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${phase.estado === 'concluida' ? 'bg-green-900/40 text-green-400' :
+                                phase.estado === 'em_curso' ? 'bg-amber-900/40 text-amber-400' :
+                                    phase.estado === 'cancelada' ? 'bg-red-900/40 text-red-400' :
+                                        'bg-gray-700 text-gray-400'
+                            }`}>
+                            {phaseState.label}
+                        </span>
+                        <span>· {appointments.length} agendamento{appointments.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    {phase.notas && (
+                        <p className="mt-2 text-sm text-gray-400 italic">{phase.notas}</p>
+                    )}
+                </div>
+                <div className="relative">
+                    <button onClick={() => setShowPhaseMenu(!showPhaseMenu)}
+                        className="p-1.5 rounded-lg hover:bg-gray-700 transition-colors">
+                        <MoreVertical className="w-4 h-4 text-gray-400" />
+                    </button>
+                    {showPhaseMenu && (
+                        <div className="absolute right-0 top-full mt-1 w-44 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
+                            {phase.estado !== 'em_curso' && (
+                                <button onClick={() => { onStateChange(phase.id, 'em_curso'); setShowPhaseMenu(false); }}
+                                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-amber-400">
+                                    🔄 Em Curso
+                                </button>
+                            )}
+                            {phase.estado !== 'concluida' && (
+                                <button onClick={() => { onStateChange(phase.id, 'concluida'); setShowPhaseMenu(false); }}
+                                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-green-400">
+                                    ✅ Concluída
+                                </button>
+                            )}
+                            {phase.estado !== 'cancelada' && (
+                                <button onClick={() => { onStateChange(phase.id, 'cancelada'); setShowPhaseMenu(false); }}
+                                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-red-400">
+                                    ❌ Cancelada
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Agendamentos */}
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Agendamentos</h3>
+                    <button onClick={onAddAppointment}
+                        className="text-sm text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1">
+                        <Plus className="w-3.5 h-3.5" /> Novo
+                    </button>
+                </div>
+
+                {appointments.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 border border-dashed border-gray-700 rounded-lg">
+                        <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-600" />
+                        <p className="text-sm">Nenhum agendamento</p>
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {appointments.map((appt: any) => {
+                            const typeConfig = APPOINTMENT_TYPE_CONFIG[appt.tipo] || APPOINTMENT_TYPE_CONFIG.outro;
+                            const stateConfig = APPOINTMENT_STATE_CONFIG[appt.estado] || APPOINTMENT_STATE_CONFIG.agendado;
+                            return (
+                                <AppointmentCard
+                                    key={appt.id}
+                                    appointment={appt}
+                                    typeConfig={typeConfig}
+                                    stateConfig={stateConfig}
+                                    onStateChange={onAppointmentStateChange}
+                                />
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
+            {/* Placeholder for materiais */}
+            {phase.notas && (
+                <div className="border border-gray-700 rounded-lg p-4">
+                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Notas da Fase</h3>
+                    <p className="text-sm text-gray-300">{phase.notas}</p>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// === Sub-componente: Card de Agendamento ===
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    appointment: any;
+    typeConfig: { label: string; emoji: string };
+    stateConfig: { label: string; color: string; bg: string };
+    onStateChange: (id: string, state: string) => void;
+}) {
+    const [showMenu, setShowMenu] = useState(false);
+
+    return (
+        <div className="bg-gray-800/60 border border-gray-700 rounded-lg p-3 hover:border-gray-600 transition-colors">
+            <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                    <span className="text-lg">{typeConfig.emoji}</span>
+                    <div>
+                        <p className="text-sm font-medium">{typeConfig.label}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${stateConfig.bg} ${stateConfig.color}`}>
+                                {stateConfig.label}
+                            </span>
+                            {appointment.agendada_para && (
+                                <span className="text-xs text-gray-400 flex items-center gap-1">
+                                    <Calendar className="w-3 h-3" />
+                                    {new Date(appointment.agendada_para).toLocaleDateString('pt-PT')}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+                <div className="relative">
+                    <button onClick={() => setShowMenu(!showMenu)}
+                        className="p-1 rounded hover:bg-gray-700 transition-colors">
+                        <MoreVertical className="w-3.5 h-3.5 text-gray-500" />
+                    </button>
+                    {showMenu && (
+                        <div className="absolute right-0 top-full mt-1 w-40 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
+                            {appointment.estado !== 'concluido' && (
+                                <button onClick={() => { onStateChange(appointment.id, 'concluido'); setShowMenu(false); }}
+                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-green-400">
+                                    ✅ Concluído
+                                </button>
+                            )}
+                            {appointment.estado !== 'remarcado' && (
+                                <button onClick={() => { onStateChange(appointment.id, 'remarcado'); setShowMenu(false); }}
+                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-orange-400">
+                                    🔄 Remarcado
+                                </button>
+                            )}
+                            {appointment.estado !== 'cancelado' && (
+                                <button onClick={() => { onStateChange(appointment.id, 'cancelado'); setShowMenu(false); }}
+                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-red-400">
+                                    ❌ Cancelado
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+            {appointment.notas && (
+                <p className="mt-2 text-xs text-gray-400 italic">{appointment.notas}</p>
+            )}
+        </div>
+    );
+}

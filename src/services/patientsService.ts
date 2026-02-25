@@ -186,10 +186,195 @@ export const patientsService = {
     },
 
     // 11. Update genérico para qualquer tabela
-    async updateRecord(table: 'treatment_plans' | 'phases' | 'appointments', id: string, data: Record<string, unknown>) {
+    async updateRecord(table: 'treatment_plans' | 'phases' | 'appointments' | 'considerations', id: string, data: Record<string, unknown>) {
         const { error } = await supabase
             .from(table)
             .update(data)
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+
+    // 12. Criar fase dentro de um plano
+    async createPhase(data: {
+        treatment_plan_id: string;
+        nome: string;
+        ordem: number;
+        notas?: string;
+    }) {
+        const { data: phase, error } = await supabase
+            .from('phases')
+            .insert({
+                treatment_plan_id: data.treatment_plan_id,
+                nome: data.nome,
+                ordem: data.ordem,
+                notas: data.notas || null,
+            })
+            .select('*')
+            .single();
+
+        if (error) throw error;
+        return phase;
+    },
+
+    // 13. Criar agendamento dentro de uma fase
+    async createAppointment(data: {
+        phase_id: string;
+        tipo: string;
+        data_prevista?: string;
+        notas?: string;
+    }) {
+        const { data: appointment, error } = await supabase
+            .from('appointments')
+            .insert({
+                phase_id: data.phase_id,
+                tipo: data.tipo,
+                agendada_para: data.data_prevista || null,
+                notas: data.notas || null,
+            })
+            .select('*')
+            .single();
+
+        if (error) throw error;
+        return appointment;
+    },
+
+    // 14. Alterar estado do plano
+    async updatePlanState(planId: string, estado: string) {
+        const updates: Record<string, unknown> = { estado };
+        if (estado === 'concluido') {
+            updates.data_conclusao = new Date().toISOString();
+        }
+        const { error } = await supabase
+            .from('treatment_plans')
+            .update(updates)
+            .eq('id', planId);
+
+        if (error) throw error;
+    },
+
+    // 15. Obter detalhes de um plano específico (com fases e agendamentos)
+    async getPlanDetails(planId: string) {
+        const { data, error } = await supabase
+            .from('treatment_plans')
+            .select(`
+                *,
+                work_type:work_types!treatment_plans_tipo_trabalho_id_fkey(id, nome, cor),
+                medico:user_profiles!treatment_plans_medico_id_fkey(user_id, full_name),
+                clinica:clinics!treatment_plans_clinica_id_fkey(id, commercial_name),
+                patient:patients!treatment_plans_patient_id_fkey(id, nome, t_id),
+                phases(
+                    *,
+                    appointments(*)
+                )
+            `)
+            .eq('id', planId)
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    // 16. Listar considerações de um paciente (com filtro por fase opcional)
+    async getConsiderations(patientId: string, phaseId?: string) {
+        let query = supabase
+            .from('considerations')
+            .select(`
+                *,
+                autor:user_profiles!considerations_autor_id_fkey(user_id, full_name, app_role),
+                appointment:appointments!considerations_appointment_id_fkey(
+                    id,
+                    phase:phases!appointments_phase_id_fkey(id, nome, treatment_plan_id)
+                )
+            `)
+            .eq('patient_id', patientId)
+            .order('created_at', { ascending: false });
+
+        if (phaseId) {
+            query = query.eq('phase_id', phaseId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return data || [];
+    },
+
+    // 17. Criar consideração
+    async createConsideration(data: {
+        patient_id: string;
+        appointment_id?: string;
+        phase_id?: string;
+        tipo: string;
+        conteudo: string;
+    }) {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: consideration, error } = await supabase
+            .from('considerations')
+            .insert({
+                patient_id: data.patient_id,
+                appointment_id: data.appointment_id || null,
+                phase_id: data.phase_id || null,
+                tipo: data.tipo,
+                conteudo: data.conteudo,
+                autor_id: user?.id || null,
+                versao: 1,
+            })
+            .select('*')
+            .single();
+
+        if (error) throw error;
+        return consideration;
+    },
+
+    // 18. Listar ficheiros de um paciente
+    async getFiles(patientId: string) {
+        const { data, error } = await supabase
+            .from('files')
+            .select(`
+                *,
+                enviado_por:user_profiles!files_enviado_por_fkey(user_id, full_name)
+            `)
+            .eq('patient_id', patientId)
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+    },
+
+    // 19. Criar registo de ficheiro (metadados)
+    async createFileRecord(data: {
+        patient_id: string;
+        nome_original: string;
+        tipo: string;
+        caminho_nas?: string;
+        tamanho: number;
+        thumbnail_url?: string;
+    }) {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: file, error } = await supabase
+            .from('files')
+            .insert({
+                patient_id: data.patient_id,
+                nome_original: data.nome_original,
+                tipo: data.tipo,
+                caminho_nas: data.caminho_nas || '',
+                tamanho: data.tamanho,
+                thumbnail_url: data.thumbnail_url || null,
+                enviado_por: user?.id || null,
+            })
+            .select('*')
+            .single();
+
+        if (error) throw error;
+        return file;
+    },
+
+    // 20. Delete genérico (soft ou hard dependendo da tabela)
+    async deleteRecord(table: 'phases' | 'appointments' | 'considerations', id: string) {
+        const { error } = await supabase
+            .from(table)
+            .delete()
             .eq('id', id);
 
         if (error) throw error;
