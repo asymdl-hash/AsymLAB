@@ -1711,9 +1711,9 @@ Perfil do utilizador → Opção "Desactivar conta"
 
 ---
 
-### 4.14 — F10: Acesso NAS / Ficheiros ✅
+### 4.14 — F10: Acesso NAS / Ficheiros ✅ (v2 — refinado)
 
-> **Complexidade:** 🟡 Média — envolve NAS, Cloudflare Tunnel, upload/download.
+> **Complexidade:** 🟡 Média — envolve NAS, Cloudflare Tunnel, upload/download, câmara.
 > **Infraestrutura:** NAS local + Cloudflare Tunnel para acesso externo.
 
 #### 📌 ID do Paciente — Formato T-xxxx
@@ -1783,6 +1783,47 @@ Upload de ficheiro (via app ou formulário WA)
 | **Via link WA** | URL tokenizado (validade configurável) via Cloudflare Tunnel |
 | **Formulário público** | Token 24h — download via Cloudflare Tunnel |
 
+#### 📌 Câmara no Desktop (Web Camera API)
+
+> A PWA usa a Web Camera API do browser — tudo funciona dentro do browser, **sem instalar nada**.
+
+```
+Utilizador clica "📸 Tirar Foto" (em qualquer local: guia, anexos, etc.)
+  │
+  ├─ 1ª vez: Browser pede permissão "Permitir acesso à câmara?"
+  │
+  ├─ Se tem 1 câmara: abre automaticamente
+  │
+  ├─ Se tem múltiplas câmaras (webcam + USB):
+  │   ┌─────────────────────────────────┐
+  │   │ Seleccionar câmara:             │
+  │   │ ○ Webcam integrada (default)    │
+  │   │ ● USB Camera (Logitech C920)    │
+  │   │ ☑ Lembrar esta escolha          │
+  │   │ [Confirmar]                     │
+  │   └─────────────────────────────────┘
+  │
+  └─ Interface de câmara custom (sem sair da app):
+      ┌─────────────────────────────┐
+      │    [preview câmara live]    │
+      │                             │
+      │   📷 (3 fotos tiradas)      │
+      │   [min1] [min2] [min3]      │
+      │                             │
+      │  [📸 Tirar] [✅ Pronto]    │
+      └─────────────────────────────┘
+```
+
+| Questão | Resposta |
+|---------|---------|
+| **Ligação** | Automática — browser detecta câmaras via sistema operativo |
+| **Directório** | Não precisa — foto vai directo para a app (memória) |
+| **API fabricante** | Não precisa — browser fala com driver universal |
+| **Multi-computador** | Cada PC usa a sua câmara. Preferência guardada por browser |
+| **Alternativas** | Arrastar ficheiros + file picker sempre disponíveis em paralelo |
+
+> **Câmaras profissionais** (Nikon, Canon): funciona se o SO reconhecer como webcam. Caso contrário, fluxo alternativo: tirar foto com câmara → arrastar para a app.
+
 #### 📌 Backup de Metadata
 
 > Regra global (já definida na Etapa 3.10): export periódico dos metadados da BD para a NAS.
@@ -1795,22 +1836,33 @@ Upload de ficheiro (via app ou formulário WA)
 | **Considerações** | JSON | Diário |
 | **Histórico de edições** | JSON | Semanal |
 
-> Garante portabilidade: se migrar do Supabase, toda a informação está na NAS.
-
 ---
 
-### 4.15 — F8: Avisos e Notificações ✅
+### 4.15 — F8: Avisos e Notificações ✅ (v2 — refinado)
 
 > **Complexidade:** 🟡 Média — envolve múltiplos canais e tipos de notificação.
 > **Canais:** App (badges + toasts + push) + WhatsApp (F5) + Email.
 
 #### 📌 Tipos de Notificação na App
 
-| Tipo | O que é | Quando usar | Exemplo |
-|------|---------|-------------|---------|
-| **Badge** 🔴 | Bolinha com número num ícone/menu | Indicar itens pendentes | "Pedidos (7)" no menu |
-| **Toast** 📢 | Pop-up pequeno no canto do ecrã, desaparece após 3-5s | Confirmar acções, avisos rápidos | "✅ Paciente criado com sucesso" |
-| **Push** 🔔 | Notificação do browser (aparece mesmo fora da app) | Eventos importantes em tempo real | "🔴 Novo pedido urgente: João Silva" |
+| Tipo | O que é | Quando usar | Recomendação |
+|------|---------|-------------|-------------|
+| **Badge** 🔴 | Bolinha com número num ícone/menu | Indicar itens pendentes | ✅ **Sempre activo** — é passivo, não interrompe |
+| **Toast** 📢 | Pop-up pequeno no canto do ecrã (3-5s) | Confirmar acções, avisos rápidos | ✅ **Sempre activo** — UX básico obrigatório |
+| **Push** 🔔 | Notificação do browser/SO (fora da app) | Eventos importantes em tempo real | ✅ **Opt-in** — desactivado por defeito |
+
+#### 📌 Push Notifications por Plataforma
+
+> Como a app é PWA, as push notifications funcionam em **todas as plataformas**:
+
+| Plataforma | Como funciona |
+|-----------|---------------|
+| **Windows** | Notificações no canto inferior direito + Centro de Notificações do Windows |
+| **iOS** (≥16.4) | Notificações nativas do iPhone (requer instalar a PWA no ecrã inicial) |
+| **Android** | Suporte total — idêntico a apps nativas |
+| **macOS** | Via Safari/Chrome como notificação nativa |
+
+> **Requisito:** O utilizador tem de "instalar" a PWA (Add to Home Screen / Install App).
 
 #### 📌 Centro de Notificações (🔔)
 
@@ -1821,7 +1873,6 @@ Upload de ficheiro (via app ou formulário WA)
 ┌─────────────────────────────────────────┐
 │ NOTIFICAÇÕES                    [Limpar]│
 ├─────────────────────────────────────────┤
-│                                         │
 │ 🔴 Novo pedido: João Silva       2 min │
 │    📋 Novo Paciente — Dr. Ferreira      │
 │                                         │
@@ -1835,14 +1886,11 @@ Upload de ficheiro (via app ou formulário WA)
 │    "Paciente pede cor mais clara"       │
 │                                         │
 │ 📦 Material recebido: Ana Costa  1d    │
-│                                         │
 │              [Ver todas →]              │
 └─────────────────────────────────────────┘
 ```
 
 #### 📌 Configurações de Notificação (perfil)
-
-> No perfil do utilizador → secção "Notificações".
 
 | Configuração | Opções | Onde |
 |-------------|--------|------|
@@ -1856,14 +1904,12 @@ Upload de ficheiro (via app ou formulário WA)
 #### 📌 Relatório Semanal Obrigatório (Email + PDF)
 
 > **NÃO pode ser mutado pelo utilizador.** Só o admin pode desactivar.
-> Enviado semanalmente para cada médico e clínica associada.
+> Enviado semanalmente para cada médico e clínica. PDF gerado on-the-fly (não ocupa espaço no Supabase). Log guardado na BD (metadata leve).
 
 ```
 📧 Email semanal — Relatório de Trabalhos em Aberto
 
 Para: Dr. Ferreira (Clínica Sorriso)
-Assunto: "AsymLAB — Relatório semanal: 3 trabalhos em aberto"
-
 📎 Anexo: relatorio_semanal_2026-02-24.pdf
 
 CONTEÚDO DO PDF:
@@ -1872,7 +1918,6 @@ CONTEÚDO DO PDF:
 │ Dr. Ferreira — Clínica Sorriso                   │
 │ Semana de 17/02 a 24/02/2026                     │
 ├─────────────────────────────────────────────────┤
-│                                                   │
 │ 📋 TRABALHOS EM ABERTO: 3                        │
 │                                                   │
 │ ┌─ T-0042 João Silva ─────────────────────────┐  │
@@ -1883,91 +1928,382 @@ CONTEÚDO DO PDF:
 │ │    • Material em falta há 5 dias             │  │
 │ └──────────────────────────────────────────────┘  │
 │                                                   │
-│ ┌─ T-0089 Maria Costa ────────────────────────┐  │
-│ │ Plano: Implante #36                          │  │
-│ │ Fase: Cicatrização                           │  │
-│ │ Status: ⬜ Sem agendamentos — s/ data        │  │
-│ │ ⚠️ PENDENTE DA CLÍNICA:                     │  │
-│ │    • Data de próxima consulta não definida    │  │
-│ └──────────────────────────────────────────────┘  │
-│                                                   │
-│ ┌─ T-0103 Pedro Santos ──────────────────────┐   │
-│ │ Plano: Facetas #11-21                       │   │
-│ │ Fase: Acabamento                            │   │
-│ │ Status: 🟢 Para Colocar — data não definida │   │
-│ └─────────────────────────────────────────────┘   │
-│                                                   │
 │ 📊 Resumo: 1 urgente, 2 pendentes da clínica     │
 └─────────────────────────────────────────────────┘
 ```
 
-**Regras do relatório:**
+**Regras:**
 
 | Regra | Detalhe |
 |-------|---------|
-| **Frequência** | Semanal (dia configurável pelo admin, default: segunda) |
+| **Frequência** | Semanal (dia configurável pelo admin, default: segunda 08:00) |
 | **Destinatários** | Cada médico + cada clínica (emails separados) |
-| **Conteúdo** | Todos os planos não-concluídos associados ao médico/clínica |
-| **Destaque** | Items pendentes da clínica (material, datas, informação) com ⚠️ |
-| **Mutável** | ❌ Não — utilizador não pode desactivar. Só admin pode |
-| **Formato** | Email com resumo + PDF completo em anexo |
-| **Horário** | Configurável pelo admin (default: segunda 08:00) |
+| **Conteúdo** | Planos não-concluídos com destaque ⚠️ em pendentes da clínica |
+| **Mutável** | ❌ Não — só admin pode desactivar |
+| **Armazenamento** | Log metadata leve na BD (0 impacto). PDF gerado on-the-fly |
+
+#### 📌 Reenvio de Relatório (na ficha da Clínica/Médico)
+
+> Qualquer staff lab pode reenviar — não só o admin. Fica na ficha da clínica ou do médico.
+
+```
+Ficha da Clínica/Médico → Separador "📊 Relatórios"
+  │
+  ├─ 📊 Último enviado: 24/02/2026
+  │
+  ├─ [📤 Reenviar último] → reenvia exactamente o último
+  ├─ [📊 Gerar novo]     → gera com dados actualizados
+  │   └─ Escolher: email e/ou WA
+  │
+  └─ Histórico de envios:
+      ├─ 24/02 08:00 — auto — email ✅ WA ✅
+      ├─ 17/02 08:00 — auto — email ✅ WA ✅
+      └─ 10/02 14:30 — reenviado por [João] — email ✅
+```
+
+> **Log de auditoria:** Configurações → Logs de Envios (para analytics e auditoria).
 
 ---
 
-### 4.16 — F9: Documentação e Billing ✅
+### 4.16 — F9: Documentação e Billing ✅ (v2 — refinado)
 
-> **Complexidade:** 🟡 Média — envolve geração de documentos e facturação.
-> **Nota:** Esta secção define a estrutura. Detalhes de facturação serão refinados durante implementação.
+> **Complexidade:** 🟡 Média — envolve geração de documentos, facturação por fase, e integração TOConline.
 
-#### 📌 Tipos de Documento
-
-| Documento | Quando | Gerado por | Formato |
-|-----------|--------|-----------|---------|
-| **Guia de Transporte** | Trabalho enviado para a clínica | Staff Lab (manual ou auto) | PDF |
-| **Guia de Recepção** | Material/trabalho recebido no lab | Staff Lab | PDF |
-| **Relatório Semanal** | Semanalmente (automático) | Sistema | PDF (ver F8) |
-| **Relatório de Plano** | Plano concluído | Sistema | PDF |
-| **Considerações (impressão)** | A pedido | Qualquer (ver F4) | PDF |
-| **Factura** | Por definir | Por definir | PDF |
-| **Recibo** | Por definir | Por definir | PDF |
-
-#### 📌 Guia de Transporte (detalhe)
+#### 📌 Bloco Documentação (na ficha do paciente)
 
 ```
-Trabalho pronto para envio → Staff Lab gera Guia de Transporte
+📁 DOCUMENTAÇÃO
+
+  ├─ 📄 Facturas (emitidas por fase)               👁️ Lab + Clínica
+  │   ├─ Via TOConline (integração) ou arrastar PDF
+  │   └─ Associadas à fase do plano
+  │
+  ├─ 📄 Recibos (emitidos por nós)                 👁️ Lab + Clínica
+  │   ├─ Via TOConline ou arrastar PDF
+  │   └─ Associados à factura
+  │
+  └─ 📄 Outros Documentos                          👁️ Só Lab
+      ├─ Encomendas feitas para o caso
+      ├─ Digitalizações de documentos
+      └─ Documentos variados
+```
+
+| Secção | Lab | Médico/Staff Clínica |
+|--------|-----|---------------------|
+| **Facturas** | ✅ Ver + Editar + Upload | ✅ Ver + Descarregar |
+| **Recibos** | ✅ Ver + Editar + Upload | ✅ Ver + Descarregar |
+| **Outros Documentos** | ✅ Ver + Editar + Upload | ❌ Não vê |
+
+#### 📌 Facturação por Fase (não por plano)
+
+> As facturas são emitidas **por fase**, não por plano. Uma fase pode fechar sem factura com aviso restrito.
+
+```
+Fechar fase sem factura:
+  │
+  ├─ 1º Modal de aviso:
+  │   "⚠️ ATENÇÃO: Esta fase não tem factura associada.
+  │    Tem a certeza que quer fechar sem facturar?"
+  │   [Cancelar] [Continuar →]
+  │
+  ├─ 2º Confirmação por texto (anti-erro):
+  │   "🔴 CONFIRMAÇÃO OBRIGATÓRIA
+  │    Escreva 'SEM FACTURA' para confirmar:"
+  │   [________] [Confirmar]
+  │
+  ├─ Registo: quem fechou, quando, sem factura
+  └─ Badge permanente na fase: "⚠️ Sem factura"
+```
+
+> **Plano só conclui quando:** todas as fases fechadas + facturas emitidas (excepto fases marcadas "sem factura") + recibos emitidos.
+
+#### 📌 Integração TOConline (modo leve)
+
+> Integração segura: automação quando funciona, manual quando não funciona.
+
+```
+Emitir factura para fase concluída:
+  │
+  ├─ App pré-preenche dados:
+  │   ├─ Cliente (clínica): nome, NIF, morada
+  │   ├─ Itens: tipo de trabalho, material, dentes
+  │   ├─ Valores: tabela de preços configurável
+  │   └─ Referência: T-xxxx / Plano / Fase
+  │
+  ├─ 2 Opções:
+  │   │
+  │   ├─ 🔄 Criar no TOConline (via API)
+  │   │   ├─ Se funcionar → factura criada + PDF auto-guardado
+  │   │   └─ Se falhar → aviso: "Crie manualmente e arraste o PDF"
+  │   │
+  │   └─ 📁 Arrastar PDF manualmente
+  │       └─ Sempre disponível (backup para quando API falha)
+  │
+  └─ Factura guardada no bloco Documentação + NAS
+```
+
+#### 📌 Guia de Transporte (com câmara + sugestões inteligentes)
+
+> Sugestões de itens baseadas em contagem de frequência (não IA).
+
+```
+Staff Lab → "🚚 Nova Guia de Transporte"
   │
   ├─ Auto-preenchido:
-  │   ├─ Dados do lab (nome, morada, NIF)
-  │   ├─ Dados da clínica destinatária
+  │   ├─ Dados lab (nome, morada, NIF)
+  │   ├─ Clínica destinatária
   │   ├─ Paciente: T-xxxx + nome
   │   ├─ Plano: tipo de trabalho
-  │   ├─ Conteúdo: lista de items enviados
-  │   ├─ Data de envio
-  │   └─ Nº da guia (sequencial)
+  │   ├─ Nº da guia (sequencial)
+  │   └─ Data de envio
   │
-  ├─ 3 Opções:
-  │   ├─ 🖨️ Imprimir (acompanha trabalho fisicamente)
-  │   ├─ 📤 Enviar por WA (PDF no grupo do paciente)
-  │   └─ 📧 Enviar por email
+  ├─ 💡 SUGESTÕES DE ITENS (contagem de frequência):
+  │   Combinação: clínica × médico × tipo_trabalho × tipo_agendamento_próximo
   │
-  └─ Guardada no histórico do paciente + NAS
+  │   "Clínica Sorriso + Dr. Ferreira + Coroa Zircónia + Para Prova"
+  │   ☑️ Prova de estrutura     (usado 95%) ← pré-seleccionado
+  │   ☑️ Modelo antagonista     (usado 80%) ← pré-seleccionado
+  │   ☐  Chave silicone         (usado 60%)
+  │   + Adicionar item...
+  │   + Criar novo item...
+  │
+  │   Threshold: ≥80% → pré-seleccionado | ≥50% → sugerido | <50% → não aparece
+  │
+  ├─ 📸 FOTOS DO ENVIO:
+  │   ├─ Mobile: abre câmara nativa (múltiplas fotos sem sair)
+  │   ├─ Desktop: abre Web Camera API (interface custom)
+  │   └─ Alternativa: arrastar ficheiros
+  │
+  ├─ 📝 Notas (opcional)
+  │
+  └─ ACÇÕES:
+      ├─ 💾 Guardar (só registo digital)
+      ├─ 📤 Enviar por WA (guia + fotos no grupo do paciente)
+      ├─ 📧 Enviar por email (future feature)
+      └─ 🖨️ Imprimir (PDF acompanha trabalho)
 ```
 
-#### 📌 Facturação (estrutura base)
+> A base de dados de itens cresce com o uso — aprende as tendências por clínica, médico, e tipo de trabalho automaticamente.
 
-> ⚠️ **A detalhar durante implementação.** Estrutura base definida:
+#### 📌 Guia de Recepção (2 cenários)
 
-| Conceito | Proposta |
-|----------|----------|
-| **Unidade de facturação** | Por plano de tratamento |
-| **Preço** | Definido por tipo de trabalho (tabela de preços configurável) |
-| **Orçamento** | Gerado ao criar plano, pode ser revisto |
-| **Factura** | Gerada ao concluir plano (ou parcial ao concluir fase) |
-| **Histórico** | Todas as facturas guardadas na NAS + BD |
-| **Integração contabilística** | A definir (export CSV/PDF para software de contabilidade) |
+##### Cenário 1: Após @recolhido
 
-> A tabela de preços é configurável pelo admin: tipo de trabalho × material × complexidade.
+```
+Staff Lab marca @recolhido no WA (ou marca na app)
+  │
+  ├─ Badge na app: "📦 Recepção pendente: T-0042"
+  │
+  └─ Staff Lab clica → formulário pré-preenchido:
+      ├─ Paciente: T-0042 (auto)
+      ├─ Clínica: Sorriso (auto)
+      ├─ Agendamento: Moldagem 25/02 (auto)
+      ├─ 💡 Sugestões de itens (mesma contagem de frequência):
+      │   clínica × médico × tipo_trabalho × tipo_agendamento
+      │   ☑️ Moldagem superior (95%)
+      │   ☑️ Moldagem inferior (90%)
+      │   ☐  Registo de mordida (60%)
+      ├─ Estado: ○ OK  ○ Danificado  ○ Incompleto
+      ├─ 📸 Fotos do que chegou
+      ├─ 📝 Notas (opcional)
+      └─ [💾 Guardar] [📤 Enviar WA] [🖨️ Imprimir]
+```
+
+##### Cenário 2: Entrega directa (sem @recolhido)
+
+```
+Trabalho chega directamente ao lab
+  │
+  ├─ Menu → "📦 Nova Recepção"
+  │
+  └─ 🔍 Pesquisar paciente: [____]
+      │
+      ├─ Paciente encontrado:
+      │   ├─ Lista agendamentos pendentes:
+      │   │   ○ Moldagem — 25/02
+      │   │   ○ Prova — 03/03
+      │   │   ○ Nenhum (recepção avulsa)
+      │   └─ Seleccionar → abre formulário = Cenário 1
+      │
+      └─ Paciente não encontrado:
+          ├─ Recepção avulsa (nome, clínica, itens, fotos)
+          └─ Badge: "⚠️ Paciente não existe — criar?"
+```
+
+> As guias de transporte e recepção têm as mesmas opções de output: **registo digital**, **documento impresso (PDF)**, **envio WA com fotos**. O utilizador escolhe.
+
+#### 📌 Relatório de Plano (com material/dentes/logística)
+
+> Gerado automaticamente quando a **última fase** do plano tem o **último agendamento "Para Colocação" concluído**.
+> O plano só fecha definitivamente quando facturas e recibos estiverem OK.
+
+```
+📋 RELATÓRIO DE PLANO — T-0042 João Silva
+Plano: Coroa Zircónia #46
+Período: 15/01/2026 — 28/02/2026 (44 dias)
+
+🦷 DENTES: 46
+📦 MATERIAL TOTAL:
+├─ Zircónia Katana UTML (bloco A2-HT)
+├─ Cimento RelyX Ultimate
+└─ Pilar personalizado Ti
+
+FASES:
+├─ Fase 1: Moldagem (15/01 - 22/01) ✅
+│   Material: Impressão digital (scanner TRIOS)
+│   Factura: #F-2026-0042 ✅
+│
+├─ Fase 2: Prova Estrutura (25/01 - 05/02) ✅
+│   Material: Zircónia Katana UTML
+│   Factura: #F-2026-0043 ✅
+│
+└─ Fase 3: Cimentação (20/02 - 28/02) ✅
+    Material: Cimento RelyX Ultimate
+    Factura: #F-2026-0044 ✅
+
+📊 RESUMO:
+├─ 3 fases, 5 agendamentos
+├─ 3 considerações, 8 ficheiros
+├─ 0 remakes, 0 correcções
+├─ Facturas: 3/3 emitidas ✅
+└─ Tempo total: 44 dias
+```
+
+**Trigger e acções:**
+
+```
+Último agendamento "Para Colocação" concluído
+  │
+  ├─ Gera Relatório de Plano automaticamente
+  ├─ Badge: "📋 Relatório pronto"
+  │
+  └─ Acções:
+      ├─ 📤 Enviar por WA
+      ├─ 📧 Enviar por email
+      └─ 🖨️ Imprimir
+```
+
+#### 📌 Relatório de Fase (para fases com colocação)
+
+> Cada fase que tem agendamento "Para Colocação" gera um mini-relatório com os seus materiais específicos.
+> Essencial quando as fases têm materiais diferentes (provisório vs definitivo).
+
+```
+📋 RELATÓRIO DE FASE — T-0042 João Silva
+Plano: Híbrida Superior
+Fase: Provisório (Para Colocação)
+
+🦷 DENTES: 14—24
+📦 MATERIAL DESTA FASE:
+├─ Dentes: Ivoclar Phonares II (A2, tamanho M)
+├─ Base: PMMA fresada
+└─ Parafusos: Prosthetic Screw M1.6
+
+📝 CONSIDERAÇÕES:
+├─ Cor confirmada pelo médico
+└─ Oclusão verificada em articulador
+
+📎 FOTOS: 4 (antes montagem, pós-montagem, oclusal, frontal)
+```
+
+> **Caso de uso:** Plano "Híbrida" com 4 fases (prova dentes, carga imediata, prova definitiva, colocação definitiva) — cada fase pode ter dentes e materiais diferentes. O relatório de fase permite a clínica saber exactamente o que foi usado.
+
+---
+
+### 4.17 — Sistema de Ajuda Integrado (Feature Transversal) ✅
+
+> **Conceito:** Cada página, modal, ou interacção da app tem um ícone de ajuda **❓** que mostra uma explicação detalhada + vídeo tutorial.
+> **Vídeos:** Gravados durante os testes QA, guardados na NAS (não no Supabase).
+> **Abrangência:** TODOS os módulos — login, instalação PWA, ficha paciente, guias, pedidos, etc.
+
+#### 📌 Como Funciona
+
+```
+Qualquer página/modal da app
+  │
+  ├─ Ícone ❓ no canto superior direito
+  │
+  └─ Ao clicar:
+      ┌──────────────────────────────────────────┐
+      │ ❓ AJUDA — Ficha do Paciente              │
+      ├──────────────────────────────────────────┤
+      │                                          │
+      │ 📝 COMO FUNCIONA                         │
+      │ A ficha do paciente mostra todos os      │
+      │ planos activos e histórico. Pode:        │
+      │ • Ver/editar dados do paciente           │
+      │ • Navegar entre planos activos           │
+      │ • Consultar histórico de planos          │
+      │ • Aceder a ficheiros e considerações     │
+      │                                          │
+      │ 🎬 VÍDEO TUTORIAL                        │
+      │ ┌────────────────────────────────┐       │
+      │ │                                │       │
+      │ │    [▶️ vídeo player]           │       │
+      │ │    (carregado da NAS)          │       │
+      │ │                                │       │
+      │ └────────────────────────────────┘       │
+      │                                          │
+      │ ⏱️ Duração: 1:30                         │
+      │                                          │
+      │ [✕ Fechar]                               │
+      └──────────────────────────────────────────┘
+```
+
+#### 📌 Origem dos Vídeos
+
+| Aspecto | Detalhe |
+|---------|---------|
+| **Quando gravar** | Durante os testes QA finais de cada módulo |
+| **Quem grava** | Sistema automático (browser recording durante testes) |
+| **Onde ficam** | NAS: `/asymlab/ajuda/[modulo]/[pagina].webm` |
+| **Performance** | Pode demorar a carregar (NAS) — é um plus, não crítico |
+| **Formato** | WebM/MP4 (compatível com todos os browsers) |
+| **Actualização** | Ao correr testes QA de novo → vídeos actualizados automaticamente |
+
+#### 📌 Cobertura Completa
+
+| Módulo | Exemplos de Ajuda |
+|--------|-------------------|
+| **Login** | Como fazer login, recuperar password |
+| **Instalar PWA** | Como instalar no Windows, iOS, Android |
+| **Dashboard** | Navegar widgets, badges, atalhos |
+| **Pacientes** | Criar, pesquisar, ficha, histórico |
+| **Planos** | Criar, editar, pausar, reabrir |
+| **Fases/Agendamentos** | Adicionar, transitar status, remarcar |
+| **Pedidos** | Inbox, aceitar, transitar, cancelar |
+| **WhatsApp** | Usar @comandos, criar grupo, formulário |
+| **Documentação** | Facturas, guias, relatórios |
+| **Ficheiros** | Upload, STL viewer, câmara |
+| **Notificações** | Configurar, mutar, push |
+| **Configurações** | Utilizadores, clínicas, templates |
+
+> **Em cada ajuda:** texto explicativo + vídeo gravado durante QA + links para ajudas relacionadas.
+
+---
+
+### 4.18 — Email como Canal Alternativo ao WhatsApp (Future Feature) 🔮
+
+> **Status:** Future feature — documentado para implementação posterior.
+> A arquitectura é **channel-agnostic** (abstracção por canal).
+
+```
+Módulo Configurações (Admin):
+  │
+  └─ Canal de comunicação:
+      ○ WhatsApp apenas (default actual)
+      ○ Email apenas
+      ○ WhatsApp + Email (ambos)
+      │
+      └─ Ao enviar qualquer coisa:
+          → Sistema verifica configuração
+          → Envia pelo(s) canal(is) activo(s)
+          → Botões/automações da app adaptam-se
+```
+
+> **Conceito:** O email entre clínica e lab funciona como o grupo WA — destinatários = participantes.
+> Os CC do email = membros do grupo.
+> **Para já:** Tudo via WA. Arquitectura preparada para adicionar email plug-in.
 
 ---
 
