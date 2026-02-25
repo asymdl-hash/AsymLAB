@@ -14,7 +14,7 @@
 | 2 | Identificar os Actores | ✅ Concluída |
 | 3 | Definir as Entidades | ✅ Concluída (23 secções) |
 | 4 | Mapear os Fluxos | ✅ Concluída (10 fluxos + 2 transversais) |
-| 5 | Definir a Informação | ✅ Concluída (22 tabelas + 8 auxiliares) |
+| 5 | Definir a Informação | ✅ Concluída (28 tabelas + 8 auxiliares) |
 | 6 | Desenhar a Interface | ⬜ Por definir |
 | 7 | Priorizar e Fasear | ⬜ Por definir |
 
@@ -2849,15 +2849,144 @@ Módulo Configurações (Admin):
 
 ---
 
-### 5.23 — Diagrama de Relações (ER simplificado)
+### 5.23 — Utilizador (`users`) — extensão módulo pacientes
+
+> A tabela `users` já existe no sistema de auth (Supabase Auth). Estes são os campos **adicionais** necessários para o módulo pacientes.
+> Referências: F1 (Criação), F5 (WA), F7 (Merge — desactivação), Etapa 2 (Actores)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | Supabase Auth | Mesmo ID do auth.users |
+| `nome` | TEXT | ✅ | — | Nome completo |
+| `email` | TEXT | ✅ | — | — |
+| `telefone` | TEXT | ❌ | NULL | Número para WA |
+| `role` | ENUM | ✅ | — | `admin` \| `staff_lab` \| `medico` \| `staff_clinica` |
+| `clinica_id` | FK → `clinics` | ❌ | NULL | NULL para Admin/Staff Lab |
+| `avatar_url` | TEXT | ❌ | NULL | Foto de perfil |
+| `activo` | BOOLEAN | ✅ | true | false → conta desactivada (login bloqueado) |
+| `desactivado_em` | TIMESTAMP | ❌ | NULL | — |
+| `desactivado_por` | FK → `users` | ❌ | NULL | — |
+| `ultimo_login` | TIMESTAMP | ❌ | NULL | — |
+| `idioma` | TEXT | ✅ | 'pt' | — |
+
+---
+
+### 5.24 — Clínica (`clinics`)
+
+> Referências: F1 (Associação paciente), F9 (Facturação, Guias)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `nome` | TEXT | ✅ | — | Nome da clínica |
+| `nif` | TEXT | ❌ | NULL | Número de identificação fiscal |
+| `morada` | TEXT | ❌ | NULL | — |
+| `codigo_postal` | TEXT | ❌ | NULL | — |
+| `cidade` | TEXT | ❌ | NULL | — |
+| `telefone` | TEXT | ❌ | NULL | — |
+| `email` | TEXT | ❌ | NULL | Email geral |
+| `logo_url` | TEXT | ❌ | NULL | Supabase Storage |
+| `desconto_percentagem` | DECIMAL(5,2) | ✅ | 0 | Desconto global para esta clínica |
+| `activa` | BOOLEAN | ✅ | true | — |
+| `notas_lab` | TEXT | ❌ | NULL | Observações internas do lab |
+
+---
+
+### 5.25 — Tipo de Trabalho (`work_types`)
+
+> Referências: F2 (Plano), F9 (Preços, Guias — contagem frequência)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `nome` | TEXT | ✅ | — | Ex: "Coroa Zircónia", "Implante", "Facetas", "Híbrida" |
+| `categoria` | TEXT | ❌ | NULL | Agrupamento: "Fixa", "Removível", "Implantologia" |
+| `cor` | TEXT | ❌ | NULL | Cor para UI (hex) |
+| `ordem` | INTEGER | ✅ | auto | Ordenação na listagem |
+| `activo` | BOOLEAN | ✅ | true | — |
+
+---
+
+### 5.26 — Tabela de Preços (`price_table`)
+
+> Referências: F9 (Facturação — tabela configurável pelo admin)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `work_type_id` | FK → `work_types` | ✅ | — | Tipo de trabalho |
+| `material_id` | FK → `materials` | ❌ | NULL | NULL = preço base (sem material específico) |
+| `complexidade` | ENUM | ✅ | 'normal' | `simples` \| `normal` \| `complexo` |
+| `preco` | DECIMAL(10,2) | ✅ | — | Preço base (antes de descontos clínica) |
+| `iva` | DECIMAL(5,2) | ✅ | 23.00 | Percentagem de IVA |
+| `notas` | TEXT | ❌ | NULL | — |
+| `activo` | BOOLEAN | ✅ | true | — |
+
+> O preço final da factura = `price_table.preco × (1 - clinics.desconto_percentagem / 100)`.
+
+---
+
+### 5.27 — Fila de Mensagens WA (`wa_message_queue`)
+
+> Referências: F5 (Anti-spam — FIFO queue com throttling)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `id` | UUID | PK | auto | — |
+| `wa_group_id` | FK → `wa_groups` | ❌ | NULL | Grupo destinatário (NULL se mensagem directa) |
+| `telefone_destino` | TEXT | ❌ | NULL | Se mensagem directa (não grupo) |
+| `conteudo` | TEXT | ✅ | — | Texto da mensagem |
+| `anexos` | JSONB | ❌ | NULL | Lista de URLs de ficheiros a anexar |
+| `prioridade` | ENUM | ✅ | 'normal' | `normal` \| `urgente` |
+| `estado` | ENUM | ✅ | 'pendente' | `pendente` \| `enviando` \| `enviada` \| `erro` |
+| `tentativas` | INTEGER | ✅ | 0 | Número de tentativas de envio |
+| `erro_detalhe` | TEXT | ❌ | NULL | Detalhe do erro (se falhou) |
+| `agendada_para` | TIMESTAMP | ❌ | NULL | Envio agendado (horário fora de expediente) |
+| `enviada_em` | TIMESTAMP | ❌ | NULL | — |
+| `criado_por` | FK → `users` | ❌ | NULL | NULL = sistema (automático) |
+| `comando_origem` | TEXT | ❌ | NULL | Ex: "@entregue", "notif_material" |
+
+> **Regras anti-spam:** intervalo mínimo entre mensagens (configurável), limite diário, horário de funcionamento, fila FIFO com prioridade urgente no topo.
+
+---
+
+### 5.28 — Preferências de Notificação (`user_notification_settings`)
+
+> Referências: F8 (Configurações de notificação no perfil)
+
+| Campo | Tipo | Obrig. | Default | Notas |
+|-------|------|--------|---------|-------|
+| `user_id` | FK → `users` | PK | — | 1 registo por utilizador |
+| `mutar_tudo` | BOOLEAN | ✅ | false | — |
+| `mutar_pedidos` | BOOLEAN | ✅ | false | — |
+| `mutar_agendamentos` | BOOLEAN | ✅ | false | — |
+| `mutar_notas` | BOOLEAN | ✅ | false | — |
+| `mutar_material` | BOOLEAN | ✅ | false | — |
+| `push_activo` | BOOLEAN | ✅ | false | Opt-in (desactivado por defeito) |
+| `push_subscription` | JSONB | ❌ | NULL | Web Push subscription object |
+| `email_activo` | BOOLEAN | ✅ | true | — |
+| `som_activo` | BOOLEAN | ✅ | true | — |
+| `som_ficheiro` | TEXT | ✅ | 'default' | Nome do som escolhido |
+| `silencio_inicio` | TIME | ❌ | NULL | Ex: 22:00 |
+| `silencio_fim` | TIME | ❌ | NULL | Ex: 08:00 |
+
+---
+
+### 5.29 — Diagrama de Relações (ER simplificado)
 
 ```
+clinics
+  ├─ 1:N → users (médicos, staff clínica)
+  │         ├─ 1:1 → user_notification_settings
+  │         └─ 1:N → notifications
+  └─ 1:N → price_table → work_types + materials
+
 patients (T-xxxx)
-  ├─ 1:N → treatment_plans
+  ├─ 1:N → treatment_plans → work_types
   │         ├─ 1:N → phases
   │         │         ├─ 1:N → appointments
   │         │         │         ├─ 1:1 → boxes → box_items
-  │         │         │         └─ N:N → transport/reception_guides
+  │         │         │         └─ N:N → transport/reception_guides → guide_items
   │         │         ├─ 1:N → considerations → consideration_attachments → files
   │         │         ├─ 1:N → invoices → invoice_items
   │         │         └─ N:N → phase_materials → materials
@@ -2866,10 +2995,8 @@ patients (T-xxxx)
   ├─ N:N → patient_doctors → users
   └─ 1:N → files
 
-users
-  ├─ pertence a → clinics
-  ├─ recebe → notifications
-  └─ gera → audit_logs
+wa_message_queue (FIFO anti-spam)
+  └─ referencia → wa_groups
 
 requests (fila de pedidos)
   └─ referencia → patients, plans, phases, appointments
@@ -2879,11 +3006,12 @@ message_templates (templates WA)
 guide_items → guide_item_frequency (sugestões)
 help_contents (ajuda integrada + vídeos QA)
 weekly_report_logs (logs relatórios semanais)
+audit_logs (auditoria)
 ```
 
 ---
 
-### 5.24 — Tabelas Resumo
+### 5.30 — Tabelas Resumo (Final)
 
 | # | Tabela | Tipo | Registos esperados |
 |---|--------|------|-------------------|
@@ -2895,23 +3023,29 @@ weekly_report_logs (logs relatórios semanais)
 | 6 | `files` | Core | Dezenas de milhar |
 | 7 | `requests` | Core | Milhares |
 | 8 | `wa_groups` | Core | Milhares |
-| 9 | `transport_guides` | Documentação | Milhares |
-| 10 | `reception_guides` | Documentação | Milhares |
-| 11 | `invoices` | Billing | Milhares |
-| 12 | `receipts` | Billing | Milhares |
-| 13 | `documents` | Documentação | Centenas |
-| 14 | `notifications` | UX | Dezenas de milhar |
-| 15 | `materials` | Catálogo | Centenas |
-| 16 | `boxes` | Logística | Milhares |
-| 17 | `message_templates` | Config | Dezenas |
-| 18 | `guide_items` | Catálogo | Dezenas |
-| 19 | `help_contents` | Ajuda | Dezenas |
-| 20 | `weekly_report_logs` | Logs | Milhares |
-| 21 | `audit_logs` | Logs | Dezenas de milhar |
-| 22 | `system_settings` | Config | Dezenas |
-| — | *Tabelas auxiliares (N:N)* | Relações | — |
+| 9 | `users` (extensão) | Auth | Centenas |
+| 10 | `clinics` | Config | Dezenas |
+| 11 | `work_types` | Catálogo | Dezenas |
+| 12 | `transport_guides` | Documentação | Milhares |
+| 13 | `reception_guides` | Documentação | Milhares |
+| 14 | `invoices` | Billing | Milhares |
+| 15 | `receipts` | Billing | Milhares |
+| 16 | `documents` | Documentação | Centenas |
+| 17 | `notifications` | UX | Dezenas de milhar |
+| 18 | `materials` | Catálogo | Centenas |
+| 19 | `boxes` | Logística | Milhares |
+| 20 | `message_templates` | Config | Dezenas |
+| 21 | `guide_items` | Catálogo | Dezenas |
+| 22 | `help_contents` | Ajuda | Dezenas |
+| 23 | `weekly_report_logs` | Logs | Milhares |
+| 24 | `audit_logs` | Logs | Dezenas de milhar |
+| 25 | `system_settings` | Config | Dezenas |
+| 26 | `price_table` | Billing | Centenas |
+| 27 | `wa_message_queue` | Infra | Milhares |
+| 28 | `user_notification_settings` | UX | Centenas |
+| — | *Tabelas auxiliares (N:N e itens)* | Relações | — |
 
-> Total: **22 tabelas principais + ~8 tabelas auxiliares (N:N e itens)** ≈ **30 tabelas**.
+> Total: **28 tabelas principais + ~8 tabelas auxiliares (N:N e itens)** ≈ **36 tabelas**.
 
 ---
 
