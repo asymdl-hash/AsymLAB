@@ -361,35 +361,94 @@ export const patientsService = {
         return data || [];
     },
 
-    // 19. Criar registo de ficheiro (metadados)
-    async createFileRecord(data: {
+    // 19. Upload de ficheiro (Storage + metadata)
+    async uploadFile(data: {
+        file: File;
         patient_id: string;
-        nome_original: string;
-        tipo: string;
-        caminho_nas?: string;
-        tamanho: number;
-        thumbnail_url?: string;
+        plan_id?: string;
+        phase_id?: string;
     }) {
         const { data: { user } } = await supabase.auth.getUser();
-        const { data: file, error } = await supabase
+        if (!user) throw new Error('Utilizador não autenticado');
+
+        // Determinar tipo com base no mime_type
+        const mimeType = data.file.type;
+        let tipo = 'outro';
+        if (mimeType.startsWith('image/')) tipo = 'foto';
+        else if (mimeType.startsWith('video/')) tipo = 'video';
+        else if (mimeType === 'application/pdf' || mimeType.includes('document') || mimeType.includes('text/')) tipo = 'documento';
+        else if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('7z') || mimeType.includes('compressed')) tipo = 'comprimido';
+        else if (data.file.name.toLowerCase().endsWith('.stl')) tipo = 'stl';
+
+        // Gerar path único no storage
+        const timestamp = Date.now();
+        const safeName = data.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const storagePath = `${data.patient_id}/${timestamp}_${safeName}`;
+
+        // 1. Upload para Supabase Storage
+        const { error: uploadError } = await supabase.storage
+            .from('patient-files')
+            .upload(storagePath, data.file, {
+                cacheControl: '3600',
+                upsert: false,
+            });
+
+        if (uploadError) throw uploadError;
+
+        // 2. Inserir metadata na tabela files
+        const { data: fileRecord, error: dbError } = await supabase
             .from('files')
             .insert({
                 patient_id: data.patient_id,
-                nome_original: data.nome_original,
-                tipo: data.tipo,
-                caminho_nas: data.caminho_nas || '',
-                tamanho: data.tamanho,
-                thumbnail_url: data.thumbnail_url || null,
-                enviado_por: user?.id || null,
+                plan_id: data.plan_id || null,
+                phase_id: data.phase_id || null,
+                nome_original: data.file.name,
+                nome_nas: safeName,
+                tipo,
+                mime_type: mimeType,
+                caminho_nas: storagePath,
+                tamanho: data.file.size,
+                enviado_por: user.id,
+                versao: 1,
+                origem: 'app',
             })
             .select('*')
             .single();
 
-        if (error) throw error;
-        return file;
+        if (dbError) {
+            // Rollback: apagar ficheiro do storage se falhou o insert
+            await supabase.storage.from('patient-files').remove([storagePath]);
+            throw dbError;
+        }
+
+        return fileRecord;
     },
 
-    // 20. Delete genérico (soft ou hard dependendo da tabela)
+    // 20. Obter URL signed para download
+    async getFileUrl(storagePath: string) {
+        const { data, error } = await supabase.storage
+            .from('patient-files')
+            .createSignedUrl(storagePath, 3600); // 1h
+
+        if (error) throw error;
+        return data.signedUrl;
+    },
+
+    // 21. Eliminar ficheiro (storage + metadata)
+    async deleteFile(fileId: string, storagePath: string) {
+        // 1. Apagar do storage
+        await supabase.storage.from('patient-files').remove([storagePath]);
+
+        // 2. Apagar metadata
+        const { error } = await supabase
+            .from('files')
+            .delete()
+            .eq('id', fileId);
+
+        if (error) throw error;
+    },
+
+    // 22. Delete genérico (soft ou hard dependendo da tabela)
     async deleteRecord(table: 'phases' | 'appointments' | 'considerations', id: string) {
         const { error } = await supabase
             .from(table)

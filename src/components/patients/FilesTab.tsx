@@ -14,6 +14,10 @@ import {
     Trash2,
     Eye,
     Box,
+    Film,
+    Archive,
+    CheckCircle2,
+    AlertCircle,
 } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
 
@@ -26,19 +30,11 @@ interface FilesTabProps {
 const FILE_TYPE_CONFIG: Record<string, { label: string; icon: typeof File; color: string; bg: string }> = {
     stl: { label: 'STL', icon: Box, color: 'text-purple-600', bg: 'bg-purple-50' },
     foto: { label: 'Foto', icon: FileImage, color: 'text-green-600', bg: 'bg-green-50' },
+    video: { label: 'Vídeo', icon: Film, color: 'text-pink-600', bg: 'bg-pink-50' },
     documento: { label: 'Documento', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
-    raio_x: { label: 'Raio-X', icon: FileImage, color: 'text-amber-600', bg: 'bg-amber-50' },
+    comprimido: { label: 'Comprimido', icon: Archive, color: 'text-amber-600', bg: 'bg-amber-50' },
     outro: { label: 'Outro', icon: File, color: 'text-gray-600', bg: 'bg-gray-50' },
 };
-
-function getFileCategory(filename: string): string {
-    const ext = filename.split('.').pop()?.toLowerCase() || '';
-    if (['stl', 'obj', 'ply'].includes(ext)) return 'stl';
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'].includes(ext)) return 'foto';
-    if (['pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx'].includes(ext)) return 'documento';
-    if (['dcm', 'dicom'].includes(ext)) return 'raio_x';
-    return 'outro';
-}
 
 function formatFileSize(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
@@ -53,7 +49,10 @@ export default function FilesTab({ patientId, plans }: FilesTabProps) {
     const [filterType, setFilterType] = useState('');
     const [dragging, setDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
     const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
+    const [deletingId, setDeletingId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // suppress lint for plans
@@ -76,31 +75,87 @@ export default function FilesTab({ patientId, plans }: FilesTabProps) {
     }, [loadFiles]);
 
     const filteredFiles = filterType
-        ? files.filter((f) => f.tipo === filterType || getFileCategory(f.nome_original) === filterType)
+        ? files.filter((f) => f.tipo === filterType)
         : files;
 
     const handleFileUpload = async (fileList: FileList) => {
         if (!fileList.length) return;
         setUploading(true);
         setError('');
+        setSuccessMsg('');
+        setUploadProgress({ current: 0, total: fileList.length });
 
-        try {
-            for (let i = 0; i < fileList.length; i++) {
-                const file = fileList[i];
-                const category = getFileCategory(file.name);
-                await patientsService.createFileRecord({
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (let i = 0; i < fileList.length; i++) {
+            setUploadProgress({ current: i + 1, total: fileList.length });
+            try {
+                await patientsService.uploadFile({
+                    file: fileList[i],
                     patient_id: patientId,
-                    nome_original: file.name,
-                    tipo: category,
-                    tamanho: file.size,
                 });
+                successCount++;
+            } catch (err) {
+                console.error(`Error uploading ${fileList[i].name}:`, err);
+                errorCount++;
             }
+        }
+
+        setUploadProgress(null);
+        setUploading(false);
+
+        if (errorCount > 0) {
+            setError(`${errorCount} ficheiro(s) falharam o upload.`);
+        }
+        if (successCount > 0) {
+            setSuccessMsg(`${successCount} ficheiro(s) enviados com sucesso.`);
+            setTimeout(() => setSuccessMsg(''), 3000);
             loadFiles();
+        }
+
+        // Reset input
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handleDownload = async (storagePath: string, fileName: string) => {
+        try {
+            const url = await patientsService.getFileUrl(storagePath);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         } catch (err) {
-            console.error('Error uploading files:', err);
-            setError('Erro ao registar ficheiros. Tente novamente.');
+            console.error('Error downloading file:', err);
+            setError('Erro ao fazer download.');
+        }
+    };
+
+    const handlePreview = async (storagePath: string, mimeType: string) => {
+        try {
+            const url = await patientsService.getFileUrl(storagePath);
+            // Abrir num novo separador
+            window.open(url, '_blank');
+        } catch (err) {
+            console.error('Error previewing file:', err);
+            setError('Erro ao pré-visualizar.');
+        }
+    };
+
+    const handleDelete = async (fileId: string, storagePath: string) => {
+        if (!confirm('Tem a certeza que quer eliminar este ficheiro?')) return;
+        setDeletingId(fileId);
+        try {
+            await patientsService.deleteFile(fileId, storagePath);
+            setFiles(prev => prev.filter(f => f.id !== fileId));
+        } catch (err) {
+            console.error('Error deleting file:', err);
+            setError('Erro ao eliminar ficheiro.');
         } finally {
-            setUploading(false);
+            setDeletingId(null);
         }
     };
 
@@ -157,7 +212,36 @@ export default function FilesTab({ patientId, plans }: FilesTabProps) {
                 </div>
             </div>
 
-            {error && <p className="text-xs text-red-500 bg-red-50 rounded-lg p-2">{error}</p>}
+            {/* Upload Progress */}
+            {uploadProgress && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-3">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                    <div className="flex-1">
+                        <p className="text-xs font-medium text-blue-700">
+                            A enviar ficheiro {uploadProgress.current} de {uploadProgress.total}...
+                        </p>
+                        <div className="w-full bg-blue-200 rounded-full h-1.5 mt-1">
+                            <div className="bg-blue-500 h-1.5 rounded-full transition-all"
+                                style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }} />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Messages */}
+            {error && (
+                <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-lg p-2">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    {error}
+                    <button onClick={() => setError('')} className="ml-auto"><X className="h-3 w-3" /></button>
+                </div>
+            )}
+            {successMsg && (
+                <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 rounded-lg p-2">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    {successMsg}
+                </div>
+            )}
 
             {/* Drag & Drop Overlay */}
             {dragging && (
@@ -183,13 +267,13 @@ export default function FilesTab({ patientId, plans }: FilesTabProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {filteredFiles.map((f: any) => {
-                        const category = f.tipo || getFileCategory(f.nome_original);
-                        const config = FILE_TYPE_CONFIG[category] || FILE_TYPE_CONFIG.outro;
+                        const config = FILE_TYPE_CONFIG[f.tipo] || FILE_TYPE_CONFIG.outro;
                         const Icon = config.icon;
+                        const isDeleting = deletingId === f.id;
 
                         return (
                             <div key={f.id}
-                                className={`border rounded-xl p-3 transition-all hover:shadow-sm group ${config.bg} border-gray-200`}>
+                                className={`border rounded-xl p-3 transition-all hover:shadow-sm group ${config.bg} border-gray-200 ${isDeleting ? 'opacity-50' : ''}`}>
                                 <div className="flex items-start gap-3">
                                     <div className={`p-2 rounded-lg ${config.bg}`}>
                                         <Icon className={`h-5 w-5 ${config.color}`} />
@@ -216,14 +300,27 @@ export default function FilesTab({ patientId, plans }: FilesTabProps) {
                                 </div>
                                 {/* Actions (visible on hover) */}
                                 <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button className="text-xs text-gray-400 hover:text-gray-600 p-1 rounded" title="Visualizar">
+                                    <button
+                                        className="text-xs text-gray-400 hover:text-gray-600 p-1 rounded"
+                                        title="Visualizar"
+                                        onClick={() => handlePreview(f.caminho_nas, f.mime_type)}
+                                    >
                                         <Eye className="h-3.5 w-3.5" />
                                     </button>
-                                    <button className="text-xs text-gray-400 hover:text-gray-600 p-1 rounded" title="Download">
+                                    <button
+                                        className="text-xs text-gray-400 hover:text-gray-600 p-1 rounded"
+                                        title="Download"
+                                        onClick={() => handleDownload(f.caminho_nas, f.nome_original)}
+                                    >
                                         <Download className="h-3.5 w-3.5" />
                                     </button>
-                                    <button className="text-xs text-gray-400 hover:text-red-500 p-1 rounded ml-auto" title="Eliminar">
-                                        <Trash2 className="h-3.5 w-3.5" />
+                                    <button
+                                        className="text-xs text-gray-400 hover:text-red-500 p-1 rounded ml-auto"
+                                        title="Eliminar"
+                                        disabled={isDeleting}
+                                        onClick={() => handleDelete(f.id, f.caminho_nas)}
+                                    >
+                                        {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                                     </button>
                                 </div>
                             </div>
