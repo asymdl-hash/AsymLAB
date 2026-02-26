@@ -114,11 +114,24 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
     const handlePhaseStateChange = useCallback(async (phaseId: string, newState: string) => {
         try {
             await patientsService.updateRecord('phases', phaseId, { estado: newState });
+
+            // Lógica sequencial: ao concluir uma fase, activar a próxima pendente
+            if (newState === 'concluida') {
+                const currentIndex = sortedPhases.findIndex((p: { id: string }) => p.id === phaseId);
+                const nextPhase = sortedPhases.slice(currentIndex + 1).find(
+                    (p: { estado: string }) => p.estado === 'pendente'
+                );
+                if (nextPhase) {
+                    await patientsService.updateRecord('phases', nextPhase.id, { estado: 'em_curso' });
+                    setSelectedPhaseId(nextPhase.id);
+                }
+            }
+
             onReload();
         } catch (err) {
             console.error('Error changing phase state:', err);
         }
-    }, [onReload]);
+    }, [onReload, sortedPhases]);
 
     const handleAppointmentStateChange = useCallback(async (appointmentId: string, newState: string) => {
         try {
@@ -502,6 +515,48 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                 <div className="border border-gray-700 rounded-lg p-4">
                     <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Notas da Fase</h3>
                     <p className="text-sm text-gray-300">{phase.notas}</p>
+                </div>
+            )}
+
+            {/* Acções Rápidas da Fase */}
+            {phase.estado !== 'concluida' && phase.estado !== 'cancelada' && (
+                <div className="mt-6 flex items-center gap-2 pt-4 border-t border-gray-700">
+                    {phase.estado === 'pendente' && (
+                        <button
+                            onClick={() => onStateChange(phase.id, 'em_curso')}
+                            className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors flex items-center gap-2"
+                        >
+                            <Clock className="w-4 h-4" />
+                            Iniciar Fase
+                        </button>
+                    )}
+                    {phase.estado === 'em_curso' && (
+                        <button
+                            onClick={() => onStateChange(phase.id, 'concluida')}
+                            className="px-4 py-2 text-sm font-medium rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors flex items-center gap-2"
+                        >
+                            <CheckCircle2 className="w-4 h-4" />
+                            Concluir Fase
+                        </button>
+                    )}
+                    <button
+                        onClick={() => onStateChange(phase.id, 'cancelada')}
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-700 text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition-colors flex items-center gap-2 ml-auto"
+                    >
+                        <XCircle className="w-4 h-4" />
+                        Cancelar
+                    </button>
+                </div>
+            )}
+            {(phase.estado === 'concluida' || phase.estado === 'cancelada') && (
+                <div className="mt-6 flex items-center gap-2 pt-4 border-t border-gray-700">
+                    <button
+                        onClick={() => onStateChange(phase.id, 'pendente')}
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors flex items-center gap-2"
+                    >
+                        <Circle className="w-4 h-4" />
+                        Reabrir como Pendente
+                    </button>
                 </div>
             )}
         </div>
