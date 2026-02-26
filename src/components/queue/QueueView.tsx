@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Filter, X, RefreshCw, ListTodo } from 'lucide-react';
+import { Search, Filter, X, RefreshCw, ListTodo, CheckCircle, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,20 @@ import {
 import { patientsService } from '@/services/patientsService';
 import QueueColumn from './QueueColumn';
 
+// Estados que requerem motivo
+const NEEDS_REASON: Record<string, { label: string; placeholder: string; showTipo?: boolean }> = {
+    pausado: { label: 'Motivo da Pausa', placeholder: 'Porque está a pausar este plano?' },
+    cancelado: { label: 'Motivo do Cancelamento', placeholder: 'Porque está a cancelar este plano?' },
+    reaberto: { label: 'Motivo da Reabertura', placeholder: 'Porque está a reabrir este plano?', showTipo: true },
+};
+
+const ESTADO_LABELS: Record<string, string> = {
+    activo: 'Activo',
+    pausado: 'Pausado',
+    reaberto: 'Reaberto',
+    concluido: 'Concluído',
+};
+
 export default function QueueView() {
     const [items, setItems] = useState<QueueItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -28,6 +42,23 @@ export default function QueueView() {
     const [clinics, setClinics] = useState<{ id: string; name: string }[]>([]);
     const [doctors, setDoctors] = useState<{ id: string; name: string }[]>([]);
     const [workTypes, setWorkTypes] = useState<{ id: string; name: string }[]>([]);
+
+    // Modal de motivo (para drag & drop)
+    const [reasonModal, setReasonModal] = useState<{
+        planId: string;
+        toEstado: string;
+        motivo: string;
+        tipoReopen: string;
+    } | null>(null);
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    // Auto-dismiss toast
+    useEffect(() => {
+        if (toast) {
+            const t = setTimeout(() => setToast(null), 3000);
+            return () => clearTimeout(t);
+        }
+    }, [toast]);
 
     // Carregar filtros guardados
     useEffect(() => {
@@ -85,6 +116,44 @@ export default function QueueView() {
         }
     };
 
+    // ====== DRAG & DROP HANDLER ======
+    const handleDrop = (planId: string, fromEstado: string, toEstado: string) => {
+        if (fromEstado === toEstado) return;
+
+        // Se precisa de motivo, mostrar modal
+        if (NEEDS_REASON[toEstado]) {
+            setReasonModal({ planId, toEstado, motivo: '', tipoReopen: 'correcao' });
+            return;
+        }
+
+        // Transição directa (activo, concluído)
+        executeDrop(planId, toEstado);
+    };
+
+    const executeDrop = async (planId: string, toEstado: string, motivo?: string, tipoReopen?: string) => {
+        // Optimistic update: mover card imediatamente na UI
+        setItems(prev => prev.map(item =>
+            item.id === planId ? { ...item, estado: toEstado } : item
+        ));
+
+        try {
+            await queueService.updatePlanEstado(planId, toEstado, motivo, tipoReopen);
+            setToast({ message: `Plano movido para ${ESTADO_LABELS[toEstado] || toEstado}`, type: 'success' });
+        } catch {
+            // Reverter optimistic update
+            loadData();
+            setToast({ message: 'Erro ao actualizar estado do plano', type: 'error' });
+        }
+    };
+
+    const handleReasonSubmit = () => {
+        if (!reasonModal) return;
+        const { planId, toEstado, motivo, tipoReopen } = reasonModal;
+        if (!motivo.trim()) return;
+        executeDrop(planId, toEstado, motivo, toEstado === 'reaberto' ? tipoReopen : undefined);
+        setReasonModal(null);
+    };
+
     const hasActiveFilters = filters.search || filters.clinica_id || filters.medico_id || filters.tipo_trabalho_id || filters.urgente !== null;
 
     // Filtrar e agrupar
@@ -105,6 +174,78 @@ export default function QueueView() {
 
     return (
         <div className="flex flex-col h-full bg-white">
+            {/* ====== TOAST ====== */}
+            {toast && (
+                <div className={cn(
+                    "fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium animate-in slide-in-from-top-2",
+                    toast.type === 'success'
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-red-50 text-red-700 border border-red-200"
+                )}>
+                    {toast.type === 'success'
+                        ? <CheckCircle className="h-4 w-4" />
+                        : <AlertCircle className="h-4 w-4" />
+                    }
+                    {toast.message}
+                </div>
+            )}
+
+            {/* ====== REASON MODAL ====== */}
+            {reasonModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                            {NEEDS_REASON[reasonModal.toEstado]?.label}
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-4">
+                            A mover para <strong>{ESTADO_LABELS[reasonModal.toEstado]}</strong>
+                        </p>
+
+                        {/* Tipo de reabertura */}
+                        {NEEDS_REASON[reasonModal.toEstado]?.showTipo && (
+                            <div className="mb-3">
+                                <label className="text-xs text-gray-500 mb-1 block">Tipo de Reabertura</label>
+                                <select
+                                    className="w-full h-9 rounded-lg border border-gray-300 px-3 text-sm"
+                                    value={reasonModal.tipoReopen}
+                                    onChange={e => setReasonModal({ ...reasonModal, tipoReopen: e.target.value })}
+                                >
+                                    <option value="correcao">Correcção</option>
+                                    <option value="remake">Remake</option>
+                                </select>
+                            </div>
+                        )}
+
+                        {/* Motivo */}
+                        <textarea
+                            className="w-full h-24 rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+                            placeholder={NEEDS_REASON[reasonModal.toEstado]?.placeholder}
+                            value={reasonModal.motivo}
+                            onChange={e => setReasonModal({ ...reasonModal, motivo: e.target.value })}
+                            autoFocus
+                        />
+
+                        <div className="flex items-center gap-2 mt-4 justify-end">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setReasonModal(null)}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                disabled={!reasonModal.motivo.trim()}
+                                onClick={handleReasonSubmit}
+                            >
+                                Confirmar
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ====== HEADER ====== */}
             <div className="px-6 py-4 border-b border-gray-200 bg-white">
                 <div className="flex items-center justify-between mb-3">
@@ -243,7 +384,9 @@ export default function QueueView() {
                             title={col.label}
                             color={col.color}
                             icon={col.icon}
+                            columnKey={col.key}
                             items={grouped[col.key] || []}
+                            onDrop={handleDrop}
                         />
                     ))}
                 </div>

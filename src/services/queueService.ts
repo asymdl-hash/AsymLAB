@@ -188,4 +188,35 @@ export const queueService = {
         } catch { /* ignore */ }
         return { ...DEFAULT_QUEUE_FILTERS };
     },
+
+    // Actualizar estado de um plano (para drag & drop)
+    async updatePlanEstado(
+        planId: string,
+        novoEstado: string,
+        motivo?: string,
+        tipo_reopen?: string
+    ): Promise<void> {
+        const updateData: Record<string, any> = {
+            estado: novoEstado,
+            updated_at: new Date().toISOString(),
+        };
+
+        if (motivo) updateData.motivo_pausa = motivo;
+        if (tipo_reopen) updateData.tipo_reopen = tipo_reopen;
+
+        // Se concluir, guardar data_fim
+        if (novoEstado === 'concluido') {
+            updateData.data_fim = new Date().toISOString();
+        }
+
+        const { error } = await supabase
+            .from('treatment_plans')
+            .update(updateData)
+            .eq('id', planId);
+
+        if (error) {
+            console.error('Erro ao actualizar estado:', error);
+            throw error;
+        }
+    },
 };

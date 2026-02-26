@@ -2,8 +2,9 @@
 
 import { QueueItem } from '@/services/queueService';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, Clock } from 'lucide-react';
+import { AlertTriangle, Clock, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import React from 'react';
 
 interface QueueCardProps {
     item: QueueItem;
@@ -26,8 +27,26 @@ function timeAgo(dateStr: string): string {
 export default function QueueCard({ item }: QueueCardProps) {
     const router = useRouter();
 
-    const handleClick = () => {
+    const handleClick = (e: React.MouseEvent) => {
+        // Não navegar se está a arrastar
+        if ((e.target as HTMLElement).closest('.drag-handle')) return;
         router.push(`/dashboard/patients/${item.paciente.id}/plans/${item.id}`);
+    };
+
+    const handleDragStart = (e: React.DragEvent) => {
+        e.dataTransfer.setData('application/json', JSON.stringify({
+            planId: item.id,
+            fromEstado: item.estado,
+            planNome: item.nome,
+            pacienteNome: item.paciente.nome,
+        }));
+        e.dataTransfer.effectAllowed = 'move';
+        // Adicionar classe visual
+        (e.currentTarget as HTMLElement).style.opacity = '0.4';
+    };
+
+    const handleDragEnd = (e: React.DragEvent) => {
+        (e.currentTarget as HTMLElement).style.opacity = '1';
     };
 
     const progressPct = item.progresso.total > 0
@@ -35,7 +54,10 @@ export default function QueueCard({ item }: QueueCardProps) {
         : 0;
 
     return (
-        <button
+        <div
+            draggable
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
             onClick={handleClick}
             className={cn(
                 "w-full text-left p-3 rounded-lg border transition-all duration-200 group cursor-pointer",
@@ -43,13 +65,18 @@ export default function QueueCard({ item }: QueueCardProps) {
                 item.urgente && "ring-2 ring-amber-400/40 border-amber-300"
             )}
         >
-            {/* Urgente badge */}
-            {item.urgente && (
-                <div className="flex items-center gap-1 mb-1.5">
-                    <AlertTriangle className="h-3 w-3 text-amber-500" />
-                    <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Urgente</span>
+            {/* Drag handle + Urgente */}
+            <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1">
+                    <GripVertical className="h-3 w-3 text-gray-300 drag-handle cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {item.urgente && (
+                        <div className="flex items-center gap-1">
+                            <AlertTriangle className="h-3 w-3 text-amber-500" />
+                            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Urgente</span>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
 
             {/* Paciente */}
             <div className="flex items-center justify-between gap-2 mb-1">
@@ -97,6 +124,6 @@ export default function QueueCard({ item }: QueueCardProps) {
                     <span className="text-[10px]">{timeAgo(item.updated_at)}</span>
                 </div>
             </div>
-        </button>
+        </div>
     );
 }
