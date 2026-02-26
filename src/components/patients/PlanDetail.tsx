@@ -15,17 +15,22 @@ import {
     ChevronDown,
     AlertTriangle,
     XCircle,
+    Pause,
+    RotateCcw,
+    X,
 } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
 import NewPhaseModal from './NewPhaseModal';
 import NewAppointmentModal from './NewAppointmentModal';
 
 // === Config de estados ===
-const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    rascunho: { label: 'Rascunho', color: 'text-yellow-700', bg: 'bg-yellow-100' },
-    activo: { label: 'Activo', color: 'text-green-700', bg: 'bg-green-100' },
-    concluido: { label: 'Concluído', color: 'text-blue-700', bg: 'bg-blue-100' },
-    cancelado: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-100' },
+const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: string; darkColor: string; darkBg: string }> = {
+    rascunho: { label: 'Rascunho', color: 'text-yellow-700', bg: 'bg-yellow-100', darkColor: 'text-yellow-400', darkBg: 'bg-yellow-900/30' },
+    activo: { label: 'Activo', color: 'text-green-700', bg: 'bg-green-100', darkColor: 'text-green-400', darkBg: 'bg-green-900/30' },
+    pausado: { label: 'Pausado', color: 'text-orange-700', bg: 'bg-orange-100', darkColor: 'text-orange-400', darkBg: 'bg-orange-900/30' },
+    concluido: { label: 'Concluído', color: 'text-blue-700', bg: 'bg-blue-100', darkColor: 'text-blue-400', darkBg: 'bg-blue-900/30' },
+    cancelado: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-100', darkColor: 'text-red-400', darkBg: 'bg-red-900/30' },
+    reaberto: { label: 'Reaberto', color: 'text-purple-700', bg: 'bg-purple-100', darkColor: 'text-purple-400', darkBg: 'bg-purple-900/30' },
 };
 
 const PHASE_STATE_CONFIG: Record<string, { label: string; icon: typeof CheckCircle2; color: string }> = {
@@ -36,8 +41,9 @@ const PHASE_STATE_CONFIG: Record<string, { label: string; icon: typeof CheckCirc
 };
 
 const APPOINTMENT_TYPE_CONFIG: Record<string, { label: string; emoji: string }> = {
-    prova: { label: 'Prova', emoji: '🔵' },
-    colocacao: { label: 'Colocação', emoji: '🟣' },
+    moldagem: { label: 'Moldagem', emoji: '🟤' },
+    para_prova: { label: 'Prova', emoji: '🔵' },
+    para_colocacao: { label: 'Colocação', emoji: '🟣' },
     reparacao: { label: 'Reparação', emoji: '🔧' },
     ajuste: { label: 'Ajuste', emoji: '⚙️' },
     outro: { label: 'Outro', emoji: '📅' },
@@ -45,6 +51,9 @@ const APPOINTMENT_TYPE_CONFIG: Record<string, { label: string; emoji: string }> 
 
 const APPOINTMENT_STATE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
     agendado: { label: 'Agendado', color: 'text-blue-700', bg: 'bg-blue-100' },
+    prova_entregue: { label: 'Prova Entregue', color: 'text-indigo-700', bg: 'bg-indigo-100' },
+    colocacao_entregue: { label: 'Colocação Entregue', color: 'text-purple-700', bg: 'bg-purple-100' },
+    recolhido: { label: 'Recolhido', color: 'text-teal-700', bg: 'bg-teal-100' },
     concluido: { label: 'Concluído', color: 'text-green-700', bg: 'bg-green-100' },
     cancelado: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-100' },
     remarcado: { label: 'Remarcado', color: 'text-orange-700', bg: 'bg-orange-100' },
@@ -63,6 +72,7 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
     const [showActionsMenu, setShowActionsMenu] = useState(false);
     const [changingState, setChangingState] = useState(false);
     const [reordering, setReordering] = useState(false);
+    const [reasonModal, setReasonModal] = useState<{ action: 'pausar' | 'cancelar' | 'reabrir'; planId: string } | null>(null);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sortedPhases = [...(plan.phases || [])].sort((a: any, b: any) => a.ordem - b.ordem);
@@ -71,10 +81,14 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
 
     const planState = PLAN_STATE_CONFIG[plan.estado] || PLAN_STATE_CONFIG.rascunho;
 
-    const handleStateChange = useCallback(async (newState: string) => {
+    const handleStateChange = useCallback(async (newState: string, extra?: Record<string, unknown>) => {
         try {
             setChangingState(true);
-            await patientsService.updatePlanState(plan.id, newState);
+            if (extra) {
+                await patientsService.updateRecord('treatment_plans', plan.id, { estado: newState, ...extra });
+            } else {
+                await patientsService.updatePlanState(plan.id, newState);
+            }
             setShowActionsMenu(false);
             onReload();
         } catch (err) {
@@ -83,6 +97,19 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
             setChangingState(false);
         }
     }, [plan.id, onReload]);
+
+    const handleReasonSubmit = useCallback(async (reason: string, reopenType?: string) => {
+        if (!reasonModal) return;
+        const { action } = reasonModal;
+        if (action === 'pausar') {
+            await handleStateChange('pausado', { motivo_pausa: reason });
+        } else if (action === 'cancelar') {
+            await handleStateChange('cancelado', { motivo_cancelamento: reason });
+        } else if (action === 'reabrir') {
+            await handleStateChange('reaberto', { tipo_reopen: reopenType || 'correcao' });
+        }
+        setReasonModal(null);
+    }, [reasonModal, handleStateChange]);
 
     const handlePhaseStateChange = useCallback(async (phaseId: string, newState: string) => {
         try {
@@ -140,7 +167,7 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                     <h1 className="text-lg font-bold truncate">{plan.nome}</h1>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 ml-9">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${planState.bg} ${planState.color}`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${planState.darkBg} ${planState.darkColor}`}>
                         {planState.label}
                     </span>
                     {plan.work_type && (
@@ -166,23 +193,47 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                             <MoreVertical className="w-5 h-5" />
                         </button>
                         {showActionsMenu && (
-                            <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
-                                {plan.estado !== 'activo' && (
+                            <div className="absolute right-0 top-full mt-1 w-52 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
+                                {plan.estado === 'rascunho' && (
                                     <button onClick={() => handleStateChange('activo')} disabled={changingState}
-                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-green-400">
-                                        ✅ Marcar como Activo
+                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-green-400 flex items-center gap-2">
+                                        <CheckCircle2 className="w-4 h-4" /> Activar Plano
                                     </button>
                                 )}
-                                {plan.estado !== 'concluido' && (
-                                    <button onClick={() => handleStateChange('concluido')} disabled={changingState}
-                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-blue-400">
-                                        ☑️ Concluir Plano
-                                    </button>
+                                {(plan.estado === 'activo' || plan.estado === 'reaberto') && (
+                                    <>
+                                        <button onClick={() => { setReasonModal({ action: 'pausar', planId: plan.id }); setShowActionsMenu(false); }} disabled={changingState}
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-orange-400 flex items-center gap-2">
+                                            <Pause className="w-4 h-4" /> Pausar Plano
+                                        </button>
+                                        <button onClick={() => handleStateChange('concluido')} disabled={changingState}
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-blue-400 flex items-center gap-2">
+                                            <CheckCircle2 className="w-4 h-4" /> Concluir Plano
+                                        </button>
+                                        <div className="border-t border-gray-700 my-1" />
+                                        <button onClick={() => { setReasonModal({ action: 'cancelar', planId: plan.id }); setShowActionsMenu(false); }} disabled={changingState}
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-red-400 flex items-center gap-2">
+                                            <XCircle className="w-4 h-4" /> Cancelar Plano
+                                        </button>
+                                    </>
                                 )}
-                                {plan.estado !== 'cancelado' && (
-                                    <button onClick={() => handleStateChange('cancelado')} disabled={changingState}
-                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-red-400">
-                                        ❌ Cancelar Plano
+                                {plan.estado === 'pausado' && (
+                                    <>
+                                        <button onClick={() => handleStateChange('activo', { motivo_pausa: null })} disabled={changingState}
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-green-400 flex items-center gap-2">
+                                            <CheckCircle2 className="w-4 h-4" /> Retomar Plano
+                                        </button>
+                                        <div className="border-t border-gray-700 my-1" />
+                                        <button onClick={() => { setReasonModal({ action: 'cancelar', planId: plan.id }); setShowActionsMenu(false); }} disabled={changingState}
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-red-400 flex items-center gap-2">
+                                            <XCircle className="w-4 h-4" /> Cancelar Plano
+                                        </button>
+                                    </>
+                                )}
+                                {(plan.estado === 'concluido' || plan.estado === 'cancelado') && (
+                                    <button onClick={() => { setReasonModal({ action: 'reabrir', planId: plan.id }); setShowActionsMenu(false); }} disabled={changingState}
+                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-purple-400 flex items-center gap-2">
+                                        <RotateCcw className="w-4 h-4" /> Reabrir Plano
                                     </button>
                                 )}
                             </div>
@@ -324,6 +375,13 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                     phaseId={selectedPhaseId}
                     onClose={() => setShowAppointmentModal(false)}
                     onCreated={() => { setShowAppointmentModal(false); onReload(); }}
+                />
+            )}
+            {reasonModal && (
+                <ReasonModal
+                    action={reasonModal.action}
+                    onSubmit={handleReasonSubmit}
+                    onClose={() => setReasonModal(null)}
                 />
             )}
         </div>
@@ -488,20 +546,38 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange }
                         <MoreVertical className="w-3.5 h-3.5 text-gray-500" />
                     </button>
                     {showMenu && (
-                        <div className="absolute right-0 top-full mt-1 w-40 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
+                        <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
+                            {(appointment.tipo === 'para_prova' || appointment.tipo === 'moldagem') && appointment.estado === 'agendado' && (
+                                <button onClick={() => { onStateChange(appointment.id, 'prova_entregue'); setShowMenu(false); }}
+                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-indigo-400">
+                                    📦 Prova Entregue
+                                </button>
+                            )}
+                            {appointment.tipo === 'para_colocacao' && appointment.estado === 'agendado' && (
+                                <button onClick={() => { onStateChange(appointment.id, 'colocacao_entregue'); setShowMenu(false); }}
+                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-purple-400">
+                                    📦 Col. Entregue
+                                </button>
+                            )}
+                            {(appointment.estado === 'prova_entregue' || appointment.estado === 'colocacao_entregue') && (
+                                <button onClick={() => { onStateChange(appointment.id, 'recolhido'); setShowMenu(false); }}
+                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-teal-400">
+                                    ✅ Recolhido
+                                </button>
+                            )}
                             {appointment.estado !== 'concluido' && (
                                 <button onClick={() => { onStateChange(appointment.id, 'concluido'); setShowMenu(false); }}
                                     className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-green-400">
                                     ✅ Concluído
                                 </button>
                             )}
-                            {appointment.estado !== 'remarcado' && (
+                            {appointment.estado !== 'remarcado' && appointment.estado !== 'concluido' && (
                                 <button onClick={() => { onStateChange(appointment.id, 'remarcado'); setShowMenu(false); }}
                                     className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-orange-400">
                                     🔄 Remarcado
                                 </button>
                             )}
-                            {appointment.estado !== 'cancelado' && (
+                            {appointment.estado !== 'cancelado' && appointment.estado !== 'concluido' && (
                                 <button onClick={() => { onStateChange(appointment.id, 'cancelado'); setShowMenu(false); }}
                                     className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-red-400">
                                     ❌ Cancelado
@@ -514,6 +590,117 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange }
             {appointment.notas && (
                 <p className="mt-2 text-xs text-gray-400 italic">{appointment.notas}</p>
             )}
+        </div>
+    );
+}
+
+// === Modal de Motivo para Pausar/Cancelar/Reabrir ===
+
+function ReasonModal({ action, onSubmit, onClose }: {
+    action: 'pausar' | 'cancelar' | 'reabrir';
+    onSubmit: (reason: string, reopenType?: string) => void;
+    onClose: () => void;
+}) {
+    const [reason, setReason] = useState('');
+    const [reopenType, setReopenType] = useState<'correcao' | 'remake'>('correcao');
+    const [submitting, setSubmitting] = useState(false);
+
+    const config = {
+        pausar: {
+            title: '⏸️ Pausar Plano',
+            label: 'Motivo da pausa',
+            placeholder: 'Ex: A aguardar componentes, paciente em viagem...',
+            color: 'bg-orange-500 hover:bg-orange-600',
+            required: true,
+        },
+        cancelar: {
+            title: '❌ Cancelar Plano',
+            label: 'Motivo do cancelamento',
+            placeholder: 'Ex: Paciente desistiu, plano incorreto...',
+            color: 'bg-red-600 hover:bg-red-700',
+            required: true,
+        },
+        reabrir: {
+            title: '🔄 Reabrir Plano',
+            label: 'Motivo da reabertura (opcional)',
+            placeholder: 'Ex: Necessidade de ajuste, reclamação...',
+            color: 'bg-purple-600 hover:bg-purple-700',
+            required: false,
+        },
+    }[action];
+
+    const handleSubmit = async () => {
+        if (config.required && !reason.trim()) return;
+        setSubmitting(true);
+        try {
+            await onSubmit(reason.trim(), action === 'reabrir' ? reopenType : undefined);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-md shadow-2xl">
+                <div className="flex items-center justify-between p-5 border-b border-gray-700">
+                    <h3 className="text-lg font-bold text-white">{config.title}</h3>
+                    <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-700 text-gray-400">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+                <div className="p-5 space-y-4">
+                    {action === 'reabrir' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Tipo de reabertura</label>
+                            <div className="flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setReopenType('correcao')}
+                                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${reopenType === 'correcao'
+                                        ? 'bg-purple-900/40 border-purple-500 text-purple-300'
+                                        : 'bg-gray-700/50 border-gray-600 text-gray-400 hover:border-gray-500'
+                                        }`}
+                                >
+                                    🔧 Correcção
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setReopenType('remake')}
+                                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${reopenType === 'remake'
+                                        ? 'bg-purple-900/40 border-purple-500 text-purple-300'
+                                        : 'bg-gray-700/50 border-gray-600 text-gray-400 hover:border-gray-500'
+                                        }`}
+                                >
+                                    🔄 Remake
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{config.label}</label>
+                        <textarea
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                            placeholder={config.placeholder}
+                            rows={3}
+                            className="w-full px-3 py-2.5 rounded-lg bg-gray-700/50 border border-gray-600 text-white placeholder-gray-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 resize-none text-sm"
+                            autoFocus
+                        />
+                    </div>
+                </div>
+                <div className="flex justify-end gap-3 p-5 border-t border-gray-700">
+                    <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-700 transition-colors">
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={submitting || (config.required && !reason.trim())}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${config.color}`}
+                    >
+                        {submitting ? 'A processar...' : 'Confirmar'}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }
