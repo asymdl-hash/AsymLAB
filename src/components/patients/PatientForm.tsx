@@ -11,6 +11,7 @@ import {
     FolderOpen,
     MessageSquare,
     History,
+    FileText,
     Plus,
     ChevronRight,
     Circle,
@@ -25,6 +26,7 @@ import DeleteConfirmModal from '@/components/patients/DeleteConfirmModal';
 import DuplicateWarning from '@/components/patients/DuplicateWarning';
 import ConsiderationsTab from '@/components/patients/ConsiderationsTab';
 import FilesTab from '@/components/patients/FilesTab';
+import DocumentsTab from '@/components/patients/DocumentsTab';
 import HistoryTab from '@/components/patients/HistoryTab';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -344,6 +346,10 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         <MessageSquare className="h-3.5 w-3.5" />
                         <span>Considerações</span>
                     </TabsTrigger>
+                    <TabsTrigger value="documentacao" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
+                        <FileText className="h-3.5 w-3.5" />
+                        <span>Documentação</span>
+                    </TabsTrigger>
                     <TabsTrigger value="historico" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
                         <History className="h-3.5 w-3.5" />
                         <span>Histórico</span>
@@ -501,6 +507,11 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                 {/* === Tab: Considerações === */}
                 <TabsContent value="consideracoes" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
                     <ConsiderationsTab patientId={patient.id} plans={patient.treatment_plans || []} />
+                </TabsContent>
+
+                {/* === Tab: Documentação === */}
+                <TabsContent value="documentacao" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
+                    <DocumentsTab patientId={patient.id} />
                 </TabsContent>
 
                 {/* === Tab: Histórico === */}
