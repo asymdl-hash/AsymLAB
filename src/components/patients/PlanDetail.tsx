@@ -22,6 +22,7 @@ import {
 import { patientsService } from '@/services/patientsService';
 import NewPhaseModal from './NewPhaseModal';
 import NewAppointmentModal from './NewAppointmentModal';
+import WorkBadges from './WorkBadges';
 
 // === Config de estados ===
 const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: string; darkColor: string; darkBg: string }> = {
@@ -253,6 +254,11 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* === WORK BADGES === */}
+            <div className="px-4 md:px-6 py-2 border-b border-gray-700/50 bg-gray-800/20 flex-shrink-0">
+                <WorkBadges planId={plan.id} mode="full" />
             </div>
 
             {/* === BODY: Timeline + Detail === */}

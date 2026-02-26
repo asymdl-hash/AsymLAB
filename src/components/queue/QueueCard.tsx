@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AlertTriangle, Clock, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React from 'react';
+import WorkBadges from '@/components/patients/WorkBadges';
 
 interface QueueCardProps {
     item: QueueItem;
@@ -101,6 +102,11 @@ export default function QueueCard({ item }: QueueCardProps) {
                         {item.clinica.commercial_name}
                     </span>
                 )}
+            </div>
+
+            {/* Work Status Badges */}
+            <div className="mb-2">
+                <WorkBadges planId={item.id} mode="compact" maxVisible={3} />
             </div>
 
             {/* Footer: progress + time */}
