@@ -163,24 +163,24 @@ export default function QueueView() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-full bg-white">
+            <div className="flex items-center justify-center h-full bg-gray-900">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3" />
-                    <p className="text-sm text-gray-500">A carregar fila de pedidos...</p>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto mb-3" />
+                    <p className="text-sm text-gray-400">A carregar fila de pedidos...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col h-full bg-white">
+        <div className="flex flex-col h-full bg-gray-900 text-white">
             {/* ====== TOAST ====== */}
             {toast && (
                 <div className={cn(
                     "fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium animate-in slide-in-from-top-2",
                     toast.type === 'success'
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
+                        ? "bg-emerald-900/40 text-emerald-400 border border-emerald-700"
+                        : "bg-red-900/40 text-red-400 border border-red-700"
                 )}>
                     {toast.type === 'success'
                         ? <CheckCircle className="h-4 w-4" />
@@ -192,21 +192,21 @@ export default function QueueView() {
 
             {/* ====== REASON MODAL ====== */}
             {reasonModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                    <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+                        <h3 className="text-lg font-semibold text-white mb-1">
                             {NEEDS_REASON[reasonModal.toEstado]?.label}
                         </h3>
-                        <p className="text-xs text-gray-500 mb-4">
+                        <p className="text-xs text-gray-400 mb-4">
                             A mover para <strong>{ESTADO_LABELS[reasonModal.toEstado]}</strong>
                         </p>
 
                         {/* Tipo de reabertura */}
                         {NEEDS_REASON[reasonModal.toEstado]?.showTipo && (
                             <div className="mb-3">
-                                <label className="text-xs text-gray-500 mb-1 block">Tipo de Reabertura</label>
+                                <label className="text-xs text-gray-400 mb-1 block">Tipo de Reabertura</label>
                                 <select
-                                    className="w-full h-9 rounded-lg border border-gray-300 px-3 text-sm"
+                                    className="w-full h-9 rounded-lg border border-gray-600 bg-gray-700 text-white px-3 text-sm"
                                     value={reasonModal.tipoReopen}
                                     onChange={e => setReasonModal({ ...reasonModal, tipoReopen: e.target.value })}
                                 >
@@ -218,7 +218,7 @@ export default function QueueView() {
 
                         {/* Motivo */}
                         <textarea
-                            className="w-full h-24 rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+                            className="w-full h-24 rounded-lg border border-gray-600 bg-gray-700 text-white px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 placeholder:text-gray-500"
                             placeholder={NEEDS_REASON[reasonModal.toEstado]?.placeholder}
                             value={reasonModal.motivo}
                             onChange={e => setReasonModal({ ...reasonModal, motivo: e.target.value })}
@@ -229,13 +229,14 @@ export default function QueueView() {
                             <Button
                                 variant="ghost"
                                 size="sm"
+                                className="text-gray-400 hover:text-white"
                                 onClick={() => setReasonModal(null)}
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 size="sm"
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                className="bg-amber-500 hover:bg-amber-400 text-gray-900"
                                 disabled={!reasonModal.motivo.trim()}
                                 onClick={handleReasonSubmit}
                             >
@@ -247,15 +248,15 @@ export default function QueueView() {
             )}
 
             {/* ====== HEADER ====== */}
-            <div className="px-6 py-4 border-b border-gray-200 bg-white">
+            <div className="px-6 py-4 border-b border-gray-700 bg-gray-800/50">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
-                            <ListTodo className="h-5 w-5 text-blue-600" />
+                        <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                            <ListTodo className="h-5 w-5 text-amber-500" />
                         </div>
                         <div>
-                            <h1 className="text-lg font-bold text-gray-900">Fila de Pedidos</h1>
-                            <p className="text-xs text-gray-500">
+                            <h1 className="text-lg font-bold text-white">Fila de Pedidos</h1>
+                            <p className="text-xs text-gray-400">
                                 {totalActive} pedido{totalActive !== 1 ? 's' : ''} activo{totalActive !== 1 ? 's' : ''}
                                 {hasActiveFilters && ` · ${filteredItems.length} visíveis`}
                             </p>
@@ -268,14 +269,14 @@ export default function QueueView() {
                             variant="ghost"
                             className={cn(
                                 "h-8 gap-1.5 text-xs",
-                                showFilters ? "text-blue-600 bg-blue-50" : "text-gray-500 hover:text-gray-700"
+                                showFilters ? "text-amber-400 bg-amber-500/10" : "text-gray-400 hover:text-white"
                             )}
                             onClick={() => setShowFilters(!showFilters)}
                         >
                             <Filter className="h-3.5 w-3.5" />
                             Filtros
                             {hasActiveFilters && (
-                                <span className="ml-1 w-4 h-4 rounded-full bg-blue-600 text-white text-[9px] flex items-center justify-center font-bold">
+                                <span className="ml-1 w-4 h-4 rounded-full bg-amber-500 text-gray-900 text-[9px] flex items-center justify-center font-bold">
                                     !
                                 </span>
                             )}
@@ -283,7 +284,7 @@ export default function QueueView() {
                         <Button
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8 text-gray-400 hover:text-gray-600"
+                            className="h-8 w-8 text-gray-500 hover:text-white"
                             onClick={handleRefresh}
                             disabled={refreshing}
                         >
@@ -297,7 +298,7 @@ export default function QueueView() {
                     {QUEUE_COLUMNS.map(col => (
                         <div key={col.key} className="flex items-center gap-1.5">
                             <span className="text-xs">{col.icon}</span>
-                            <span className="text-xs font-medium text-gray-600">
+                            <span className="text-xs font-medium text-gray-400">
                                 {grouped[col.key]?.length || 0}
                             </span>
                         </div>
@@ -306,13 +307,13 @@ export default function QueueView() {
 
                 {/* ====== FILTROS ====== */}
                 {showFilters && (
-                    <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3 flex-wrap">
+                    <div className="mt-3 pt-3 border-t border-gray-700 flex items-center gap-3 flex-wrap">
                         {/* Pesquisa */}
                         <div className="relative flex-1 min-w-[200px] max-w-[300px]">
-                            <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400" />
+                            <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-500" />
                             <Input
                                 placeholder="Pesquisar paciente, T-ID, plano..."
-                                className="pl-8 h-8 text-xs bg-gray-50 border-gray-200"
+                                className="pl-8 h-8 text-xs bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
                                 value={filters.search}
                                 onChange={(e) => updateFilter('search', e.target.value)}
                             />
@@ -320,7 +321,7 @@ export default function QueueView() {
 
                         {/* Clínica */}
                         <select
-                            className="h-8 text-xs border border-gray-200 rounded-md px-2 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            className="h-8 text-xs border border-gray-600 rounded-md px-2 bg-gray-800 text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
                             value={filters.clinica_id || ''}
                             onChange={(e) => updateFilter('clinica_id', e.target.value || null)}
                         >
@@ -330,7 +331,7 @@ export default function QueueView() {
 
                         {/* Médico */}
                         <select
-                            className="h-8 text-xs border border-gray-200 rounded-md px-2 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            className="h-8 text-xs border border-gray-600 rounded-md px-2 bg-gray-800 text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
                             value={filters.medico_id || ''}
                             onChange={(e) => updateFilter('medico_id', e.target.value || null)}
                         >
@@ -340,7 +341,7 @@ export default function QueueView() {
 
                         {/* Tipo Trabalho */}
                         <select
-                            className="h-8 text-xs border border-gray-200 rounded-md px-2 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            className="h-8 text-xs border border-gray-600 rounded-md px-2 bg-gray-800 text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
                             value={filters.tipo_trabalho_id || ''}
                             onChange={(e) => updateFilter('tipo_trabalho_id', e.target.value || null)}
                         >
@@ -353,8 +354,8 @@ export default function QueueView() {
                             className={cn(
                                 "h-8 px-3 text-xs rounded-md border transition-colors font-medium",
                                 filters.urgente === true
-                                    ? "bg-amber-50 border-amber-300 text-amber-700"
-                                    : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-amber-50 hover:text-amber-700"
+                                    ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                                    : "bg-gray-800 border-gray-600 text-gray-400 hover:bg-amber-500/10 hover:text-amber-400"
                             )}
                             onClick={() => updateFilter('urgente', filters.urgente === true ? null : true)}
                         >
@@ -364,7 +365,7 @@ export default function QueueView() {
                         {/* Reset */}
                         {hasActiveFilters && (
                             <button
-                                className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                                className="text-xs text-amber-400 hover:underline flex items-center gap-1"
                                 onClick={resetFilters}
                             >
                                 <X className="h-3 w-3" />

@@ -61,18 +61,18 @@ export default function QueueCard({ item }: QueueCardProps) {
             onClick={handleClick}
             className={cn(
                 "w-full text-left p-3 rounded-lg border transition-all duration-200 group cursor-pointer",
-                "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300 hover:shadow-md",
-                item.urgente && "ring-2 ring-amber-400/40 border-amber-300"
+                "bg-gray-700/50 hover:bg-gray-700 border-gray-600 hover:border-gray-500 hover:shadow-lg hover:shadow-black/20",
+                item.urgente && "ring-2 ring-amber-400/30 border-amber-500/50"
             )}
         >
             {/* Drag handle + Urgente */}
             <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1">
-                    <GripVertical className="h-3 w-3 text-gray-300 drag-handle cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <GripVertical className="h-3 w-3 text-gray-500 drag-handle cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity" />
                     {item.urgente && (
                         <div className="flex items-center gap-1">
                             <AlertTriangle className="h-3 w-3 text-amber-500" />
-                            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Urgente</span>
+                            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Urgente</span>
                         </div>
                     )}
                 </div>
@@ -80,24 +80,24 @@ export default function QueueCard({ item }: QueueCardProps) {
 
             {/* Paciente */}
             <div className="flex items-center justify-between gap-2 mb-1">
-                <h4 className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-700 transition-colors">
+                <h4 className="text-sm font-semibold text-gray-100 truncate group-hover:text-amber-400 transition-colors">
                     {item.paciente.nome}
                 </h4>
-                <span className="text-[10px] font-mono text-gray-400 shrink-0">{item.paciente.t_id}</span>
+                <span className="text-[10px] font-mono text-gray-500 shrink-0">{item.paciente.t_id}</span>
             </div>
 
             {/* Plano */}
-            <p className="text-xs text-gray-600 truncate mb-2">{item.nome}</p>
+            <p className="text-xs text-gray-400 truncate mb-2">{item.nome}</p>
 
             {/* Badges row */}
             <div className="flex items-center gap-1.5 flex-wrap mb-2">
                 {item.tipo_trabalho && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium border border-blue-100">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-medium border border-blue-500/30">
                         {item.tipo_trabalho.nome}
                     </span>
                 )}
                 {item.clinica && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-600/50 text-gray-300 font-medium">
                         {item.clinica.commercial_name}
                     </span>
                 )}
@@ -107,19 +107,19 @@ export default function QueueCard({ item }: QueueCardProps) {
             <div className="flex items-center justify-between">
                 {/* Progress */}
                 <div className="flex items-center gap-2">
-                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="w-16 h-1.5 bg-gray-600 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-emerald-500 rounded-full transition-all"
                             style={{ width: `${progressPct}%` }}
                         />
                     </div>
-                    <span className="text-[10px] text-gray-400 font-medium">
+                    <span className="text-[10px] text-gray-500 font-medium">
                         {item.progresso.feitas}/{item.progresso.total}
                     </span>
                 </div>
 
                 {/* Time */}
-                <div className="flex items-center gap-0.5 text-gray-400">
+                <div className="flex items-center gap-0.5 text-gray-500">
                     <Clock className="h-2.5 w-2.5" />
                     <span className="text-[10px]">{timeAgo(item.updated_at)}</span>
                 </div>

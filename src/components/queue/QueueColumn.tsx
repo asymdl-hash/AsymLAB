@@ -16,32 +16,32 @@ interface QueueColumnProps {
 
 const COLOR_MAP: Record<string, { header: string; border: string; dot: string; count: string; dropHighlight: string }> = {
     emerald: {
-        header: 'bg-emerald-50 border-emerald-200',
-        border: 'border-emerald-200',
+        header: 'bg-emerald-900/30 border-emerald-700',
+        border: 'border-emerald-700',
         dot: 'bg-emerald-500',
-        count: 'text-emerald-700 bg-emerald-100',
-        dropHighlight: 'bg-emerald-100/60 border-emerald-400',
+        count: 'text-emerald-400 bg-emerald-500/20',
+        dropHighlight: 'bg-emerald-900/30 border-emerald-500',
     },
     amber: {
-        header: 'bg-amber-50 border-amber-200',
-        border: 'border-amber-200',
+        header: 'bg-amber-900/30 border-amber-700',
+        border: 'border-amber-700',
         dot: 'bg-amber-500',
-        count: 'text-amber-700 bg-amber-100',
-        dropHighlight: 'bg-amber-100/60 border-amber-400',
+        count: 'text-amber-400 bg-amber-500/20',
+        dropHighlight: 'bg-amber-900/30 border-amber-500',
     },
     blue: {
-        header: 'bg-blue-50 border-blue-200',
-        border: 'border-blue-200',
+        header: 'bg-blue-900/30 border-blue-700',
+        border: 'border-blue-700',
         dot: 'bg-blue-500',
-        count: 'text-blue-700 bg-blue-100',
-        dropHighlight: 'bg-blue-100/60 border-blue-400',
+        count: 'text-blue-400 bg-blue-500/20',
+        dropHighlight: 'bg-blue-900/30 border-blue-500',
     },
     gray: {
-        header: 'bg-gray-50 border-gray-200',
-        border: 'border-gray-200',
-        dot: 'bg-gray-400',
-        count: 'text-gray-600 bg-gray-100',
-        dropHighlight: 'bg-gray-200/60 border-gray-400',
+        header: 'bg-gray-800/50 border-gray-700',
+        border: 'border-gray-700',
+        dot: 'bg-gray-500',
+        count: 'text-gray-400 bg-gray-600/30',
+        dropHighlight: 'bg-gray-700/40 border-gray-500',
     },
 };
 
@@ -98,7 +98,7 @@ export default function QueueColumn({ title, color, icon, columnKey, items, onDr
                 "flex flex-col rounded-xl border min-w-[280px] max-w-[340px] flex-1 transition-all duration-200",
                 isDragOver
                     ? colors.dropHighlight + " border-dashed border-2 scale-[1.01]"
-                    : "bg-gray-50/50 border-gray-200"
+                    : "bg-gray-800/50 border-gray-700"
             )}
         >
             {/* Header */}
@@ -108,7 +108,7 @@ export default function QueueColumn({ title, color, icon, columnKey, items, onDr
             )}>
                 <div className="flex items-center gap-2">
                     <span className="text-sm">{icon}</span>
-                    <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+                    <h3 className="text-sm font-semibold text-gray-200">{title}</h3>
                 </div>
                 <span className={cn(
                     "text-xs font-bold px-2 py-0.5 rounded-full",
@@ -127,8 +127,8 @@ export default function QueueColumn({ title, color, icon, columnKey, items, onDr
                     <div className={cn(
                         "text-center py-8 text-xs rounded-lg border-2 border-dashed transition-all",
                         isDragOver
-                            ? "text-gray-600 border-gray-400 bg-white/60"
-                            : "text-gray-400 border-transparent"
+                            ? "text-gray-300 border-gray-500 bg-gray-700/40"
+                            : "text-gray-500 border-transparent"
                     )}>
                         {isDragOver ? '⬇ Largar aqui' : 'Sem pedidos'}
                     </div>
@@ -141,8 +141,8 @@ export default function QueueColumn({ title, color, icon, columnKey, items, onDr
 
             {/* Footer count */}
             {items.length > 10 && (
-                <div className="px-4 py-2 border-t border-gray-200 text-center">
-                    <span className="text-[10px] text-gray-400">
+                <div className="px-4 py-2 border-t border-gray-700 text-center">
+                    <span className="text-[10px] text-gray-500">
                         {items.length} pedido{items.length !== 1 ? 's' : ''}
                     </span>
                 </div>
