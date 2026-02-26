@@ -474,4 +474,90 @@ export const patientsService = {
             .eq('id', phaseB.id);
         if (err2) throw err2;
     },
+
+    // 24. Anti-duplicação: verificar se já existe paciente com nome similar na mesma clínica
+    async checkDuplicates(currentPatientId: string, nome: string, clinicaId: string, idPacienteClinica?: string | null): Promise<{
+        status: 'ok' | 'warning' | 'block';
+        matches: { id: string; nome: string; t_id: string; id_paciente_clinica: string | null }[];
+        message: string;
+    }> {
+        if (!nome || nome.trim().length < 3 || nome === 'Novo Paciente (Rascunho)') {
+            return { status: 'ok', matches: [], message: '' };
+        }
+
+        // Buscar pacientes da mesma clínica (excluindo o atual e os eliminados)
+        const { data, error } = await supabase
+            .from('patients')
+            .select('id, nome, t_id, id_paciente_clinica')
+            .eq('clinica_id', clinicaId)
+            .is('deleted_at', null)
+            .neq('id', currentPatientId);
+
+        if (error || !data) return { status: 'ok', matches: [], message: '' };
+
+        // Normalizar nome para comparação
+        const normalize = (s: string) => s.trim().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remover acentos
+            .replace(/\s+/g, ' ');
+
+        const queryNorm = normalize(nome);
+
+        // Encontrar matches por similaridade de nome
+        const matches = data.filter(p => {
+            const candidateNorm = normalize(p.nome);
+            // Match exacto
+            if (candidateNorm === queryNorm) return true;
+            // Contém o nome inteiro
+            if (candidateNorm.includes(queryNorm) || queryNorm.includes(candidateNorm)) return true;
+            // Levenshtein simplificado: mesmo início (primeiros 80% dos caracteres)
+            const minLen = Math.min(candidateNorm.length, queryNorm.length);
+            if (minLen >= 4) {
+                const prefixLen = Math.floor(minLen * 0.8);
+                if (candidateNorm.substring(0, prefixLen) === queryNorm.substring(0, prefixLen)) return true;
+            }
+            return false;
+        });
+
+        if (matches.length === 0) {
+            return { status: 'ok', matches: [], message: '' };
+        }
+
+        // Aplicar regras §3.3 do MODULO_PACIENTES.md
+        const hasIdClinica = idPacienteClinica && idPacienteClinica.trim().length > 0;
+
+        for (const match of matches) {
+            const matchHasId = match.id_paciente_clinica && match.id_paciente_clinica.trim().length > 0;
+
+            if (hasIdClinica && matchHasId) {
+                if (idPacienteClinica!.trim().toLowerCase() === match.id_paciente_clinica!.trim().toLowerCase()) {
+                    // Mesmo ID Paciente Clínica = duplicação confirmada
+                    return {
+                        status: 'block',
+                        matches,
+                        message: `Duplicação detectada: "${match.nome}" (${match.t_id}) tem o mesmo ID de Clínica "${match.id_paciente_clinica}".`,
+                    };
+                }
+                // IDs diferentes = pode criar (são pacientes diferentes)
+                continue;
+            }
+
+            if (!hasIdClinica && !matchHasId) {
+                // Nenhum tem ID = bloqueia, pede para preencher
+                return {
+                    status: 'block',
+                    matches,
+                    message: `Paciente com nome similar "${match.nome}" (${match.t_id}) já existe. Preencha o ID Paciente Clínica em ambos para confirmar que são diferentes.`,
+                };
+            }
+
+            // Só um tem ID = avisa
+            return {
+                status: 'warning',
+                matches,
+                message: `Possível duplicado: "${match.nome}" (${match.t_id}). Considere preencher o ID Paciente Clínica para confirmar que são pacientes diferentes.`,
+            };
+        }
+
+        return { status: 'ok', matches: [], message: '' };
+    },
 };

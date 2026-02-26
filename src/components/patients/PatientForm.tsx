@@ -22,6 +22,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { patientsService, PatientFullDetails } from '@/services/patientsService';
 import NewPlanModal from '@/components/patients/NewPlanModal';
 import DeleteConfirmModal from '@/components/patients/DeleteConfirmModal';
+import DuplicateWarning from '@/components/patients/DuplicateWarning';
 import ConsiderationsTab from '@/components/patients/ConsiderationsTab';
 import FilesTab from '@/components/patients/FilesTab';
 import HistoryTab from '@/components/patients/HistoryTab';
@@ -61,6 +62,14 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const { isAdmin, isReadOnly: checkReadOnly } = useAuth();
     const readOnly = checkReadOnly('patients');
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
+    const dupCheckRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Estado anti-duplicação
+    const [dupResult, setDupResult] = useState<{
+        status: 'ok' | 'warning' | 'block';
+        message: string;
+        matches: { id: string; nome: string; t_id: string; id_paciente_clinica: string | null }[];
+    }>({ status: 'ok', message: '', matches: [] });
 
     // Carregar dropdowns
     useEffect(() => {
@@ -102,6 +111,25 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const handleFieldChange = (field: string, value: unknown) => {
         setPatient(prev => ({ ...prev, [field]: value }));
         autoSave(field, value);
+
+        // Trigger anti-duplicação quando nome ou ID Paciente Clínica mudam
+        if (field === 'nome' || field === 'id_paciente_clinica') {
+            if (dupCheckRef.current) clearTimeout(dupCheckRef.current);
+            dupCheckRef.current = setTimeout(async () => {
+                const updatedPatient = { ...patient, [field]: value };
+                try {
+                    const result = await patientsService.checkDuplicates(
+                        patient.id,
+                        String(updatedPatient.nome || ''),
+                        String(updatedPatient.clinica_id || ''),
+                        updatedPatient.id_paciente_clinica as string | null
+                    );
+                    setDupResult(result);
+                } catch (err) {
+                    console.error('Erro na verificação de duplicados:', err);
+                }
+            }, 800);
+        }
     };
 
     const handleToggleUrgent = async () => {
@@ -260,6 +288,14 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Anti-duplicação warning */}
+            <DuplicateWarning
+                status={dupResult.status}
+                message={dupResult.message}
+                matches={dupResult.matches}
+                onDismiss={() => setDupResult({ status: 'ok', message: '', matches: [] })}
+            />
 
             {/* Tabs */}
             <Tabs defaultValue="planos" className="flex-1 flex flex-col overflow-hidden">
