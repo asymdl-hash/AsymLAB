@@ -29,6 +29,14 @@ import HistoryTab from '@/components/patients/HistoryTab';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
+// Status do paciente
+const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+    rascunho: { label: 'Rascunho', color: 'text-gray-600', bg: 'bg-gray-100', border: 'border-gray-200' },
+    activo: { label: 'Activo', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+    inactivo: { label: 'Inactivo', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
+    arquivado: { label: 'Arquivado', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
+};
+
 // Labels e cores para estados dos planos
 const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
     rascunho: { label: 'Rascunho', color: 'text-gray-500', bg: 'bg-gray-100' },
@@ -184,6 +192,27 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                             className="text-lg font-semibold border-0 p-0 h-auto focus-visible:ring-0 bg-transparent"
                             disabled={readOnly}
                         />
+
+                        {/* Status do paciente */}
+                        {(() => {
+                            const statusConfig = PATIENT_STATUS_CONFIG[patient.estado || 'rascunho'] || PATIENT_STATUS_CONFIG.rascunho;
+                            return (
+                                <select
+                                    value={patient.estado || 'rascunho'}
+                                    onChange={(e) => handleFieldChange('estado', e.target.value)}
+                                    disabled={readOnly}
+                                    className={cn(
+                                        'text-[10px] font-semibold px-2 py-0.5 rounded-full border cursor-pointer shrink-0 appearance-none text-center',
+                                        statusConfig.bg, statusConfig.color, statusConfig.border,
+                                        readOnly && 'cursor-default opacity-70'
+                                    )}
+                                >
+                                    {Object.entries(PATIENT_STATUS_CONFIG).map(([key, cfg]) => (
+                                        <option key={key} value={key}>{cfg.label}</option>
+                                    ))}
+                                </select>
+                            );
+                        })()}
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">

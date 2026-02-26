@@ -11,6 +11,13 @@ import { patientsService, PatientListItem } from '@/services/patientsService';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
+const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
+    rascunho: { label: 'Rascunho', color: 'text-gray-600', bg: 'bg-gray-100', dot: 'bg-gray-400' },
+    activo: { label: 'Activo', color: 'text-emerald-700', bg: 'bg-emerald-50', dot: 'bg-emerald-500' },
+    inactivo: { label: 'Inactivo', color: 'text-amber-700', bg: 'bg-amber-50', dot: 'bg-amber-500' },
+    arquivado: { label: 'Arquivado', color: 'text-red-600', bg: 'bg-red-50', dot: 'bg-red-500' },
+};
+
 /** Gera iniciais a partir do nome (primeira e última palavra) */
 function getInitials(name: string | null | undefined): string {
     if (!name || name.trim() === '') return '?';
@@ -30,6 +37,7 @@ export default function PatientList() {
     const [loading, setLoading] = useState(true);
     const [clinicFilter, setClinicFilter] = useState<string | null>(null);
     const [doctorFilter, setDoctorFilter] = useState<string | null>(null);
+    const [statusFilter, setStatusFilter] = useState<string | null>(null);
     const [showFilters, setShowFilters] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
@@ -96,8 +104,13 @@ export default function PatientList() {
             result = result.filter(p => p.medico?.user_id === doctorFilter);
         }
 
+        // Filtro por status
+        if (statusFilter) {
+            result = result.filter(p => (p as any).estado === statusFilter);
+        }
+
         return result;
-    }, [patients, search, clinicFilter, doctorFilter]);
+    }, [patients, search, clinicFilter, doctorFilter, statusFilter]);
 
     // Separar urgentes no topo
     const sortedPatients = useMemo(() => {
@@ -179,10 +192,20 @@ export default function PatientList() {
                                 <option key={id} value={id}>Dr. {name}</option>
                             ))}
                         </select>
-                        {(clinicFilter || doctorFilter) && (
+                        <select
+                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            value={statusFilter || ''}
+                            onChange={(e) => setStatusFilter(e.target.value || null)}
+                        >
+                            <option value="">Todos os Estados</option>
+                            {Object.entries(PATIENT_STATUS_CONFIG).map(([key, cfg]) => (
+                                <option key={key} value={key}>{cfg.label}</option>
+                            ))}
+                        </select>
+                        {(clinicFilter || doctorFilter || statusFilter) && (
                             <button
                                 className="text-xs text-primary hover:underline flex items-center gap-1"
-                                onClick={() => { setClinicFilter(null); setDoctorFilter(null); }}
+                                onClick={() => { setClinicFilter(null); setDoctorFilter(null); setStatusFilter(null); }}
                             >
                                 <X className="h-3 w-3" /> Limpar filtros
                             </button>
@@ -250,6 +273,16 @@ export default function PatientList() {
                                             </span>
                                         )}
                                     </div>
+                                    {/* Status badge */}
+                                    {(() => {
+                                        const estado = (patient as any).estado || 'rascunho';
+                                        const cfg = PATIENT_STATUS_CONFIG[estado] || PATIENT_STATUS_CONFIG.rascunho;
+                                        return estado !== 'activo' ? (
+                                            <span className={cn('text-[9px] font-medium px-1.5 py-0.5 rounded-full mt-0.5 inline-block w-fit', cfg.bg, cfg.color)}>
+                                                {cfg.label}
+                                            </span>
+                                        ) : null;
+                                    })()}
                                 </div>
 
                                 {/* Badge de planos activos */}
@@ -267,7 +300,7 @@ export default function PatientList() {
             {/* Footer */}
             <div className="p-3 border-t border-gray-100 text-xs text-center text-gray-400 bg-gray-50/50">
                 {filteredPatients.length} {filteredPatients.length === 1 ? 'Paciente' : 'Pacientes'}
-                {(clinicFilter || doctorFilter) && ' (filtrado)'}
+                {(clinicFilter || doctorFilter || statusFilter) && ' (filtrado)'}
             </div>
         </div>
     );
