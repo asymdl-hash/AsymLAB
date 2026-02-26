@@ -12,10 +12,10 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
-    rascunho: { label: 'Rascunho', color: 'text-gray-600', bg: 'bg-gray-100', dot: 'bg-gray-400' },
-    activo: { label: 'Activo', color: 'text-emerald-700', bg: 'bg-emerald-50', dot: 'bg-emerald-500' },
-    inactivo: { label: 'Inactivo', color: 'text-amber-700', bg: 'bg-amber-50', dot: 'bg-amber-500' },
-    arquivado: { label: 'Arquivado', color: 'text-red-600', bg: 'bg-red-50', dot: 'bg-red-500' },
+    rascunho: { label: 'Rascunho', color: 'text-gray-400', bg: 'bg-gray-700/50', dot: 'bg-gray-500' },
+    activo: { label: 'Activo', color: 'text-emerald-400', bg: 'bg-emerald-900/30', dot: 'bg-emerald-500' },
+    inactivo: { label: 'Inactivo', color: 'text-amber-400', bg: 'bg-amber-900/30', dot: 'bg-amber-500' },
+    arquivado: { label: 'Arquivado', color: 'text-red-400', bg: 'bg-red-900/30', dot: 'bg-red-500' },
 };
 
 /** Gera iniciais a partir do nome (primeira e última palavra) */
@@ -126,18 +126,18 @@ export default function PatientList() {
     };
 
     return (
-        <div className="w-full md:w-80 border-r border-gray-200 bg-white flex flex-col h-full">
+        <div className="w-full md:w-80 border-r border-gray-800 bg-gray-900 flex flex-col h-full">
             {/* Header */}
-            <div className="p-4 border-b border-gray-100 space-y-3">
+            <div className="p-4 border-b border-gray-800 space-y-3">
                 <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-gray-800">Pacientes</h2>
+                    <h2 className="font-semibold text-gray-200">Pacientes</h2>
                     <div className="flex items-center gap-1">
                         <Button
                             size="icon"
                             variant="ghost"
                             className={cn(
                                 "h-8 w-8 transition-colors",
-                                showFilters ? "text-primary bg-primary/10" : "text-gray-400 hover:text-gray-600"
+                                showFilters ? "text-amber-400 bg-amber-900/20" : "text-gray-500 hover:text-gray-300"
                             )}
                             title="Filtros"
                             onClick={() => setShowFilters(!showFilters)}
@@ -148,7 +148,7 @@ export default function PatientList() {
                             <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                                className="h-8 w-8 text-amber-400 hover:text-amber-300 hover:bg-amber-900/20"
                                 title="Novo Paciente"
                                 onClick={handleCreateNew}
                             >
@@ -163,7 +163,7 @@ export default function PatientList() {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
                     <Input
                         placeholder="Pesquisar por nome ou T-ID..."
-                        className="pl-9 bg-gray-50 border-gray-200 focus:bg-white transition-all text-sm"
+                        className="pl-9 bg-gray-800 border-gray-700 text-gray-200 placeholder:text-gray-500 focus:bg-gray-800 focus:border-amber-500/30 transition-all text-sm"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -173,7 +173,7 @@ export default function PatientList() {
                 {showFilters && (
                     <div className="space-y-2 pt-1">
                         <select
-                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            className="w-full text-sm border border-gray-700 rounded-md px-3 py-2 bg-gray-800 text-gray-300 focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                             value={clinicFilter || ''}
                             onChange={(e) => setClinicFilter(e.target.value || null)}
                         >
@@ -183,7 +183,7 @@ export default function PatientList() {
                             ))}
                         </select>
                         <select
-                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            className="w-full text-sm border border-gray-700 rounded-md px-3 py-2 bg-gray-800 text-gray-300 focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                             value={doctorFilter || ''}
                             onChange={(e) => setDoctorFilter(e.target.value || null)}
                         >
@@ -193,7 +193,7 @@ export default function PatientList() {
                             ))}
                         </select>
                         <select
-                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            className="w-full text-sm border border-gray-700 rounded-md px-3 py-2 bg-gray-800 text-gray-300 focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                             value={statusFilter || ''}
                             onChange={(e) => setStatusFilter(e.target.value || null)}
                         >
@@ -204,7 +204,7 @@ export default function PatientList() {
                         </select>
                         {(clinicFilter || doctorFilter || statusFilter) && (
                             <button
-                                className="text-xs text-primary hover:underline flex items-center gap-1"
+                                className="text-xs text-amber-400 hover:underline flex items-center gap-1"
                                 onClick={() => { setClinicFilter(null); setDoctorFilter(null); setStatusFilter(null); }}
                             >
                                 <X className="h-3 w-3" /> Limpar filtros
@@ -217,9 +217,9 @@ export default function PatientList() {
             {/* Lista */}
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
                 {loading ? (
-                    <div className="text-center py-8 text-gray-400 text-sm">Carregando...</div>
+                    <div className="text-center py-8 text-gray-500 text-sm">Carregando...</div>
                 ) : sortedPatients.length === 0 ? (
-                    <div className="text-center py-8 text-gray-400 text-sm">
+                    <div className="text-center py-8 text-gray-500 text-sm">
                         {search || clinicFilter ? 'Nenhum paciente encontrado.' : 'Sem pacientes registados.'}
                     </div>
                 ) : (
@@ -233,19 +233,19 @@ export default function PatientList() {
                                 key={patient.id}
                                 href={`/dashboard/patients/${patient.id}`}
                                 className={cn(
-                                    "flex items-center gap-3 p-3 rounded-lg transition-all group hover:bg-gray-50",
-                                    isActive ? "bg-primary/5 border border-primary/20 shadow-sm" : "border border-transparent",
-                                    patient.urgente && "ring-1 ring-amber-300/50"
+                                    "flex items-center gap-3 p-3 rounded-lg transition-all group hover:bg-gray-800",
+                                    isActive ? "bg-amber-500/10 border border-amber-500/20 shadow-sm" : "border border-transparent",
+                                    patient.urgente && "ring-1 ring-amber-500/30"
                                 )}
                             >
                                 {/* Avatar com iniciais */}
                                 <div className={cn(
                                     "h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold transition-colors relative",
                                     patient.urgente
-                                        ? "bg-amber-100 text-amber-700"
+                                        ? "bg-amber-900/30 text-amber-400"
                                         : isActive
-                                            ? "bg-primary/15 text-primary"
-                                            : "bg-gradient-to-br from-gray-100 to-gray-200 text-gray-500 group-hover:from-primary/10 group-hover:to-primary/5 group-hover:text-primary"
+                                            ? "bg-amber-500/15 text-amber-400"
+                                            : "bg-gradient-to-br from-gray-700 to-gray-800 text-gray-400 group-hover:from-amber-900/20 group-hover:to-amber-900/10 group-hover:text-amber-400"
                                 )}>
                                     {initials}
                                     {patient.urgente && (
@@ -258,17 +258,17 @@ export default function PatientList() {
                                     <div className="flex items-center gap-2">
                                         <h3 className={cn(
                                             "font-medium text-sm truncate",
-                                            isActive ? "text-gray-900" : "text-gray-700"
+                                            isActive ? "text-gray-100" : "text-gray-300"
                                         )}>
                                             {patient.nome}
                                         </h3>
                                     </div>
                                     <div className="flex items-center gap-2 mt-0.5">
-                                        <span className="text-xs font-mono text-gray-400">
+                                        <span className="text-xs font-mono text-gray-500">
                                             {patient.t_id}
                                         </span>
                                         {patient.clinica && (
-                                            <span className="text-xs text-gray-400 truncate">
+                                            <span className="text-xs text-gray-500 truncate">
                                                 · {patient.clinica.commercial_name}
                                             </span>
                                         )}
@@ -298,7 +298,7 @@ export default function PatientList() {
             </div>
 
             {/* Footer */}
-            <div className="p-3 border-t border-gray-100 text-xs text-center text-gray-400 bg-gray-50/50">
+            <div className="p-3 border-t border-gray-800 text-xs text-center text-gray-500 bg-gray-900">
                 {filteredPatients.length} {filteredPatients.length === 1 ? 'Paciente' : 'Pacientes'}
                 {(clinicFilter || doctorFilter || statusFilter) && ' (filtrado)'}
             </div>
