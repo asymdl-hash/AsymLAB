@@ -321,29 +321,63 @@ export const patientsService = {
         return data || [];
     },
 
-    // 17. Criar consideração
+    // 17. Criar consideração (com anexo opcional)
     async createConsideration(data: {
         phase_id: string;
         appointment_id?: string;
         lado: string;
         conteudo: string;
+        anexo_url?: string;
+        anexo_nome?: string;
+        anexo_tipo?: string;
     }) {
         const { data: { user } } = await supabase.auth.getUser();
+        const insertData: Record<string, unknown> = {
+            appointment_id: data.appointment_id || null,
+            phase_id: data.phase_id,
+            lado: data.lado,
+            conteudo: data.conteudo,
+            autor_id: user?.id || '',
+            versao: 1,
+        };
+
+        if (data.anexo_url) insertData.anexo_url = data.anexo_url;
+        if (data.anexo_nome) insertData.anexo_nome = data.anexo_nome;
+        if (data.anexo_tipo) insertData.anexo_tipo = data.anexo_tipo;
+
         const { data: consideration, error } = await supabase
             .from('considerations')
-            .insert({
-                appointment_id: data.appointment_id || null,
-                phase_id: data.phase_id,
-                lado: data.lado,
-                conteudo: data.conteudo,
-                autor_id: user?.id || '',
-                versao: 1,
-            })
+            .insert(insertData)
             .select('*')
             .single();
 
         if (error) throw error;
         return consideration;
+    },
+
+    // 17b. Upload de ficheiro para consideração
+    async uploadConsiderationFile(phaseId: string, file: File): Promise<{ url: string; nome: string; tipo: string }> {
+        const ext = file.name.split('.').pop() || 'bin';
+        const fileName = `${phaseId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+        const { error } = await supabase.storage
+            .from('consideration-files')
+            .upload(fileName, file, {
+                cacheControl: '3600',
+                upsert: false,
+            });
+
+        if (error) throw error;
+
+        const { data: urlData } = supabase.storage
+            .from('consideration-files')
+            .getPublicUrl(fileName);
+
+        return {
+            url: urlData.publicUrl,
+            nome: file.name,
+            tipo: file.type,
+        };
     },
 
     // 18. Listar ficheiros de um paciente
