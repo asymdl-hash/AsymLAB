@@ -11,16 +11,18 @@ interface NewAppointmentModalProps {
 }
 
 const APPOINTMENT_TYPES = [
-    { value: 'prova', label: 'Prova', emoji: '🔵' },
-    { value: 'colocacao', label: 'Colocação', emoji: '🟣' },
+    { value: 'moldagem', label: 'Moldagem', emoji: '🟤' },
+    { value: 'para_prova', label: 'Prova', emoji: '🟥' },
+    { value: 'para_colocacao', label: 'Colocação', emoji: '🟣' },
     { value: 'reparacao', label: 'Reparação', emoji: '🔧' },
     { value: 'ajuste', label: 'Ajuste', emoji: '⚙️' },
     { value: 'outro', label: 'Outro', emoji: '📅' },
 ];
 
 export default function NewAppointmentModal({ phaseId, onClose, onCreated }: NewAppointmentModalProps) {
-    const [tipo, setTipo] = useState('prova');
+    const [tipo, setTipo] = useState('moldagem');
     const [dataPrevista, setDataPrevista] = useState('');
+    const [horaPrevista, setHoraPrevista] = useState('');
     const [notas, setNotas] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
@@ -35,6 +37,7 @@ export default function NewAppointmentModal({ phaseId, onClose, onCreated }: New
                 phase_id: phaseId,
                 tipo,
                 data_prevista: dataPrevista || undefined,
+                hora_prevista: horaPrevista || undefined,
                 notas: notas.trim() || undefined,
             });
             onCreated();
@@ -82,8 +85,13 @@ export default function NewAppointmentModal({ phaseId, onClose, onCreated }: New
 
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Data Prevista (opcional)</label>
-                        <input type="date" value={dataPrevista} onChange={(e) => setDataPrevista(e.target.value)}
-                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 [color-scheme:dark]" />
+                        <div className="flex gap-2">
+                            <input type="date" value={dataPrevista} onChange={(e) => setDataPrevista(e.target.value)}
+                                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 [color-scheme:dark]" />
+                            <input type="time" value={horaPrevista} onChange={(e) => setHoraPrevista(e.target.value)}
+                                placeholder="Hora"
+                                className="w-28 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 [color-scheme:dark]" />
+                        </div>
                     </div>
 
                     <div>

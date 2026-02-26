@@ -222,16 +222,21 @@ export const patientsService = {
         phase_id: string;
         tipo: string;
         data_prevista?: string;
+        hora_prevista?: string;
         notas?: string;
     }) {
+        const insertData: Record<string, unknown> = {
+            phase_id: data.phase_id,
+            tipo: data.tipo,
+            agendada_para: data.data_prevista || null,
+            notas: data.notas || null,
+        };
+
+        if (data.hora_prevista) insertData.hora_prevista = data.hora_prevista;
+
         const { data: appointment, error } = await supabase
             .from('appointments')
-            .insert({
-                phase_id: data.phase_id,
-                tipo: data.tipo,
-                agendada_para: data.data_prevista || null,
-                notas: data.notas || null,
-            })
+            .insert(insertData)
             .select('*')
             .single();
 

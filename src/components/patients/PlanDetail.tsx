@@ -590,6 +590,9 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange }
                                 <span className="text-xs text-gray-400 flex items-center gap-1">
                                     <Calendar className="w-3 h-3" />
                                     {new Date(appointment.agendada_para).toLocaleDateString('pt-PT')}
+                                    {appointment.hora_prevista && (
+                                        <span className="text-gray-500"> · {appointment.hora_prevista}</span>
+                                    )}
                                 </span>
                             )}
                         </div>
