@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { auth } from '@/lib/supabase';
+import { auth, supabase } from '@/lib/supabase';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppModule } from '@/lib/permissions';
@@ -51,6 +51,33 @@ export default function Sidebar() {
     const { collapsed, toggleCollapsed } = useSidebar();
     const [mobileOpen, setMobileOpen] = useState(false);
     const { user, hasAccess, isReadOnly, role } = useAuth();
+
+    // === Badge: contagem de pedidos activos ===
+    const [queueCount, setQueueCount] = useState(0);
+    const [urgentCount, setUrgentCount] = useState(0);
+
+    const fetchQueueCounts = useCallback(async () => {
+        try {
+            const { count } = await supabase
+                .from('treatment_plans')
+                .select('*', { count: 'exact', head: true })
+                .in('estado', ['activo', 'reaberto']);
+            setQueueCount(count || 0);
+
+            const { count: urg } = await supabase
+                .from('treatment_plans')
+                .select('*', { count: 'exact', head: true })
+                .in('estado', ['activo', 'reaberto'])
+                .eq('urgente', true);
+            setUrgentCount(urg || 0);
+        } catch { /* silent */ }
+    }, []);
+
+    useEffect(() => {
+        fetchQueueCounts();
+        const interval = setInterval(fetchQueueCounts, 30000); // 30s refresh
+        return () => clearInterval(interval);
+    }, [fetchQueueCounts]);
 
     // Filtrar menus por permissão
     const visibleMenuItems = menuItems.filter(item => hasAccess(item.module));
@@ -174,7 +201,27 @@ export default function Sidebar() {
                                             Leitura
                                         </span>
                                     )}
+                                    {/* Queue badge */}
+                                    {item.module === 'queue' && queueCount > 0 && (
+                                        <span className="ml-auto flex items-center gap-1">
+                                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-bold tabular-nums">
+                                                {queueCount}
+                                            </span>
+                                            {urgentCount > 0 && (
+                                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold flex items-center gap-0.5">
+                                                    ⚡{urgentCount}
+                                                </span>
+                                            )}
+                                        </span>
+                                    )}
                                 </span>
+                            )}
+
+                            {/* Collapsed badge dot */}
+                            {collapsed && !isMobile && item.module === 'queue' && queueCount > 0 && (
+                                <div className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-blue-500 text-white text-[9px] font-bold flex items-center justify-center px-1">
+                                    {queueCount}
+                                </div>
                             )}
 
                             {collapsed && !isMobile && isActive && (
