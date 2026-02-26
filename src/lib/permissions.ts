@@ -10,6 +10,7 @@ export type AppModule =
     | 'clinics'
     | 'doctors'
     | 'patients'
+    | 'queue'
     | 'schedule'
     | 'billing'
     | 'reports'
@@ -21,6 +22,7 @@ export const MODULE_PATHS: Record<AppModule, string> = {
     clinics: '/dashboard/clinics',
     doctors: '/dashboard/doctors',
     patients: '/dashboard/patients',
+    queue: '/dashboard/queue',
     schedule: '/dashboard/schedule',
     billing: '/dashboard/billing',
     reports: '/dashboard/reports',
@@ -65,6 +67,7 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
         clinics: 'full',
         doctors: 'full',
         patients: 'full',
+        queue: 'full',
         schedule: 'full',
         billing: 'full',
         reports: 'full',
@@ -75,6 +78,7 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
         clinics: 'read',
         doctors: 'read',
         patients: 'full',
+        queue: 'none',
         schedule: 'none',
         billing: 'none',
         reports: 'none',
@@ -85,6 +89,7 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
         clinics: 'read',
         doctors: 'read',
         patients: 'read',
+        queue: 'none',
         schedule: 'none',
         billing: 'none',
         reports: 'none',
@@ -95,6 +100,7 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
         clinics: 'read',
         doctors: 'read',
         patients: 'read',
+        queue: 'read',
         schedule: 'none',
         billing: 'none',
         reports: 'none',
@@ -105,6 +111,7 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
         clinics: 'read',
         doctors: 'none',
         patients: 'none',
+        queue: 'none',
         schedule: 'none',
         billing: 'read',
         reports: 'read',
@@ -115,6 +122,7 @@ export const PERMISSIONS_MATRIX: Record<AppRole, Record<AppModule, AccessLevel>>
         clinics: 'read',
         doctors: 'none',
         patients: 'none',
+        queue: 'none',
         schedule: 'none',
         billing: 'read',
         reports: 'read',
