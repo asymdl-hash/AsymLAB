@@ -3,10 +3,13 @@
 import { useState, useEffect, useRef } from 'react';
 import {
     User, Key, Save, Eye, EyeOff, Shield, Building2,
-    CheckCircle, AlertCircle, X, Loader2, Edit3, Smartphone, Camera, Download, Monitor
+    CheckCircle, AlertCircle, X, Loader2, Edit3, Smartphone, Camera, Download, Monitor, Home
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { getUserHomepage, setUserHomepage, MODULE_LABELS } from '@/lib/userPreferences';
+import { AppModule } from '@/lib/permissions';
 
 interface AccountData {
     id: string;
@@ -70,6 +73,8 @@ export default function MyAccountPage() {
     const [showCurrentPw, setShowCurrentPw] = useState(false);
     const [showNewPw, setShowNewPw] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [selectedHomepage, setSelectedHomepage] = useState<AppModule>('dashboard');
+    const { user: authUser, visibleModules } = useAuth();
 
     // Auto-dismiss messages
     useEffect(() => {
@@ -108,6 +113,13 @@ export default function MyAccountPage() {
     };
 
     useEffect(() => { fetchAccount(); }, []);
+
+    // Carregar homepage preferida
+    useEffect(() => {
+        if (account?.id) {
+            setSelectedHomepage(getUserHomepage(account.id));
+        }
+    }, [account?.id]);
 
     const apiCall = async (action: string, extraData: Record<string, string>) => {
         setSaving(true);
@@ -576,6 +588,33 @@ export default function MyAccountPage() {
                         ) : (
                             <p className="mt-1 text-sm text-gray-400">••••••••</p>
                         )}
+                    </div>
+
+                    {/* Página Inicial */}
+                    <div className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                            <Home className="h-4 w-4" />
+                            Página Inicial
+                        </div>
+                        <p className="text-xs text-gray-400 mb-2">
+                            Escolhe qual módulo abrir automaticamente após o login
+                        </p>
+                        <select
+                            className="h-9 w-full max-w-xs rounded-lg border border-gray-300 px-3 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            value={selectedHomepage}
+                            onChange={(e) => {
+                                const mod = e.target.value as AppModule;
+                                setSelectedHomepage(mod);
+                                if (account?.id) {
+                                    setUserHomepage(account.id, mod);
+                                    setSuccess(`Página inicial definida para: ${MODULE_LABELS[mod]}`);
+                                }
+                            }}
+                        >
+                            {visibleModules.map(mod => (
+                                <option key={mod} value={mod}>{MODULE_LABELS[mod]}</option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Info: Instalar como App — Design Profissional */}

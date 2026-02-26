@@ -1,10 +1,13 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { User, Plus, Search, Bell, Grid, List, Calendar, Euro } from 'lucide-react';
 import PermissionGuard, { useModulePermission } from '@/components/PermissionGuard';
 import { useAuth } from '@/contexts/AuthContext';
+import { getUserHomepage, getUserHomepagePath } from '@/lib/userPreferences';
 
 /* 
  * Dashboard Page - Estilo Soft SaaS Premium (Mobbin/Refero)
@@ -14,6 +17,18 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function DashboardPage() {
     const { user } = useAuth();
     const { canEdit } = useModulePermission('dashboard');
+    const router = useRouter();
+
+    // Redirect para homepage configurada pelo utilizador
+    useEffect(() => {
+        if (user?.id) {
+            const homepage = getUserHomepage(user.id);
+            if (homepage !== 'dashboard') {
+                const path = getUserHomepagePath(user.id);
+                router.replace(path);
+            }
+        }
+    }, [user?.id, router]);
 
     return (
         <PermissionGuard module="dashboard">
