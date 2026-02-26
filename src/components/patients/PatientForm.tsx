@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { patientsService, PatientFullDetails } from '@/services/patientsService';
 import NewPlanModal from '@/components/patients/NewPlanModal';
+import DeleteConfirmModal from '@/components/patients/DeleteConfirmModal';
 import ConsiderationsTab from '@/components/patients/ConsiderationsTab';
 import FilesTab from '@/components/patients/FilesTab';
 import HistoryTab from '@/components/patients/HistoryTab';
@@ -53,6 +54,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [showNewPlan, setShowNewPlan] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [clinics, setClinics] = useState<{ id: string; commercial_name: string }[]>([]);
     const [doctors, setDoctors] = useState<{ user_id: string; full_name: string }[]>([]);
     const router = useRouter();
@@ -115,15 +117,14 @@ export default function PatientForm({ initialData }: PatientFormProps) {
         }
     };
 
-    const handleDelete = async () => {
-        if (!isAdmin) return;
-        if (!confirm('Tem certeza que quer apagar este paciente? Esta acção é irreversível.')) return;
+    const handleDeleteConfirm = async () => {
         try {
             await patientsService.softDeletePatient(patient.id);
             window.dispatchEvent(new Event('patient-updated'));
             router.push('/dashboard/patients');
         } catch (error) {
             console.error('Erro ao apagar:', error);
+            setShowDeleteModal(false);
         }
     };
 
@@ -194,7 +195,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-gray-400 hover:text-red-500"
-                                onClick={handleDelete}
+                                onClick={() => setShowDeleteModal(true)}
                                 title="Apagar paciente"
                             >
                                 <Trash2 className="h-4 w-4" />
@@ -460,6 +461,15 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                             console.error('Erro ao recarregar:', err);
                         }
                     }}
+                />
+            )}
+
+            {/* Modal Confirmar Eliminação */}
+            {showDeleteModal && (
+                <DeleteConfirmModal
+                    patientName={patient.nome}
+                    onConfirm={handleDeleteConfirm}
+                    onCancel={() => setShowDeleteModal(false)}
                 />
             )}
         </div>
