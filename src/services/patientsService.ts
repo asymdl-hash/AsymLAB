@@ -228,7 +228,7 @@ export const patientsService = {
         const insertData: Record<string, unknown> = {
             phase_id: data.phase_id,
             tipo: data.tipo,
-            agendada_para: data.data_prevista || null,
+            data_prevista: data.data_prevista || null,
             notas: data.notas || null,
         };
 

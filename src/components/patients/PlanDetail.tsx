@@ -18,6 +18,9 @@ import {
     Pause,
     RotateCcw,
     X,
+    Trash2,
+    Pencil,
+    Check,
 } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
 import NewPhaseModal from './NewPhaseModal';
@@ -51,13 +54,13 @@ const APPOINTMENT_TYPE_CONFIG: Record<string, { label: string; emoji: string }> 
 };
 
 const APPOINTMENT_STATE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    agendado: { label: 'Agendado', color: 'text-blue-700', bg: 'bg-blue-100' },
-    prova_entregue: { label: 'Prova Entregue', color: 'text-indigo-700', bg: 'bg-indigo-100' },
-    colocacao_entregue: { label: 'Colocação Entregue', color: 'text-purple-700', bg: 'bg-purple-100' },
-    recolhido: { label: 'Recolhido', color: 'text-teal-700', bg: 'bg-teal-100' },
-    concluido: { label: 'Concluído', color: 'text-green-700', bg: 'bg-green-100' },
-    cancelado: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-100' },
-    remarcado: { label: 'Remarcado', color: 'text-orange-700', bg: 'bg-orange-100' },
+    agendado: { label: 'Agendado', color: 'text-blue-300', bg: 'bg-blue-900/40' },
+    prova_entregue: { label: 'Prova Entregue', color: 'text-indigo-300', bg: 'bg-indigo-900/40' },
+    colocacao_entregue: { label: 'Colocação Entregue', color: 'text-purple-300', bg: 'bg-purple-900/40' },
+    recolhido: { label: 'Recolhido', color: 'text-teal-300', bg: 'bg-teal-900/40' },
+    concluido: { label: 'Concluído', color: 'text-green-300', bg: 'bg-green-900/40' },
+    cancelado: { label: 'Cancelado', color: 'text-red-300', bg: 'bg-red-900/40' },
+    remarcado: { label: 'Remarcado', color: 'text-orange-300', bg: 'bg-orange-900/40' },
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -140,6 +143,24 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
             onReload();
         } catch (err) {
             console.error('Error changing appointment state:', err);
+        }
+    }, [onReload]);
+
+    const handleAppointmentDelete = useCallback(async (appointmentId: string) => {
+        try {
+            await patientsService.deleteRecord('appointments', appointmentId);
+            onReload();
+        } catch (err) {
+            console.error('Error deleting appointment:', err);
+        }
+    }, [onReload]);
+
+    const handleAppointmentUpdate = useCallback(async (appointmentId: string, data: Record<string, unknown>) => {
+        try {
+            await patientsService.updateRecord('appointments', appointmentId, data);
+            onReload();
+        } catch (err) {
+            console.error('Error updating appointment:', err);
         }
     }, [onReload]);
 
@@ -365,6 +386,8 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                             onAddAppointment={() => setShowAppointmentModal(true)}
                             onStateChange={handlePhaseStateChange}
                             onAppointmentStateChange={handleAppointmentStateChange}
+                            onAppointmentDelete={handleAppointmentDelete}
+                            onAppointmentUpdate={handleAppointmentUpdate}
                         />
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full text-gray-500">
@@ -410,7 +433,7 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
 // === Sub-componente: Detalhe da Fase ===
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppointmentStateChange }: {
+function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppointmentStateChange, onAppointmentDelete, onAppointmentUpdate }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     phase: any;
     onReload: () => void;
@@ -418,6 +441,8 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
     onStateChange: (phaseId: string, newState: string) => void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onAppointmentStateChange: (appointmentId: string, newState: string) => void;
+    onAppointmentDelete: (appointmentId: string) => void;
+    onAppointmentUpdate: (appointmentId: string, data: Record<string, unknown>) => void;
 }) {
     const [showPhaseMenu, setShowPhaseMenu] = useState(false);
     const phaseState = PHASE_STATE_CONFIG[phase.estado] || PHASE_STATE_CONFIG.pendente;
@@ -509,6 +534,8 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                                     typeConfig={typeConfig}
                                     stateConfig={stateConfig}
                                     onStateChange={onAppointmentStateChange}
+                                    onDelete={onAppointmentDelete}
+                                    onUpdate={onAppointmentUpdate}
                                 />
                             );
                         })}
@@ -572,14 +599,35 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
 // === Sub-componente: Card de Agendamento ===
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange }: {
+function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, onDelete, onUpdate }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     appointment: any;
     typeConfig: { label: string; emoji: string };
     stateConfig: { label: string; color: string; bg: string };
     onStateChange: (id: string, state: string) => void;
+    onDelete: (id: string) => void;
+    onUpdate: (id: string, data: Record<string, unknown>) => void;
 }) {
     const [showMenu, setShowMenu] = useState(false);
+    const [editingDate, setEditingDate] = useState(false);
+    const [editingNotes, setEditingNotes] = useState(false);
+    const [dateValue, setDateValue] = useState(appointment.data_prevista || '');
+    const [timeValue, setTimeValue] = useState(appointment.hora_prevista || '');
+    const [notesValue, setNotesValue] = useState(appointment.notas || '');
+    const [confirmDelete, setConfirmDelete] = useState(false);
+
+    const handleSaveDate = () => {
+        onUpdate(appointment.id, {
+            data_prevista: dateValue || null,
+            hora_prevista: timeValue || null,
+        });
+        setEditingDate(false);
+    };
+
+    const handleSaveNotes = () => {
+        onUpdate(appointment.id, { notas: notesValue.trim() || null });
+        setEditingNotes(false);
+    };
 
     return (
         <div className="bg-gray-800/60 border border-gray-700 rounded-lg p-3 hover:border-gray-600 transition-colors">
@@ -588,18 +636,26 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange }
                     <span className="text-lg">{typeConfig.emoji}</span>
                     <div>
                         <p className="text-sm font-medium">{typeConfig.label}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${stateConfig.bg} ${stateConfig.color}`}>
                                 {stateConfig.label}
                             </span>
-                            {appointment.agendada_para && (
-                                <span className="text-xs text-gray-400 flex items-center gap-1">
+                            {!editingDate && appointment.data_prevista && (
+                                <button onClick={() => setEditingDate(true)}
+                                    className="text-xs text-gray-400 flex items-center gap-1 hover:text-amber-400 transition-colors">
                                     <Calendar className="w-3 h-3" />
-                                    {new Date(appointment.agendada_para).toLocaleDateString('pt-PT')}
+                                    {new Date(appointment.data_prevista).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
                                     {appointment.hora_prevista && (
-                                        <span className="text-gray-500"> · {appointment.hora_prevista}</span>
+                                        <span className="text-gray-500"> · {appointment.hora_prevista.substring(0, 5)}</span>
                                     )}
-                                </span>
+                                    <Pencil className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100" />
+                                </button>
+                            )}
+                            {!editingDate && !appointment.data_prevista && (
+                                <button onClick={() => setEditingDate(true)}
+                                    className="text-[10px] text-gray-500 hover:text-amber-400 transition-colors flex items-center gap-1">
+                                    <Calendar className="w-3 h-3" /> Definir data
+                                </button>
                             )}
                         </div>
                     </div>
@@ -611,6 +667,7 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange }
                     </button>
                     {showMenu && (
                         <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
+                            {/* Transições de estado */}
                             {(appointment.tipo === 'para_prova' || appointment.tipo === 'moldagem') && appointment.estado === 'agendado' && (
                                 <button onClick={() => { onStateChange(appointment.id, 'prova_entregue'); setShowMenu(false); }}
                                     className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-indigo-400">
@@ -647,12 +704,79 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange }
                                     ❌ Cancelado
                                 </button>
                             )}
+                            {/* Editar */}
+                            <div className="border-t border-gray-700 my-1" />
+                            <button onClick={() => { setEditingDate(true); setShowMenu(false); }}
+                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-gray-300 flex items-center gap-2">
+                                <Pencil className="w-3.5 h-3.5" /> Editar Data
+                            </button>
+                            <button onClick={() => { setEditingNotes(true); setShowMenu(false); }}
+                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-gray-300 flex items-center gap-2">
+                                <Pencil className="w-3.5 h-3.5" /> Editar Notas
+                            </button>
+                            {/* Apagar */}
+                            <div className="border-t border-gray-700 my-1" />
+                            <button onClick={() => { setConfirmDelete(true); setShowMenu(false); }}
+                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-700 text-red-400 flex items-center gap-2">
+                                <Trash2 className="w-3.5 h-3.5" /> Apagar
+                            </button>
                         </div>
                     )}
                 </div>
             </div>
-            {appointment.notas && (
-                <p className="mt-2 text-xs text-gray-400 italic">{appointment.notas}</p>
+
+            {/* Edição inline de data */}
+            {editingDate && (
+                <div className="mt-2 flex items-center gap-2">
+                    <input type="date" value={dateValue} onChange={(e) => setDateValue(e.target.value)}
+                        className="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white [color-scheme:dark]" />
+                    <input type="time" value={timeValue} onChange={(e) => setTimeValue(e.target.value)}
+                        className="w-24 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white [color-scheme:dark]" />
+                    <button onClick={handleSaveDate} className="p-1 rounded bg-green-600 hover:bg-green-500 text-white">
+                        <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => setEditingDate(false)} className="p-1 rounded bg-gray-600 hover:bg-gray-500 text-white">
+                        <X className="w-3.5 h-3.5" />
+                    </button>
+                </div>
+            )}
+
+            {/* Notas - modo visualização ou edição */}
+            {editingNotes ? (
+                <div className="mt-2">
+                    <textarea value={notesValue} onChange={(e) => setNotesValue(e.target.value)}
+                        rows={2} placeholder="Notas do agendamento..."
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white placeholder:text-gray-500 resize-none" />
+                    <div className="flex gap-1 mt-1">
+                        <button onClick={handleSaveNotes} className="px-2 py-0.5 rounded bg-green-600 hover:bg-green-500 text-white text-[10px]">
+                            Guardar
+                        </button>
+                        <button onClick={() => setEditingNotes(false)} className="px-2 py-0.5 rounded bg-gray-600 hover:bg-gray-500 text-white text-[10px]">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            ) : appointment.notas && (
+                <p className="mt-2 text-xs text-gray-400 italic cursor-pointer hover:text-gray-300" onClick={() => setEditingNotes(true)}>
+                    {appointment.notas}
+                </p>
+            )}
+
+            {/* Confirmação de delete */}
+            {confirmDelete && (
+                <div className="mt-2 p-2 bg-red-900/20 border border-red-700/50 rounded-lg">
+                    <p className="text-xs text-red-300">Tem a certeza que quer apagar este agendamento?</p>
+                    <div className="flex gap-2 mt-2">
+                        <button onClick={() => onDelete(appointment.id)}
+                            className="px-3 py-1 rounded bg-red-600 hover:bg-red-500 text-white text-xs font-medium">
+                            Sim, apagar
+                        </button>
+                        <button onClick={() => setConfirmDelete(false)}
+                            className="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
             )}
         </div>
     );
