@@ -205,7 +205,7 @@ export default function FilesTab({ patientId, plans }: FilesTabProps) {
                     <input type="file" ref={fileInputRef} multiple className="hidden"
                         onChange={(e) => e.target.files && handleFileUpload(e.target.files)} />
                     <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                        className="text-xs bg-primary text-foreground rounded-lg px-3 py-1.5 font-medium hover:bg-primary/90 transition-colors flex items-center gap-1 disabled:opacity-50">
+                        className="text-xs bg-primary text-card-foreground rounded-lg px-3 py-1.5 font-medium hover:bg-primary/90 transition-colors flex items-center gap-1 disabled:opacity-50">
                         {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
                         Upload
                     </button>
@@ -254,7 +254,7 @@ export default function FilesTab({ patientId, plans }: FilesTabProps) {
             {/* Files Grid */}
             {loading ? (
                 <div className="flex justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-foreground/80" />
+                    <Loader2 className="h-6 w-6 animate-spin text-card-foreground/80" />
                 </div>
             ) : filteredFiles.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-gray-300 transition-colors"

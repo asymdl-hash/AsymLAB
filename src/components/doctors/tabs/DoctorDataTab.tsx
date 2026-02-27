@@ -56,7 +56,7 @@ function PhoneLockedModal({
                 {isAdmin ? (
                     <Link
                         href={`/dashboard/settings?tab=users&userId=${doctorId}`}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-foreground text-sm font-medium hover:bg-primary/90 transition-colors w-full justify-center"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-card-foreground text-sm font-medium hover:bg-primary/90 transition-colors w-full justify-center"
                         onClick={onClose}
                     >
                         <ExternalLink className="h-4 w-4" />
@@ -254,7 +254,7 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                                     type="button"
                                     onClick={handleSavePhone}
                                     disabled={savingPhone || !phoneValue.trim()}
-                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-primary text-foreground hover:bg-primary/90 disabled:opacity-50 transition-all h-10 flex-shrink-0"
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-primary text-card-foreground hover:bg-primary/90 disabled:opacity-50 transition-all h-10 flex-shrink-0"
                                 >
                                     {phoneSaved ? (
                                         <><Check className="h-4 w-4" /> Guardado</>
@@ -306,7 +306,7 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                             type="button"
                             onClick={handleSaveContactEmail}
                             disabled={savingEmail}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-foreground hover:bg-primary/90 disabled:opacity-50 transition-all h-10"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-card-foreground hover:bg-primary/90 disabled:opacity-50 transition-all h-10"
                         >
                             {emailSaved ? (
                                 <><Check className="h-4 w-4" /> Guardado</>
@@ -329,7 +329,7 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                     <div className="text-sm text-muted-foreground py-4">Carregando clínicas...</div>
                 ) : clinics.length === 0 ? (
                     <div className="bg-gray-50 rounded-lg border border-dashed border-gray-300 p-6 text-center">
-                        <Building2 className="h-8 w-8 text-foreground/80 mx-auto mb-2" />
+                        <Building2 className="h-8 w-8 text-card-foreground/80 mx-auto mb-2" />
                         <p className="text-sm text-gray-500">Nenhuma clínica associada.</p>
                         <p className="text-xs text-muted-foreground mt-1">
                             {isAdmin ? 'Associe este médico a uma clínica nas Definições > Utilizadores' : 'Sem clínicas associadas. Contacte o administrador.'}

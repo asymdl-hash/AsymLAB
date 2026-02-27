@@ -79,7 +79,7 @@ export default function DoctorPermissionsTab() {
                 </div>
 
                 <div className="bg-gray-50 rounded-lg border border-dashed border-gray-300 p-6 text-center">
-                    <MessageCircle className="h-8 w-8 text-foreground/80 mx-auto mb-2" />
+                    <MessageCircle className="h-8 w-8 text-card-foreground/80 mx-auto mb-2" />
                     <p className="text-sm text-gray-500">
                         Configurações de permissões do WhatsApp para este médico.
                     </p>

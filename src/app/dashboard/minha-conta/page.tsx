@@ -315,8 +315,8 @@ export default function MyAccountPage() {
                                     className={cn(
                                         "h-16 w-16 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-md cursor-pointer transition-transform group-hover:scale-105",
                                         account.app_role === 'admin'
-                                            ? 'bg-gradient-to-br from-red-500 to-red-600 text-foreground'
-                                            : 'bg-gradient-to-br from-primary to-primary/80 text-foreground'
+                                            ? 'bg-gradient-to-br from-red-500 to-red-600 text-card-foreground'
+                                            : 'bg-gradient-to-br from-primary to-primary/80 text-card-foreground'
                                     )}
                                     onClick={() => fileInputRef.current?.click()}
                                 >
@@ -329,9 +329,9 @@ export default function MyAccountPage() {
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 {uploadingAvatar ? (
-                                    <Loader2 className="h-5 w-5 text-foreground animate-spin" />
+                                    <Loader2 className="h-5 w-5 text-card-foreground animate-spin" />
                                 ) : (
-                                    <Camera className="h-5 w-5 text-foreground" />
+                                    <Camera className="h-5 w-5 text-card-foreground" />
                                 )}
                             </div>
                         </div>
@@ -402,7 +402,7 @@ export default function MyAccountPage() {
                                 <button
                                     onClick={handleSaveName}
                                     disabled={saving || !newName.trim()}
-                                    className="h-9 px-3 rounded-lg bg-primary text-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1"
+                                    className="h-9 px-3 rounded-lg bg-primary text-card-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1"
                                 >
                                     {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
                                     Guardar
@@ -455,7 +455,7 @@ export default function MyAccountPage() {
                                     <button
                                         onClick={handleSaveUsername}
                                         disabled={saving || !newUsername.trim() || newUsername === account.username}
-                                        className="h-8 px-3 rounded-lg bg-primary text-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1"
+                                        className="h-8 px-3 rounded-lg bg-primary text-card-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1"
                                     >
                                         {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
                                         Guardar
@@ -567,7 +567,7 @@ export default function MyAccountPage() {
                                     <button
                                         onClick={handleSavePassword}
                                         disabled={saving || !currentPassword || newPassword.length < 6 || newPassword !== confirmPassword}
-                                        className="h-9 px-4 rounded-lg bg-amber-500 text-foreground text-xs font-medium hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1"
+                                        className="h-9 px-4 rounded-lg bg-amber-500 text-card-foreground text-xs font-medium hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1"
                                     >
                                         {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Key className="h-3 w-3" />}
                                         Alterar Password
@@ -626,7 +626,7 @@ export default function MyAccountPage() {
                         <div className="space-y-2">
                             {/* Android */}
                             <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-50 to-green-50/30 border border-green-200/60">
-                                <div className="h-8 w-8 rounded-lg bg-green-500 flex items-center justify-center flex-shrink-0 text-white">
+                                <div className="h-8 w-8 rounded-lg bg-green-500 flex items-center justify-center flex-shrink-0 text-card-foreground">
                                     <AndroidIcon />
                                 </div>
                                 <div>
@@ -639,7 +639,7 @@ export default function MyAccountPage() {
 
                             {/* iOS */}
                             <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-gray-50 to-gray-50/30 border border-gray-200/60">
-                                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 text-white">
+                                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 text-card-foreground">
                                     <AppleIcon />
                                 </div>
                                 <div>
@@ -652,7 +652,7 @@ export default function MyAccountPage() {
 
                             {/* Windows/Desktop */}
                             <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-50 to-blue-50/30 border border-blue-200/60">
-                                <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0 text-white">
+                                <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0 text-card-foreground">
                                     <WindowsIcon />
                                 </div>
                                 <div>

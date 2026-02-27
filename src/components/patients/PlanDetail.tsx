@@ -185,7 +185,7 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
     const totalPhases = sortedPhases.length;
 
     return (
-        <div className="h-full flex flex-col bg-card text-foreground overflow-hidden">
+        <div className="h-full flex flex-col bg-card text-card-foreground overflow-hidden">
             {/* === HEADER === */}
             <div className="p-4 md:p-6 border-b border-border bg-muted/50 flex-shrink-0">
                 <div className="flex items-center gap-3 mb-2">
@@ -295,14 +295,14 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                                 <button key={phase.id}
                                     onClick={() => setSelectedPhaseId(phase.id)}
                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors
-                                        ${selectedPhaseId === phase.id ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500' : 'bg-gray-700 text-foreground/80'}`}>
+                                        ${selectedPhaseId === phase.id ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500' : 'bg-muted text-card-foreground/80'}`}>
                                     <Icon className={`w-3.5 h-3.5 ${s.color}`} />
                                     {phase.nome}
                                 </button>
                             );
                         })}
                         <button onClick={() => setShowPhaseModal(true)}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm whitespace-nowrap bg-gray-700 text-muted-foreground hover:text-amber-400 transition-colors">
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm whitespace-nowrap bg-muted text-muted-foreground hover:text-amber-400 transition-colors">
                             <Plus className="w-3.5 h-3.5" /> Fase
                         </button>
                     </div>
@@ -319,7 +319,7 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                         <div className="relative">
                             {/* Vertical line */}
                             {sortedPhases.length > 1 && (
-                                <div className="absolute left-[15px] top-[20px] bottom-[20px] w-0.5 bg-gray-700" />
+                                <div className="absolute left-[15px] top-[20px] bottom-[20px] w-0.5 bg-muted" />
                             )}
                             <div className="space-y-1">
                                 {sortedPhases.map((phase: { id: string; nome: string; estado: string; ordem: number }, idx: number) => {
@@ -331,12 +331,12 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                                             <button
                                                 onClick={() => setSelectedPhaseId(phase.id)}
                                                 className={`flex-1 flex items-center gap-3 p-3 rounded-lg transition-colors text-left relative
-                                                    ${isSelected ? 'bg-gray-700/70 ring-1 ring-amber-500/40' : 'hover:bg-muted/40'}`}>
+                                                    ${isSelected ? 'bg-muted/70 ring-1 ring-amber-500/40' : 'hover:bg-muted/40'}`}>
                                                 <div className="relative z-10 flex-shrink-0">
                                                     <Icon className={`w-[30px] h-[30px] ${s.color}`} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className={`text-sm font-medium truncate ${isSelected ? 'text-foreground' : 'text-foreground/80'}`}>
+                                                    <p className={`text-sm font-medium truncate ${isSelected ? 'text-card-foreground' : 'text-card-foreground/80'}`}>
                                                         F{phase.ordem} · {phase.nome}
                                                     </p>
                                                     <p className="text-xs text-gray-500">{s.label}</p>
@@ -466,7 +466,7 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${phase.estado === 'concluida' ? 'bg-green-900/40 text-green-400' :
                             phase.estado === 'em_curso' ? 'bg-amber-900/40 text-amber-400' :
                                 phase.estado === 'cancelada' ? 'bg-red-900/40 text-red-400' :
-                                    'bg-gray-700 text-muted-foreground'
+                                    'bg-muted text-muted-foreground'
                             }`}>
                             {phaseState.label}
                         </span>
@@ -547,7 +547,7 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
             {phase.notas && (
                 <div className="border border-border rounded-lg p-4">
                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Notas da Fase</h3>
-                    <p className="text-sm text-foreground/80">{phase.notas}</p>
+                    <p className="text-sm text-card-foreground/80">{phase.notas}</p>
                 </div>
             )}
 
@@ -574,7 +574,7 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                     )}
                     <button
                         onClick={() => onStateChange(phase.id, 'cancelada')}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-700 text-muted-foreground hover:bg-red-500/20 hover:text-red-400 transition-colors flex items-center gap-2 ml-auto"
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-muted text-muted-foreground hover:bg-red-500/20 hover:text-red-400 transition-colors flex items-center gap-2 ml-auto"
                     >
                         <XCircle className="w-4 h-4" />
                         Cancelar
@@ -585,7 +585,7 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                 <div className="mt-6 flex items-center gap-2 pt-4 border-t border-border">
                     <button
                         onClick={() => onStateChange(phase.id, 'pendente')}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-700 text-foreground/80 hover:bg-muted transition-colors flex items-center gap-2"
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-muted text-card-foreground/80 hover:bg-muted transition-colors flex items-center gap-2"
                     >
                         <Circle className="w-4 h-4" />
                         Reabrir como Pendente
@@ -707,11 +707,11 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, 
                             {/* Editar */}
                             <div className="border-t border-border my-1" />
                             <button onClick={() => { setEditingDate(true); setShowMenu(false); }}
-                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-foreground/80 flex items-center gap-2">
+                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-card-foreground/80 flex items-center gap-2">
                                 <Pencil className="w-3.5 h-3.5" /> Editar Data
                             </button>
                             <button onClick={() => { setEditingNotes(true); setShowMenu(false); }}
-                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-foreground/80 flex items-center gap-2">
+                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-card-foreground/80 flex items-center gap-2">
                                 <Pencil className="w-3.5 h-3.5" /> Editar Notas
                             </button>
                             {/* Apagar */}
@@ -729,13 +729,13 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, 
             {editingDate && (
                 <div className="mt-2 flex items-center gap-2">
                     <input type="date" value={dateValue} onChange={(e) => setDateValue(e.target.value)}
-                        className="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-foreground [color-scheme:dark]" />
+                        className="flex-1 bg-muted border border-gray-600 rounded px-2 py-1 text-xs text-card-foreground [color-scheme:dark]" />
                     <input type="time" value={timeValue} onChange={(e) => setTimeValue(e.target.value)}
-                        className="w-24 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-foreground [color-scheme:dark]" />
-                    <button onClick={handleSaveDate} className="p-1 rounded bg-green-600 hover:bg-green-500 text-white">
+                        className="w-24 bg-muted border border-gray-600 rounded px-2 py-1 text-xs text-card-foreground [color-scheme:dark]" />
+                    <button onClick={handleSaveDate} className="p-1 rounded bg-green-600 hover:bg-green-500 text-card-foreground">
                         <Check className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => setEditingDate(false)} className="p-1 rounded bg-gray-600 hover:bg-gray-500 text-white">
+                    <button onClick={() => setEditingDate(false)} className="p-1 rounded bg-gray-600 hover:bg-gray-500 text-card-foreground">
                         <X className="w-3.5 h-3.5" />
                     </button>
                 </div>
@@ -746,18 +746,18 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, 
                 <div className="mt-2">
                     <textarea value={notesValue} onChange={(e) => setNotesValue(e.target.value)}
                         rows={2} placeholder="Notas do agendamento..."
-                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-foreground placeholder:text-gray-500 resize-none" />
+                        className="w-full bg-muted border border-gray-600 rounded px-2 py-1 text-xs text-card-foreground placeholder:text-gray-500 resize-none" />
                     <div className="flex gap-1 mt-1">
-                        <button onClick={handleSaveNotes} className="px-2 py-0.5 rounded bg-green-600 hover:bg-green-500 text-foreground text-[10px]">
+                        <button onClick={handleSaveNotes} className="px-2 py-0.5 rounded bg-green-600 hover:bg-green-500 text-card-foreground text-[10px]">
                             Guardar
                         </button>
-                        <button onClick={() => setEditingNotes(false)} className="px-2 py-0.5 rounded bg-gray-600 hover:bg-gray-500 text-foreground text-[10px]">
+                        <button onClick={() => setEditingNotes(false)} className="px-2 py-0.5 rounded bg-gray-600 hover:bg-gray-500 text-card-foreground text-[10px]">
                             Cancelar
                         </button>
                     </div>
                 </div>
             ) : appointment.notas && (
-                <p className="mt-2 text-xs text-muted-foreground italic cursor-pointer hover:text-foreground/80" onClick={() => setEditingNotes(true)}>
+                <p className="mt-2 text-xs text-muted-foreground italic cursor-pointer hover:text-card-foreground/80" onClick={() => setEditingNotes(true)}>
                     {appointment.notas}
                 </p>
             )}
@@ -768,11 +768,11 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, 
                     <p className="text-xs text-red-300">Tem a certeza que quer apagar este agendamento?</p>
                     <div className="flex gap-2 mt-2">
                         <button onClick={() => onDelete(appointment.id)}
-                            className="px-3 py-1 rounded bg-red-600 hover:bg-red-500 text-foreground text-xs font-medium">
+                            className="px-3 py-1 rounded bg-red-600 hover:bg-red-500 text-card-foreground text-xs font-medium">
                             Sim, apagar
                         </button>
                         <button onClick={() => setConfirmDelete(false)}
-                            className="px-3 py-1 rounded bg-gray-700 hover:bg-muted text-foreground/80 text-xs">
+                            className="px-3 py-1 rounded bg-muted hover:bg-muted text-card-foreground/80 text-xs">
                             Cancelar
                         </button>
                     </div>
@@ -831,7 +831,7 @@ function ReasonModal({ action, onSubmit, onClose }: {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-muted rounded-2xl border border-border w-full max-w-md shadow-2xl">
                 <div className="flex items-center justify-between p-5 border-b border-border">
-                    <h3 className="text-lg font-bold text-white">{config.title}</h3>
+                    <h3 className="text-lg font-bold text-card-foreground">{config.title}</h3>
                     <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted text-muted-foreground">
                         <X className="w-5 h-5" />
                     </button>
@@ -839,14 +839,14 @@ function ReasonModal({ action, onSubmit, onClose }: {
                 <div className="p-5 space-y-4">
                     {action === 'reabrir' && (
                         <div>
-                            <label className="block text-sm font-medium text-foreground/80 mb-2">Tipo de reabertura</label>
+                            <label className="block text-sm font-medium text-card-foreground/80 mb-2">Tipo de reabertura</label>
                             <div className="flex gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setReopenType('correcao')}
                                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${reopenType === 'correcao'
                                         ? 'bg-purple-900/40 border-purple-500 text-purple-300'
-                                        : 'bg-gray-700/50 border-gray-600 text-muted-foreground hover:border-gray-500'
+                                        : 'bg-muted/50 border-gray-600 text-muted-foreground hover:border-gray-500'
                                         }`}
                                 >
                                     🔧 Correcção
@@ -856,7 +856,7 @@ function ReasonModal({ action, onSubmit, onClose }: {
                                     onClick={() => setReopenType('remake')}
                                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${reopenType === 'remake'
                                         ? 'bg-purple-900/40 border-purple-500 text-purple-300'
-                                        : 'bg-gray-700/50 border-gray-600 text-muted-foreground hover:border-gray-500'
+                                        : 'bg-muted/50 border-gray-600 text-muted-foreground hover:border-gray-500'
                                         }`}
                                 >
                                     🔄 Remake
@@ -865,13 +865,13 @@ function ReasonModal({ action, onSubmit, onClose }: {
                         </div>
                     )}
                     <div>
-                        <label className="block text-sm font-medium text-foreground/80 mb-2">{config.label}</label>
+                        <label className="block text-sm font-medium text-card-foreground/80 mb-2">{config.label}</label>
                         <textarea
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
                             placeholder={config.placeholder}
                             rows={3}
-                            className="w-full px-3 py-2.5 rounded-lg bg-gray-700/50 border border-gray-600 text-foreground placeholder-muted-foreground focus:border-amber-500 focus:ring-1 focus:ring-amber-500 resize-none text-sm"
+                            className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-gray-600 text-card-foreground placeholder-muted-foreground focus:border-amber-500 focus:ring-1 focus:ring-amber-500 resize-none text-sm"
                             autoFocus
                         />
                     </div>
@@ -883,7 +883,7 @@ function ReasonModal({ action, onSubmit, onClose }: {
                     <button
                         onClick={handleSubmit}
                         disabled={submitting || (config.required && !reason.trim())}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${config.color}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium text-card-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${config.color}`}
                     >
                         {submitting ? 'A processar...' : 'Confirmar'}
                     </button>

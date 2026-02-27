@@ -356,7 +356,7 @@ ${appUrl}
                                         className={cn(
                                             "flex-1 px-4 py-2.5 text-sm font-medium transition-all flex items-center justify-center gap-2",
                                             inviteMode === 'username'
-                                                ? "bg-primary text-foreground"
+                                                ? "bg-primary text-card-foreground"
                                                 : "bg-white text-muted-foreground hover:bg-gray-50"
                                         )}
                                     >
@@ -369,7 +369,7 @@ ${appUrl}
                                         className={cn(
                                             "flex-1 px-4 py-2.5 text-sm font-medium transition-all flex items-center justify-center gap-2",
                                             inviteMode === 'email'
-                                                ? "bg-primary text-foreground"
+                                                ? "bg-primary text-card-foreground"
                                                 : "bg-white text-muted-foreground hover:bg-gray-50"
                                         )}
                                     >
@@ -572,7 +572,7 @@ ${appUrl}
                         </div>
                     ) : clinicUsers.length === 0 ? (
                         <div className="text-center py-10 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg">
-                            <Users className="h-10 w-10 mx-auto text-foreground/80 mb-2" />
+                            <Users className="h-10 w-10 mx-auto text-card-foreground/80 mb-2" />
                             <h4 className="text-sm font-medium text-gray-900">Nenhum utilizador associado</h4>
                             <p className="text-sm text-gray-500 mt-1">
                                 Clique em &quot;Convidar Utilizador&quot; para adicionar acesso.
@@ -631,7 +631,7 @@ ${appUrl}
                                         <button
                                             type="button"
                                             onClick={() => setDeleteTarget(user)}
-                                            className="p-2 rounded-lg text-foreground/80 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+                                            className="p-2 rounded-lg text-card-foreground/80 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
                                             title="Remover acesso"
                                         >
                                             <Trash2 className="h-4 w-4" />

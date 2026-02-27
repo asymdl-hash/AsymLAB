@@ -241,7 +241,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
     const renderModeStep = () => (
         <div className="space-y-4">
             <div className="text-center mb-6">
-                <h3 className="text-lg font-semibold text-white">Onde quer guardar os backups?</h3>
+                <h3 className="text-lg font-semibold text-card-foreground">Onde quer guardar os backups?</h3>
                 <p className="text-sm text-gray-500 mt-1">Escolha o método de backup mais adequado</p>
             </div>
 
@@ -258,12 +258,12 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
                         <Monitor className="h-6 w-6 text-blue-600" />
                     </div>
                     <div className="flex-1">
-                        <p className="font-semibold text-white">Este Computador (PC)</p>
+                        <p className="font-semibold text-card-foreground">Este Computador (PC)</p>
                         <p className="text-sm text-gray-500 mt-0.5">
                             O backup corre e guarda neste PC. O computador precisa de estar ligado na hora do backup.
                         </p>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-foreground/80 flex-shrink-0" />
+                    <ChevronRight className="h-5 w-5 text-card-foreground/80 flex-shrink-0" />
                 </button>
 
                 {/* NAS como Drive */}
@@ -278,12 +278,12 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
                         <HardDrive className="h-6 w-6 text-emerald-600" />
                     </div>
                     <div className="flex-1">
-                        <p className="font-semibold text-white">NAS como Drive de Rede</p>
+                        <p className="font-semibold text-card-foreground">NAS como Drive de Rede</p>
                         <p className="text-sm text-gray-500 mt-0.5">
                             O backup corre neste PC mas guarda numa NAS montada como drive de rede. O PC precisa de estar ligado.
                         </p>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-foreground/80 flex-shrink-0" />
+                    <ChevronRight className="h-5 w-5 text-card-foreground/80 flex-shrink-0" />
                 </button>
 
                 {/* NAS Autónoma */}
@@ -298,12 +298,12 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
                         <Server className="h-6 w-6 text-violet-600" />
                     </div>
                     <div className="flex-1">
-                        <p className="font-semibold text-white">NAS Autónoma</p>
+                        <p className="font-semibold text-card-foreground">NAS Autónoma</p>
                         <p className="text-sm text-gray-500 mt-0.5">
                             A NAS corre o script de backup de forma independente. Não precisa deste PC ligado. <span className="text-primary font-medium">Recomendado</span>
                         </p>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-foreground/80 flex-shrink-0" />
+                    <ChevronRight className="h-5 w-5 text-card-foreground/80 flex-shrink-0" />
                 </button>
             </div>
         </div>
@@ -313,7 +313,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
     const renderBrandStep = () => (
         <div className="space-y-4">
             <div className="text-center mb-6">
-                <h3 className="text-lg font-semibold text-white">Qual a marca da sua NAS?</h3>
+                <h3 className="text-lg font-semibold text-card-foreground">Qual a marca da sua NAS?</h3>
                 <p className="text-sm text-gray-500 mt-1">As instruções serão adaptadas ao seu equipamento</p>
             </div>
 
@@ -330,7 +330,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
                         )}
                     >
                         <span className="text-3xl">{brand.logo}</span>
-                        <p className="font-semibold text-white">{brand.name}</p>
+                        <p className="font-semibold text-card-foreground">{brand.name}</p>
                     </button>
                 ))}
             </div>
@@ -341,7 +341,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
     const renderPathStep = () => (
         <div className="space-y-6">
             <div className="text-center mb-2">
-                <h3 className="text-lg font-semibold text-white">Diretório de Backup</h3>
+                <h3 className="text-lg font-semibold text-card-foreground">Diretório de Backup</h3>
                 <p className="text-sm text-gray-500 mt-1">
                     {state.mode === 'pc' && 'Onde guardar os backups neste computador'}
                     {state.mode === 'nas-drive' && 'Indique o caminho da NAS montada como drive de rede'}
@@ -438,7 +438,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
     const renderScheduleStep = () => (
         <div className="space-y-6">
             <div className="text-center mb-2">
-                <h3 className="text-lg font-semibold text-white">Horário do Backup</h3>
+                <h3 className="text-lg font-semibold text-card-foreground">Horário do Backup</h3>
                 <p className="text-sm text-gray-500 mt-1">O backup será executado diariamente a esta hora</p>
             </div>
 
@@ -463,8 +463,8 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
                         className={cn(
                             "px-3 py-1.5 rounded-full text-sm transition-all",
                             state.scheduleTime === t
-                                ? "bg-primary text-foreground"
-                                : "bg-gray-700 text-gray-500 hover:bg-muted"
+                                ? "bg-primary text-card-foreground"
+                                : "bg-muted text-gray-500 hover:bg-muted"
                         )}
                     >
                         {t}
@@ -488,7 +488,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
     const renderTestStep = () => (
         <div className="space-y-6">
             <div className="text-center mb-2">
-                <h3 className="text-lg font-semibold text-white">Testar Backup</h3>
+                <h3 className="text-lg font-semibold text-card-foreground">Testar Backup</h3>
                 <p className="text-sm text-gray-500 mt-1">Vamos executar um backup de teste para confirmar que tudo funciona</p>
             </div>
 
@@ -497,7 +497,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
                     <Button
                         onClick={async () => { await saveConfig(); await runTestBackup(); }}
                         size="lg"
-                        className="bg-primary hover:bg-primary/90 text-foreground gap-2 px-8"
+                        className="bg-primary hover:bg-primary/90 text-card-foreground gap-2 px-8"
                     >
                         <Play className="h-5 w-5" />
                         Executar Backup de Teste
@@ -542,7 +542,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
     const renderActivateStep = () => (
         <div className="space-y-6">
             <div className="text-center mb-2">
-                <h3 className="text-lg font-semibold text-white">Ativar Backup Automático</h3>
+                <h3 className="text-lg font-semibold text-card-foreground">Ativar Backup Automático</h3>
                 <p className="text-sm text-gray-500 mt-1">Agendar backup diário às {state.scheduleTime}</p>
             </div>
 
@@ -551,7 +551,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
                     <Button
                         onClick={scheduleBackup}
                         size="lg"
-                        className="bg-primary hover:bg-primary/90 text-foreground gap-2 px-8"
+                        className="bg-primary hover:bg-primary/90 text-card-foreground gap-2 px-8"
                     >
                         <Calendar className="h-5 w-5" />
                         Ativar Agendamento
@@ -591,7 +591,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
                             </code>
                             <button
                                 onClick={() => navigator.clipboard.writeText(state.scheduleResult.manual_command)}
-                                className="absolute top-2 right-2 p-1.5 rounded bg-gray-700 text-foreground/80 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute top-2 right-2 p-1.5 rounded bg-muted text-card-foreground/80 hover:text-card-foreground opacity-0 group-hover:opacity-100 transition-opacity"
                                 title="Copiar"
                             >
                                 <Copy className="h-4 w-4" />
@@ -616,7 +616,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
     const renderCopyStep = () => (
         <div className="space-y-6">
             <div className="text-center mb-2">
-                <h3 className="text-lg font-semibold text-white">Copiar Ficheiros para a NAS</h3>
+                <h3 className="text-lg font-semibold text-card-foreground">Copiar Ficheiros para a NAS</h3>
                 <p className="text-sm text-gray-500 mt-1">Vamos copiar o script de backup e configuração para a NAS</p>
             </div>
 
@@ -632,7 +632,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
 
             <div className="flex flex-col items-center gap-4">
                 {!state.copyResult && (
-                    <Button onClick={copyFilesToNas} size="lg" className="bg-primary hover:bg-primary/90 text-foreground gap-2 px-8">
+                    <Button onClick={copyFilesToNas} size="lg" className="bg-primary hover:bg-primary/90 text-card-foreground gap-2 px-8">
                         <Copy className="h-5 w-5" />
                         Copiar para NAS
                     </Button>
@@ -674,7 +674,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
         return (
             <div className="space-y-6">
                 <div className="text-center mb-2">
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-card-foreground">
                         Configurar {brand.name}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">Siga estas instruções na sua NAS</p>
@@ -684,12 +684,12 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
                 <div className="bg-card rounded-xl border border-border overflow-hidden">
                     <div className="bg-blue-900/30 px-5 py-3 border-b border-blue-100">
                         <p className="font-semibold text-blue-800 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-blue-600 text-foreground flex items-center justify-center text-xs">1</span>
+                            <span className="w-6 h-6 rounded-full bg-blue-600 text-card-foreground flex items-center justify-center text-xs">1</span>
                             Instalar Node.js
                         </p>
                     </div>
                     <div className="p-5">
-                        <pre className="text-sm text-foreground/80 whitespace-pre-wrap font-mono bg-gray-50 p-4 rounded-lg">
+                        <pre className="text-sm text-card-foreground/80 whitespace-pre-wrap font-mono bg-gray-50 p-4 rounded-lg">
                             {brand.nodeInstall}
                         </pre>
                     </div>
@@ -699,12 +699,12 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
                 <div className="bg-card rounded-xl border border-border overflow-hidden">
                     <div className="bg-emerald-50 px-5 py-3 border-b border-emerald-100">
                         <p className="font-semibold text-emerald-800 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-emerald-600 text-foreground flex items-center justify-center text-xs">2</span>
+                            <span className="w-6 h-6 rounded-full bg-emerald-600 text-card-foreground flex items-center justify-center text-xs">2</span>
                             Agendar Backup Diário
                         </p>
                     </div>
                     <div className="p-5">
-                        <pre className="text-sm text-foreground/80 whitespace-pre-wrap font-mono bg-gray-50 p-4 rounded-lg">
+                        <pre className="text-sm text-card-foreground/80 whitespace-pre-wrap font-mono bg-gray-50 p-4 rounded-lg">
                             {brand.cronSetup.replace('{TIME}', state.scheduleTime).replace('{CRON}', cronExpr)}
                         </pre>
                     </div>
@@ -731,14 +731,14 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
             </div>
 
             <div>
-                <h3 className="text-xl font-bold text-white">Configuração Concluída!</h3>
+                <h3 className="text-xl font-bold text-card-foreground">Configuração Concluída!</h3>
                 <p className="text-sm text-gray-500 mt-2">O sistema de backup está configurado e pronto.</p>
             </div>
 
             <div className="bg-muted rounded-xl p-6 text-left max-w-sm mx-auto space-y-3">
                 <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Modo</span>
-                    <span className="font-medium text-white">
+                    <span className="font-medium text-card-foreground">
                         {state.mode === 'pc' && '💻 PC Local'}
                         {state.mode === 'nas-drive' && '🖥️ NAS Drive'}
                         {state.mode === 'nas-autonomous' && '⚙️ NAS Autónoma'}
@@ -746,19 +746,19 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
                 </div>
                 <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Diretório</span>
-                    <span className="font-medium text-foreground font-mono text-xs">{state.backupPath}</span>
+                    <span className="font-medium text-card-foreground font-mono text-xs">{state.backupPath}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Horário</span>
-                    <span className="font-medium text-white">{state.scheduleTime}</span>
+                    <span className="font-medium text-card-foreground">{state.scheduleTime}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Retenção</span>
-                    <span className="font-medium text-white">{state.retentionDays} dias</span>
+                    <span className="font-medium text-card-foreground">{state.retentionDays} dias</span>
                 </div>
             </div>
 
-            <Button onClick={onComplete} className="bg-primary hover:bg-primary/90 text-foreground gap-2 px-8">
+            <Button onClick={onComplete} className="bg-primary hover:bg-primary/90 text-card-foreground gap-2 px-8">
                 Concluir
                 <ArrowRight className="h-4 w-4" />
             </Button>
@@ -787,18 +787,18 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
             {/* Header */}
             <div className="bg-gradient-to-r from-[#111827] to-[#1a2332] px-6 py-5 flex items-center justify-between">
                 <div>
-                    <h2 className="text-lg font-bold text-white">Configurar Backup</h2>
+                    <h2 className="text-lg font-bold text-card-foreground">Configurar Backup</h2>
                     <p className="text-sm text-muted-foreground mt-0.5">
                         Passo {currentStep + 1} de {steps.length}
                     </p>
                 </div>
-                <button onClick={onCancel} className="text-muted-foreground hover:text-white transition-colors">
+                <button onClick={onCancel} className="text-muted-foreground hover:text-card-foreground transition-colors">
                     <X className="h-5 w-5" />
                 </button>
             </div>
 
             {/* Progress bar */}
-            <div className="h-1 bg-gray-700">
+            <div className="h-1 bg-muted">
                 <div
                     className="h-full bg-primary transition-all duration-500 ease-out"
                     style={{ width: `${progress}%` }}
@@ -821,7 +821,7 @@ export default function BackupWizard({ onComplete, onCancel }: BackupWizardProps
                         <Button
                             onClick={nextStep}
                             disabled={!canProceed()}
-                            className="bg-primary hover:bg-primary/90 text-foreground gap-1"
+                            className="bg-primary hover:bg-primary/90 text-card-foreground gap-1"
                         >
                             Seguinte <ChevronRight className="h-4 w-4" />
                         </Button>

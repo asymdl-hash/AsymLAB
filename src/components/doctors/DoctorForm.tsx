@@ -149,17 +149,17 @@ function DoctorHeroHeader({ initialData, canEdit }: { initialData: DoctorProfile
                             />
                             {uploading && (
                                 <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center z-20">
-                                    <Loader2 className="h-8 w-8 text-foreground animate-spin" />
+                                    <Loader2 className="h-8 w-8 text-card-foreground animate-spin" />
                                 </div>
                             )}
                             {canEdit && !uploading && (
                                 <>
                                     <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Camera className="h-6 w-6 text-foreground" />
+                                        <Camera className="h-6 w-6 text-card-foreground" />
                                     </div>
                                     <button
                                         onClick={removeAvatar}
-                                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10 shadow-md"
+                                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-card-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10 shadow-md"
                                         title="Remover Avatar"
                                         type="button"
                                     >
@@ -175,8 +175,8 @@ function DoctorHeroHeader({ initialData, canEdit }: { initialData: DoctorProfile
                             </span>
                             {canEdit && (
                                 <div className="absolute inset-0 rounded-full bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Upload className="h-5 w-5 text-foreground mb-0.5" />
-                                    <span className="text-[10px] text-foreground/80">Upload</span>
+                                    <Upload className="h-5 w-5 text-card-foreground mb-0.5" />
+                                    <span className="text-[10px] text-card-foreground/80">Upload</span>
                                 </div>
                             )}
                         </div>
@@ -193,7 +193,7 @@ function DoctorHeroHeader({ initialData, canEdit }: { initialData: DoctorProfile
                     )}
                     {/* Mensagem de erro de upload */}
                     {uploadError && (
-                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-red-500/90 text-foreground text-xs px-3 py-1 rounded-full shadow-lg">
+                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-red-500/90 text-card-foreground text-xs px-3 py-1 rounded-full shadow-lg">
                             {uploadError}
                         </div>
                     )}
@@ -202,7 +202,7 @@ function DoctorHeroHeader({ initialData, canEdit }: { initialData: DoctorProfile
                 <div className="flex flex-col gap-1.5">
                     {/* Nome + Badge */}
                     <div className="flex items-center gap-3 flex-wrap">
-                        <h1 className="text-4xl font-bold text-foreground tracking-tight">
+                        <h1 className="text-4xl font-bold text-card-foreground tracking-tight">
                             {fullName}
                         </h1>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/15 text-blue-400 border border-blue-500/20">

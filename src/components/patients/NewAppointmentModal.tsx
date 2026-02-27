@@ -55,7 +55,7 @@ export default function NewAppointmentModal({ phaseId, onClose, onCreated }: New
             <div className="bg-muted border border-border rounded-xl shadow-2xl w-full max-w-md">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-border">
-                    <h2 className="text-lg font-bold text-white">Novo Agendamento</h2>
+                    <h2 className="text-lg font-bold text-card-foreground">Novo Agendamento</h2>
                     <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted transition-colors">
                         <X className="w-5 h-5 text-muted-foreground" />
                     </button>
@@ -64,7 +64,7 @@ export default function NewAppointmentModal({ phaseId, onClose, onCreated }: New
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-4 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-foreground/80 mb-1">
+                        <label className="block text-sm font-medium text-card-foreground/80 mb-1">
                             Tipo <span className="text-red-400">*</span>
                         </label>
                         <div className="grid grid-cols-2 gap-2">
@@ -74,7 +74,7 @@ export default function NewAppointmentModal({ phaseId, onClose, onCreated }: New
                                     className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors
                                         ${tipo === t.value
                                             ? 'border-amber-500 bg-amber-500/10 text-amber-400'
-                                            : 'border-gray-600 bg-gray-700 text-foreground/80 hover:border-gray-500'
+                                            : 'border-gray-600 bg-muted text-card-foreground/80 hover:border-gray-500'
                                         }`}>
                                     <span>{t.emoji}</span>
                                     <span>{t.label}</span>
@@ -84,22 +84,22 @@ export default function NewAppointmentModal({ phaseId, onClose, onCreated }: New
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-foreground/80 mb-1">Data Prevista (opcional)</label>
+                        <label className="block text-sm font-medium text-card-foreground/80 mb-1">Data Prevista (opcional)</label>
                         <div className="flex gap-2">
                             <input type="date" value={dataPrevista} onChange={(e) => setDataPrevista(e.target.value)}
-                                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-amber-500/50 [color-scheme:dark]" />
+                                className="flex-1 bg-muted border border-gray-600 rounded-lg px-3 py-2 text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-amber-500/50 [color-scheme:dark]" />
                             <input type="time" value={horaPrevista} onChange={(e) => setHoraPrevista(e.target.value)}
                                 placeholder="Hora"
-                                className="w-28 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-amber-500/50 [color-scheme:dark]" />
+                                className="w-28 bg-muted border border-gray-600 rounded-lg px-3 py-2 text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-amber-500/50 [color-scheme:dark]" />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-foreground/80 mb-1">Notas (opcional)</label>
+                        <label className="block text-sm font-medium text-card-foreground/80 mb-1">Notas (opcional)</label>
                         <textarea value={notas} onChange={(e) => setNotas(e.target.value)}
                             placeholder="Observações sobre o agendamento..."
                             rows={3}
-                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none" />
+                            className="w-full bg-muted border border-gray-600 rounded-lg px-3 py-2 text-sm text-card-foreground placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none" />
                     </div>
 
                     {error && (
@@ -108,7 +108,7 @@ export default function NewAppointmentModal({ phaseId, onClose, onCreated }: New
 
                     <div className="flex gap-3 pt-2">
                         <button type="button" onClick={onClose}
-                            className="flex-1 px-4 py-2 rounded-lg border border-gray-600 text-foreground/80 hover:bg-muted transition-colors text-sm">
+                            className="flex-1 px-4 py-2 rounded-lg border border-gray-600 text-card-foreground/80 hover:bg-muted transition-colors text-sm">
                             Cancelar
                         </button>
                         <button type="submit" disabled={submitting}

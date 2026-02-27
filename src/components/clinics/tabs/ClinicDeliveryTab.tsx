@@ -170,7 +170,7 @@ export default function ClinicDeliveryTab() {
             <div className="grid gap-4">
                 {fields.length === 0 ? (
                     <div className="text-center py-12 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg">
-                        <MapPin className="h-10 w-10 mx-auto text-foreground/80 mb-2" />
+                        <MapPin className="h-10 w-10 mx-auto text-card-foreground/80 mb-2" />
                         <h3 className="text-sm font-medium text-gray-900">Sem locais de entrega</h3>
                         <p className="text-sm text-gray-500 mt-1">Adicione pelo menos um local para calcular custos de estafeta.</p>
                     </div>
@@ -377,7 +377,7 @@ export default function ClinicDeliveryTab() {
                                                                         type="button"
                                                                         disabled={!externalForm.name.trim()}
                                                                         onClick={() => dpId && handleAddExternalContact(dpId, index)}
-                                                                        className="flex-1 text-xs py-1 bg-blue-600 text-foreground rounded hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                        className="flex-1 text-xs py-1 bg-blue-600 text-card-foreground rounded hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
                                                                     >
                                                                         Adicionar
                                                                     </button>

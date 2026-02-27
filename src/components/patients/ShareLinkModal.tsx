@@ -73,11 +73,11 @@ export default function ShareLinkModal({
             <div className="bg-card border border-border/50 rounded-xl w-full max-w-md overflow-hidden shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-border/50">
-                    <h3 className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-card-foreground/80 flex items-center gap-2">
                         <Share2 className="h-4 w-4 text-green-400" />
                         Link de Partilha
                     </h3>
-                    <button onClick={onClose} className="text-gray-500 hover:text-foreground/80 text-xs">
+                    <button onClick={onClose} className="text-gray-500 hover:text-card-foreground/80 text-xs">
                         Fechar ✕
                     </button>
                 </div>
@@ -126,7 +126,7 @@ export default function ShareLinkModal({
                                         type="text"
                                         value={shareUrl}
                                         readOnly
-                                        className="flex-1 text-xs bg-transparent text-foreground/80 outline-none"
+                                        className="flex-1 text-xs bg-transparent text-card-foreground/80 outline-none"
                                     />
                                     <button
                                         onClick={handleCopy}
@@ -169,7 +169,7 @@ export default function ShareLinkModal({
                                     href={shareUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-1.5 text-xs px-3 py-2 bg-gray-700/30 text-muted-foreground border border-border/50 rounded-lg hover:bg-muted/50 transition-colors"
+                                    className="flex items-center justify-center gap-1.5 text-xs px-3 py-2 bg-muted/30 text-muted-foreground border border-border/50 rounded-lg hover:bg-muted/50 transition-colors"
                                 >
                                     <ExternalLink className="h-3 w-3" />
                                 </a>

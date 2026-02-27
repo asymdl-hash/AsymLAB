@@ -62,7 +62,7 @@ export default function QueueCard({ item }: QueueCardProps) {
             onClick={handleClick}
             className={cn(
                 "w-full text-left p-3 rounded-lg border transition-all duration-200 group cursor-pointer",
-                "bg-gray-700/50 hover:bg-muted border-gray-600 hover:border-gray-500 hover:shadow-lg hover:shadow-black/20",
+                "bg-muted/80 hover:bg-muted border-border hover:border-border hover:shadow-lg hover:shadow-black/20",
                 item.urgente && "ring-2 ring-amber-400/30 border-amber-500/50"
             )}
         >
@@ -98,7 +98,7 @@ export default function QueueCard({ item }: QueueCardProps) {
                     </span>
                 )}
                 {item.clinica && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-600/50 text-foreground/80 font-medium">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-600/50 text-card-foreground/80 font-medium">
                         {item.clinica.commercial_name}
                     </span>
                 )}

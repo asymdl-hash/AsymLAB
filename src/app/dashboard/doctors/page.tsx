@@ -9,7 +9,7 @@ export default function Doctors() {
                 <Stethoscope className="w-12 h-12 text-muted-foreground" />
             </div>
             <div>
-                <h2 className="text-xl font-semibold text-white">Selecione um Médico</h2>
+                <h2 className="text-xl font-semibold text-card-foreground">Selecione um Médico</h2>
                 <p className="text-gray-500 mt-2">Escolha um médico na lista à esquerda para ver os detalhes.</p>
             </div>
         </div>

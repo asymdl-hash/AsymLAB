@@ -33,7 +33,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 // Status do paciente
 const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-    rascunho: { label: 'Rascunho', color: 'text-muted-foreground', bg: 'bg-gray-700/50', border: 'border-gray-600' },
+    rascunho: { label: 'Rascunho', color: 'text-muted-foreground', bg: 'bg-muted/50', border: 'border-gray-600' },
     activo: { label: 'Activo', color: 'text-emerald-400', bg: 'bg-emerald-900/30', border: 'border-emerald-700/50' },
     inactivo: { label: 'Inactivo', color: 'text-amber-400', bg: 'bg-amber-900/30', border: 'border-amber-700/50' },
     arquivado: { label: 'Arquivado', color: 'text-red-400', bg: 'bg-red-900/30', border: 'border-red-700/50' },
@@ -41,7 +41,7 @@ const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: 
 
 // Labels e cores para estados dos planos
 const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    rascunho: { label: 'Rascunho', color: 'text-muted-foreground', bg: 'bg-gray-700/50' },
+    rascunho: { label: 'Rascunho', color: 'text-muted-foreground', bg: 'bg-muted/50' },
     activo: { label: 'Activo', color: 'text-blue-400', bg: 'bg-blue-900/30' },
     pausado: { label: 'Pausado', color: 'text-amber-400', bg: 'bg-amber-900/30' },
     concluido: { label: 'Concluído', color: 'text-green-400', bg: 'bg-green-900/30' },
@@ -284,7 +284,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                 autoSave('clinica_id', e.target.value);
                             }}
                             disabled={readOnly}
-                            className="h-6 text-xs font-medium border border-border rounded px-1.5 bg-muted text-foreground/80 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
+                            className="h-6 text-xs font-medium border border-border rounded px-1.5 bg-muted text-card-foreground/80 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
                         >
                             {clinics.map(c => (
                                 <option key={c.id} value={c.id}>{c.commercial_name}</option>
@@ -305,7 +305,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                 autoSave('medico_principal_id', e.target.value);
                             }}
                             disabled={readOnly}
-                            className="h-6 text-xs font-medium border border-border rounded px-1.5 bg-muted text-foreground/80 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
+                            className="h-6 text-xs font-medium border border-border rounded px-1.5 bg-muted text-card-foreground/80 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
                         >
                             {doctors.map(d => (
                                 <option key={d.user_id} value={d.user_id}>Dr. {d.full_name}</option>
@@ -319,7 +319,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                             onChange={(e) => handleFieldChange('id_paciente_clinica', e.target.value)}
                             placeholder="—"
                             disabled={readOnly}
-                            className="h-6 w-20 text-xs font-medium border border-border rounded px-1.5 bg-muted text-foreground/80 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
+                            className="h-6 w-20 text-xs font-medium border border-border rounded px-1.5 bg-muted text-card-foreground/80 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
                         />
                     </div>
                 </div>
@@ -370,7 +370,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                             value={patient.notas_lab || ''}
                             onChange={(e) => handleFieldChange('notas_lab', e.target.value)}
                             placeholder="Notas internas sobre o paciente..."
-                            className="mt-1 w-full text-sm border border-border rounded-lg p-3 bg-muted/50 text-foreground/80 placeholder:text-muted-foreground focus:bg-muted focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/30 resize-none min-h-[60px]"
+                            className="mt-1 w-full text-sm border border-border rounded-lg p-3 bg-muted/50 text-card-foreground/80 placeholder:text-muted-foreground focus:bg-muted focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/30 resize-none min-h-[60px]"
                             rows={2}
                             disabled={readOnly}
                         />
@@ -379,12 +379,12 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     {/* Lista de planos */}
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-foreground/80">Planos de Tratamento</h3>
+                            <h3 className="text-sm font-semibold text-card-foreground/80">Planos de Tratamento</h3>
                             {!readOnly && (
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-7 text-xs gap-1.5 border-border text-foreground/80 hover:bg-muted hover:text-amber-400 hover:border-amber-500/30"
+                                    className="h-7 text-xs gap-1.5 border-border text-card-foreground/80 hover:bg-muted hover:text-amber-400 hover:border-amber-500/30"
                                     onClick={() => setShowNewPlan(true)}
                                 >
                                     <Plus className="h-3 w-3" />
@@ -415,7 +415,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <h4 className="font-medium text-sm text-foreground truncate">
+                                                    <h4 className="font-medium text-sm text-card-foreground truncate">
                                                         {plan.nome}
                                                     </h4>
                                                     <span className={cn(
@@ -453,7 +453,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                                     <span className="text-xs text-gray-500">
                                                         {completedPhases}/{totalPhases}
                                                     </span>
-                                                    <div className="w-16 h-1.5 bg-gray-700 rounded-full mt-1 overflow-hidden">
+                                                    <div className="w-16 h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
                                                         <div
                                                             className="h-full bg-primary rounded-full transition-all"
                                                             style={{ width: `${(completedPhases / totalPhases) * 100}%` }}

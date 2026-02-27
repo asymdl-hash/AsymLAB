@@ -207,7 +207,7 @@ export default function ClinicContactsList() {
                                 <button
                                     type="button"
                                     onClick={() => handleRemoveTeamContact(tc.user_id)}
-                                    className="p-1 rounded-md text-foreground/80 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+                                    className="p-1 rounded-md text-card-foreground/80 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
                                     title="Remover dos contactos"
                                 >
                                     <X className="h-4 w-4" />

@@ -41,7 +41,7 @@ const COLOR_MAP: Record<string, { header: string; border: string; dot: string; c
         border: 'border-border',
         dot: 'bg-gray-500',
         count: 'text-muted-foreground bg-gray-600/30',
-        dropHighlight: 'bg-gray-700/40 border-gray-500',
+        dropHighlight: 'bg-muted/60 border-border',
     },
 };
 
@@ -108,7 +108,7 @@ export default function QueueColumn({ title, color, icon, columnKey, items, onDr
             )}>
                 <div className="flex items-center gap-2">
                     <span className="text-sm">{icon}</span>
-                    <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+                    <h3 className="text-sm font-semibold text-card-foreground">{title}</h3>
                 </div>
                 <span className={cn(
                     "text-xs font-bold px-2 py-0.5 rounded-full",
@@ -127,7 +127,7 @@ export default function QueueColumn({ title, color, icon, columnKey, items, onDr
                     <div className={cn(
                         "text-center py-8 text-xs rounded-lg border-2 border-dashed transition-all",
                         isDragOver
-                            ? "text-foreground/80 border-gray-500 bg-gray-700/40"
+                            ? "text-card-foreground/80 border-border bg-muted/60"
                             : "text-gray-500 border-transparent"
                     )}>
                         {isDragOver ? '⬇ Largar aqui' : 'Sem pedidos'}

@@ -171,11 +171,11 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
         <div className="flex flex-col h-full min-h-[400px]">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-border/50">
-                <h3 className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-card-foreground/80 flex items-center gap-2">
                     <MessageSquare className="h-4 w-4 text-gray-500" />
                     Considerações
                     {considerations.length > 0 && (
-                        <span className="text-[10px] bg-gray-700 text-muted-foreground rounded-full px-2 py-0.5">
+                        <span className="text-[10px] bg-muted text-muted-foreground rounded-full px-2 py-0.5">
                             {considerations.length}
                         </span>
                     )}
@@ -201,7 +201,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                             key={filter}
                             onClick={() => setActiveFilter(filter)}
                             className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md transition-colors ${isActive
-                                ? config ? `${config.bg} ${config.color} ${config.border} border` : 'bg-gray-700/50 text-foreground/80 border border-gray-600'
+                                ? config ? `${config.bg} ${config.color} ${config.border} border` : 'bg-muted/50 text-card-foreground/80 border border-gray-600'
                                 : 'text-gray-500 hover:text-muted-foreground'
                                 }`}
                         >
@@ -250,7 +250,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                         <select
                             value={createPhaseId}
                             onChange={e => setCreatePhaseId(e.target.value)}
-                            className="w-full text-xs bg-gray-800/60 border border-border/50 rounded-lg px-3 py-2 text-foreground/80"
+                            className="w-full text-xs bg-gray-800/60 border border-border/50 rounded-lg px-3 py-2 text-card-foreground/80"
                         >
                             <option value="">Seleccionar fase...</option>
                             {allPhases.map(p => (
@@ -301,7 +301,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                                                 }}
                                                 placeholder={`Descrever ${f.subtitulo.toLowerCase()}...`}
                                                 rows={2}
-                                                className="w-full text-sm bg-gray-800/60 border border-border/50 rounded-lg px-3 py-2 text-foreground/80 placeholder:text-muted-foreground resize-none focus:outline-none focus:border-gray-600"
+                                                className="w-full text-sm bg-gray-800/60 border border-border/50 rounded-lg px-3 py-2 text-card-foreground/80 placeholder:text-muted-foreground resize-none focus:outline-none focus:border-gray-600"
                                             />
                                         </div>
                                     ))}
@@ -314,7 +314,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                                 onChange={e => setFreeText(e.target.value)}
                                 placeholder={fields.length > 0 ? 'Notas adicionais (opcional)...' : 'Escrever consideração...'}
                                 rows={3}
-                                className="w-full text-sm bg-gray-800/60 border border-border/50 rounded-lg px-3 py-2 text-foreground/80 placeholder:text-muted-foreground resize-none focus:outline-none focus:border-gray-600"
+                                className="w-full text-sm bg-gray-800/60 border border-border/50 rounded-lg px-3 py-2 text-card-foreground/80 placeholder:text-muted-foreground resize-none focus:outline-none focus:border-gray-600"
                             />
 
                             {/* Actions */}
@@ -350,11 +350,11 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                         <div key={phaseId} className="mb-4">
                             {/* Phase header */}
                             <div className="flex items-center gap-2 mb-2">
-                                <div className="h-px flex-1 bg-gray-700/50" />
+                                <div className="h-px flex-1 bg-muted/50" />
                                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                                     {group.phaseName}
                                 </span>
-                                <div className="h-px flex-1 bg-gray-700/50" />
+                                <div className="h-px flex-1 bg-muted/50" />
                             </div>
 
                             {/* Cards */}
@@ -466,7 +466,7 @@ function ConsiderationCard({ consideration: c, isExpanded, onToggle, onReply, on
                                     <span className="text-[10px] uppercase tracking-wider text-gray-500">
                                         {f.subtitulo}
                                     </span>
-                                    <p className="text-sm text-foreground/80 mt-0.5">
+                                    <p className="text-sm text-card-foreground/80 mt-0.5">
                                         {f.descricao || <span className="text-muted-foreground italic">Sem descrição</span>}
                                     </p>
                                     {/* Field attachments */}
@@ -487,7 +487,7 @@ function ConsiderationCard({ consideration: c, isExpanded, onToggle, onReply, on
                     {/* Free text */}
                     {c.conteudo && (
                         <div className={`${hasFields ? 'mt-2 pt-2 border-t border-border/30' : 'mt-2'}`}>
-                            <p className="text-sm text-foreground/80 whitespace-pre-wrap">{c.conteudo}</p>
+                            <p className="text-sm text-card-foreground/80 whitespace-pre-wrap">{c.conteudo}</p>
                         </div>
                     )}
 

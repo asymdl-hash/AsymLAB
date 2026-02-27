@@ -127,7 +127,7 @@ export default function HistoryTab({ patient }: HistoryTabProps) {
                         return (
                             <button key={tipo} onClick={() => setFilterTipo(tipo)}
                                 className={`text-[10px] px-2 py-1 rounded-full transition-colors font-medium
-                                    ${active ? 'bg-muted text-foreground' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                                    ${active ? 'bg-muted text-card-foreground' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
                                 {label}
                             </button>
                         );

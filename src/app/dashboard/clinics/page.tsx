@@ -9,7 +9,7 @@ export default function Clinics() {
                 <Building2 className="w-12 h-12 text-muted-foreground" />
             </div>
             <div>
-                <h2 className="text-xl font-semibold text-white">Selecione uma Clínica</h2>
+                <h2 className="text-xl font-semibold text-card-foreground">Selecione uma Clínica</h2>
                 <p className="text-gray-500 mt-2">Escolha uma clínica na lista à esquerda para ver os detalhes ou editar.</p>
             </div>
         </div>

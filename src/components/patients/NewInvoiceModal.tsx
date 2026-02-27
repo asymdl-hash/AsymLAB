@@ -78,8 +78,8 @@ export default function NewInvoiceModal({ patientId, onClose, onCreated }: NewIn
             <div className="bg-muted border border-border rounded-2xl w-full max-w-lg mx-4 shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-border">
-                    <h3 className="text-base font-semibold text-white">🧾 Nova Factura</h3>
-                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-white">
+                    <h3 className="text-base font-semibold text-card-foreground">🧾 Nova Factura</h3>
+                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-card-foreground">
                         <X className="h-4 w-4" />
                     </button>
                 </div>
@@ -92,7 +92,7 @@ export default function NewInvoiceModal({ patientId, onClose, onCreated }: NewIn
                         <select
                             value={selectedPlanId}
                             onChange={(e) => { setSelectedPlanId(e.target.value); setSelectedPhaseId(''); }}
-                            className="w-full rounded-lg bg-gray-700 border border-gray-600 text-sm text-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
+                            className="w-full rounded-lg bg-muted border border-gray-600 text-sm text-card-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
                         >
                             <option value="">Sem plano associado</option>
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -109,7 +109,7 @@ export default function NewInvoiceModal({ patientId, onClose, onCreated }: NewIn
                             <select
                                 value={selectedPhaseId}
                                 onChange={(e) => setSelectedPhaseId(e.target.value)}
-                                className="w-full rounded-lg bg-gray-700 border border-gray-600 text-sm text-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
+                                className="w-full rounded-lg bg-muted border border-gray-600 text-sm text-card-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
                             >
                                 <option value="">Sem fase específica</option>
                                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -130,7 +130,7 @@ export default function NewInvoiceModal({ patientId, onClose, onCreated }: NewIn
                             value={valor}
                             onChange={(e) => setValor(e.target.value)}
                             placeholder="0.00"
-                            className="w-full rounded-lg bg-gray-700 border border-gray-600 text-sm text-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
+                            className="w-full rounded-lg bg-muted border border-gray-600 text-sm text-card-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
                         />
                     </div>
 
@@ -142,7 +142,7 @@ export default function NewInvoiceModal({ patientId, onClose, onCreated }: NewIn
                             value={descricao}
                             onChange={(e) => setDescricao(e.target.value)}
                             placeholder="Ex: Coroa zircónia dente 14"
-                            className="w-full rounded-lg bg-gray-700 border border-gray-600 text-sm text-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
+                            className="w-full rounded-lg bg-muted border border-gray-600 text-sm text-card-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
                         />
                     </div>
 
@@ -154,7 +154,7 @@ export default function NewInvoiceModal({ patientId, onClose, onCreated }: NewIn
                             onChange={(e) => setNotas(e.target.value)}
                             rows={2}
                             placeholder="Observações internas..."
-                            className="w-full rounded-lg bg-gray-700 border border-gray-600 text-sm text-foreground px-3 py-2 focus:border-amber-500 focus:outline-none resize-none"
+                            className="w-full rounded-lg bg-muted border border-gray-600 text-sm text-card-foreground px-3 py-2 focus:border-amber-500 focus:outline-none resize-none"
                         />
                     </div>
 
@@ -166,7 +166,7 @@ export default function NewInvoiceModal({ patientId, onClose, onCreated }: NewIn
                                 <span className="text-sm text-emerald-400 truncate flex-1">{pdfFile.name}</span>
                                 <button
                                     onClick={() => setPdfFile(null)}
-                                    className="text-muted-foreground hover:text-white"
+                                    className="text-muted-foreground hover:text-card-foreground"
                                 >
                                     <X className="h-3.5 w-3.5" />
                                 </button>
@@ -198,14 +198,14 @@ export default function NewInvoiceModal({ patientId, onClose, onCreated }: NewIn
                     <button
                         onClick={onClose}
                         disabled={saving}
-                        className="px-4 py-2 text-sm text-muted-foreground hover:text-white transition-colors"
+                        className="px-4 py-2 text-sm text-muted-foreground hover:text-card-foreground transition-colors"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={saving || !valor}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 hover:bg-emerald-500 text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 hover:bg-emerald-500 text-card-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                         {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : '🧾'}
                         {saving ? 'A criar...' : 'Criar Factura'}

@@ -51,13 +51,13 @@ export default function TemplatePicker({ tipo, onSelect, onSkip, tipoTrabalhoId,
         <div className="space-y-3">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium text-foreground/80 flex items-center gap-2">
+                <h4 className="text-sm font-medium text-card-foreground/80 flex items-center gap-2">
                     <Layout className="h-4 w-4 text-gray-500" />
                     Escolher Template
                 </h4>
                 <button
                     onClick={onSkip}
-                    className="text-xs text-gray-500 hover:text-foreground/80 transition-colors"
+                    className="text-xs text-gray-500 hover:text-card-foreground/80 transition-colors"
                 >
                     Sem template →
                 </button>
@@ -71,7 +71,7 @@ export default function TemplatePicker({ tipo, onSelect, onSkip, tipoTrabalhoId,
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Pesquisar templates..."
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-muted/50 border border-border/50 rounded-lg text-foreground/80 placeholder:text-muted-foreground focus:outline-none focus:border-gray-600"
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-muted/50 border border-border/50 rounded-lg text-card-foreground/80 placeholder:text-muted-foreground focus:outline-none focus:border-gray-600"
                 />
             </div>
 

@@ -113,8 +113,8 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
             <div className="bg-muted border border-border rounded-2xl w-full max-w-lg mx-4 shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-border">
-                    <h3 className="text-base font-semibold text-white">{label}</h3>
-                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-white">
+                    <h3 className="text-base font-semibold text-card-foreground">{label}</h3>
+                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-card-foreground">
                         <X className="h-4 w-4" />
                     </button>
                 </div>
@@ -127,7 +127,7 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
                         <select
                             value={selectedPlanId}
                             onChange={(e) => setSelectedPlanId(e.target.value)}
-                            className="w-full rounded-lg bg-gray-700 border border-gray-600 text-sm text-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
+                            className="w-full rounded-lg bg-muted border border-gray-600 text-sm text-card-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
                         >
                             <option value="">Sem plano</option>
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -187,14 +187,14 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
                                         value={item.nome}
                                         onChange={(e) => updateItem(i, 'nome', e.target.value)}
                                         placeholder="Nome do item..."
-                                        className="flex-1 rounded-lg bg-gray-700 border border-gray-600 text-xs text-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
+                                        className="flex-1 rounded-lg bg-muted border border-gray-600 text-xs text-card-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
                                     />
                                     <input
                                         type="number"
                                         min="1"
                                         value={item.quantidade}
                                         onChange={(e) => updateItem(i, 'quantidade', parseInt(e.target.value) || 1)}
-                                        className="w-14 rounded-lg bg-gray-700 border border-gray-600 text-xs text-foreground px-2 py-2 text-center focus:border-amber-500 focus:outline-none"
+                                        className="w-14 rounded-lg bg-muted border border-gray-600 text-xs text-card-foreground px-2 py-2 text-center focus:border-amber-500 focus:outline-none"
                                     />
                                     {items.length > 1 && (
                                         <button
@@ -223,7 +223,7 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
                             onChange={(e) => setNotas(e.target.value)}
                             rows={2}
                             placeholder="Observações..."
-                            className="w-full rounded-lg bg-gray-700 border border-gray-600 text-sm text-foreground px-3 py-2 focus:border-amber-500 focus:outline-none resize-none"
+                            className="w-full rounded-lg bg-muted border border-gray-600 text-sm text-card-foreground px-3 py-2 focus:border-amber-500 focus:outline-none resize-none"
                         />
                     </div>
 
@@ -238,14 +238,14 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
                     <button
                         onClick={onClose}
                         disabled={saving}
-                        className="px-4 py-2 text-sm text-muted-foreground hover:text-white transition-colors"
+                        className="px-4 py-2 text-sm text-muted-foreground hover:text-card-foreground transition-colors"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={saving}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-600 hover:bg-amber-500 text-foreground transition-colors disabled:opacity-50 flex items-center gap-2"
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-600 hover:bg-amber-500 text-card-foreground transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
                         {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Package className="h-3.5 w-3.5" />}
                         {saving ? 'A criar...' : 'Criar Guia'}

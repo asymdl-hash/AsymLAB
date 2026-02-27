@@ -53,16 +53,16 @@ export default function DeleteConfirmModal({ patientName, onConfirm, onCancel }:
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
-                                <AlertTriangle className="h-5 w-5 text-foreground" />
+                                <AlertTriangle className="h-5 w-5 text-card-foreground" />
                             </div>
                             <div>
-                                <h3 className="text-foreground font-semibold text-lg">Eliminar Paciente</h3>
+                                <h3 className="text-card-foreground font-semibold text-lg">Eliminar Paciente</h3>
                                 <p className="text-red-100 text-xs">Esta acção não pode ser desfeita</p>
                             </div>
                         </div>
                         <button
                             onClick={onCancel}
-                            className="text-foreground/70 hover:text-white transition-colors"
+                            className="text-foreground/70 hover:text-card-foreground transition-colors"
                         >
                             <X className="h-5 w-5" />
                         </button>
@@ -92,7 +92,7 @@ export default function DeleteConfirmModal({ patientName, onConfirm, onCancel }:
                         placeholder="Escreva ELIMINAR"
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-center text-sm font-mono
                             focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100
-                            transition-all placeholder:text-foreground/80"
+                            transition-all placeholder:text-card-foreground/80"
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' && isConfirmed) handleConfirm();
                         }}
@@ -111,7 +111,7 @@ export default function DeleteConfirmModal({ patientName, onConfirm, onCancel }:
                         Cancelar
                     </Button>
                     <Button
-                        className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-card-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         onClick={handleConfirm}
                         disabled={!isConfirmed || deleting}
                     >

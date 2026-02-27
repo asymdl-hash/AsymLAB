@@ -225,7 +225,7 @@ export default function BackupSettings() {
                         <Database className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold text-white">Backup Local</h3>
+                        <h3 className="text-lg font-semibold text-card-foreground">Backup Local</h3>
                         <p className="text-sm text-gray-500">Redundância dos dados do Supabase</p>
                     </div>
                 </div>
@@ -245,7 +245,7 @@ export default function BackupSettings() {
                             <Button
                                 onClick={() => handleBackupNow()}
                                 disabled={backingUp}
-                                className="bg-primary hover:bg-primary/90 text-foreground gap-2 rounded-r-none"
+                                className="bg-primary hover:bg-primary/90 text-card-foreground gap-2 rounded-r-none"
                             >
                                 {backingUp ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -257,7 +257,7 @@ export default function BackupSettings() {
                             <Button
                                 onClick={() => setShowDropdown(!showDropdown)}
                                 disabled={backingUp}
-                                className="bg-primary hover:bg-primary/90 text-foreground rounded-l-none border-l border-white/20 px-2"
+                                className="bg-primary hover:bg-primary/90 text-card-foreground rounded-l-none border-l border-white/20 px-2"
                             >
                                 <ChevronDown className="h-4 w-4" />
                             </Button>
@@ -271,7 +271,7 @@ export default function BackupSettings() {
                                 >
                                     <Zap className="h-4 w-4 text-amber-500" />
                                     <div>
-                                        <p className="font-medium text-foreground/80">Auto</p>
+                                        <p className="font-medium text-card-foreground/80">Auto</p>
                                         <p className="text-[11px] text-muted-foreground">Decide automaticamente</p>
                                     </div>
                                 </button>
@@ -281,7 +281,7 @@ export default function BackupSettings() {
                                 >
                                     <Archive className="h-4 w-4 text-blue-500" />
                                     <div>
-                                        <p className="font-medium text-foreground/80">Forçar Full</p>
+                                        <p className="font-medium text-card-foreground/80">Forçar Full</p>
                                         <p className="text-[11px] text-muted-foreground">Backup completo de tudo</p>
                                     </div>
                                 </button>
@@ -291,7 +291,7 @@ export default function BackupSettings() {
                                 >
                                     <Zap className="h-4 w-4 text-emerald-500" />
                                     <div>
-                                        <p className="font-medium text-foreground/80">Forçar Incremental</p>
+                                        <p className="font-medium text-card-foreground/80">Forçar Incremental</p>
                                         <p className="text-[11px] text-muted-foreground">Só dados alterados</p>
                                     </div>
                                 </button>
@@ -321,7 +321,7 @@ export default function BackupSettings() {
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs text-gray-500 uppercase font-medium">Total</span>
                         </div>
-                        <p className="text-2xl font-bold text-white">{stats.total_backups}</p>
+                        <p className="text-2xl font-bold text-card-foreground">{stats.total_backups}</p>
                         <p className="text-[11px] text-muted-foreground mt-1">
                             <span className="text-blue-500 font-medium">{stats.total_full}</span> Full · <span className="text-emerald-500 font-medium">{stats.total_incremental}</span> Incr
                         </p>
@@ -331,28 +331,28 @@ export default function BackupSettings() {
                             <HardDrive className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs text-gray-500 uppercase font-medium">Espaço</span>
                         </div>
-                        <p className="text-2xl font-bold text-white">{stats.total_size_display}</p>
+                        <p className="text-2xl font-bold text-card-foreground">{stats.total_size_display}</p>
                     </div>
                     <div className="bg-muted rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
                             <Database className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs text-gray-500 uppercase font-medium">Tabelas</span>
                         </div>
-                        <p className="text-2xl font-bold text-white">{config?.tables.length || 0}</p>
+                        <p className="text-2xl font-bold text-card-foreground">{config?.tables.length || 0}</p>
                     </div>
                     <div className="bg-muted rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
                             <Zap className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs text-gray-500 uppercase font-medium">Modo</span>
                         </div>
-                        <p className="text-lg font-bold text-white">{modeLabels[editMode] || 'Auto'}</p>
+                        <p className="text-lg font-bold text-card-foreground">{modeLabels[editMode] || 'Auto'}</p>
                     </div>
                 </div>
             )}
 
             {/* ====== CONFIGURAÇÕES ====== */}
             <div className="bg-card rounded-lg border border-border p-6 space-y-6">
-                <h4 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">
+                <h4 className="text-sm font-semibold text-card-foreground/80 uppercase tracking-wider">
                     Configuração
                 </h4>
 
@@ -394,7 +394,7 @@ export default function BackupSettings() {
                             >
                                 <p className={cn(
                                     "text-sm font-medium",
-                                    editMode === mode ? "text-primary" : "text-foreground/80"
+                                    editMode === mode ? "text-primary" : "text-card-foreground/80"
                                 )}>
                                     {modeLabels[mode]}
                                 </p>
@@ -460,7 +460,7 @@ export default function BackupSettings() {
                 {/* Ativar/Desativar */}
                 <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                     <div>
-                        <p className="text-sm font-medium text-foreground/80">Backup automático diário</p>
+                        <p className="text-sm font-medium text-card-foreground/80">Backup automático diário</p>
                         <p className="text-xs text-muted-foreground">Executa backup todos os dias no horário definido</p>
                     </div>
                     <button
@@ -483,7 +483,7 @@ export default function BackupSettings() {
                         <Button
                             onClick={handleSave}
                             disabled={saving}
-                            className="bg-primary hover:bg-primary/90 text-foreground gap-2"
+                            className="bg-primary hover:bg-primary/90 text-card-foreground gap-2"
                         >
                             {saving ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -498,14 +498,14 @@ export default function BackupSettings() {
 
             {/* ====== TABELAS MONITORIZADAS ====== */}
             <div className="bg-card rounded-lg border border-border p-6">
-                <h4 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider mb-4">
+                <h4 className="text-sm font-semibold text-card-foreground/80 uppercase tracking-wider mb-4">
                     Tabelas Monitorizadas
                 </h4>
                 <div className="flex flex-wrap gap-2">
                     {config?.tables.map((table) => (
                         <span
                             key={table}
-                            className="px-3 py-1.5 bg-gray-700 text-muted-foreground rounded-lg text-xs font-mono"
+                            className="px-3 py-1.5 bg-muted text-muted-foreground rounded-lg text-xs font-mono"
                         >
                             {table}
                         </span>
@@ -516,7 +516,7 @@ export default function BackupSettings() {
             {/* ====== HISTÓRICO ====== */}
             <div className="bg-card rounded-lg border border-border p-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">
+                    <h4 className="text-sm font-semibold text-card-foreground/80 uppercase tracking-wider">
                         Histórico de Backups
                     </h4>
                     <Button
@@ -558,7 +558,7 @@ export default function BackupSettings() {
                                         )}
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <p className="text-sm font-medium text-foreground/80">
+                                                <p className="text-sm font-medium text-card-foreground/80">
                                                     {backup.timestamp
                                                         ? new Date(backup.timestamp).toLocaleString('pt-PT')
                                                         : backup.folder}

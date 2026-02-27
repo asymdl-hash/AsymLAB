@@ -59,7 +59,7 @@ export default function ClinicDiscountsTab() {
             <div className="grid gap-4">
                 {fields.length === 0 ? (
                     <div className="text-center py-12 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg">
-                        <Percent className="h-10 w-10 mx-auto text-foreground/80 mb-2" />
+                        <Percent className="h-10 w-10 mx-auto text-card-foreground/80 mb-2" />
                         <h3 className="text-sm font-medium text-gray-900">Sem descontos configurados</h3>
                         <p className="text-sm text-gray-500 mt-1">Defina regras de preço especiais para fidelizar este cliente.</p>
                     </div>

@@ -57,13 +57,13 @@ export default function DoctorList() {
             {/* Header da Lista */}
             <div className="p-4 border-b border-border space-y-4">
                 <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-white">Médicos</h2>
+                    <h2 className="font-semibold text-card-foreground">Médicos</h2>
                 </div>
                 <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
                         placeholder="Pesquisar..."
-                        className="pl-9 bg-muted border-border text-foreground placeholder-muted-foreground focus:bg-muted focus:border-amber-500/50 transition-all"
+                        className="pl-9 bg-muted border-border text-card-foreground placeholder-muted-foreground focus:bg-muted focus:border-amber-500/50 transition-all"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -110,7 +110,7 @@ export default function DoctorList() {
                                 <div className="flex-1 min-w-0">
                                     <h3 className={cn(
                                         "font-medium text-sm truncate",
-                                        isActive ? "text-foreground" : "text-foreground/80"
+                                        isActive ? "text-card-foreground" : "text-card-foreground/80"
                                     )}>
                                         {doctor.full_name}
                                     </h3>

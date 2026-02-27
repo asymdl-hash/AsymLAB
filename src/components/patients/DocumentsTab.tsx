@@ -139,7 +139,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
         <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-card-foreground/80 flex items-center gap-2">
                     <FileText className="h-4 w-4 text-gray-500" />
                     Documentação
                 </h3>
@@ -147,7 +147,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                     {activeCategory === 'facturas' && (
                         <button
                             onClick={() => setShowInvoiceModal(true)}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-foreground text-xs font-medium transition-colors"
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-card-foreground text-xs font-medium transition-colors"
                         >
                             <Plus className="h-3 w-3" /> Factura
                         </button>
@@ -156,20 +156,20 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                         <div className="flex gap-1">
                             <button
                                 onClick={() => setShowGuideModal('transporte')}
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-foreground text-xs font-medium transition-colors"
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-card-foreground text-xs font-medium transition-colors"
                             >
                                 🚚 Transporte
                             </button>
                             <button
                                 onClick={() => setShowGuideModal('recepcao')}
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-foreground text-xs font-medium transition-colors"
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-card-foreground text-xs font-medium transition-colors"
                             >
                                 📦 Recepção
                             </button>
                         </div>
                     )}
                     {activeCategory === 'documentos' && (
-                        <label className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-foreground text-xs font-medium transition-colors cursor-pointer">
+                        <label className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-card-foreground text-xs font-medium transition-colors cursor-pointer">
                             {uploadingDoc ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
                             Upload
                             <input ref={fileInputRef} type="file" className="hidden" onChange={handleDocUpload} disabled={uploadingDoc} />
@@ -231,7 +231,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                 <div className="flex items-start justify-between gap-3">
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2 mb-1">
-                                                            <span className="text-sm font-semibold text-white">{inv.numero}</span>
+                                                            <span className="text-sm font-semibold text-card-foreground">{inv.numero}</span>
                                                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${state.bg} ${state.color}`}>
                                                                 {state.label}
                                                             </span>
@@ -247,7 +247,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                         <span className="text-sm font-bold text-emerald-400">{formatCurrency(inv.valor)}</span>
                                                         {inv.pdf_url && (
                                                             <a href={inv.pdf_url} target="_blank" rel="noreferrer"
-                                                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-white transition-colors">
+                                                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-card-foreground transition-colors">
                                                                 <Download className="h-3.5 w-3.5" />
                                                             </a>
                                                         )}
@@ -271,12 +271,12 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                             value={receiptValor}
                                                             onChange={(e) => setReceiptValor(e.target.value)}
                                                             placeholder="Valor €"
-                                                            className="w-24 rounded bg-gray-700 border border-gray-600 text-xs text-foreground px-2 py-1.5"
+                                                            className="w-24 rounded bg-muted border border-gray-600 text-xs text-card-foreground px-2 py-1.5"
                                                         />
                                                         <select
                                                             value={receiptMetodo}
                                                             onChange={(e) => setReceiptMetodo(e.target.value)}
-                                                            className="rounded bg-gray-700 border border-gray-600 text-xs text-foreground px-2 py-1.5"
+                                                            className="rounded bg-muted border border-gray-600 text-xs text-card-foreground px-2 py-1.5"
                                                         >
                                                             {Object.entries(PAYMENT_METHODS).map(([k, v]) => (
                                                                 <option key={k} value={k}>{v}</option>
@@ -285,11 +285,11 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                         <button
                                                             onClick={() => handleCreateReceipt(inv.id)}
                                                             disabled={savingReceipt}
-                                                            className="px-3 py-1.5 rounded-lg bg-blue-600 text-foreground text-xs font-medium hover:bg-blue-500 disabled:opacity-50"
+                                                            className="px-3 py-1.5 rounded-lg bg-blue-600 text-card-foreground text-xs font-medium hover:bg-blue-500 disabled:opacity-50"
                                                         >
                                                             {savingReceipt ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Emitir'}
                                                         </button>
-                                                        <button onClick={() => setShowReceiptForm(null)} className="text-gray-500 hover:text-white">
+                                                        <button onClick={() => setShowReceiptForm(null)} className="text-gray-500 hover:text-card-foreground">
                                                             <X className="h-3.5 w-3.5" />
                                                         </button>
                                                     </div>
@@ -316,7 +316,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-sm font-semibold text-white">{rec.numero}</span>
+                                                        <span className="text-sm font-semibold text-card-foreground">{rec.numero}</span>
                                                         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-medium">
                                                             Pago
                                                         </span>
@@ -331,7 +331,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                     <span className="text-sm font-bold text-blue-400">{formatCurrency(rec.valor)}</span>
                                                     {rec.pdf_url && (
                                                         <a href={rec.pdf_url} target="_blank" rel="noreferrer"
-                                                            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-white transition-colors">
+                                                            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-card-foreground transition-colors">
                                                             <Download className="h-3.5 w-3.5" />
                                                         </a>
                                                     )}
@@ -411,7 +411,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                         <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setGuideExpanded(isExpanded ? null : g.id)}>
                                                             <div className="flex items-center gap-2 mb-1">
                                                                 <span className="text-base">{tipo.emoji}</span>
-                                                                <span className="text-sm font-semibold text-white">{g.numero}</span>
+                                                                <span className="text-sm font-semibold text-card-foreground">{g.numero}</span>
                                                                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${tipo.bg} ${tipo.color}`}>
                                                                     {tipo.label}
                                                                 </span>
@@ -441,7 +441,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                         <div className="relative">
                                                             <button
                                                                 onClick={() => setGuideMenuOpen(isMenuOpen ? null : g.id)}
-                                                                className="p-1 rounded hover:bg-muted text-gray-500 hover:text-foreground/80 transition-colors"
+                                                                className="p-1 rounded hover:bg-muted text-gray-500 hover:text-card-foreground/80 transition-colors"
                                                             >
                                                                 <MoreVertical className="h-4 w-4" />
                                                             </button>
@@ -470,7 +470,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                                         </>
                                                                     )}
                                                                     <div className="border-t border-border my-1" />
-                                                                    <button onClick={() => { setGuideEditNotes(g.id); setGuideNotesText(g.notas || ''); setGuideMenuOpen(null); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted text-foreground/80 flex items-center gap-2">
+                                                                    <button onClick={() => { setGuideEditNotes(g.id); setGuideNotesText(g.notas || ''); setGuideMenuOpen(null); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted text-card-foreground/80 flex items-center gap-2">
                                                                         <Edit3 className="h-3 w-3" /> Editar Notas
                                                                     </button>
                                                                     <button onClick={() => { setGuideDeleting(g.id); setGuideMenuOpen(null); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted text-red-400 flex items-center gap-2">
@@ -487,10 +487,10 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                     <div className="mx-4 mb-3 p-3 bg-red-900/20 border border-red-800/40 rounded-lg">
                                                         <p className="text-xs text-red-300 mb-2">Tem a certeza que quer apagar esta guia?</p>
                                                         <div className="flex gap-2">
-                                                            <button onClick={handleDeleteGuide} disabled={guideSaving} className="px-3 py-1 text-xs bg-red-600 hover:bg-red-500 text-foreground rounded transition-colors">
+                                                            <button onClick={handleDeleteGuide} disabled={guideSaving} className="px-3 py-1 text-xs bg-red-600 hover:bg-red-500 text-card-foreground rounded transition-colors">
                                                                 {guideSaving ? 'A apagar...' : 'Apagar'}
                                                             </button>
-                                                            <button onClick={() => setGuideDeleting(null)} className="px-3 py-1 text-xs bg-gray-700 hover:bg-muted text-foreground/80 rounded transition-colors">
+                                                            <button onClick={() => setGuideDeleting(null)} className="px-3 py-1 text-xs bg-muted hover:bg-muted text-card-foreground/80 rounded transition-colors">
                                                                 Cancelar
                                                             </button>
                                                         </div>
@@ -505,13 +505,13 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                             onChange={(e) => setGuideNotesText(e.target.value)}
                                                             placeholder="Notas..."
                                                             rows={3}
-                                                            className="w-full bg-card border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder-gray-600 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                                            className="w-full bg-card border border-border rounded px-2 py-1.5 text-xs text-card-foreground placeholder-gray-600 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
                                                         />
                                                         <div className="flex gap-2 mt-2">
-                                                            <button onClick={handleSaveNotes} disabled={guideSaving} className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-500 text-foreground rounded transition-colors">
+                                                            <button onClick={handleSaveNotes} disabled={guideSaving} className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-500 text-card-foreground rounded transition-colors">
                                                                 {guideSaving ? 'A guardar...' : 'Guardar'}
                                                             </button>
-                                                            <button onClick={() => setGuideEditNotes(null)} className="px-3 py-1 text-xs bg-gray-700 hover:bg-muted text-foreground/80 rounded transition-colors">
+                                                            <button onClick={() => setGuideEditNotes(null)} className="px-3 py-1 text-xs bg-muted hover:bg-muted text-card-foreground/80 rounded transition-colors">
                                                                 Cancelar
                                                             </button>
                                                         </div>
@@ -528,10 +528,10 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                                 <div className="space-y-1">
                                                                     {g.items.map((item, idx) => (
                                                                         <div key={idx} className="flex items-center justify-between text-xs">
-                                                                            <span className="text-foreground/80">{item.nome}</span>
+                                                                            <span className="text-card-foreground/80">{item.nome}</span>
                                                                             <div className="flex items-center gap-2">
                                                                                 {item.quantidade > 1 && (
-                                                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 text-muted-foreground">×{item.quantidade}</span>
+                                                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">×{item.quantidade}</span>
                                                                                 )}
                                                                                 {item.observacao && (
                                                                                     <span className="text-[10px] text-muted-foreground italic">{item.observacao}</span>
@@ -547,7 +547,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                         {g.notas && (
                                                             <div className="bg-gray-800/40 rounded-lg p-3">
                                                                 <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Notas</p>
-                                                                <p className="text-xs text-foreground/80 whitespace-pre-wrap">{g.notas}</p>
+                                                                <p className="text-xs text-card-foreground/80 whitespace-pre-wrap">{g.notas}</p>
                                                             </div>
                                                         )}
 
@@ -594,14 +594,14 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                     <div className="flex items-center gap-2 flex-1 min-w-0">
                                                         <span className="text-base">{typeConfig.emoji}</span>
                                                         <div className="flex-1 min-w-0">
-                                                            <p className="text-sm text-foreground truncate">{doc.nome}</p>
+                                                            <p className="text-sm text-card-foreground truncate">{doc.nome}</p>
                                                             <p className="text-[10px] text-muted-foreground">{typeConfig.label} · {formatDate(doc.uploaded_at)}</p>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         {doc.file_url && (
                                                             <a href={doc.file_url} target="_blank" rel="noreferrer"
-                                                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-white transition-colors">
+                                                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-card-foreground transition-colors">
                                                                 <ExternalLink className="h-3.5 w-3.5" />
                                                             </a>
                                                         )}

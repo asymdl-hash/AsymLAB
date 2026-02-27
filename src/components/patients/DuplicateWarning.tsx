@@ -87,7 +87,7 @@ export default function DuplicateWarning({ status, message, matches, onDismiss }
             {status !== 'block' && (
                 <button
                     onClick={onDismiss}
-                    className="text-muted-foreground hover:text-muted-foreground dark:text-gray-500 dark:hover:text-foreground/80 shrink-0"
+                    className="text-muted-foreground hover:text-muted-foreground dark:text-gray-500 dark:hover:text-card-foreground/80 shrink-0"
                 >
                     <X className="h-4 w-4" />
                 </button>

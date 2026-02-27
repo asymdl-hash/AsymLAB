@@ -190,7 +190,7 @@ export default function ClinicTeamTab() {
                 <div className="grid gap-4 md:grid-cols-2">
                     {team.length === 0 ? (
                         <div className="col-span-2 text-center py-12 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg">
-                            <User className="h-10 w-10 mx-auto text-foreground/80 mb-2" />
+                            <User className="h-10 w-10 mx-auto text-card-foreground/80 mb-2" />
                             <h3 className="text-sm font-medium text-gray-900">Sem equipa registada</h3>
                             <p className="text-sm text-gray-500 mt-1">Adicione utilizadores para associar a esta clínica.</p>
                         </div>

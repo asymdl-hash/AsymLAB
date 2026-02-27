@@ -41,14 +41,14 @@ export default function VersionHistory({
             <div className="bg-card border border-border/50 rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-border/50">
-                    <h3 className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-card-foreground/80 flex items-center gap-2">
                         <History className="h-4 w-4 text-amber-400" />
                         Histórico de Versões
-                        <span className="text-[10px] bg-gray-700 text-muted-foreground rounded-full px-2 py-0.5">
+                        <span className="text-[10px] bg-muted text-muted-foreground rounded-full px-2 py-0.5">
                             v{currentVersion}
                         </span>
                     </h3>
-                    <button onClick={onClose} className="text-gray-500 hover:text-foreground/80 text-xs">
+                    <button onClick={onClose} className="text-gray-500 hover:text-card-foreground/80 text-xs">
                         Fechar ✕
                     </button>
                 </div>
@@ -128,13 +128,13 @@ function VersionCard({ label, fields, conteudo, editorName, editedAt, isExpanded
                     {fields.length > 0 && fields.map((f, i) => (
                         <div key={i} className="mt-2">
                             <span className="text-[10px] uppercase tracking-wider text-gray-500">{f.subtitulo}</span>
-                            <p className="text-sm text-foreground/80 mt-0.5">{f.descricao || <span className="italic text-muted-foreground">Vazio</span>}</p>
+                            <p className="text-sm text-card-foreground/80 mt-0.5">{f.descricao || <span className="italic text-muted-foreground">Vazio</span>}</p>
                         </div>
                     ))}
                     {conteudo && (
                         <div className="mt-2">
                             <span className="text-[10px] uppercase tracking-wider text-gray-500">Texto</span>
-                            <p className="text-sm text-foreground/80 mt-0.5 whitespace-pre-wrap">{conteudo}</p>
+                            <p className="text-sm text-card-foreground/80 mt-0.5 whitespace-pre-wrap">{conteudo}</p>
                         </div>
                     )}
                 </div>
