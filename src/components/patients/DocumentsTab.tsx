@@ -12,6 +12,12 @@ import {
     Trash2,
     Upload,
     X,
+    MoreVertical,
+    ChevronDown,
+    ChevronUp,
+    Check,
+    Image,
+    Edit3,
 } from 'lucide-react';
 import { billingService, Invoice, Receipt as ReceiptType, PatientDocument, INVOICE_STATE_CONFIG, DOC_TYPE_CONFIG, PAYMENT_METHODS } from '@/services/billingService';
 import { transportService, TransportGuide, GUIDE_TYPE_CONFIG, GUIDE_STATE_CONFIG, RECEPTION_STATE_CONFIG } from '@/services/transportService';
@@ -46,6 +52,13 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
     const [receiptMetodo, setReceiptMetodo] = useState('transferencia');
     const [savingReceipt, setSavingReceipt] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    // Guide interactions
+    const [guideMenuOpen, setGuideMenuOpen] = useState<string | null>(null);
+    const [guideExpanded, setGuideExpanded] = useState<string | null>(null);
+    const [guideEditNotes, setGuideEditNotes] = useState<string | null>(null);
+    const [guideNotesText, setGuideNotesText] = useState('');
+    const [guideDeleting, setGuideDeleting] = useState<string | null>(null);
+    const [guideSaving, setGuideSaving] = useState(false);
 
     const loadData = useCallback(async () => {
         try {
@@ -344,37 +357,218 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                         const tipo = GUIDE_TYPE_CONFIG[g.tipo] || GUIDE_TYPE_CONFIG.transporte;
                                         const state = GUIDE_STATE_CONFIG[g.estado] || GUIDE_STATE_CONFIG.rascunho;
                                         const recState = g.estado_recepcao ? RECEPTION_STATE_CONFIG[g.estado_recepcao] : null;
+                                        const isExpanded = guideExpanded === g.id;
+                                        const isMenuOpen = guideMenuOpen === g.id;
+                                        const isEditingNotes = guideEditNotes === g.id;
+                                        const isConfirmDelete = guideDeleting === g.id;
+
+                                        const handleGuideStateChange = async (newState: string) => {
+                                            setGuideSaving(true);
+                                            try {
+                                                await transportService.updateGuide(g.id, { estado: newState } as Partial<TransportGuide>);
+                                                loadData();
+                                            } catch (e) { console.error(e); }
+                                            setGuideSaving(false);
+                                            setGuideMenuOpen(null);
+                                        };
+
+                                        const handleReceptionState = async (recState: string) => {
+                                            setGuideSaving(true);
+                                            try {
+                                                await transportService.updateGuide(g.id, { estado: 'recebido', estado_recepcao: recState } as Partial<TransportGuide>);
+                                                loadData();
+                                            } catch (e) { console.error(e); }
+                                            setGuideSaving(false);
+                                            setGuideMenuOpen(null);
+                                        };
+
+                                        const handleSaveNotes = async () => {
+                                            setGuideSaving(true);
+                                            try {
+                                                await transportService.updateGuide(g.id, { notas: guideNotesText } as Partial<TransportGuide>);
+                                                loadData();
+                                            } catch (e) { console.error(e); }
+                                            setGuideSaving(false);
+                                            setGuideEditNotes(null);
+                                        };
+
+                                        const handleDeleteGuide = async () => {
+                                            setGuideSaving(true);
+                                            try {
+                                                const { error } = await (await import('@/lib/supabase')).supabase
+                                                    .from('transport_guides').delete().eq('id', g.id);
+                                                if (!error) loadData();
+                                            } catch (e) { console.error(e); }
+                                            setGuideSaving(false);
+                                            setGuideDeleting(null);
+                                        };
+
                                         return (
-                                            <div key={g.id} className="p-4 hover:bg-gray-700/20 transition-colors">
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <span className="text-base">{tipo.emoji}</span>
-                                                            <span className="text-sm font-semibold text-white">{g.numero}</span>
-                                                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${tipo.bg} ${tipo.color}`}>
-                                                                {tipo.label}
-                                                            </span>
-                                                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${state.bg} ${state.color}`}>
-                                                                {state.label}
-                                                            </span>
-                                                            {recState && (
-                                                                <span className={`text-[10px] ${recState.color}`}>
-                                                                    {recState.emoji} {recState.label}
+                                            <div key={g.id} className="hover:bg-gray-700/20 transition-colors">
+                                                {/* Card header */}
+                                                <div className="p-4">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setGuideExpanded(isExpanded ? null : g.id)}>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className="text-base">{tipo.emoji}</span>
+                                                                <span className="text-sm font-semibold text-white">{g.numero}</span>
+                                                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${tipo.bg} ${tipo.color}`}>
+                                                                    {tipo.label}
                                                                 </span>
+                                                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${state.bg} ${state.color}`}>
+                                                                    {state.label}
+                                                                </span>
+                                                                {recState && (
+                                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${recState.color === 'text-emerald-400' ? 'bg-emerald-900/40 text-emerald-300' : recState.color === 'text-red-400' ? 'bg-red-900/40 text-red-300' : 'bg-orange-900/40 text-orange-300'}`}>
+                                                                        {recState.emoji} {recState.label}
+                                                                    </span>
+                                                                )}
+                                                                {isExpanded ? <ChevronUp className="h-3 w-3 text-gray-500" /> : <ChevronDown className="h-3 w-3 text-gray-500" />}
+                                                            </div>
+                                                            <p className="text-xs text-gray-400">
+                                                                {g.plan && g.plan.nome}
+                                                                {g.clinica && <span className="text-gray-600"> · {g.clinica.commercial_name}</span>}
+                                                            </p>
+                                                            {!isExpanded && g.items && g.items.length > 0 && (
+                                                                <p className="text-[10px] text-gray-600 mt-1">
+                                                                    {g.items.map(it => `${it.nome}${it.quantidade > 1 ? ` (${it.quantidade})` : ''}`).join(', ')}
+                                                                </p>
+                                                            )}
+                                                            <p className="text-[10px] text-gray-600 mt-0.5">{formatDate(g.created_at)}</p>
+                                                        </div>
+
+                                                        {/* Menu ⋮ */}
+                                                        <div className="relative">
+                                                            <button
+                                                                onClick={() => setGuideMenuOpen(isMenuOpen ? null : g.id)}
+                                                                className="p-1 rounded hover:bg-gray-600 text-gray-500 hover:text-gray-300 transition-colors"
+                                                            >
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </button>
+                                                            {isMenuOpen && (
+                                                                <div className="absolute right-0 top-8 z-20 bg-gray-800 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[180px]">
+                                                                    {/* Estado transitions */}
+                                                                    {g.estado !== 'enviado' && (
+                                                                        <button onClick={() => handleGuideStateChange('enviado')} className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 text-amber-400 flex items-center gap-2">
+                                                                            📤 Marcar Enviado
+                                                                        </button>
+                                                                    )}
+                                                                    {g.estado !== 'entregue' && (
+                                                                        <button onClick={() => handleGuideStateChange('entregue')} className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 text-emerald-400 flex items-center gap-2">
+                                                                            ✅ Marcar Entregue
+                                                                        </button>
+                                                                    )}
+                                                                    {g.estado !== 'recebido' && (
+                                                                        <>
+                                                                            <div className="border-t border-gray-700 my-1" />
+                                                                            <p className="px-3 py-1 text-[10px] text-gray-500 uppercase tracking-wider">Confirmar Recepção</p>
+                                                                            {Object.entries(RECEPTION_STATE_CONFIG).map(([key, cfg]) => (
+                                                                                <button key={key} onClick={() => handleReceptionState(key)} className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 ${cfg.color} flex items-center gap-2`}>
+                                                                                    {cfg.emoji} {cfg.label}
+                                                                                </button>
+                                                                            ))}
+                                                                        </>
+                                                                    )}
+                                                                    <div className="border-t border-gray-700 my-1" />
+                                                                    <button onClick={() => { setGuideEditNotes(g.id); setGuideNotesText(g.notas || ''); setGuideMenuOpen(null); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 text-gray-300 flex items-center gap-2">
+                                                                        <Edit3 className="h-3 w-3" /> Editar Notas
+                                                                    </button>
+                                                                    <button onClick={() => { setGuideDeleting(g.id); setGuideMenuOpen(null); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 text-red-400 flex items-center gap-2">
+                                                                        <Trash2 className="h-3 w-3" /> Apagar
+                                                                    </button>
+                                                                </div>
                                                             )}
                                                         </div>
-                                                        <p className="text-xs text-gray-400">
-                                                            {g.plan && g.plan.nome}
-                                                            {g.clinica && <span className="text-gray-600"> · {g.clinica.commercial_name}</span>}
-                                                        </p>
-                                                        {g.items && g.items.length > 0 && (
-                                                            <p className="text-[10px] text-gray-600 mt-1">
-                                                                {g.items.map(it => `${it.nome}${it.quantidade > 1 ? ` (${it.quantidade})` : ''}`).join(', ')}
-                                                            </p>
-                                                        )}
-                                                        <p className="text-[10px] text-gray-600 mt-0.5">{formatDate(g.created_at)}</p>
                                                     </div>
                                                 </div>
+
+                                                {/* Delete confirmation */}
+                                                {isConfirmDelete && (
+                                                    <div className="mx-4 mb-3 p-3 bg-red-900/20 border border-red-800/40 rounded-lg">
+                                                        <p className="text-xs text-red-300 mb-2">Tem a certeza que quer apagar esta guia?</p>
+                                                        <div className="flex gap-2">
+                                                            <button onClick={handleDeleteGuide} disabled={guideSaving} className="px-3 py-1 text-xs bg-red-600 hover:bg-red-500 text-white rounded transition-colors">
+                                                                {guideSaving ? 'A apagar...' : 'Apagar'}
+                                                            </button>
+                                                            <button onClick={() => setGuideDeleting(null)} className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors">
+                                                                Cancelar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Edit notes inline */}
+                                                {isEditingNotes && (
+                                                    <div className="mx-4 mb-3 p-3 bg-gray-800/60 border border-gray-700 rounded-lg">
+                                                        <textarea
+                                                            value={guideNotesText}
+                                                            onChange={(e) => setGuideNotesText(e.target.value)}
+                                                            placeholder="Notas..."
+                                                            rows={3}
+                                                            className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-200 placeholder-gray-600 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                                        />
+                                                        <div className="flex gap-2 mt-2">
+                                                            <button onClick={handleSaveNotes} disabled={guideSaving} className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors">
+                                                                {guideSaving ? 'A guardar...' : 'Guardar'}
+                                                            </button>
+                                                            <button onClick={() => setGuideEditNotes(null)} className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors">
+                                                                Cancelar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Expanded details */}
+                                                {isExpanded && (
+                                                    <div className="mx-4 mb-3 space-y-3">
+                                                        {/* Items */}
+                                                        {g.items && g.items.length > 0 && (
+                                                            <div className="bg-gray-800/40 rounded-lg p-3">
+                                                                <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">Itens ({g.items.length})</p>
+                                                                <div className="space-y-1">
+                                                                    {g.items.map((item, idx) => (
+                                                                        <div key={idx} className="flex items-center justify-between text-xs">
+                                                                            <span className="text-gray-300">{item.nome}</span>
+                                                                            <div className="flex items-center gap-2">
+                                                                                {item.quantidade > 1 && (
+                                                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 text-gray-400">×{item.quantidade}</span>
+                                                                                )}
+                                                                                {item.observacao && (
+                                                                                    <span className="text-[10px] text-gray-600 italic">{item.observacao}</span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Notas */}
+                                                        {g.notas && (
+                                                            <div className="bg-gray-800/40 rounded-lg p-3">
+                                                                <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Notas</p>
+                                                                <p className="text-xs text-gray-300 whitespace-pre-wrap">{g.notas}</p>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Fotos */}
+                                                        {g.fotos && g.fotos.length > 0 && (
+                                                            <div className="bg-gray-800/40 rounded-lg p-3">
+                                                                <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">
+                                                                    <Image className="h-3 w-3 inline mr-1" /> Fotos ({g.fotos.length})
+                                                                </p>
+                                                                <div className="flex gap-2 flex-wrap">
+                                                                    {g.fotos.map((url, idx) => (
+                                                                        <a key={idx} href={url} target="_blank" rel="noreferrer"
+                                                                            className="w-16 h-16 rounded-lg overflow-hidden border border-gray-700 hover:border-blue-500 transition-colors">
+                                                                            <img src={url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                                                                        </a>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}
