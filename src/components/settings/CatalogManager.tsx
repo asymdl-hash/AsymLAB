@@ -404,30 +404,43 @@ function MaterialsManager() {
 
 // Mapa de cores VITA realistas para swatches
 const VITA_SHADE_COLORS: Record<string, string> = {
-    // Grupo A - Tons castanho-alaranjados
-    'A1': '#E8D5B8', 'A2': '#DCC8A5', 'A3': '#D0B88E', 'A3.5': '#C8AD82',
-    'A4': '#BFA076',
-    // Grupo B - Tons amarelados
+    // Vita Classical A
+    'A1': '#E8D5B8', 'A2': '#DCC8A5', 'A3': '#D0B88E', 'A3.5': '#C8AD82', 'A4': '#BFA076',
+    // Vita Classical B
     'B1': '#E5D9C0', 'B2': '#D9C9A6', 'B3': '#CDBA8E', 'B4': '#C1AB7A',
-    // Grupo C - Tons acinzentados
+    // Vita Classical C
     'C1': '#D4CCC0', 'C2': '#C8BFB0', 'C3': '#BCB2A0', 'C4': '#AEA492',
-    // Grupo D - Tons rosados/avermelhados
+    // Vita Classical D
     'D2': '#DBC8B5', 'D3': '#D0BBAA', 'D4': '#C5AE9F',
-    // 3D-Master
-    '1M1': '#EDE3D5', '1M2': '#E5DAC8', '2L1.5': '#E8DCC5', '2L2.5': '#DCCFB5',
-    '2M1': '#E0D4BE', '2M2': '#D8CAAE', '2M3': '#D0C0A0', '2R1.5': '#DFC8AE',
-    '2R2.5': '#D5BB9E', '3L1.5': '#D8CDB8', '3L2.5': '#CEC0A8', '3M1': '#D2C4AC',
-    '3M2': '#C8B89A', '3M3': '#BEA88B', '3R1.5': '#CCBA9E', '3R2.5': '#C2AE8E',
-    '4L1.5': '#C8BDAA', '4L2.5': '#BEB19C', '4M1': '#C0B49E', '4M3': '#A89882',
-    '4R1.5': '#B8A892', '4R2.5': '#AE9E88',
-    '5M1': '#B0A490', '5M2': '#A69882', '5M3': '#9C8E78',
-    // Bleach
+    // Bleach (part of Vita Classical)
     'BL1': '#F0EDE8', 'BL2': '#ECE8E2', 'BL3': '#E8E4DC', 'BL4': '#E4DFD6',
+    // Vita 3D-Master
+    '1M1': '#EDE3D5', '1M2': '#E5DAC8',
+    '2L1.5': '#E8DCC5', '2L2.5': '#DCCFB5', '2M1': '#E0D4BE', '2M2': '#D8CAAE', '2M3': '#D0C0A0', '2R1.5': '#DFC8AE', '2R2.5': '#D5BB9E',
+    '3L1.5': '#D8CDB8', '3L2.5': '#CEC0A8', '3M1': '#D2C4AC', '3M2': '#C8B89A', '3M3': '#BEA88B', '3R1.5': '#CCBA9E', '3R2.5': '#C2AE8E',
+    '4L1.5': '#C8BDAA', '4L2.5': '#BEB19C', '4M1': '#C0B49E', '4M3': '#A89882', '4R1.5': '#B8A892', '4R2.5': '#AE9E88',
+    '5M1': '#B0A490', '5M2': '#A69882', '5M3': '#9C8E78',
+    // Ivoclar Chromascop
+    '110': '#EDE5D8', '120': '#E5DCC8', '130': '#DDD2B8', '140': '#D5C8A8',
+    '210': '#E8DED0', '220': '#E0D4C0', '230': '#D8CAB0', '240': '#D0C0A0',
+    '310': '#E2D8CC', '320': '#D9CEB8', '330': '#D0C4A8', '340': '#C8BA98',
+    '410': '#DDD5CC', '420': '#D4CCBC', '430': '#CBC2AC', '440': '#C2B89C',
+    '510': '#D8D0C8', '520': '#D0C8B8', '530': '#C8BEA8', '540': '#C0B498',
 };
 
 function getShadeColor(codigo: string): string {
     return VITA_SHADE_COLORS[codigo] || '#D0C0A0';
 }
+
+// Mapeia grupo BD → nome de escala
+const GRUPO_TO_ESCALA: Record<string, string> = {
+    'A': 'Vita Classical', 'B': 'Vita Classical', 'C': 'Vita Classical', 'D': 'Vita Classical',
+    'Bleach': 'Vita Classical',
+    '3D-Master': 'Vita 3D-Master',
+    'Chromascop': 'Ivoclar Chromascop',
+};
+
+const ESCALA_ORDER = ['Vita Classical', 'Vita 3D-Master', 'Ivoclar Chromascop'];
 
 function ToothColorsManager() {
     const [items, setItems] = useState<any[]>([]);
@@ -436,7 +449,7 @@ function ToothColorsManager() {
     const [addForm, setAddForm] = useState({ codigo: '', nome: '', grupo: 'A' });
     const [saving, setSaving] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-    const [activeGrupo, setActiveGrupo] = useState<string | null>(null);
+    const [activeEscala, setActiveEscala] = useState<string | null>(null);
 
     const load = useCallback(async () => {
         try { setLoading(true); setItems(await catalogService.getToothColors()); }
@@ -448,33 +461,40 @@ function ToothColorsManager() {
 
     const handleAdd = async () => {
         if (!addForm.codigo.trim() || !addForm.nome.trim()) return;
-        try { setSaving(true); await catalogService.createToothColor(addForm); setAddForm({ codigo: '', nome: '', grupo: activeGrupo || 'A' }); setShowAdd(false); load(); }
+        try { setSaving(true); await catalogService.createToothColor(addForm); setAddForm({ codigo: '', nome: '', grupo: addForm.grupo }); setShowAdd(false); load(); }
         catch (e) { console.error(e); } finally { setSaving(false); }
     };
 
-    // Group by grupo
-    const grouped = items.reduce<Record<string, any[]>>((acc, item) => {
-        const g = item.grupo || 'Outro';
-        if (!acc[g]) acc[g] = [];
-        acc[g].push(item);
+    // Agrupar por ESCALA (Vita Classical junta todos A/B/C/D/Bleach)
+    const byEscala = items.reduce<Record<string, Record<string, any[]>>>((acc, item) => {
+        const grupo = item.grupo || 'Outro';
+        const escala = GRUPO_TO_ESCALA[grupo] || grupo;
+        if (!acc[escala]) acc[escala] = {};
+        if (!acc[escala][grupo]) acc[escala][grupo] = [];
+        acc[escala][grupo].push(item);
         return acc;
     }, {});
 
-    const grupoNames = Object.keys(grouped).sort();
-    const selectedGrupo = activeGrupo || grupoNames[0] || 'A';
-    const currentColors = grouped[selectedGrupo] || [];
+    const escalaNames = ESCALA_ORDER.filter(e => byEscala[e]);
+    // Add any custom escalas not in ESCALA_ORDER
+    Object.keys(byEscala).forEach(e => { if (!escalaNames.includes(e)) escalaNames.push(e); });
 
-    // Nomes amigáveis para os grupos
-    const grupoLabels: Record<string, string> = {
-        'A': 'Vita Classical A', 'B': 'Vita Classical B', 'C': 'Vita Classical C',
-        'D': 'Vita Classical D', 'Bleach': 'Bleach', 'Outro': 'Outro',
+    const selectedEscala = activeEscala || escalaNames[0] || 'Vita Classical';
+    const currentSubGroups = byEscala[selectedEscala] || {};
+    const totalInEscala = Object.values(currentSubGroups).reduce((sum, arr) => sum + arr.length, 0);
+
+    // Grupo options por escala para o formulário de adicionar
+    const grupoOptionsForEscala: Record<string, string[]> = {
+        'Vita Classical': ['A', 'B', 'C', 'D', 'Bleach'],
+        'Vita 3D-Master': ['3D-Master'],
+        'Ivoclar Chromascop': ['Chromascop'],
     };
 
     return (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="flex min-h-[400px]">
                 {/* === Sidebar de Escalas === */}
-                <div className="w-48 border-r border-border bg-muted/30 flex-shrink-0">
+                <div className="w-52 border-r border-border bg-muted/30 flex-shrink-0">
                     <div className="p-3 border-b border-border">
                         <button
                             onClick={() => setShowAdd(true)}
@@ -484,19 +504,22 @@ function ToothColorsManager() {
                         </button>
                     </div>
                     <div className="py-1">
-                        {grupoNames.map(grupo => (
-                            <button
-                                key={grupo}
-                                onClick={() => setActiveGrupo(grupo)}
-                                className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedGrupo === grupo
+                        {escalaNames.map(escala => {
+                            const count = Object.values(byEscala[escala] || {}).reduce((s, a) => s + a.length, 0);
+                            return (
+                                <button
+                                    key={escala}
+                                    onClick={() => setActiveEscala(escala)}
+                                    className={`w-full text-left px-4 py-3 text-sm transition-colors ${selectedEscala === escala
                                         ? 'bg-card text-card-foreground font-semibold border-l-2 border-primary'
                                         : 'text-muted-foreground hover:text-card-foreground hover:bg-muted/50'
-                                    }`}
-                            >
-                                <span className="block font-medium">{grupoLabels[grupo] || grupo}</span>
-                                <span className="text-xs text-muted-foreground">{grouped[grupo]?.length || 0} tons</span>
-                            </button>
-                        ))}
+                                        }`}
+                                >
+                                    <span className="block font-medium">{escala}</span>
+                                    <span className="text-xs text-muted-foreground">{count} tons</span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -505,11 +528,15 @@ function ToothColorsManager() {
                     {/* Header */}
                     <div className="flex items-center justify-between p-4 border-b border-border">
                         <div>
-                            <h3 className="text-base font-semibold text-card-foreground">{grupoLabels[selectedGrupo] || selectedGrupo}</h3>
-                            <span className="text-xs text-muted-foreground">{currentColors.length} tonalidade(s)</span>
+                            <h3 className="text-base font-semibold text-card-foreground">{selectedEscala}</h3>
+                            <span className="text-xs text-muted-foreground">{totalInEscala} tonalidade(s)</span>
                         </div>
                         <button
-                            onClick={() => { setAddForm({ codigo: '', nome: '', grupo: selectedGrupo }); setShowAdd(true); }}
+                            onClick={() => {
+                                const grupos = grupoOptionsForEscala[selectedEscala] || ['A'];
+                                setAddForm({ codigo: '', nome: '', grupo: grupos[0] });
+                                setShowAdd(true);
+                            }}
                             className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 font-medium shadow-sm"
                         >
                             <Plus className="h-4 w-4" /> Adicionar Tonalidade
@@ -522,7 +549,9 @@ function ToothColorsManager() {
                             <input type="text" value={addForm.codigo} onChange={e => setAddForm({ ...addForm, codigo: e.target.value })} placeholder="Código (ex: A1)" className="w-24 text-sm border border-border rounded-lg bg-card text-card-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" autoFocus />
                             <input type="text" value={addForm.nome} onChange={e => setAddForm({ ...addForm, nome: e.target.value })} placeholder="Nome descritivo..." className="flex-1 text-sm border border-border rounded-lg bg-card text-card-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
                             <select value={addForm.grupo} onChange={e => setAddForm({ ...addForm, grupo: e.target.value })} className="text-sm border border-border rounded-lg bg-card text-card-foreground px-3 py-2">
-                                {['A', 'B', 'C', 'D', 'Bleach'].map(g => <option key={g} value={g}>{g}</option>)}
+                                {(grupoOptionsForEscala[selectedEscala] || ['A', 'B', 'C', 'D', 'Bleach', '3D-Master', 'Chromascop']).map(g => (
+                                    <option key={g} value={g}>{g}</option>
+                                ))}
                             </select>
                             <button onClick={handleAdd} disabled={saving} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50">
                                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -531,45 +560,56 @@ function ToothColorsManager() {
                         </div>
                     )}
 
-                    {/* Grid de Swatches */}
+                    {/* Grid de Swatches por sub-grupo */}
                     {loading ? (
                         <div className="text-center py-16"><Loader2 className="h-6 w-6 mx-auto animate-spin text-muted-foreground" /></div>
-                    ) : currentColors.length === 0 ? (
+                    ) : totalInEscala === 0 ? (
                         <div className="text-center py-16 text-muted-foreground text-sm">
                             <Palette className="h-10 w-10 mx-auto mb-3 opacity-20" />
-                            <p>Sem tonalidades neste grupo</p>
+                            <p>Sem tonalidades nesta escala</p>
                             <p className="text-xs mt-1">Clique em "Adicionar Tonalidade" para começar</p>
                         </div>
                     ) : (
-                        <div className="p-6">
-                            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
-                                {currentColors.map(c => (
-                                    <div key={c.id} className="flex flex-col items-center group relative">
-                                        {/* Swatch Circle */}
-                                        <div
-                                            className="w-14 h-14 rounded-full border-2 border-gray-200 dark:border-gray-600 shadow-sm transition-transform group-hover:scale-110 group-hover:shadow-md"
-                                            style={{ backgroundColor: getShadeColor(c.codigo) }}
-                                        />
-                                        {/* Label */}
-                                        <span className="mt-1.5 text-xs font-medium text-card-foreground">{c.codigo}</span>
+                        <div className="p-6 space-y-6">
+                            {Object.entries(currentSubGroups).sort(([a], [b]) => a.localeCompare(b)).map(([subGrupo, colors]) => (
+                                <div key={subGrupo}>
+                                    {/* Sub-grupo label (só mostra se houver mais de 1 sub-grupo) */}
+                                    {Object.keys(currentSubGroups).length > 1 && (
+                                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                                            {subGrupo === 'Bleach' ? '🦷 Bleach' : `Grupo ${subGrupo}`}
+                                        </h4>
+                                    )}
+                                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
+                                        {colors.map((c: any) => (
+                                            <div key={c.id} className="flex flex-col items-center group relative">
+                                                {/* Swatch Circle */}
+                                                <div
+                                                    className="w-14 h-14 rounded-full border-2 border-gray-200 dark:border-gray-600 shadow-sm transition-transform group-hover:scale-110 group-hover:shadow-md cursor-default"
+                                                    style={{ backgroundColor: getShadeColor(c.codigo) }}
+                                                    title={c.nome}
+                                                />
+                                                {/* Label */}
+                                                <span className="mt-1.5 text-xs font-medium text-card-foreground">{c.codigo}</span>
 
-                                        {/* Delete overlay on hover */}
-                                        {deleteConfirm === c.id ? (
-                                            <div className="absolute -top-1 -right-1 flex gap-0.5">
-                                                <button onClick={async () => { await catalogService.deleteToothColor(c.id); setDeleteConfirm(null); load(); }} className="text-[9px] bg-red-500 text-white rounded px-1.5 py-0.5 shadow">✓</button>
-                                                <button onClick={() => setDeleteConfirm(null)} className="text-[9px] bg-gray-400 text-white rounded px-1.5 py-0.5 shadow">✕</button>
+                                                {/* Delete overlay on hover */}
+                                                {deleteConfirm === c.id ? (
+                                                    <div className="absolute -top-1 -right-1 flex gap-0.5">
+                                                        <button onClick={async () => { await catalogService.deleteToothColor(c.id); setDeleteConfirm(null); load(); }} className="text-[9px] bg-red-500 text-white rounded px-1.5 py-0.5 shadow">✓</button>
+                                                        <button onClick={() => setDeleteConfirm(null)} className="text-[9px] bg-gray-400 text-white rounded px-1.5 py-0.5 shadow">✕</button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setDeleteConfirm(c.id); }}
+                                                        className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full p-0.5 shadow transition-opacity"
+                                                    >
+                                                        <X className="h-2.5 w-2.5" />
+                                                    </button>
+                                                )}
                                             </div>
-                                        ) : (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setDeleteConfirm(c.id); }}
-                                                className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full p-0.5 shadow transition-opacity"
-                                            >
-                                                <X className="h-2.5 w-2.5" />
-                                            </button>
-                                        )}
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
@@ -577,6 +617,7 @@ function ToothColorsManager() {
         </div>
     );
 }
+
 
 // =====================================================
 // TEMPLATES MANAGER
