@@ -52,10 +52,10 @@ export default function DoctorList() {
     );
 
     return (
-        <div className="w-80 border-r border-gray-800 bg-gray-900 flex flex-col h-full">
+        <div className="w-80 border-r border-border bg-card flex flex-col h-full">
 
             {/* Header da Lista */}
-            <div className="p-4 border-b border-gray-800 space-y-4">
+            <div className="p-4 border-b border-border space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="font-semibold text-white">Médicos</h2>
                 </div>
@@ -63,7 +63,7 @@ export default function DoctorList() {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
                         placeholder="Pesquisar..."
-                        className="pl-9 bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500 focus:bg-gray-800 focus:border-amber-500/50 transition-all"
+                        className="pl-9 bg-muted border-border text-foreground placeholder-muted-foreground focus:bg-muted focus:border-amber-500/50 transition-all"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -86,7 +86,7 @@ export default function DoctorList() {
                                 key={doctor.user_id}
                                 href={`/dashboard/doctors/${doctor.user_id}`}
                                 className={cn(
-                                    "flex items-center gap-3 p-3 rounded-lg transition-all group hover:bg-gray-800",
+                                    "flex items-center gap-3 p-3 rounded-lg transition-all group hover:bg-muted",
                                     isActive ? "bg-amber-500/10 border border-amber-500/20 shadow-sm" : "border border-transparent"
                                 )}
                             >
@@ -95,14 +95,14 @@ export default function DoctorList() {
                                     <img
                                         src={doctor.avatar_url}
                                         alt={doctor.full_name}
-                                        className="h-10 w-10 rounded-full object-cover shrink-0 border border-gray-700"
+                                        className="h-10 w-10 rounded-full object-cover shrink-0 border border-border"
                                     />
                                 ) : (
                                     <div className={cn(
                                         "h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold transition-colors",
                                         isActive
                                             ? "bg-amber-500/20 text-amber-400"
-                                            : "bg-gray-800 text-gray-400 group-hover:bg-amber-500/10 group-hover:text-amber-400"
+                                            : "bg-muted text-muted-foreground group-hover:bg-amber-500/10 group-hover:text-amber-400"
                                     )}>
                                         {initials}
                                     </div>
@@ -110,7 +110,7 @@ export default function DoctorList() {
                                 <div className="flex-1 min-w-0">
                                     <h3 className={cn(
                                         "font-medium text-sm truncate",
-                                        isActive ? "text-white" : "text-gray-300"
+                                        isActive ? "text-foreground" : "text-foreground/80"
                                     )}>
                                         {doctor.full_name}
                                     </h3>
@@ -125,7 +125,7 @@ export default function DoctorList() {
             </div>
 
             {/* Footer da Lista */}
-            <div className="p-3 border-t border-gray-800 text-xs text-center text-gray-600 bg-gray-900/80">
+            <div className="p-3 border-t border-border text-xs text-center text-muted-foreground bg-card/80">
                 {filteredDoctors.length} Médicos Registados
             </div>
         </div>

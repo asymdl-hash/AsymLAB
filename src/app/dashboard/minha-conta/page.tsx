@@ -261,7 +261,7 @@ export default function MyAccountPage() {
     if (!account) {
         return (
             <div className="flex items-center justify-center h-full min-h-[50vh]">
-                <p className="text-gray-400">Não foi possível carregar os dados da conta</p>
+                <p className="text-muted-foreground">Não foi possível carregar os dados da conta</p>
             </div>
         );
     }
@@ -315,8 +315,8 @@ export default function MyAccountPage() {
                                     className={cn(
                                         "h-16 w-16 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-md cursor-pointer transition-transform group-hover:scale-105",
                                         account.app_role === 'admin'
-                                            ? 'bg-gradient-to-br from-red-500 to-red-600 text-white'
-                                            : 'bg-gradient-to-br from-primary to-primary/80 text-white'
+                                            ? 'bg-gradient-to-br from-red-500 to-red-600 text-foreground'
+                                            : 'bg-gradient-to-br from-primary to-primary/80 text-foreground'
                                     )}
                                     onClick={() => fileInputRef.current?.click()}
                                 >
@@ -329,9 +329,9 @@ export default function MyAccountPage() {
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 {uploadingAvatar ? (
-                                    <Loader2 className="h-5 w-5 text-white animate-spin" />
+                                    <Loader2 className="h-5 w-5 text-foreground animate-spin" />
                                 ) : (
-                                    <Camera className="h-5 w-5 text-white" />
+                                    <Camera className="h-5 w-5 text-foreground" />
                                 )}
                             </div>
                         </div>
@@ -344,7 +344,7 @@ export default function MyAccountPage() {
                                         ? 'bg-red-100 text-red-700 border-red-200'
                                         : account.app_role === 'doctor'
                                             ? 'bg-blue-100 text-blue-700 border-blue-200'
-                                            : 'bg-gray-100 text-gray-600 border-gray-200'
+                                            : 'bg-gray-100 text-muted-foreground border-gray-200'
                                 )}>
                                     <Shield className="h-3 w-3" />
                                     {ROLE_LABELS[account.app_role] || account.app_role}
@@ -357,7 +357,7 @@ export default function MyAccountPage() {
                                 ))}
                             </div>
                             <div className="flex items-center gap-2 mt-1">
-                                <p className="text-xs text-gray-400">Clica na foto para alterar</p>
+                                <p className="text-xs text-muted-foreground">Clica na foto para alterar</p>
                                 {account.avatar_url && (
                                     <button
                                         onClick={handleDeleteAvatar}
@@ -402,7 +402,7 @@ export default function MyAccountPage() {
                                 <button
                                     onClick={handleSaveName}
                                     disabled={saving || !newName.trim()}
-                                    className="h-9 px-3 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1"
+                                    className="h-9 px-3 rounded-lg bg-primary text-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1"
                                 >
                                     {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
                                     Guardar
@@ -455,7 +455,7 @@ export default function MyAccountPage() {
                                     <button
                                         onClick={handleSaveUsername}
                                         disabled={saving || !newUsername.trim() || newUsername === account.username}
-                                        className="h-8 px-3 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1"
+                                        className="h-8 px-3 rounded-lg bg-primary text-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1"
                                     >
                                         {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
                                         Guardar
@@ -475,7 +475,7 @@ export default function MyAccountPage() {
                                         <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-mono text-xs">
                                             {account.username}
                                         </span>
-                                        <span className="text-gray-400 text-xs">@asymlab.app</span>
+                                        <span className="text-muted-foreground text-xs">@asymlab.app</span>
                                     </span>
                                 ) : (
                                     account.email
@@ -516,7 +516,7 @@ export default function MyAccountPage() {
                                         <button
                                             type="button"
                                             onClick={() => setShowCurrentPw(!showCurrentPw)}
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                                         >
                                             {showCurrentPw ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                                         </button>
@@ -537,7 +537,7 @@ export default function MyAccountPage() {
                                         <button
                                             type="button"
                                             onClick={() => setShowNewPw(!showNewPw)}
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                                         >
                                             {showNewPw ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                                         </button>
@@ -567,7 +567,7 @@ export default function MyAccountPage() {
                                     <button
                                         onClick={handleSavePassword}
                                         disabled={saving || !currentPassword || newPassword.length < 6 || newPassword !== confirmPassword}
-                                        className="h-9 px-4 rounded-lg bg-amber-500 text-white text-xs font-medium hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1"
+                                        className="h-9 px-4 rounded-lg bg-amber-500 text-foreground text-xs font-medium hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1"
                                     >
                                         {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Key className="h-3 w-3" />}
                                         Alterar Password
@@ -586,7 +586,7 @@ export default function MyAccountPage() {
                                 </div>
                             </div>
                         ) : (
-                            <p className="mt-1 text-sm text-gray-400">••••••••</p>
+                            <p className="mt-1 text-sm text-muted-foreground">••••••••</p>
                         )}
                     </div>
 
@@ -596,7 +596,7 @@ export default function MyAccountPage() {
                             <Home className="h-4 w-4" />
                             Página Inicial
                         </div>
-                        <p className="text-xs text-gray-400 mb-2">
+                        <p className="text-xs text-muted-foreground mb-2">
                             Escolhe qual módulo abrir automaticamente após o login
                         </p>
                         <select
@@ -639,7 +639,7 @@ export default function MyAccountPage() {
 
                             {/* iOS */}
                             <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-gray-50 to-gray-50/30 border border-gray-200/60">
-                                <div className="h-8 w-8 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-white">
+                                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 text-white">
                                     <AppleIcon />
                                 </div>
                                 <div>

@@ -6,7 +6,7 @@ export default function DoctorAnalyticsTab() {
     return (
         <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
             <div className="bg-gray-100 p-4 rounded-full">
-                <BarChart3 className="w-10 h-10 text-gray-400" />
+                <BarChart3 className="w-10 h-10 text-muted-foreground" />
             </div>
             <div>
                 <h3 className="text-lg font-semibold text-gray-800">Analytics</h3>

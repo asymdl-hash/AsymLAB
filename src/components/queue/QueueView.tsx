@@ -163,17 +163,17 @@ export default function QueueView() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-full bg-gray-900">
+            <div className="flex items-center justify-center h-full bg-card">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto mb-3" />
-                    <p className="text-sm text-gray-400">A carregar fila de pedidos...</p>
+                    <p className="text-sm text-muted-foreground">A carregar fila de pedidos...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col h-full bg-gray-900 text-white">
+        <div className="flex flex-col h-full bg-card text-white">
             {/* ====== TOAST ====== */}
             {toast && (
                 <div className={cn(
@@ -193,20 +193,20 @@ export default function QueueView() {
             {/* ====== REASON MODAL ====== */}
             {reasonModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                    <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
-                        <h3 className="text-lg font-semibold text-white mb-1">
+                    <div className="bg-muted border border-border rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+                        <h3 className="text-lg font-semibold text-foreground mb-1">
                             {NEEDS_REASON[reasonModal.toEstado]?.label}
                         </h3>
-                        <p className="text-xs text-gray-400 mb-4">
+                        <p className="text-xs text-muted-foreground mb-4">
                             A mover para <strong>{ESTADO_LABELS[reasonModal.toEstado]}</strong>
                         </p>
 
                         {/* Tipo de reabertura */}
                         {NEEDS_REASON[reasonModal.toEstado]?.showTipo && (
                             <div className="mb-3">
-                                <label className="text-xs text-gray-400 mb-1 block">Tipo de Reabertura</label>
+                                <label className="text-xs text-muted-foreground mb-1 block">Tipo de Reabertura</label>
                                 <select
-                                    className="w-full h-9 rounded-lg border border-gray-600 bg-gray-700 text-white px-3 text-sm"
+                                    className="w-full h-9 rounded-lg border border-gray-600 bg-gray-700 text-foreground px-3 text-sm"
                                     value={reasonModal.tipoReopen}
                                     onChange={e => setReasonModal({ ...reasonModal, tipoReopen: e.target.value })}
                                 >
@@ -218,7 +218,7 @@ export default function QueueView() {
 
                         {/* Motivo */}
                         <textarea
-                            className="w-full h-24 rounded-lg border border-gray-600 bg-gray-700 text-white px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 placeholder:text-gray-500"
+                            className="w-full h-24 rounded-lg border border-gray-600 bg-gray-700 text-foreground px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 placeholder:text-gray-500"
                             placeholder={NEEDS_REASON[reasonModal.toEstado]?.placeholder}
                             value={reasonModal.motivo}
                             onChange={e => setReasonModal({ ...reasonModal, motivo: e.target.value })}
@@ -229,7 +229,7 @@ export default function QueueView() {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-gray-400 hover:text-white"
+                                className="text-muted-foreground hover:text-white"
                                 onClick={() => setReasonModal(null)}
                             >
                                 Cancelar
@@ -248,7 +248,7 @@ export default function QueueView() {
             )}
 
             {/* ====== HEADER ====== */}
-            <div className="px-6 py-4 border-b border-gray-700 bg-gray-800/50">
+            <div className="px-6 py-4 border-b border-border bg-muted/50">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
@@ -256,7 +256,7 @@ export default function QueueView() {
                         </div>
                         <div>
                             <h1 className="text-lg font-bold text-white">Fila de Pedidos</h1>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted-foreground">
                                 {totalActive} pedido{totalActive !== 1 ? 's' : ''} activo{totalActive !== 1 ? 's' : ''}
                                 {hasActiveFilters && ` · ${filteredItems.length} visíveis`}
                             </p>
@@ -269,7 +269,7 @@ export default function QueueView() {
                             variant="ghost"
                             className={cn(
                                 "h-8 gap-1.5 text-xs",
-                                showFilters ? "text-amber-400 bg-amber-500/10" : "text-gray-400 hover:text-white"
+                                showFilters ? "text-amber-400 bg-amber-500/10" : "text-muted-foreground hover:text-white"
                             )}
                             onClick={() => setShowFilters(!showFilters)}
                         >
@@ -298,7 +298,7 @@ export default function QueueView() {
                     {QUEUE_COLUMNS.map(col => (
                         <div key={col.key} className="flex items-center gap-1.5">
                             <span className="text-xs">{col.icon}</span>
-                            <span className="text-xs font-medium text-gray-400">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 {grouped[col.key]?.length || 0}
                             </span>
                         </div>
@@ -307,13 +307,13 @@ export default function QueueView() {
 
                 {/* ====== FILTROS ====== */}
                 {showFilters && (
-                    <div className="mt-3 pt-3 border-t border-gray-700 flex items-center gap-3 flex-wrap">
+                    <div className="mt-3 pt-3 border-t border-border flex items-center gap-3 flex-wrap">
                         {/* Pesquisa */}
                         <div className="relative flex-1 min-w-[200px] max-w-[300px]">
                             <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-500" />
                             <Input
                                 placeholder="Pesquisar paciente, T-ID, plano..."
-                                className="pl-8 h-8 text-xs bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                                className="pl-8 h-8 text-xs bg-muted border-gray-600 text-foreground placeholder:text-gray-500"
                                 value={filters.search}
                                 onChange={(e) => updateFilter('search', e.target.value)}
                             />
@@ -321,7 +321,7 @@ export default function QueueView() {
 
                         {/* Clínica */}
                         <select
-                            className="h-8 text-xs border border-gray-600 rounded-md px-2 bg-gray-800 text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
+                            className="h-8 text-xs border border-gray-600 rounded-md px-2 bg-muted text-foreground/80 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
                             value={filters.clinica_id || ''}
                             onChange={(e) => updateFilter('clinica_id', e.target.value || null)}
                         >
@@ -331,7 +331,7 @@ export default function QueueView() {
 
                         {/* Médico */}
                         <select
-                            className="h-8 text-xs border border-gray-600 rounded-md px-2 bg-gray-800 text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
+                            className="h-8 text-xs border border-gray-600 rounded-md px-2 bg-muted text-foreground/80 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
                             value={filters.medico_id || ''}
                             onChange={(e) => updateFilter('medico_id', e.target.value || null)}
                         >
@@ -341,7 +341,7 @@ export default function QueueView() {
 
                         {/* Tipo Trabalho */}
                         <select
-                            className="h-8 text-xs border border-gray-600 rounded-md px-2 bg-gray-800 text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
+                            className="h-8 text-xs border border-gray-600 rounded-md px-2 bg-muted text-foreground/80 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
                             value={filters.tipo_trabalho_id || ''}
                             onChange={(e) => updateFilter('tipo_trabalho_id', e.target.value || null)}
                         >
@@ -355,7 +355,7 @@ export default function QueueView() {
                                 "h-8 px-3 text-xs rounded-md border transition-colors font-medium",
                                 filters.urgente === true
                                     ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
-                                    : "bg-gray-800 border-gray-600 text-gray-400 hover:bg-amber-500/10 hover:text-amber-400"
+                                    : "bg-muted border-gray-600 text-muted-foreground hover:bg-amber-500/10 hover:text-amber-400"
                             )}
                             onClick={() => updateFilter('urgente', filters.urgente === true ? null : true)}
                         >

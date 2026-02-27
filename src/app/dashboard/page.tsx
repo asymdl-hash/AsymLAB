@@ -27,11 +27,11 @@ export default function DashboardPage() {
     return (
         <PermissionGuard module="dashboard">
             {/* Header */}
-            <div className="bg-gray-900 border-b border-gray-800 sticky top-0 z-40">
+            <div className="bg-card border-b border-border sticky top-0 z-40">
                 <div className="container mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
+                            <h1 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
                             <p className="text-gray-500 text-sm mt-0.5">
                                 Panorâmica geral da clínica
                             </p>
@@ -43,16 +43,16 @@ export default function DashboardPage() {
                                 <input
                                     type="text"
                                     placeholder="Procurar paciente..."
-                                    className="pl-9 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-200 w-64 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50 transition-all placeholder-gray-500"
+                                    className="pl-9 pr-4 py-2 bg-muted border border-border rounded-lg text-sm text-foreground w-64 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50 transition-all placeholder-muted-foreground"
                                 />
                             </div>
 
-                            <Button variant="ghost" size="icon" className="text-gray-500 hover:text-gray-300 hover:bg-gray-800">
+                            <Button variant="ghost" size="icon" className="text-gray-500 hover:text-foreground/80 hover:bg-muted">
                                 <Bell className="h-5 w-5" />
                             </Button>
 
                             {canEdit && (
-                                <Button className="bg-amber-600 text-white hover:bg-amber-500 shadow-md font-medium px-4">
+                                <Button className="bg-amber-600 text-foreground hover:bg-amber-500 shadow-md font-medium px-4">
                                     <Plus className="h-4 w-4 mr-2" />
                                     Novo Paciente
                                 </Button>
@@ -63,7 +63,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Conteúdo Principal */}
-            <div className="container mx-auto px-6 py-8 space-y-8 bg-gray-950 min-h-screen">
+            <div className="container mx-auto px-6 py-8 space-y-8 bg-background min-h-screen">
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -72,7 +72,7 @@ export default function DashboardPage() {
                         { label: 'Consultas Hoje', value: '24', change: '-2%', color: 'text-orange-400', bg: 'bg-orange-500/15' },
                         { label: 'Faturação Mês', value: '€ 12.4k', change: '+8%', color: 'text-blue-400', bg: 'bg-blue-500/15' },
                     ].map((stat) => (
-                        <div key={stat.label} className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-gray-700 transition-all">
+                        <div key={stat.label} className="bg-card p-6 rounded-xl border border-border hover:border-border transition-all">
                             <div className="flex justify-between items-start mb-4">
                                 <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">{stat.label}</h3>
                                 <span className={`text-xs font-semibold px-2 py-1 rounded-full ${stat.bg} ${stat.color}`}>
@@ -89,8 +89,8 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold text-white">Acesso Rápido</h2>
                         <div className="flex gap-2">
-                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-300 hover:bg-gray-800"><Grid className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-300 hover:bg-gray-800"><List className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-foreground/80 hover:bg-muted"><Grid className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-foreground/80 hover:bg-muted"><List className="h-4 w-4" /></Button>
                         </div>
                     </div>
 
@@ -100,12 +100,12 @@ export default function DashboardPage() {
                             { name: 'Agenda Médica', desc: 'Marcações e calendário', icon: Calendar, color: 'bg-indigo-600' },
                             { name: 'Faturação', desc: 'Emitir faturas e orçamentos', icon: Euro, color: 'bg-emerald-600' },
                         ].map((module) => (
-                            <div key={module.name} className="group bg-gray-900 p-4 rounded-xl border border-gray-800 hover:border-amber-500/30 hover:bg-gray-800/50 transition-all cursor-pointer flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-lg ${module.color} flex items-center justify-center text-white shadow-lg`}>
+                            <div key={module.name} className="group bg-card p-4 rounded-xl border border-border hover:border-amber-500/30 hover:bg-muted/50 transition-all cursor-pointer flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-lg ${module.color} flex items-center justify-center text-foreground shadow-lg`}>
                                     <module.icon className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold text-white group-hover:text-amber-400 transition-colors">{module.name}</h4>
+                                    <h4 className="font-semibold text-foreground group-hover:text-amber-400 transition-colors">{module.name}</h4>
                                     <p className="text-sm text-gray-500">{module.desc}</p>
                                 </div>
                             </div>
@@ -114,8 +114,8 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Footer */}
-                <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm text-gray-600">
-                    <p>Ligado como <span className="font-medium text-gray-400">{user?.full_name || user?.email || 'Utilizador'}</span> • AsymLAB v2.4</p>
+                <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
+                    <p>Ligado como <span className="font-medium text-muted-foreground">{user?.full_name || user?.email || 'Utilizador'}</span> • AsymLAB v2.4</p>
                 </div>
             </div>
         </PermissionGuard>

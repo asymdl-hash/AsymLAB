@@ -139,7 +139,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
         <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
                     <FileText className="h-4 w-4 text-gray-500" />
                     Documentação
                 </h3>
@@ -147,7 +147,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                     {activeCategory === 'facturas' && (
                         <button
                             onClick={() => setShowInvoiceModal(true)}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-colors"
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-foreground text-xs font-medium transition-colors"
                         >
                             <Plus className="h-3 w-3" /> Factura
                         </button>
@@ -156,20 +156,20 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                         <div className="flex gap-1">
                             <button
                                 onClick={() => setShowGuideModal('transporte')}
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition-colors"
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-foreground text-xs font-medium transition-colors"
                             >
                                 🚚 Transporte
                             </button>
                             <button
                                 onClick={() => setShowGuideModal('recepcao')}
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors"
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-foreground text-xs font-medium transition-colors"
                             >
                                 📦 Recepção
                             </button>
                         </div>
                     )}
                     {activeCategory === 'documentos' && (
-                        <label className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition-colors cursor-pointer">
+                        <label className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-foreground text-xs font-medium transition-colors cursor-pointer">
                             {uploadingDoc ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
                             Upload
                             <input ref={fileInputRef} type="file" className="hidden" onChange={handleDocUpload} disabled={uploadingDoc} />
@@ -191,7 +191,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                             onClick={() => setActiveCategory(cat.key)}
                             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${activeCategory === cat.key
                                 ? `${cat.bg} ${cat.color} border-current`
-                                : 'bg-gray-800/50 border-gray-700 text-gray-500 hover:text-gray-400 hover:border-gray-600'
+                                : 'bg-muted/50 border-border text-gray-500 hover:text-muted-foreground hover:border-muted-foreground'
                                 }`}
                         >
                             <Icon className="h-3.5 w-3.5" />
@@ -207,7 +207,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
             </div>
 
             {/* Content */}
-            <div className="rounded-xl border border-gray-700/50 bg-gray-800/30 overflow-hidden">
+            <div className="rounded-xl border border-border/50 bg-muted/30 overflow-hidden">
                 {loading ? (
                     <div className="flex items-center justify-center py-12">
                         <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
@@ -220,14 +220,14 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                 <div className="text-center py-12">
                                     <Receipt className="h-10 w-10 mx-auto mb-3 text-emerald-500/20" />
                                     <p className="text-sm text-gray-500">Sem facturas</p>
-                                    <p className="text-xs text-gray-600 mt-1">Clique em &quot;+ Factura&quot; para criar</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Clique em &quot;+ Factura&quot; para criar</p>
                                 </div>
                             ) : (
                                 <div className="divide-y divide-gray-700/50">
                                     {invoices.map(inv => {
                                         const state = INVOICE_STATE_CONFIG[inv.estado] || INVOICE_STATE_CONFIG.rascunho;
                                         return (
-                                            <div key={inv.id} className="p-4 hover:bg-gray-700/20 transition-colors">
+                                            <div key={inv.id} className="p-4 hover:bg-muted/20 transition-colors">
                                                 <div className="flex items-start justify-between gap-3">
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2 mb-1">
@@ -236,18 +236,18 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                                 {state.label}
                                                             </span>
                                                         </div>
-                                                        <p className="text-xs text-gray-400 truncate">
+                                                        <p className="text-xs text-muted-foreground truncate">
                                                             {inv.descricao || 'Sem descrição'}
-                                                            {inv.plan && <span className="text-gray-600"> · {inv.plan.nome}</span>}
-                                                            {inv.phase && <span className="text-gray-600"> · {inv.phase.nome}</span>}
+                                                            {inv.plan && <span className="text-muted-foreground"> · {inv.plan.nome}</span>}
+                                                            {inv.phase && <span className="text-muted-foreground"> · {inv.phase.nome}</span>}
                                                         </p>
-                                                        <p className="text-[10px] text-gray-600 mt-1">{formatDate(inv.created_at)}</p>
+                                                        <p className="text-[10px] text-muted-foreground mt-1">{formatDate(inv.created_at)}</p>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-sm font-bold text-emerald-400">{formatCurrency(inv.valor)}</span>
                                                         {inv.pdf_url && (
                                                             <a href={inv.pdf_url} target="_blank" rel="noreferrer"
-                                                                className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-white transition-colors">
+                                                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-white transition-colors">
                                                                 <Download className="h-3.5 w-3.5" />
                                                             </a>
                                                         )}
@@ -271,12 +271,12 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                             value={receiptValor}
                                                             onChange={(e) => setReceiptValor(e.target.value)}
                                                             placeholder="Valor €"
-                                                            className="w-24 rounded bg-gray-700 border border-gray-600 text-xs text-white px-2 py-1.5"
+                                                            className="w-24 rounded bg-gray-700 border border-gray-600 text-xs text-foreground px-2 py-1.5"
                                                         />
                                                         <select
                                                             value={receiptMetodo}
                                                             onChange={(e) => setReceiptMetodo(e.target.value)}
-                                                            className="rounded bg-gray-700 border border-gray-600 text-xs text-white px-2 py-1.5"
+                                                            className="rounded bg-gray-700 border border-gray-600 text-xs text-foreground px-2 py-1.5"
                                                         >
                                                             {Object.entries(PAYMENT_METHODS).map(([k, v]) => (
                                                                 <option key={k} value={k}>{v}</option>
@@ -285,7 +285,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                         <button
                                                             onClick={() => handleCreateReceipt(inv.id)}
                                                             disabled={savingReceipt}
-                                                            className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-500 disabled:opacity-50"
+                                                            className="px-3 py-1.5 rounded-lg bg-blue-600 text-foreground text-xs font-medium hover:bg-blue-500 disabled:opacity-50"
                                                         >
                                                             {savingReceipt ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Emitir'}
                                                         </button>
@@ -307,12 +307,12 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                 <div className="text-center py-12">
                                     <FileCheck className="h-10 w-10 mx-auto mb-3 text-blue-500/20" />
                                     <p className="text-sm text-gray-500">Sem recibos</p>
-                                    <p className="text-xs text-gray-600 mt-1">Os recibos são criados a partir das facturas</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Os recibos são criados a partir das facturas</p>
                                 </div>
                             ) : (
                                 <div className="divide-y divide-gray-700/50">
                                     {receipts.map(rec => (
-                                        <div key={rec.id} className="p-4 hover:bg-gray-700/20 transition-colors">
+                                        <div key={rec.id} className="p-4 hover:bg-muted/20 transition-colors">
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 mb-1">
@@ -321,17 +321,17 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                             Pago
                                                         </span>
                                                     </div>
-                                                    <p className="text-xs text-gray-400">
+                                                    <p className="text-xs text-muted-foreground">
                                                         {rec.invoice && `Factura ${rec.invoice.numero}`}
-                                                        <span className="text-gray-600"> · {PAYMENT_METHODS[rec.metodo_pagamento] || rec.metodo_pagamento}</span>
+                                                        <span className="text-muted-foreground"> · {PAYMENT_METHODS[rec.metodo_pagamento] || rec.metodo_pagamento}</span>
                                                     </p>
-                                                    <p className="text-[10px] text-gray-600 mt-1">{formatDate(rec.emitido_at)}</p>
+                                                    <p className="text-[10px] text-muted-foreground mt-1">{formatDate(rec.emitido_at)}</p>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-sm font-bold text-blue-400">{formatCurrency(rec.valor)}</span>
                                                     {rec.pdf_url && (
                                                         <a href={rec.pdf_url} target="_blank" rel="noreferrer"
-                                                            className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-white transition-colors">
+                                                            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-white transition-colors">
                                                             <Download className="h-3.5 w-3.5" />
                                                         </a>
                                                     )}
@@ -349,7 +349,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                 <div className="text-center py-12">
                                     <FileText className="h-10 w-10 mx-auto mb-3 text-amber-500/20" />
                                     <p className="text-sm text-gray-500">Sem guias</p>
-                                    <p className="text-xs text-gray-600 mt-1">Crie uma guia de transporte ou recepção</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Crie uma guia de transporte ou recepção</p>
                                 </div>
                             ) : (
                                 <div className="divide-y divide-gray-700/50">
@@ -404,7 +404,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                         };
 
                                         return (
-                                            <div key={g.id} className="hover:bg-gray-700/20 transition-colors">
+                                            <div key={g.id} className="hover:bg-muted/20 transition-colors">
                                                 {/* Card header */}
                                                 <div className="p-4">
                                                     <div className="flex items-start justify-between gap-3">
@@ -425,55 +425,55 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                                 )}
                                                                 {isExpanded ? <ChevronUp className="h-3 w-3 text-gray-500" /> : <ChevronDown className="h-3 w-3 text-gray-500" />}
                                                             </div>
-                                                            <p className="text-xs text-gray-400">
+                                                            <p className="text-xs text-muted-foreground">
                                                                 {g.plan && g.plan.nome}
-                                                                {g.clinica && <span className="text-gray-600"> · {g.clinica.commercial_name}</span>}
+                                                                {g.clinica && <span className="text-muted-foreground"> · {g.clinica.commercial_name}</span>}
                                                             </p>
                                                             {!isExpanded && g.items && g.items.length > 0 && (
-                                                                <p className="text-[10px] text-gray-600 mt-1">
+                                                                <p className="text-[10px] text-muted-foreground mt-1">
                                                                     {g.items.map(it => `${it.nome}${it.quantidade > 1 ? ` (${it.quantidade})` : ''}`).join(', ')}
                                                                 </p>
                                                             )}
-                                                            <p className="text-[10px] text-gray-600 mt-0.5">{formatDate(g.created_at)}</p>
+                                                            <p className="text-[10px] text-muted-foreground mt-0.5">{formatDate(g.created_at)}</p>
                                                         </div>
 
                                                         {/* Menu ⋮ */}
                                                         <div className="relative">
                                                             <button
                                                                 onClick={() => setGuideMenuOpen(isMenuOpen ? null : g.id)}
-                                                                className="p-1 rounded hover:bg-gray-600 text-gray-500 hover:text-gray-300 transition-colors"
+                                                                className="p-1 rounded hover:bg-muted text-gray-500 hover:text-foreground/80 transition-colors"
                                                             >
                                                                 <MoreVertical className="h-4 w-4" />
                                                             </button>
                                                             {isMenuOpen && (
-                                                                <div className="absolute right-0 top-8 z-20 bg-gray-800 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[180px]">
+                                                                <div className="absolute right-0 top-8 z-20 bg-muted border border-border rounded-lg shadow-xl py-1 min-w-[180px]">
                                                                     {/* Estado transitions */}
                                                                     {g.estado !== 'enviado' && (
-                                                                        <button onClick={() => handleGuideStateChange('enviado')} className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 text-amber-400 flex items-center gap-2">
+                                                                        <button onClick={() => handleGuideStateChange('enviado')} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted text-amber-400 flex items-center gap-2">
                                                                             📤 Marcar Enviado
                                                                         </button>
                                                                     )}
                                                                     {g.estado !== 'entregue' && (
-                                                                        <button onClick={() => handleGuideStateChange('entregue')} className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 text-emerald-400 flex items-center gap-2">
+                                                                        <button onClick={() => handleGuideStateChange('entregue')} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted text-emerald-400 flex items-center gap-2">
                                                                             ✅ Marcar Entregue
                                                                         </button>
                                                                     )}
                                                                     {g.estado !== 'recebido' && (
                                                                         <>
-                                                                            <div className="border-t border-gray-700 my-1" />
+                                                                            <div className="border-t border-border my-1" />
                                                                             <p className="px-3 py-1 text-[10px] text-gray-500 uppercase tracking-wider">Confirmar Recepção</p>
                                                                             {Object.entries(RECEPTION_STATE_CONFIG).map(([key, cfg]) => (
-                                                                                <button key={key} onClick={() => handleReceptionState(key)} className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 ${cfg.color} flex items-center gap-2`}>
+                                                                                <button key={key} onClick={() => handleReceptionState(key)} className={`w-full text-left px-3 py-1.5 text-xs hover:bg-muted ${cfg.color} flex items-center gap-2`}>
                                                                                     {cfg.emoji} {cfg.label}
                                                                                 </button>
                                                                             ))}
                                                                         </>
                                                                     )}
-                                                                    <div className="border-t border-gray-700 my-1" />
-                                                                    <button onClick={() => { setGuideEditNotes(g.id); setGuideNotesText(g.notas || ''); setGuideMenuOpen(null); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 text-gray-300 flex items-center gap-2">
+                                                                    <div className="border-t border-border my-1" />
+                                                                    <button onClick={() => { setGuideEditNotes(g.id); setGuideNotesText(g.notas || ''); setGuideMenuOpen(null); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted text-foreground/80 flex items-center gap-2">
                                                                         <Edit3 className="h-3 w-3" /> Editar Notas
                                                                     </button>
-                                                                    <button onClick={() => { setGuideDeleting(g.id); setGuideMenuOpen(null); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 text-red-400 flex items-center gap-2">
+                                                                    <button onClick={() => { setGuideDeleting(g.id); setGuideMenuOpen(null); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted text-red-400 flex items-center gap-2">
                                                                         <Trash2 className="h-3 w-3" /> Apagar
                                                                     </button>
                                                                 </div>
@@ -487,10 +487,10 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                     <div className="mx-4 mb-3 p-3 bg-red-900/20 border border-red-800/40 rounded-lg">
                                                         <p className="text-xs text-red-300 mb-2">Tem a certeza que quer apagar esta guia?</p>
                                                         <div className="flex gap-2">
-                                                            <button onClick={handleDeleteGuide} disabled={guideSaving} className="px-3 py-1 text-xs bg-red-600 hover:bg-red-500 text-white rounded transition-colors">
+                                                            <button onClick={handleDeleteGuide} disabled={guideSaving} className="px-3 py-1 text-xs bg-red-600 hover:bg-red-500 text-foreground rounded transition-colors">
                                                                 {guideSaving ? 'A apagar...' : 'Apagar'}
                                                             </button>
-                                                            <button onClick={() => setGuideDeleting(null)} className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors">
+                                                            <button onClick={() => setGuideDeleting(null)} className="px-3 py-1 text-xs bg-gray-700 hover:bg-muted text-foreground/80 rounded transition-colors">
                                                                 Cancelar
                                                             </button>
                                                         </div>
@@ -499,19 +499,19 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
 
                                                 {/* Edit notes inline */}
                                                 {isEditingNotes && (
-                                                    <div className="mx-4 mb-3 p-3 bg-gray-800/60 border border-gray-700 rounded-lg">
+                                                    <div className="mx-4 mb-3 p-3 bg-gray-800/60 border border-border rounded-lg">
                                                         <textarea
                                                             value={guideNotesText}
                                                             onChange={(e) => setGuideNotesText(e.target.value)}
                                                             placeholder="Notas..."
                                                             rows={3}
-                                                            className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-200 placeholder-gray-600 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                                            className="w-full bg-card border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder-gray-600 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
                                                         />
                                                         <div className="flex gap-2 mt-2">
-                                                            <button onClick={handleSaveNotes} disabled={guideSaving} className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors">
+                                                            <button onClick={handleSaveNotes} disabled={guideSaving} className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-500 text-foreground rounded transition-colors">
                                                                 {guideSaving ? 'A guardar...' : 'Guardar'}
                                                             </button>
-                                                            <button onClick={() => setGuideEditNotes(null)} className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors">
+                                                            <button onClick={() => setGuideEditNotes(null)} className="px-3 py-1 text-xs bg-gray-700 hover:bg-muted text-foreground/80 rounded transition-colors">
                                                                 Cancelar
                                                             </button>
                                                         </div>
@@ -528,13 +528,13 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                                 <div className="space-y-1">
                                                                     {g.items.map((item, idx) => (
                                                                         <div key={idx} className="flex items-center justify-between text-xs">
-                                                                            <span className="text-gray-300">{item.nome}</span>
+                                                                            <span className="text-foreground/80">{item.nome}</span>
                                                                             <div className="flex items-center gap-2">
                                                                                 {item.quantidade > 1 && (
-                                                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 text-gray-400">×{item.quantidade}</span>
+                                                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 text-muted-foreground">×{item.quantidade}</span>
                                                                                 )}
                                                                                 {item.observacao && (
-                                                                                    <span className="text-[10px] text-gray-600 italic">{item.observacao}</span>
+                                                                                    <span className="text-[10px] text-muted-foreground italic">{item.observacao}</span>
                                                                                 )}
                                                                             </div>
                                                                         </div>
@@ -547,7 +547,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                         {g.notas && (
                                                             <div className="bg-gray-800/40 rounded-lg p-3">
                                                                 <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Notas</p>
-                                                                <p className="text-xs text-gray-300 whitespace-pre-wrap">{g.notas}</p>
+                                                                <p className="text-xs text-foreground/80 whitespace-pre-wrap">{g.notas}</p>
                                                             </div>
                                                         )}
 
@@ -560,7 +560,7 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                                                 <div className="flex gap-2 flex-wrap">
                                                                     {g.fotos.map((url, idx) => (
                                                                         <a key={idx} href={url} target="_blank" rel="noreferrer"
-                                                                            className="w-16 h-16 rounded-lg overflow-hidden border border-gray-700 hover:border-blue-500 transition-colors">
+                                                                            className="w-16 h-16 rounded-lg overflow-hidden border border-border hover:border-blue-500 transition-colors">
                                                                             <img src={url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
                                                                         </a>
                                                                     ))}
@@ -582,26 +582,26 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                 <div className="text-center py-12">
                                     <FileText className="h-10 w-10 mx-auto mb-3 text-purple-500/20" />
                                     <p className="text-sm text-gray-500">Sem documentos</p>
-                                    <p className="text-xs text-gray-600 mt-1">Clique em &quot;Upload&quot; para adicionar</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Clique em &quot;Upload&quot; para adicionar</p>
                                 </div>
                             ) : (
                                 <div className="divide-y divide-gray-700/50">
                                     {documents.map(doc => {
                                         const typeConfig = DOC_TYPE_CONFIG[doc.tipo] || DOC_TYPE_CONFIG.outro;
                                         return (
-                                            <div key={doc.id} className="p-4 hover:bg-gray-700/20 transition-colors">
+                                            <div key={doc.id} className="p-4 hover:bg-muted/20 transition-colors">
                                                 <div className="flex items-center justify-between gap-3">
                                                     <div className="flex items-center gap-2 flex-1 min-w-0">
                                                         <span className="text-base">{typeConfig.emoji}</span>
                                                         <div className="flex-1 min-w-0">
-                                                            <p className="text-sm text-white truncate">{doc.nome}</p>
-                                                            <p className="text-[10px] text-gray-600">{typeConfig.label} · {formatDate(doc.uploaded_at)}</p>
+                                                            <p className="text-sm text-foreground truncate">{doc.nome}</p>
+                                                            <p className="text-[10px] text-muted-foreground">{typeConfig.label} · {formatDate(doc.uploaded_at)}</p>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         {doc.file_url && (
                                                             <a href={doc.file_url} target="_blank" rel="noreferrer"
-                                                                className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-white transition-colors">
+                                                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-white transition-colors">
                                                                 <ExternalLink className="h-3.5 w-3.5" />
                                                             </a>
                                                         )}

@@ -33,7 +33,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 // Status do paciente
 const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-    rascunho: { label: 'Rascunho', color: 'text-gray-400', bg: 'bg-gray-700/50', border: 'border-gray-600' },
+    rascunho: { label: 'Rascunho', color: 'text-muted-foreground', bg: 'bg-gray-700/50', border: 'border-gray-600' },
     activo: { label: 'Activo', color: 'text-emerald-400', bg: 'bg-emerald-900/30', border: 'border-emerald-700/50' },
     inactivo: { label: 'Inactivo', color: 'text-amber-400', bg: 'bg-amber-900/30', border: 'border-amber-700/50' },
     arquivado: { label: 'Arquivado', color: 'text-red-400', bg: 'bg-red-900/30', border: 'border-red-700/50' },
@@ -41,7 +41,7 @@ const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: 
 
 // Labels e cores para estados dos planos
 const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    rascunho: { label: 'Rascunho', color: 'text-gray-400', bg: 'bg-gray-700/50' },
+    rascunho: { label: 'Rascunho', color: 'text-muted-foreground', bg: 'bg-gray-700/50' },
     activo: { label: 'Activo', color: 'text-blue-400', bg: 'bg-blue-900/30' },
     pausado: { label: 'Pausado', color: 'text-amber-400', bg: 'bg-amber-900/30' },
     concluido: { label: 'Concluído', color: 'text-green-400', bg: 'bg-green-900/30' },
@@ -171,7 +171,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     return (
         <div className="flex flex-col h-full">
             {/* Header fixo */}
-            <div className="sticky top-0 z-20 bg-gray-900 border-b border-gray-700/50 px-4 sm:px-6 py-4">
+            <div className="sticky top-0 z-20 bg-card border-b border-border/50 px-4 sm:px-6 py-4">
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
                         {/* Voltar (mobile) */}
@@ -185,7 +185,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         </Button>
 
                         {/* T-ID badge */}
-                        <span className="text-xs font-mono text-gray-500 bg-gray-800 px-2 py-1 rounded shrink-0">
+                        <span className="text-xs font-mono text-gray-500 bg-muted px-2 py-1 rounded shrink-0">
                             {patient.t_id}
                         </span>
 
@@ -225,7 +225,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     <div className="flex items-center gap-2 shrink-0">
                         {/* Indicador de save */}
                         {saving && (
-                            <span className="text-xs text-gray-400 animate-pulse">Guardando...</span>
+                            <span className="text-xs text-muted-foreground animate-pulse">Guardando...</span>
                         )}
                         {!saving && lastSaved && (
                             <span className="text-xs text-green-500 hidden sm:block">
@@ -258,7 +258,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-gray-400 hover:text-red-500"
+                                className="h-8 w-8 text-muted-foreground hover:text-red-500"
                                 onClick={() => setShowDeleteModal(true)}
                                 title="Apagar paciente"
                             >
@@ -269,7 +269,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                 </div>
 
                 {/* Info secundária — dropdowns editáveis */}
-                <div className="flex items-center gap-3 mt-2 text-xs text-gray-400 flex-wrap">
+                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
                     <div className="flex items-center gap-1.5">
                         <span className="text-gray-500">Clínica:</span>
                         <select
@@ -284,7 +284,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                 autoSave('clinica_id', e.target.value);
                             }}
                             disabled={readOnly}
-                            className="h-6 text-xs font-medium border border-gray-700 rounded px-1.5 bg-gray-800 text-gray-300 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
+                            className="h-6 text-xs font-medium border border-border rounded px-1.5 bg-muted text-foreground/80 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
                         >
                             {clinics.map(c => (
                                 <option key={c.id} value={c.id}>{c.commercial_name}</option>
@@ -305,7 +305,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                 autoSave('medico_principal_id', e.target.value);
                             }}
                             disabled={readOnly}
-                            className="h-6 text-xs font-medium border border-gray-700 rounded px-1.5 bg-gray-800 text-gray-300 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
+                            className="h-6 text-xs font-medium border border-border rounded px-1.5 bg-muted text-foreground/80 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
                         >
                             {doctors.map(d => (
                                 <option key={d.user_id} value={d.user_id}>Dr. {d.full_name}</option>
@@ -319,7 +319,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                             onChange={(e) => handleFieldChange('id_paciente_clinica', e.target.value)}
                             placeholder="—"
                             disabled={readOnly}
-                            className="h-6 w-20 text-xs font-medium border border-gray-700 rounded px-1.5 bg-gray-800 text-gray-300 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
+                            className="h-6 w-20 text-xs font-medium border border-border rounded px-1.5 bg-muted text-foreground/80 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
                         />
                     </div>
                 </div>
@@ -335,7 +335,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
 
             {/* Tabs */}
             <Tabs defaultValue="planos" className="flex-1 flex flex-col overflow-hidden">
-                <TabsList className="w-full justify-start px-4 sm:px-6 pt-2 bg-gray-900 border-b border-gray-700/50 rounded-none h-auto flex-wrap gap-1">
+                <TabsList className="w-full justify-start px-4 sm:px-6 pt-2 bg-card border-b border-border/50 rounded-none h-auto flex-wrap gap-1">
                     <TabsTrigger value="planos" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
                         <ClipboardList className="h-3.5 w-3.5" />
                         <span>Planos</span>
@@ -370,7 +370,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                             value={patient.notas_lab || ''}
                             onChange={(e) => handleFieldChange('notas_lab', e.target.value)}
                             placeholder="Notas internas sobre o paciente..."
-                            className="mt-1 w-full text-sm border border-gray-700 rounded-lg p-3 bg-gray-800/50 text-gray-300 placeholder:text-gray-600 focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/30 resize-none min-h-[60px]"
+                            className="mt-1 w-full text-sm border border-border rounded-lg p-3 bg-muted/50 text-foreground/80 placeholder:text-muted-foreground focus:bg-muted focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/30 resize-none min-h-[60px]"
                             rows={2}
                             disabled={readOnly}
                         />
@@ -379,12 +379,12 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     {/* Lista de planos */}
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-gray-300">Planos de Tratamento</h3>
+                            <h3 className="text-sm font-semibold text-foreground/80">Planos de Tratamento</h3>
                             {!readOnly && (
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-7 text-xs gap-1.5 border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-amber-400 hover:border-amber-500/30"
+                                    className="h-7 text-xs gap-1.5 border-border text-foreground/80 hover:bg-muted hover:text-amber-400 hover:border-amber-500/30"
                                     onClick={() => setShowNewPlan(true)}
                                 >
                                     <Plus className="h-3 w-3" />
@@ -394,7 +394,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         </div>
 
                         {(!patient.treatment_plans || patient.treatment_plans.length === 0) ? (
-                            <div className="text-center py-12 text-gray-400">
+                            <div className="text-center py-12 text-muted-foreground">
                                 <ClipboardList className="h-10 w-10 mx-auto mb-3 opacity-40" />
                                 <p className="text-sm">Sem planos de tratamento</p>
                                 <p className="text-xs mt-1">Crie o primeiro plano para começar</p>
@@ -408,14 +408,14 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                 return (
                                     <div
                                         key={plan.id}
-                                        className="border border-gray-700/50 rounded-xl p-4 hover:border-gray-600 transition-all bg-gray-800/50 cursor-pointer hover:bg-gray-800"
+                                        className="border border-border/50 rounded-xl p-4 hover:border-muted-foreground transition-all bg-muted/50 cursor-pointer hover:bg-muted"
                                         onClick={() => router.push(`/dashboard/patients/${patient.id}/plans/${plan.id}`)}
                                     >
                                         {/* Cabeçalho do plano */}
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <h4 className="font-medium text-sm text-gray-200 truncate">
+                                                    <h4 className="font-medium text-sm text-foreground truncate">
                                                         {plan.nome}
                                                     </h4>
                                                     <span className={cn(
@@ -465,7 +465,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
 
                                         {/* Fases (collapsed) */}
                                         {plan.phases && plan.phases.length > 0 && (
-                                            <div className="mt-3 pt-3 border-t border-gray-700/50 space-y-1.5">
+                                            <div className="mt-3 pt-3 border-t border-border/50 space-y-1.5">
                                                 {plan.phases
                                                     .sort((a, b) => a.ordem - b.ordem)
                                                     .map((phase) => {
@@ -475,7 +475,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                                         return (
                                                             <div
                                                                 key={phase.id}
-                                                                className="flex items-center gap-2 text-xs text-gray-400 py-1 px-2 rounded hover:bg-gray-700/50"
+                                                                className="flex items-center gap-2 text-xs text-muted-foreground py-1 px-2 rounded hover:bg-muted/50"
                                                             >
                                                                 <Circle className={cn("h-2.5 w-2.5 fill-current", phaseConfig.dot)} />
                                                                 <span className="flex-1 truncate">{phase.nome}</span>
@@ -484,7 +484,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                                                         {appointmentCount} agend.
                                                                     </span>
                                                                 )}
-                                                                <ChevronRight className="h-3 w-3 text-gray-600" />
+                                                                <ChevronRight className="h-3 w-3 text-muted-foreground" />
                                                             </div>
                                                         );
                                                     })}
@@ -492,7 +492,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                         )}
 
                                         {/* Ver detalhes link */}
-                                        <div className="mt-3 pt-2 border-t border-gray-700/50 text-right">
+                                        <div className="mt-3 pt-2 border-t border-border/50 text-right">
                                             <span className="text-xs text-primary font-medium hover:underline">
                                                 Ver detalhes →
                                             </span>

@@ -56,7 +56,7 @@ export default function DoctorPermissionsTab() {
                                             "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium",
                                             level === 'full' && "bg-emerald-50 text-emerald-700 border border-emerald-200",
                                             level === 'read' && "bg-blue-50 text-blue-700 border border-blue-200",
-                                            level === 'none' && "bg-gray-50 text-gray-400 border border-gray-200",
+                                            level === 'none' && "bg-gray-50 text-muted-foreground border border-gray-200",
                                         )}>
                                             {level === 'full' && <CheckCircle2 className="h-3 w-3" />}
                                             {level === 'read' && <Eye className="h-3 w-3" />}
@@ -79,11 +79,11 @@ export default function DoctorPermissionsTab() {
                 </div>
 
                 <div className="bg-gray-50 rounded-lg border border-dashed border-gray-300 p-6 text-center">
-                    <MessageCircle className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                    <MessageCircle className="h-8 w-8 text-foreground/80 mx-auto mb-2" />
                     <p className="text-sm text-gray-500">
                         Configurações de permissões do WhatsApp para este médico.
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                         Controlo de comandos @, ações do Z-API, e notificações.
                     </p>
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-50 text-amber-600 border border-amber-200 mt-3">

@@ -233,7 +233,7 @@ export default function BackupSettings() {
                     <Button
                         variant="outline"
                         onClick={() => setShowWizard(true)}
-                        className="gap-2 text-gray-400"
+                        className="gap-2 text-muted-foreground"
                     >
                         <Settings2 className="h-4 w-4" />
                         Reconfigurar
@@ -245,7 +245,7 @@ export default function BackupSettings() {
                             <Button
                                 onClick={() => handleBackupNow()}
                                 disabled={backingUp}
-                                className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-r-none"
+                                className="bg-primary hover:bg-primary/90 text-foreground gap-2 rounded-r-none"
                             >
                                 {backingUp ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -257,42 +257,42 @@ export default function BackupSettings() {
                             <Button
                                 onClick={() => setShowDropdown(!showDropdown)}
                                 disabled={backingUp}
-                                className="bg-primary hover:bg-primary/90 text-white rounded-l-none border-l border-white/20 px-2"
+                                className="bg-primary hover:bg-primary/90 text-foreground rounded-l-none border-l border-white/20 px-2"
                             >
                                 <ChevronDown className="h-4 w-4" />
                             </Button>
                         </div>
 
                         {showDropdown && (
-                            <div className="absolute right-0 mt-1 w-56 bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-50 py-1">
+                            <div className="absolute right-0 mt-1 w-56 bg-muted rounded-lg shadow-lg border border-border z-50 py-1">
                                 <button
                                     onClick={() => handleBackupNow('auto')}
-                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-800 flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted flex items-center gap-2"
                                 >
                                     <Zap className="h-4 w-4 text-amber-500" />
                                     <div>
-                                        <p className="font-medium text-gray-300">Auto</p>
-                                        <p className="text-[11px] text-gray-400">Decide automaticamente</p>
+                                        <p className="font-medium text-foreground/80">Auto</p>
+                                        <p className="text-[11px] text-muted-foreground">Decide automaticamente</p>
                                     </div>
                                 </button>
                                 <button
                                     onClick={() => handleBackupNow('full')}
-                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-800 flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted flex items-center gap-2"
                                 >
                                     <Archive className="h-4 w-4 text-blue-500" />
                                     <div>
-                                        <p className="font-medium text-gray-300">Forçar Full</p>
-                                        <p className="text-[11px] text-gray-400">Backup completo de tudo</p>
+                                        <p className="font-medium text-foreground/80">Forçar Full</p>
+                                        <p className="text-[11px] text-muted-foreground">Backup completo de tudo</p>
                                     </div>
                                 </button>
                                 <button
                                     onClick={() => handleBackupNow('incremental')}
-                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-800 flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted flex items-center gap-2"
                                 >
                                     <Zap className="h-4 w-4 text-emerald-500" />
                                     <div>
-                                        <p className="font-medium text-gray-300">Forçar Incremental</p>
-                                        <p className="text-[11px] text-gray-400">Só dados alterados</p>
+                                        <p className="font-medium text-foreground/80">Forçar Incremental</p>
+                                        <p className="text-[11px] text-muted-foreground">Só dados alterados</p>
                                     </div>
                                 </button>
                             </div>
@@ -316,33 +316,33 @@ export default function BackupSettings() {
             {/* ====== STATS CARDS ====== */}
             {stats && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-100">
+                    <div className="bg-muted rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
-                            <Calendar className="h-4 w-4 text-gray-400" />
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs text-gray-500 uppercase font-medium">Total</span>
                         </div>
                         <p className="text-2xl font-bold text-white">{stats.total_backups}</p>
-                        <p className="text-[11px] text-gray-400 mt-1">
+                        <p className="text-[11px] text-muted-foreground mt-1">
                             <span className="text-blue-500 font-medium">{stats.total_full}</span> Full · <span className="text-emerald-500 font-medium">{stats.total_incremental}</span> Incr
                         </p>
                     </div>
-                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-100">
+                    <div className="bg-muted rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
-                            <HardDrive className="h-4 w-4 text-gray-400" />
+                            <HardDrive className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs text-gray-500 uppercase font-medium">Espaço</span>
                         </div>
                         <p className="text-2xl font-bold text-white">{stats.total_size_display}</p>
                     </div>
-                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-100">
+                    <div className="bg-muted rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
-                            <Database className="h-4 w-4 text-gray-400" />
+                            <Database className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs text-gray-500 uppercase font-medium">Tabelas</span>
                         </div>
                         <p className="text-2xl font-bold text-white">{config?.tables.length || 0}</p>
                     </div>
-                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-100">
+                    <div className="bg-muted rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
-                            <Zap className="h-4 w-4 text-gray-400" />
+                            <Zap className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs text-gray-500 uppercase font-medium">Modo</span>
                         </div>
                         <p className="text-lg font-bold text-white">{modeLabels[editMode] || 'Auto'}</p>
@@ -351,15 +351,15 @@ export default function BackupSettings() {
             )}
 
             {/* ====== CONFIGURAÇÕES ====== */}
-            <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 space-y-6">
-                <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+            <div className="bg-card rounded-lg border border-border p-6 space-y-6">
+                <h4 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">
                     Configuração
                 </h4>
 
                 {/* Diretório */}
                 <div className="space-y-2">
                     <Label htmlFor="backup-path" className="flex items-center gap-2">
-                        <FolderOpen className="h-4 w-4 text-gray-400" />
+                        <FolderOpen className="h-4 w-4 text-muted-foreground" />
                         Diretório de Backup
                     </Label>
                     <Input
@@ -369,7 +369,7 @@ export default function BackupSettings() {
                         placeholder="F:\AsymLAB\DB\Supabase"
                         className="font-mono text-sm"
                     />
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                         💡 Para migrar para NAS, altere para o caminho de rede (ex: \\NAS\AsymLAB\DB\Supabase)
                     </p>
                 </div>
@@ -377,7 +377,7 @@ export default function BackupSettings() {
                 {/* Modo de Backup */}
                 <div className="space-y-2">
                     <Label className="flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-gray-400" />
+                        <Zap className="h-4 w-4 text-muted-foreground" />
                         Modo de Backup
                     </Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -394,11 +394,11 @@ export default function BackupSettings() {
                             >
                                 <p className={cn(
                                     "text-sm font-medium",
-                                    editMode === mode ? "text-primary" : "text-gray-300"
+                                    editMode === mode ? "text-primary" : "text-foreground/80"
                                 )}>
                                     {modeLabels[mode]}
                                 </p>
-                                <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                                <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
                                     {modeDescriptions[mode]}
                                 </p>
                             </button>
@@ -410,7 +410,7 @@ export default function BackupSettings() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="backup-time" className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-gray-400" />
+                            <Clock className="h-4 w-4 text-muted-foreground" />
                             Horário Diário
                         </Label>
                         <Input
@@ -422,7 +422,7 @@ export default function BackupSettings() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="backup-retention" className="flex items-center gap-2">
-                            <Trash2 className="h-4 w-4 text-gray-400" />
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
                             Retenção (dias)
                         </Label>
                         <Input
@@ -433,11 +433,11 @@ export default function BackupSettings() {
                             value={editRetention}
                             onChange={(e) => setEditRetention(e.target.value)}
                         />
-                        <p className="text-xs text-gray-400">Backups mais antigos são eliminados</p>
+                        <p className="text-xs text-muted-foreground">Backups mais antigos são eliminados</p>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="full-interval" className="flex items-center gap-2">
-                            <Archive className="h-4 w-4 text-gray-400" />
+                            <Archive className="h-4 w-4 text-muted-foreground" />
                             Intervalo FULL (dias)
                         </Label>
                         <Input
@@ -449,7 +449,7 @@ export default function BackupSettings() {
                             onChange={(e) => setEditFullInterval(e.target.value)}
                             disabled={editMode === 'full'}
                         />
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                             {editMode === 'full'
                                 ? 'Sempre FULL — intervalo não se aplica'
                                 : 'Consolida com FULL a cada N dias'}
@@ -458,10 +458,10 @@ export default function BackupSettings() {
                 </div>
 
                 {/* Ativar/Desativar */}
-                <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                     <div>
-                        <p className="text-sm font-medium text-gray-300">Backup automático diário</p>
-                        <p className="text-xs text-gray-400">Executa backup todos os dias no horário definido</p>
+                        <p className="text-sm font-medium text-foreground/80">Backup automático diário</p>
+                        <p className="text-xs text-muted-foreground">Executa backup todos os dias no horário definido</p>
                     </div>
                     <button
                         onClick={() => setEditEnabled(!editEnabled)}
@@ -471,7 +471,7 @@ export default function BackupSettings() {
                         )}
                     >
                         <span className={cn(
-                            "absolute top-0.5 left-0.5 w-5 h-5 bg-gray-800 rounded-full shadow transition-transform duration-200",
+                            "absolute top-0.5 left-0.5 w-5 h-5 bg-muted rounded-full shadow transition-transform duration-200",
                             editEnabled ? "translate-x-6" : "translate-x-0"
                         )} />
                     </button>
@@ -483,7 +483,7 @@ export default function BackupSettings() {
                         <Button
                             onClick={handleSave}
                             disabled={saving}
-                            className="bg-primary hover:bg-primary/90 text-white gap-2"
+                            className="bg-primary hover:bg-primary/90 text-foreground gap-2"
                         >
                             {saving ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -497,15 +497,15 @@ export default function BackupSettings() {
             </div>
 
             {/* ====== TABELAS MONITORIZADAS ====== */}
-            <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
-                <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
+            <div className="bg-card rounded-lg border border-border p-6">
+                <h4 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider mb-4">
                     Tabelas Monitorizadas
                 </h4>
                 <div className="flex flex-wrap gap-2">
                     {config?.tables.map((table) => (
                         <span
                             key={table}
-                            className="px-3 py-1.5 bg-gray-700 text-gray-400 rounded-lg text-xs font-mono"
+                            className="px-3 py-1.5 bg-gray-700 text-muted-foreground rounded-lg text-xs font-mono"
                         >
                             {table}
                         </span>
@@ -514,16 +514,16 @@ export default function BackupSettings() {
             </div>
 
             {/* ====== HISTÓRICO ====== */}
-            <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
+            <div className="bg-card rounded-lg border border-border p-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                    <h4 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">
                         Histórico de Backups
                     </h4>
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={loadConfig}
-                        className="text-gray-400 hover:text-gray-400 gap-1"
+                        className="text-muted-foreground hover:text-muted-foreground gap-1"
                     >
                         <RefreshCw className="h-3.5 w-3.5" />
                         Atualizar
@@ -531,7 +531,7 @@ export default function BackupSettings() {
                 </div>
 
                 {backups.length === 0 ? (
-                    <div className="text-center py-8 text-gray-400 text-sm">
+                    <div className="text-center py-8 text-muted-foreground text-sm">
                         Nenhum backup registado ainda
                     </div>
                 ) : (
@@ -558,7 +558,7 @@ export default function BackupSettings() {
                                         )}
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <p className="text-sm font-medium text-gray-300">
+                                                <p className="text-sm font-medium text-foreground/80">
                                                     {backup.timestamp
                                                         ? new Date(backup.timestamp).toLocaleString('pt-PT')
                                                         : backup.folder}
@@ -580,7 +580,7 @@ export default function BackupSettings() {
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-gray-400">
+                                            <p className="text-xs text-muted-foreground">
                                                 {isIncremental ? (
                                                     <>
                                                         {backup.total_rows} alterações ·{' '}
@@ -596,7 +596,7 @@ export default function BackupSettings() {
                                             </p>
                                         </div>
                                     </div>
-                                    <span className="text-xs text-gray-400 font-mono">
+                                    <span className="text-xs text-muted-foreground font-mono">
                                         {backup.duration_ms ? `${backup.duration_ms}ms` : '—'}
                                     </span>
                                 </div>

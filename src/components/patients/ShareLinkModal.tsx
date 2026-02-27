@@ -70,14 +70,14 @@ export default function ShareLinkModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-gray-900 border border-gray-700/50 rounded-xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="bg-card border border-border/50 rounded-xl w-full max-w-md overflow-hidden shadow-2xl">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
-                    <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                <div className="flex items-center justify-between p-4 border-b border-border/50">
+                    <h3 className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
                         <Share2 className="h-4 w-4 text-green-400" />
                         Link de Partilha
                     </h3>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-300 text-xs">
+                    <button onClick={onClose} className="text-gray-500 hover:text-foreground/80 text-xs">
                         Fechar ✕
                     </button>
                 </div>
@@ -90,7 +90,7 @@ export default function ShareLinkModal({
 
                     {/* Expiry selector */}
                     <div>
-                        <label className="text-[10px] uppercase tracking-wider text-gray-600 mb-1 block">Expiração</label>
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Expiração</label>
                         <div className="flex gap-2">
                             {[30, 60, 90, 180].map(d => (
                                 <button
@@ -98,7 +98,7 @@ export default function ShareLinkModal({
                                     onClick={() => setExpiryDays(d)}
                                     className={`text-xs px-3 py-1.5 rounded-md transition-colors ${expiryDays === d
                                         ? 'bg-green-500/10 text-green-400 border border-green-500/30'
-                                        : 'text-gray-500 hover:text-gray-400 border border-gray-700/50'
+                                        : 'text-gray-500 hover:text-muted-foreground border border-border/50'
                                         }`}
                                 >
                                     {d}d
@@ -126,7 +126,7 @@ export default function ShareLinkModal({
                                         type="text"
                                         value={shareUrl}
                                         readOnly
-                                        className="flex-1 text-xs bg-transparent text-gray-300 outline-none"
+                                        className="flex-1 text-xs bg-transparent text-foreground/80 outline-none"
                                     />
                                     <button
                                         onClick={handleCopy}
@@ -169,7 +169,7 @@ export default function ShareLinkModal({
                                     href={shareUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-1.5 text-xs px-3 py-2 bg-gray-700/30 text-gray-400 border border-gray-700/50 rounded-lg hover:bg-gray-700/50 transition-colors"
+                                    className="flex items-center justify-center gap-1.5 text-xs px-3 py-2 bg-gray-700/30 text-muted-foreground border border-border/50 rounded-lg hover:bg-muted/50 transition-colors"
                                 >
                                     <ExternalLink className="h-3 w-3" />
                                 </a>

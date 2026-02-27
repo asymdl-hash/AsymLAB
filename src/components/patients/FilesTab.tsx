@@ -33,7 +33,7 @@ const FILE_TYPE_CONFIG: Record<string, { label: string; icon: typeof File; color
     video: { label: 'Vídeo', icon: Film, color: 'text-pink-600', bg: 'bg-pink-50' },
     documento: { label: 'Documento', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
     comprimido: { label: 'Comprimido', icon: Archive, color: 'text-amber-600', bg: 'bg-amber-50' },
-    outro: { label: 'Outro', icon: File, color: 'text-gray-600', bg: 'bg-gray-50' },
+    outro: { label: 'Outro', icon: File, color: 'text-muted-foreground', bg: 'bg-gray-50' },
 };
 
 function formatFileSize(bytes: number): string {
@@ -193,19 +193,19 @@ export default function FilesTab({ patientId, plans }: FilesTabProps) {
                     {/* Filtro por tipo */}
                     <div className="relative">
                         <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
-                            className="text-xs bg-white border border-gray-200 rounded-lg pl-7 pr-3 py-1.5 text-gray-600 appearance-none cursor-pointer hover:border-gray-300">
+                            className="text-xs bg-white border border-gray-200 rounded-lg pl-7 pr-3 py-1.5 text-muted-foreground appearance-none cursor-pointer hover:border-gray-300">
                             <option value="">Todos</option>
                             {Object.entries(FILE_TYPE_CONFIG).map(([key, config]) => (
                                 <option key={key} value={key}>{config.label}</option>
                             ))}
                         </select>
-                        <Filter className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+                        <Filter className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                     </div>
 
                     <input type="file" ref={fileInputRef} multiple className="hidden"
                         onChange={(e) => e.target.files && handleFileUpload(e.target.files)} />
                     <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                        className="text-xs bg-primary text-white rounded-lg px-3 py-1.5 font-medium hover:bg-primary/90 transition-colors flex items-center gap-1 disabled:opacity-50">
+                        className="text-xs bg-primary text-foreground rounded-lg px-3 py-1.5 font-medium hover:bg-primary/90 transition-colors flex items-center gap-1 disabled:opacity-50">
                         {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
                         Upload
                     </button>
@@ -254,10 +254,10 @@ export default function FilesTab({ patientId, plans }: FilesTabProps) {
             {/* Files Grid */}
             {loading ? (
                 <div className="flex justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-gray-300" />
+                    <Loader2 className="h-6 w-6 animate-spin text-foreground/80" />
                 </div>
             ) : filteredFiles.length === 0 ? (
-                <div className="text-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-gray-300 transition-colors"
+                <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-gray-300 transition-colors"
                     onClick={() => fileInputRef.current?.click()}>
                     <FolderOpen className="h-10 w-10 mx-auto mb-3 opacity-40" />
                     <p className="text-sm">Sem ficheiros</p>
@@ -282,7 +282,7 @@ export default function FilesTab({ patientId, plans }: FilesTabProps) {
                                         <p className="text-sm font-medium text-gray-900 truncate" title={f.nome_original}>
                                             {f.nome_original}
                                         </p>
-                                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-gray-400">
+                                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
                                             <span>{formatFileSize(f.tamanho || 0)}</span>
                                             <span>·</span>
                                             <span>{config.label}</span>
@@ -293,7 +293,7 @@ export default function FilesTab({ patientId, plans }: FilesTabProps) {
                                                 </>
                                             )}
                                         </div>
-                                        <p className="text-[10px] text-gray-400 mt-0.5">
+                                        <p className="text-[10px] text-muted-foreground mt-0.5">
                                             {new Date(f.created_at).toLocaleDateString('pt-PT')}
                                         </p>
                                     </div>
@@ -301,21 +301,21 @@ export default function FilesTab({ patientId, plans }: FilesTabProps) {
                                 {/* Actions (visible on hover) */}
                                 <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
-                                        className="text-xs text-gray-400 hover:text-gray-600 p-1 rounded"
+                                        className="text-xs text-muted-foreground hover:text-muted-foreground p-1 rounded"
                                         title="Visualizar"
                                         onClick={() => handlePreview(f.caminho_nas, f.mime_type)}
                                     >
                                         <Eye className="h-3.5 w-3.5" />
                                     </button>
                                     <button
-                                        className="text-xs text-gray-400 hover:text-gray-600 p-1 rounded"
+                                        className="text-xs text-muted-foreground hover:text-muted-foreground p-1 rounded"
                                         title="Download"
                                         onClick={() => handleDownload(f.caminho_nas, f.nome_original)}
                                     >
                                         <Download className="h-3.5 w-3.5" />
                                     </button>
                                     <button
-                                        className="text-xs text-gray-400 hover:text-red-500 p-1 rounded ml-auto"
+                                        className="text-xs text-muted-foreground hover:text-red-500 p-1 rounded ml-auto"
                                         title="Eliminar"
                                         disabled={isDeleting}
                                         onClick={() => handleDelete(f.id, f.caminho_nas)}

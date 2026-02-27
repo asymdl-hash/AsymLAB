@@ -104,9 +104,9 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 <div className="flex items-center justify-between p-5 border-b border-gray-100">
                     <div>
                         <h2 className="text-base font-semibold text-gray-900">Novo Plano de Tratamento</h2>
-                        <p className="text-xs text-gray-400 mt-0.5">Preencha os dados para criar o plano</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Preencha os dados para criar o plano</p>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors">
+                    <button onClick={onClose} className="text-muted-foreground hover:text-muted-foreground p-1 rounded-lg hover:bg-gray-100 transition-colors">
                         <X className="h-4 w-4" />
                     </button>
                 </div>
@@ -120,7 +120,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                     <form onSubmit={handleSubmit} className="p-5 space-y-4">
                         {/* Nome do Plano */}
                         <div>
-                            <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Nome do Plano *</label>
+                            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nome do Plano *</label>
                             <Input
                                 value={nome}
                                 onChange={(e) => setNome(e.target.value)}
@@ -132,7 +132,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                         {/* Tipo de Trabalho */}
                         <div>
-                            <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Tipo de Trabalho *</label>
+                            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tipo de Trabalho *</label>
                             <select
                                 value={tipoTrabalhoId}
                                 onChange={(e) => setTipoTrabalhoId(e.target.value)}
@@ -153,7 +153,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                         {/* Médico */}
                         <div>
-                            <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Médico *</label>
+                            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Médico *</label>
                             <select
                                 value={medicoId}
                                 onChange={(e) => setMedicoId(e.target.value)}
@@ -170,7 +170,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                         {/* Clínica */}
                         <div>
-                            <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Clínica *</label>
+                            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Clínica *</label>
                             <select
                                 value={clinicaId}
                                 onChange={(e) => setClinicaId(e.target.value)}

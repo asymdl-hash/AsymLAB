@@ -142,7 +142,7 @@ export default function WorkBadges({ planId, mode = 'compact', maxVisible = 4, o
                 {mode === 'full' && (
                     <button
                         onClick={openPicker}
-                        className="inline-flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded-full border border-dashed border-gray-600 text-gray-400 hover:text-white hover:border-gray-400 transition-colors"
+                        className="inline-flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded-full border border-dashed border-gray-600 text-muted-foreground hover:text-white hover:border-gray-400 transition-colors"
                     >
                         <Plus className="h-3 w-3" />
                         Badge
@@ -154,17 +154,17 @@ export default function WorkBadges({ planId, mode = 'compact', maxVisible = 4, o
             {showPicker && (
                 <div
                     ref={pickerRef}
-                    className="absolute top-full left-0 mt-1 z-50 w-72 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
+                    className="absolute top-full left-0 mt-1 z-50 w-72 bg-muted border border-border rounded-xl shadow-2xl overflow-hidden"
                 >
                     {/* Category tabs */}
-                    <div className="flex items-center gap-1 p-2 border-b border-gray-700 overflow-x-auto">
+                    <div className="flex items-center gap-1 p-2 border-b border-border overflow-x-auto">
                         <button
                             onClick={() => setFilterCat(null)}
                             className={cn(
                                 "text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap transition-colors font-medium",
                                 !filterCat
                                     ? "bg-amber-500/20 text-amber-400"
-                                    : "text-gray-400 hover:text-white"
+                                    : "text-muted-foreground hover:text-white"
                             )}
                         >
                             Todos
@@ -179,7 +179,7 @@ export default function WorkBadges({ planId, mode = 'compact', maxVisible = 4, o
                                         "text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap transition-colors font-medium",
                                         filterCat === cat
                                             ? `${colors.bg} ${colors.text}`
-                                            : "text-gray-400 hover:text-white"
+                                            : "text-muted-foreground hover:text-white"
                                     )}
                                 >
                                     {colors.emoji} {colors.label}
@@ -201,7 +201,7 @@ export default function WorkBadges({ planId, mode = 'compact', maxVisible = 4, o
                                         "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-left transition-colors text-sm",
                                         isActive
                                             ? `${colors.bg} ${colors.text}`
-                                            : "text-gray-300 hover:bg-gray-700/50"
+                                            : "text-foreground/80 hover:bg-muted/50"
                                     )}
                                 >
                                     <span className="w-5 text-center">{status.emoji}</span>
@@ -215,10 +215,10 @@ export default function WorkBadges({ planId, mode = 'compact', maxVisible = 4, o
                     </div>
 
                     {/* Close */}
-                    <div className="p-2 border-t border-gray-700">
+                    <div className="p-2 border-t border-border">
                         <button
                             onClick={() => { setShowPicker(false); setFilterCat(null); }}
-                            className="w-full text-[11px] text-gray-400 hover:text-white py-1 transition-colors"
+                            className="w-full text-[11px] text-muted-foreground hover:text-white py-1 transition-colors"
                         >
                             Fechar
                         </button>

@@ -12,7 +12,7 @@ export default function PatientsLayout({
         <PermissionGuard module="patients">
             <div className="flex h-full w-full bg-[#0B0F1A] overflow-hidden relative">
                 {/* Lista de Pacientes (Master) — escondida em mobile quando há detail */}
-                <div className="hidden md:flex w-80 flex-shrink-0 border-r border-gray-800 bg-gray-900 h-full overflow-y-auto z-10">
+                <div className="hidden md:flex w-80 flex-shrink-0 border-r border-border bg-card h-full overflow-y-auto z-10">
                     <PatientList />
                 </div>
 

@@ -3,18 +3,16 @@
 import Sidebar from './Sidebar';
 import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
     const { collapsed } = useSidebar();
 
     return (
-        <div className="flex min-h-screen bg-[#f9fafb] antialiased">
+        <div className="flex min-h-screen bg-background antialiased">
             <Sidebar />
-            {/* Main Content Area */}
-            {/* Mobile: sem margem lateral, com padding-top para o header bar */}
-            {/* Desktop: margem esquerda adapta-se ao estado da sidebar */}
             <main
-                className={`flex-1 pt-14 md:pt-0 transition-all duration-300 bg-[#f9fafb] min-h-screen relative ${collapsed ? 'md:ml-[70px]' : 'md:ml-64'
+                className={`flex-1 pt-14 md:pt-0 transition-all duration-300 bg-background min-h-screen relative ${collapsed ? 'md:ml-[70px]' : 'md:ml-64'
                     }`}
             >
                 {children}
@@ -26,9 +24,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
         <AuthProvider>
-            <SidebarProvider>
-                <DashboardContent>{children}</DashboardContent>
-            </SidebarProvider>
+            <ThemeProvider>
+                <SidebarProvider>
+                    <DashboardContent>{children}</DashboardContent>
+                </SidebarProvider>
+            </ThemeProvider>
         </AuthProvider>
     );
 }

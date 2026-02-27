@@ -41,12 +41,12 @@ function PhoneLockedModal({
                         </div>
                         <h3 className="font-semibold text-gray-900">Telefone protegido</h3>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                    <button onClick={onClose} className="text-muted-foreground hover:text-muted-foreground">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                     O número de telefone está associado à conta de autenticação.
                     {isAdmin
                         ? ' Para alterá-lo, acede às Definições de Utilizadores.'
@@ -56,7 +56,7 @@ function PhoneLockedModal({
                 {isAdmin ? (
                     <Link
                         href={`/dashboard/settings?tab=users&userId=${doctorId}`}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors w-full justify-center"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-foreground text-sm font-medium hover:bg-primary/90 transition-colors w-full justify-center"
                         onClick={onClose}
                     >
                         <ExternalLink className="h-4 w-4" />
@@ -205,7 +205,7 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                     <div>
                         <Label htmlFor="full_name">Nome Completo</Label>
                         <Input id="full_name" {...register('full_name')} disabled className="bg-gray-50" />
-                        <p className="text-xs text-gray-400 mt-1">{isAdmin ? 'Editável nas Definições > Utilizadores' : 'Gerido pelo administrador'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{isAdmin ? 'Editável nas Definições > Utilizadores' : 'Gerido pelo administrador'}</p>
                     </div>
 
                     {/* ---- Campo Phone com lógica de bloqueio (arquitectura §11) ---- */}
@@ -254,7 +254,7 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                                     type="button"
                                     onClick={handleSavePhone}
                                     disabled={savingPhone || !phoneValue.trim()}
-                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all h-10 flex-shrink-0"
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-primary text-foreground hover:bg-primary/90 disabled:opacity-50 transition-all h-10 flex-shrink-0"
                                 >
                                     {phoneSaved ? (
                                         <><Check className="h-4 w-4" /> Guardado</>
@@ -275,7 +275,7 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                             </button>
                         )}
                         {!phoneIsLocked && !phoneIsLoading && (
-                            <p className="text-xs text-gray-400 mt-1">Será também associado à conta de autenticação.</p>
+                            <p className="text-xs text-muted-foreground mt-1">Será também associado à conta de autenticação.</p>
                         )}
                     </div>
                 </div>
@@ -287,7 +287,7 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                     <Mail className="h-5 w-5 text-primary" />
                     Email de Contacto
                 </h3>
-                <p className="text-xs text-gray-400 mb-4">
+                <p className="text-xs text-muted-foreground mb-4">
                     Email usado para comunicações. Diferente do email de login para contas por username.
                 </p>
                 <div className="flex items-end gap-2">
@@ -306,7 +306,7 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                             type="button"
                             onClick={handleSaveContactEmail}
                             disabled={savingEmail}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all h-10"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-foreground hover:bg-primary/90 disabled:opacity-50 transition-all h-10"
                         >
                             {emailSaved ? (
                                 <><Check className="h-4 w-4" /> Guardado</>
@@ -326,12 +326,12 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                 </h3>
 
                 {loadingClinics ? (
-                    <div className="text-sm text-gray-400 py-4">Carregando clínicas...</div>
+                    <div className="text-sm text-muted-foreground py-4">Carregando clínicas...</div>
                 ) : clinics.length === 0 ? (
                     <div className="bg-gray-50 rounded-lg border border-dashed border-gray-300 p-6 text-center">
-                        <Building2 className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                        <Building2 className="h-8 w-8 text-foreground/80 mx-auto mb-2" />
                         <p className="text-sm text-gray-500">Nenhuma clínica associada.</p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                             {isAdmin ? 'Associe este médico a uma clínica nas Definições > Utilizadores' : 'Sem clínicas associadas. Contacte o administrador.'}
                         </p>
                     </div>
@@ -360,18 +360,18 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                                             <h4 className="font-medium text-gray-900 text-sm">
                                                 {clinic.clinic_name}
                                             </h4>
-                                            <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                                                 <Users className="h-3 w-3" />
                                                 {clinic.partners.length} {clinic.partners.length === 1 ? 'parceiro' : 'parceiros'}
                                             </p>
                                         </div>
                                     </div>
-                                    <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-primary transition-colors" />
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                                 </div>
 
                                 {clinic.tags.length > 0 && (
                                     <div className="mt-3 pt-3 border-t border-gray-100">
-                                        <p className="text-xs text-gray-400 mb-1.5">Funções / Tags</p>
+                                        <p className="text-xs text-muted-foreground mb-1.5">Funções / Tags</p>
                                         <div className="flex flex-wrap gap-1.5">
                                             {clinic.tags.map((tag) => (
                                                 <span
@@ -391,7 +391,7 @@ export default function DoctorDataTab({ doctorId }: DoctorDataTabProps) {
                                             {clinic.partners.map((partner) => (
                                                 <span
                                                     key={partner.id}
-                                                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600"
+                                                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-gray-100 text-muted-foreground"
                                                 >
                                                     {partner.partner_name}
                                                 </span>

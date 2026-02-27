@@ -59,7 +59,7 @@ export default function ClinicDiscountsTab() {
             <div className="grid gap-4">
                 {fields.length === 0 ? (
                     <div className="text-center py-12 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg">
-                        <Percent className="h-10 w-10 mx-auto text-gray-300 mb-2" />
+                        <Percent className="h-10 w-10 mx-auto text-foreground/80 mb-2" />
                         <h3 className="text-sm font-medium text-gray-900">Sem descontos configurados</h3>
                         <p className="text-sm text-gray-500 mt-1">Defina regras de preço especiais para fidelizar este cliente.</p>
                     </div>
@@ -71,7 +71,7 @@ export default function ClinicDiscountsTab() {
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                                        className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50"
                                         onClick={() => {
                                             const currentValues = control._formValues.clinic_discounts || [];
                                             const realId = currentValues[index]?.id;
@@ -90,7 +90,7 @@ export default function ClinicDiscountsTab() {
                                         </div>
                                         <div className="space-y-3 w-full">
                                             <div className="space-y-1">
-                                                <Label className="text-xs text-gray-400">Nome da Regra</Label>
+                                                <Label className="text-xs text-muted-foreground">Nome da Regra</Label>
                                                 <Input {...register(`clinic_discounts.${index}.name`)} className="font-medium h-9" placeholder="Ex: Protocolo 2024" />
                                             </div>
 
@@ -117,7 +117,7 @@ export default function ClinicDiscountsTab() {
                                     {/* Valor e Tipo */}
                                     <div className="md:col-span-3 space-y-3">
                                         <div className="space-y-1">
-                                            <Label className="text-xs text-gray-400">Valor do Desconto</Label>
+                                            <Label className="text-xs text-muted-foreground">Valor do Desconto</Label>
                                             <div className="relative">
                                                 <Input
                                                     type="number"
@@ -125,7 +125,7 @@ export default function ClinicDiscountsTab() {
                                                     {...register(`clinic_discounts.${index}.value`, { valueAsNumber: true })}
                                                     className="pl-8 h-9 font-bold text-green-700"
                                                 />
-                                                <div className="absolute left-2.5 top-2.5 text-gray-400">
+                                                <div className="absolute left-2.5 top-2.5 text-muted-foreground">
                                                     <DollarSign className="h-4 w-4" />
                                                 </div>
                                             </div>
@@ -135,7 +135,7 @@ export default function ClinicDiscountsTab() {
                                     {/* Âmbito (Global vs Específico) */}
                                     <div className="md:col-span-5 space-y-3">
                                         <div className="space-y-1">
-                                            <Label className="text-xs text-gray-400">Aplicável a</Label>
+                                            <Label className="text-xs text-muted-foreground">Aplicável a</Label>
                                             <select
                                                 {...register(`clinic_discounts.${index}.scope`)}
                                                 className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -144,7 +144,7 @@ export default function ClinicDiscountsTab() {
                                                 <option value="specific">Produtos Específicos (Lista)</option>
                                             </select>
                                         </div>
-                                        <p className="text-[10px] text-gray-400 leading-tight">
+                                        <p className="text-[10px] text-muted-foreground leading-tight">
                                             Se "Específico", a seleção de produtos será feita no módulo de Faturação.
                                         </p>
                                     </div>

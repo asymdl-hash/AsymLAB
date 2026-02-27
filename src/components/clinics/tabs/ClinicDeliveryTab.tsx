@@ -170,7 +170,7 @@ export default function ClinicDeliveryTab() {
             <div className="grid gap-4">
                 {fields.length === 0 ? (
                     <div className="text-center py-12 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg">
-                        <MapPin className="h-10 w-10 mx-auto text-gray-300 mb-2" />
+                        <MapPin className="h-10 w-10 mx-auto text-foreground/80 mb-2" />
                         <h3 className="text-sm font-medium text-gray-900">Sem locais de entrega</h3>
                         <p className="text-sm text-gray-500 mt-1">Adicione pelo menos um local para calcular custos de estafeta.</p>
                     </div>
@@ -189,7 +189,7 @@ export default function ClinicDeliveryTab() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-gray-100/50"
+                                            className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-gray-100/50"
                                             onClick={() => {
                                                 if (dpId) setDeleteTarget({ index, id: dpId });
                                             }}
@@ -214,7 +214,7 @@ export default function ClinicDeliveryTab() {
                                             <div className="space-y-2">
                                                 <Label>Distância (Km)</Label>
                                                 <div className="relative">
-                                                    <Navigation className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                                                    <Navigation className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         type="number"
                                                         step="0.1"
@@ -223,7 +223,7 @@ export default function ClinicDeliveryTab() {
                                                         onBlur={(e) => handleUpdatePoint(index, 'distance_km', parseFloat(e.target.value))}
                                                     />
                                                 </div>
-                                                <p className="text-[10px] text-gray-400">Usado para cálculo automático de custos.</p>
+                                                <p className="text-[10px] text-muted-foreground">Usado para cálculo automático de custos.</p>
                                             </div>
                                         </div>
 
@@ -273,12 +273,12 @@ export default function ClinicDeliveryTab() {
                                                                     <MapPin className="h-4 w-4" />
                                                                     Abrir Mapa
                                                                 </a>
-                                                                <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-gray-400" onClick={() => setEditingMapIndex(index)}>
+                                                                <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground" onClick={() => setEditingMapIndex(index)}>
                                                                     <Pencil className="h-4 w-4" />
                                                                 </Button>
                                                             </>
                                                         ) : (
-                                                            <Button type="button" variant="outline" className="text-gray-400 gap-2 w-full border-dashed" onClick={() => setEditingMapIndex(index)}>
+                                                            <Button type="button" variant="outline" className="text-muted-foreground gap-2 w-full border-dashed" onClick={() => setEditingMapIndex(index)}>
                                                                 <MapPin className="h-4 w-4" />
                                                                 <span className="text-xs">Adicionar Link</span>
                                                             </Button>
@@ -292,7 +292,7 @@ export default function ClinicDeliveryTab() {
                                     {/* ===== Contactos do Local de Entrega (Multi-selecção) ===== */}
                                     <div className="mt-6 pt-4 border-t border-gray-100">
                                         <div className="flex items-center justify-between mb-3">
-                                            <Label className="text-xs text-gray-400 flex items-center gap-1">
+                                            <Label className="text-xs text-muted-foreground flex items-center gap-1">
                                                 <Phone className="h-3 w-3" /> Contactos para Entregas
                                             </Label>
                                             <div className="relative">
@@ -315,7 +315,7 @@ export default function ClinicDeliveryTab() {
                                                         {/* Membros da equipa */}
                                                         {availableContacts.length > 0 && (
                                                             <>
-                                                                <p className="px-3 pt-2 pb-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Equipa</p>
+                                                                <p className="px-3 pt-2 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Equipa</p>
                                                                 {availableContacts.map((tc) => (
                                                                     <button
                                                                         key={tc.user_id}
@@ -323,10 +323,10 @@ export default function ClinicDeliveryTab() {
                                                                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
                                                                         onClick={() => dpId && handleAddContact(dpId, tc.user_id)}
                                                                     >
-                                                                        <User className="h-3 w-3 text-gray-400" />
+                                                                        <User className="h-3 w-3 text-muted-foreground" />
                                                                         <span className="flex-1 truncate">{tc.full_name}</span>
                                                                         {tc.phone && (
-                                                                            <span className="text-xs text-gray-400">{tc.phone}</span>
+                                                                            <span className="text-xs text-muted-foreground">{tc.phone}</span>
                                                                         )}
                                                                     </button>
                                                                 ))}
@@ -377,7 +377,7 @@ export default function ClinicDeliveryTab() {
                                                                         type="button"
                                                                         disabled={!externalForm.name.trim()}
                                                                         onClick={() => dpId && handleAddExternalContact(dpId, index)}
-                                                                        className="flex-1 text-xs py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                        className="flex-1 text-xs py-1 bg-blue-600 text-foreground rounded hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
                                                                     >
                                                                         Adicionar
                                                                     </button>
@@ -413,14 +413,14 @@ export default function ClinicDeliveryTab() {
                                                         }
                                                         <span className="font-medium text-gray-700">{ac.name}</span>
                                                         {ac.role && (
-                                                            <span className="text-[10px] text-gray-400 italic">{ac.role}</span>
+                                                            <span className="text-[10px] text-muted-foreground italic">{ac.role}</span>
                                                         )}
                                                         {ac.phone && (
-                                                            <span className="text-xs text-gray-400">{ac.phone}</span>
+                                                            <span className="text-xs text-muted-foreground">{ac.phone}</span>
                                                         )}
                                                         <button
                                                             type="button"
-                                                            className="ml-0.5 p-0.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                                            className="ml-0.5 p-0.5 rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
                                                             onClick={() => dpId && handleRemoveContact(dpId, ac.id)}
                                                             title="Remover contacto"
                                                         >
@@ -430,7 +430,7 @@ export default function ClinicDeliveryTab() {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-xs text-gray-400 italic">
+                                            <p className="text-xs text-muted-foreground italic">
                                                 {teamContacts.length > 0
                                                     ? 'Nenhum contacto associado. Use o botão acima para adicionar.'
                                                     : 'Marque membros como "Contacto da Clínica" na aba Equipa primeiro.'

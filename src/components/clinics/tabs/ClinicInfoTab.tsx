@@ -120,7 +120,7 @@ export default function ClinicInfoTab() {
                                         </a>
                                         <button
                                             type="button"
-                                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                                            className="p-2 text-muted-foreground hover:text-muted-foreground hover:bg-gray-100 rounded-md transition-colors"
                                             onClick={() => setIsEditingMap(true)}
                                             title="Editar Link"
                                         >
@@ -130,7 +130,7 @@ export default function ClinicInfoTab() {
                                 ) : (
                                     <button
                                         type="button"
-                                        className="flex items-center gap-2 px-3 py-2 text-gray-400 border border-dashed border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-600 transition-all text-sm w-full"
+                                        className="flex items-center gap-2 px-3 py-2 text-muted-foreground border border-dashed border-gray-300 rounded-md hover:bg-gray-50 hover:text-muted-foreground transition-all text-sm w-full"
                                         onClick={() => setIsEditingMap(true)}
                                     >
                                         <MapPin className="h-4 w-4 opacity-50" />

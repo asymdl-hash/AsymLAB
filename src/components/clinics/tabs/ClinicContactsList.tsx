@@ -171,10 +171,10 @@ export default function ClinicContactsList() {
                                             className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
                                             onClick={() => handleAddTeamContact(m.user_id)}
                                         >
-                                            <User className="h-3 w-3 text-gray-400" />
+                                            <User className="h-3 w-3 text-muted-foreground" />
                                             <span className="flex-1 truncate">{m.full_name}</span>
                                             {m.phone && (
-                                                <span className="text-xs text-gray-400">{m.phone}</span>
+                                                <span className="text-xs text-muted-foreground">{m.phone}</span>
                                             )}
                                         </button>
                                     ))}
@@ -199,7 +199,7 @@ export default function ClinicContactsList() {
                                     </p>
                                 </div>
                                 {tc.phone && (
-                                    <div className="flex items-center gap-1 text-xs text-gray-600">
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                         <Phone className="h-3 w-3" />
                                         <span>{tc.phone}</span>
                                     </div>
@@ -207,7 +207,7 @@ export default function ClinicContactsList() {
                                 <button
                                     type="button"
                                     onClick={() => handleRemoveTeamContact(tc.user_id)}
-                                    className="p-1 rounded-md text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+                                    className="p-1 rounded-md text-foreground/80 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
                                     title="Remover dos contactos"
                                 >
                                     <X className="h-4 w-4" />
@@ -216,14 +216,14 @@ export default function ClinicContactsList() {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-4 border border-dashed border-gray-200 rounded-lg text-gray-400 text-xs">
+                    <div className="text-center py-4 border border-dashed border-gray-200 rounded-lg text-muted-foreground text-xs">
                         {allTeam.length > 0
                             ? 'Nenhum membro da equipa selecionado como contacto. Use o botão acima para adicionar.'
                             : 'Nenhum membro na equipa desta clínica. Adicione membros na aba Equipa primeiro.'
                         }
                     </div>
                 )}
-                <p className="text-[10px] text-gray-400 italic">
+                <p className="text-[10px] text-muted-foreground italic">
                     Selecione membros da equipa como contactos desta clínica. Gerir membros na aba Equipa.
                 </p>
             </div>
@@ -240,7 +240,7 @@ export default function ClinicContactsList() {
 
                 <div className="grid gap-3">
                     {fields.length === 0 ? (
-                        <div className="text-center py-4 border border-dashed border-gray-100 rounded-lg text-gray-400 text-xs">
+                        <div className="text-center py-4 border border-dashed border-gray-100 rounded-lg text-muted-foreground text-xs">
                             Sem contactos manuais. Use o botão acima para adicionar contactos avulsos (ex: receção, fax).
                         </div>
                     ) : (
@@ -252,7 +252,7 @@ export default function ClinicContactsList() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-7 w-7 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                                            className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-50"
                                             onClick={() => {
                                                 const currentValues = getValues().clinic_contacts || [];
                                                 const realId = currentValues[index]?.id;
@@ -265,7 +265,7 @@ export default function ClinicContactsList() {
                                     </div>
 
                                     <div className="md:col-span-6 space-y-1">
-                                        <Label className="text-[10px] uppercase text-gray-400 font-semibold flex items-center gap-1">
+                                        <Label className="text-[10px] uppercase text-muted-foreground font-semibold flex items-center gap-1">
                                             <User className="h-3 w-3" /> Nome / Cargo
                                         </Label>
                                         <Input
@@ -277,7 +277,7 @@ export default function ClinicContactsList() {
                                     </div>
 
                                     <div className="md:col-span-6 space-y-1">
-                                        <Label className="text-[10px] uppercase text-gray-400 font-semibold flex items-center gap-1">
+                                        <Label className="text-[10px] uppercase text-muted-foreground font-semibold flex items-center gap-1">
                                             <Phone className="h-3 w-3" /> Telefone
                                         </Label>
                                         <Input

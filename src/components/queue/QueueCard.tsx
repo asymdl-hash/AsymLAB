@@ -62,7 +62,7 @@ export default function QueueCard({ item }: QueueCardProps) {
             onClick={handleClick}
             className={cn(
                 "w-full text-left p-3 rounded-lg border transition-all duration-200 group cursor-pointer",
-                "bg-gray-700/50 hover:bg-gray-700 border-gray-600 hover:border-gray-500 hover:shadow-lg hover:shadow-black/20",
+                "bg-gray-700/50 hover:bg-muted border-gray-600 hover:border-gray-500 hover:shadow-lg hover:shadow-black/20",
                 item.urgente && "ring-2 ring-amber-400/30 border-amber-500/50"
             )}
         >
@@ -88,7 +88,7 @@ export default function QueueCard({ item }: QueueCardProps) {
             </div>
 
             {/* Plano */}
-            <p className="text-xs text-gray-400 truncate mb-2">{item.nome}</p>
+            <p className="text-xs text-muted-foreground truncate mb-2">{item.nome}</p>
 
             {/* Badges row */}
             <div className="flex items-center gap-1.5 flex-wrap mb-2">
@@ -98,7 +98,7 @@ export default function QueueCard({ item }: QueueCardProps) {
                     </span>
                 )}
                 {item.clinica && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-600/50 text-gray-300 font-medium">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-600/50 text-foreground/80 font-medium">
                         {item.clinica.commercial_name}
                     </span>
                 )}

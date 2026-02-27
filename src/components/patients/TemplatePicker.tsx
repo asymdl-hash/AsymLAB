@@ -51,13 +51,13 @@ export default function TemplatePicker({ tipo, onSelect, onSkip, tipoTrabalhoId,
         <div className="space-y-3">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                <h4 className="text-sm font-medium text-foreground/80 flex items-center gap-2">
                     <Layout className="h-4 w-4 text-gray-500" />
                     Escolher Template
                 </h4>
                 <button
                     onClick={onSkip}
-                    className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                    className="text-xs text-gray-500 hover:text-foreground/80 transition-colors"
                 >
                     Sem template →
                 </button>
@@ -71,7 +71,7 @@ export default function TemplatePicker({ tipo, onSelect, onSkip, tipoTrabalhoId,
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Pesquisar templates..."
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-gray-600"
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-muted/50 border border-border/50 rounded-lg text-foreground/80 placeholder:text-muted-foreground focus:outline-none focus:border-gray-600"
                 />
             </div>
 
@@ -79,7 +79,7 @@ export default function TemplatePicker({ tipo, onSelect, onSkip, tipoTrabalhoId,
                 <div className="text-center py-8 text-gray-500 text-sm">A carregar...</div>
             ) : filtered.length === 0 ? (
                 <div className="text-center py-8">
-                    <Layout className="h-8 w-8 mx-auto mb-2 text-gray-600" />
+                    <Layout className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm text-gray-500">Nenhum template encontrado</p>
                     <button
                         onClick={onSkip}
@@ -93,7 +93,7 @@ export default function TemplatePicker({ tipo, onSelect, onSkip, tipoTrabalhoId,
                     {/* Defaults */}
                     {defaults.length > 0 && (
                         <div>
-                            <p className="text-[10px] uppercase tracking-wider text-gray-600 mb-1 flex items-center gap-1">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
                                 <Star className="h-3 w-3" /> Predefinidos
                             </p>
                             {defaults.map(t => (
@@ -105,7 +105,7 @@ export default function TemplatePicker({ tipo, onSelect, onSkip, tipoTrabalhoId,
                     {/* Pessoais */}
                     {personal.length > 0 && (
                         <div>
-                            <p className="text-[10px] uppercase tracking-wider text-gray-600 mb-1 flex items-center gap-1">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
                                 <Clock className="h-3 w-3" /> Os meus templates
                             </p>
                             {personal.map(t => (
@@ -131,17 +131,17 @@ function TemplateCard({ template, colors, onClick }: {
         >
             <div className="flex items-center justify-between">
                 <span className={`text-sm font-medium ${colors.text}`}>{template.titulo}</span>
-                <ChevronRight className="h-4 w-4 text-gray-600 group-hover:text-gray-400 transition-colors" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-muted-foreground transition-colors" />
             </div>
             {template.fields && template.fields.length > 0 && (
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {template.fields.slice(0, 5).map((f, i) => (
-                        <span key={i} className="text-[10px] bg-gray-800/60 text-gray-400 rounded px-1.5 py-0.5">
+                        <span key={i} className="text-[10px] bg-gray-800/60 text-muted-foreground rounded px-1.5 py-0.5">
                             {f.subtitulo}
                         </span>
                     ))}
                     {template.fields.length > 5 && (
-                        <span className="text-[10px] text-gray-600">+{template.fields.length - 5}</span>
+                        <span className="text-[10px] text-muted-foreground">+{template.fields.length - 5}</span>
                     )}
                 </div>
             )}

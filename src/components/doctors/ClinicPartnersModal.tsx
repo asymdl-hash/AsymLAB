@@ -103,7 +103,7 @@ export default function ClinicPartnersModal({
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="p-2 text-muted-foreground hover:text-muted-foreground rounded-lg hover:bg-gray-100 transition-colors"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -119,7 +119,7 @@ export default function ClinicPartnersModal({
                         </h4>
 
                         {currentPartners.length === 0 ? (
-                            <p className="text-sm text-gray-400 py-3">Nenhum parceiro adicionado.</p>
+                            <p className="text-sm text-muted-foreground py-3">Nenhum parceiro adicionado.</p>
                         ) : (
                             <div className="space-y-2">
                                 {currentPartners.map((partner) => (
@@ -131,11 +131,11 @@ export default function ClinicPartnersModal({
                                             <span className="text-sm font-medium text-gray-800">
                                                 {partner.partner_name}
                                             </span>
-                                            <span className="text-xs text-gray-400 ml-2">
+                                            <span className="text-xs text-muted-foreground ml-2">
                                                 {(ROLE_LABELS as any)[partner.partner_role] || partner.partner_role}
                                             </span>
                                             {partner.partner_phone && (
-                                                <span className="text-xs text-gray-400 ml-2">
+                                                <span className="text-xs text-muted-foreground ml-2">
                                                     · {partner.partner_phone}
                                                 </span>
                                             )}
@@ -166,9 +166,9 @@ export default function ClinicPartnersModal({
                         </h4>
 
                         {loading ? (
-                            <p className="text-sm text-gray-400 py-3">Carregando...</p>
+                            <p className="text-sm text-muted-foreground py-3">Carregando...</p>
                         ) : availableFiltered.length === 0 ? (
-                            <p className="text-sm text-gray-400 py-3">
+                            <p className="text-sm text-muted-foreground py-3">
                                 Todos os utilizadores disponíveis já são parceiros.
                             </p>
                         ) : (
@@ -182,11 +182,11 @@ export default function ClinicPartnersModal({
                                             <span className="text-sm font-medium text-gray-800">
                                                 {user.full_name}
                                             </span>
-                                            <span className="text-xs text-gray-400 ml-2">
+                                            <span className="text-xs text-muted-foreground ml-2">
                                                 {(ROLE_LABELS as any)[user.app_role] || user.app_role}
                                             </span>
                                             {user.role_at_clinic && (
-                                                <span className="text-xs text-gray-400 ml-1">
+                                                <span className="text-xs text-muted-foreground ml-1">
                                                     ({user.role_at_clinic})
                                                 </span>
                                             )}

@@ -2,6 +2,9 @@ import { AppModule } from '@/lib/permissions';
 import { MODULE_PATHS } from '@/lib/permissions';
 
 const HOMEPAGE_KEY = 'asymlab-homepage';
+const THEME_KEY = 'asymlab-theme';
+
+export type Theme = 'light' | 'dark';
 
 // Labels amigáveis para os módulos
 export const MODULE_LABELS: Record<AppModule, string> = {
@@ -44,4 +47,30 @@ export function getUserHomepage(userId: string): AppModule {
 export function getUserHomepagePath(userId: string): string {
     const module = getUserHomepage(userId);
     return MODULE_PATHS[module] || '/dashboard';
+}
+
+// =====================================================
+// THEME PREFERENCES
+// =====================================================
+
+/**
+ * Guardar o tema preferido do utilizador
+ */
+export function setUserTheme(userId: string, theme: Theme): void {
+    try {
+        localStorage.setItem(`${THEME_KEY}-${userId}`, theme);
+    } catch { /* ignore */ }
+}
+
+/**
+ * Obter o tema do utilizador (default: 'light')
+ */
+export function getUserTheme(userId: string): Theme {
+    try {
+        const stored = localStorage.getItem(`${THEME_KEY}-${userId}`);
+        if (stored === 'light' || stored === 'dark') {
+            return stored;
+        }
+    } catch { /* ignore */ }
+    return 'light';
 }

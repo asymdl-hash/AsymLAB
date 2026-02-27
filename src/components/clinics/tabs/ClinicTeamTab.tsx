@@ -151,12 +151,12 @@ export default function ClinicTeamTab() {
                     {showAddDropdown && (
                         <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
                             {loadingUsers ? (
-                                <div className="flex items-center justify-center py-4 text-sm text-gray-400">
+                                <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">
                                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                                     A carregar...
                                 </div>
                             ) : availableUsers.length === 0 ? (
-                                <div className="p-4 text-sm text-gray-400 text-center">
+                                <div className="p-4 text-sm text-muted-foreground text-center">
                                     Todos os utilizadores já estão na equipa
                                 </div>
                             ) : (
@@ -167,7 +167,7 @@ export default function ClinicTeamTab() {
                                         className="w-full text-left px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
                                     >
                                         <p className="text-sm font-medium text-gray-900">{u.full_name}</p>
-                                        <p className="text-xs text-gray-400">{ROLE_LABELS[u.app_role] || u.app_role}{u.phone && ` • ${u.phone}`}</p>
+                                        <p className="text-xs text-muted-foreground">{ROLE_LABELS[u.app_role] || u.app_role}{u.phone && ` • ${u.phone}`}</p>
                                     </button>
                                 ))
                             )}
@@ -183,14 +183,14 @@ export default function ClinicTeamTab() {
             </div>
 
             {loading ? (
-                <div className="flex items-center justify-center py-12 text-gray-400">
+                <div className="flex items-center justify-center py-12 text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin mr-2" /> A carregar equipa...
                 </div>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2">
                     {team.length === 0 ? (
                         <div className="col-span-2 text-center py-12 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg">
-                            <User className="h-10 w-10 mx-auto text-gray-300 mb-2" />
+                            <User className="h-10 w-10 mx-auto text-foreground/80 mb-2" />
                             <h3 className="text-sm font-medium text-gray-900">Sem equipa registada</h3>
                             <p className="text-sm text-gray-500 mt-1">Adicione utilizadores para associar a esta clínica.</p>
                         </div>
@@ -203,7 +203,7 @@ export default function ClinicTeamTab() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                                            className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50"
                                             onClick={() => setDeleteTarget({ userId: member.user_id, name: member.full_name })}
                                             title="Remover da equipa"
                                         >
@@ -218,7 +218,7 @@ export default function ClinicTeamTab() {
                                         <div className="flex-1 space-y-2">
                                             <div>
                                                 <p className="text-sm font-medium text-gray-900">{member.full_name}</p>
-                                                <p className="text-xs text-gray-400">{ROLE_LABELS[member.app_role] || member.app_role}</p>
+                                                <p className="text-xs text-muted-foreground">{ROLE_LABELS[member.app_role] || member.app_role}</p>
                                             </div>
 
                                             {member.phone && (
@@ -230,7 +230,7 @@ export default function ClinicTeamTab() {
 
                                             {/* Tags / Funções na Clínica */}
                                             <div className="space-y-1">
-                                                <label className="text-xs text-gray-400 flex items-center gap-1">
+                                                <label className="text-xs text-muted-foreground flex items-center gap-1">
                                                     <Briefcase className="h-3 w-3" /> Funções na Clínica
                                                 </label>
                                                 {member.tags && member.tags.length > 0 ? (
@@ -242,7 +242,7 @@ export default function ClinicTeamTab() {
                                                         ))}
                                                     </div>
                                                 ) : (
-                                                    <p className="text-xs text-gray-400 italic">Sem funções atribuídas</p>
+                                                    <p className="text-xs text-muted-foreground italic">Sem funções atribuídas</p>
                                                 )}
                                             </div>
 

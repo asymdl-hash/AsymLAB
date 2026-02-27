@@ -127,7 +127,7 @@ export default function HistoryTab({ patient }: HistoryTabProps) {
                         return (
                             <button key={tipo} onClick={() => setFilterTipo(tipo)}
                                 className={`text-[10px] px-2 py-1 rounded-full transition-colors font-medium
-                                    ${active ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                                    ${active ? 'bg-muted text-foreground' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
                                 {label}
                             </button>
                         );
@@ -137,7 +137,7 @@ export default function HistoryTab({ patient }: HistoryTabProps) {
 
             {/* Timeline */}
             {filteredEvents.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
+                <div className="text-center py-12 text-muted-foreground">
                     <History className="h-10 w-10 mx-auto mb-3 opacity-40" />
                     <p className="text-sm">Sem histórico</p>
                     <p className="text-xs mt-1">O histórico aparece à medida que cria planos, fases e agendamentos</p>
@@ -173,7 +173,7 @@ export default function HistoryTab({ patient }: HistoryTabProps) {
                                             )}
                                         </div>
                                         <p className="text-sm text-gray-700 mt-0.5">{event.descricao}</p>
-                                        <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-400">
+                                        <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
                                             <Clock className="h-3 w-3" />
                                             <span>{formatDateTime(event.data)}</span>
                                             {event.autor && (

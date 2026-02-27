@@ -170,12 +170,12 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
     return (
         <div className="flex flex-col h-full min-h-[400px]">
             {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-gray-700/50">
-                <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+            <div className="flex items-center justify-between pb-3 border-b border-border/50">
+                <h3 className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
                     <MessageSquare className="h-4 w-4 text-gray-500" />
                     Considerações
                     {considerations.length > 0 && (
-                        <span className="text-[10px] bg-gray-700 text-gray-400 rounded-full px-2 py-0.5">
+                        <span className="text-[10px] bg-gray-700 text-muted-foreground rounded-full px-2 py-0.5">
                             {considerations.length}
                         </span>
                     )}
@@ -190,7 +190,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
             </div>
 
             {/* Filter tabs */}
-            <div className="flex items-center gap-1 py-2 border-b border-gray-700/30">
+            <div className="flex items-center gap-1 py-2 border-b border-border/30">
                 {(['todos', 'medico', 'lab', 'lab_inside'] as LadoFilter[]).map(filter => {
                     const isActive = activeFilter === filter;
                     const config = filter === 'todos' ? null : LADO_CONFIG[filter];
@@ -201,8 +201,8 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                             key={filter}
                             onClick={() => setActiveFilter(filter)}
                             className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md transition-colors ${isActive
-                                ? config ? `${config.bg} ${config.color} ${config.border} border` : 'bg-gray-700/50 text-gray-300 border border-gray-600'
-                                : 'text-gray-500 hover:text-gray-400'
+                                ? config ? `${config.bg} ${config.color} ${config.border} border` : 'bg-gray-700/50 text-foreground/80 border border-gray-600'
+                                : 'text-gray-500 hover:text-muted-foreground'
                                 }`}
                         >
                             {config && <config.icon className="h-3 w-3" />}
@@ -217,10 +217,10 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
 
             {/* Create area */}
             {createStep !== 'idle' && (
-                <div className="p-3 border-b border-gray-700/50 bg-gray-800/30">
+                <div className="p-3 border-b border-border/50 bg-muted/30">
                     {/* Lado selector */}
                     <div className="flex items-center gap-2 mb-3">
-                        <span className="text-[10px] uppercase tracking-wider text-gray-600">Lado:</span>
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Lado:</span>
                         {(['medico', 'lab', 'lab_inside'] as const).map(l => {
                             const cfg = LADO_CONFIG[l];
                             return (
@@ -229,7 +229,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                                     onClick={() => setCreateLado(l)}
                                     className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${createLado === l
                                         ? `${cfg.bg} ${cfg.color} ${cfg.border} border`
-                                        : 'text-gray-500 hover:text-gray-400'
+                                        : 'text-gray-500 hover:text-muted-foreground'
                                         }`}
                                 >
                                     <cfg.icon className="h-3 w-3" />
@@ -239,7 +239,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                         })}
                         <button
                             onClick={() => { setCreateStep('idle'); setReplyTo(null); setSelectedTemplate(null); setFields([]); setFreeText(''); }}
-                            className="ml-auto text-gray-600 hover:text-gray-400"
+                            className="ml-auto text-muted-foreground hover:text-muted-foreground"
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -250,7 +250,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                         <select
                             value={createPhaseId}
                             onChange={e => setCreatePhaseId(e.target.value)}
-                            className="w-full text-xs bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 text-gray-300"
+                            className="w-full text-xs bg-gray-800/60 border border-border/50 rounded-lg px-3 py-2 text-foreground/80"
                         >
                             <option value="">Seleccionar fase...</option>
                             {allPhases.map(p => (
@@ -263,7 +263,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                     {replyTo && (
                         <div className="mb-3 flex items-center gap-2 text-xs text-gray-500 bg-gray-800/40 rounded-lg px-3 py-2">
                             <Reply className="h-3 w-3" />
-                            Em resposta a: <span className="text-gray-400">{replyTo.conteudo?.substring(0, 50)}...</span>
+                            Em resposta a: <span className="text-muted-foreground">{replyTo.conteudo?.substring(0, 50)}...</span>
                         </div>
                     )}
 
@@ -280,7 +280,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                             {selectedTemplate && (
                                 <div className="text-[10px] text-gray-500 flex items-center gap-1">
                                     <FileText className="h-3 w-3" />
-                                    Template: <span className="text-gray-400">{selectedTemplate.titulo}</span>
+                                    Template: <span className="text-muted-foreground">{selectedTemplate.titulo}</span>
                                 </div>
                             )}
 
@@ -301,7 +301,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                                                 }}
                                                 placeholder={`Descrever ${f.subtitulo.toLowerCase()}...`}
                                                 rows={2}
-                                                className="w-full text-sm bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 text-gray-300 placeholder:text-gray-600 resize-none focus:outline-none focus:border-gray-600"
+                                                className="w-full text-sm bg-gray-800/60 border border-border/50 rounded-lg px-3 py-2 text-foreground/80 placeholder:text-muted-foreground resize-none focus:outline-none focus:border-gray-600"
                                             />
                                         </div>
                                     ))}
@@ -314,7 +314,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                                 onChange={e => setFreeText(e.target.value)}
                                 placeholder={fields.length > 0 ? 'Notas adicionais (opcional)...' : 'Escrever consideração...'}
                                 rows={3}
-                                className="w-full text-sm bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 text-gray-300 placeholder:text-gray-600 resize-none focus:outline-none focus:border-gray-600"
+                                className="w-full text-sm bg-gray-800/60 border border-border/50 rounded-lg px-3 py-2 text-foreground/80 placeholder:text-muted-foreground resize-none focus:outline-none focus:border-gray-600"
                             />
 
                             {/* Actions */}
@@ -343,7 +343,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                     <div className="text-center py-12">
                         <MessageSquare className="h-10 w-10 mx-auto mb-3 text-gray-700" />
                         <p className="text-sm text-gray-500">Sem considerações</p>
-                        <p className="text-xs text-gray-600 mt-1">Clique em &quot;+ Nova&quot; para criar</p>
+                        <p className="text-xs text-muted-foreground mt-1">Clique em &quot;+ Nova&quot; para criar</p>
                     </div>
                 ) : (
                     Object.entries(grouped).map(([phaseId, group]) => (
@@ -351,7 +351,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                             {/* Phase header */}
                             <div className="flex items-center gap-2 mb-2">
                                 <div className="h-px flex-1 bg-gray-700/50" />
-                                <span className="text-[10px] uppercase tracking-wider text-gray-600">
+                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                                     {group.phaseName}
                                 </span>
                                 <div className="h-px flex-1 bg-gray-700/50" />
@@ -449,15 +449,15 @@ function ConsiderationCard({ consideration: c, isExpanded, onToggle, onReply, on
 
                 {/* Attachment indicator */}
                 {c.anexo_url && (
-                    <Paperclip className="h-3 w-3 text-gray-600 flex-shrink-0" />
+                    <Paperclip className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 )}
 
-                <ChevronDown className={`h-4 w-4 text-gray-600 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-4 w-4 text-muted-foreground flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
             </button>
 
             {/* Expanded content */}
             {isExpanded && (
-                <div className="px-3 pb-3 border-t border-gray-700/30">
+                <div className="px-3 pb-3 border-t border-border/30">
                     {/* Fields */}
                     {hasFields && (
                         <div className="mt-2 space-y-2">
@@ -466,8 +466,8 @@ function ConsiderationCard({ consideration: c, isExpanded, onToggle, onReply, on
                                     <span className="text-[10px] uppercase tracking-wider text-gray-500">
                                         {f.subtitulo}
                                     </span>
-                                    <p className="text-sm text-gray-300 mt-0.5">
-                                        {f.descricao || <span className="text-gray-600 italic">Sem descrição</span>}
+                                    <p className="text-sm text-foreground/80 mt-0.5">
+                                        {f.descricao || <span className="text-muted-foreground italic">Sem descrição</span>}
                                     </p>
                                     {/* Field attachments */}
                                     {f.anexos && f.anexos.length > 0 && (
@@ -486,8 +486,8 @@ function ConsiderationCard({ consideration: c, isExpanded, onToggle, onReply, on
 
                     {/* Free text */}
                     {c.conteudo && (
-                        <div className={`${hasFields ? 'mt-2 pt-2 border-t border-gray-700/30' : 'mt-2'}`}>
-                            <p className="text-sm text-gray-300 whitespace-pre-wrap">{c.conteudo}</p>
+                        <div className={`${hasFields ? 'mt-2 pt-2 border-t border-border/30' : 'mt-2'}`}>
+                            <p className="text-sm text-foreground/80 whitespace-pre-wrap">{c.conteudo}</p>
                         </div>
                     )}
 
@@ -499,12 +499,12 @@ function ConsiderationCard({ consideration: c, isExpanded, onToggle, onReply, on
                             ) : (
                                 <FileText className="h-4 w-4 text-blue-400" />
                             )}
-                            <span className="text-xs text-gray-400 truncate">{c.anexo_nome || 'Ficheiro'}</span>
+                            <span className="text-xs text-muted-foreground truncate">{c.anexo_nome || 'Ficheiro'}</span>
                         </div>
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-700/30">
+                    <div className="flex items-center gap-2 mt-3 pt-2 border-t border-border/30">
                         <button
                             onClick={onReply}
                             className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-amber-400 transition-colors"

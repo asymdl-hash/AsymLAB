@@ -37,10 +37,10 @@ const COLOR_MAP: Record<string, { header: string; border: string; dot: string; c
         dropHighlight: 'bg-blue-900/30 border-blue-500',
     },
     gray: {
-        header: 'bg-gray-800/50 border-gray-700',
-        border: 'border-gray-700',
+        header: 'bg-muted/50 border-border',
+        border: 'border-border',
         dot: 'bg-gray-500',
-        count: 'text-gray-400 bg-gray-600/30',
+        count: 'text-muted-foreground bg-gray-600/30',
         dropHighlight: 'bg-gray-700/40 border-gray-500',
     },
 };
@@ -98,7 +98,7 @@ export default function QueueColumn({ title, color, icon, columnKey, items, onDr
                 "flex flex-col rounded-xl border min-w-[280px] max-w-[340px] flex-1 transition-all duration-200",
                 isDragOver
                     ? colors.dropHighlight + " border-dashed border-2 scale-[1.01]"
-                    : "bg-gray-800/50 border-gray-700"
+                    : "bg-muted/50 border-border"
             )}
         >
             {/* Header */}
@@ -108,7 +108,7 @@ export default function QueueColumn({ title, color, icon, columnKey, items, onDr
             )}>
                 <div className="flex items-center gap-2">
                     <span className="text-sm">{icon}</span>
-                    <h3 className="text-sm font-semibold text-gray-200">{title}</h3>
+                    <h3 className="text-sm font-semibold text-foreground">{title}</h3>
                 </div>
                 <span className={cn(
                     "text-xs font-bold px-2 py-0.5 rounded-full",
@@ -127,7 +127,7 @@ export default function QueueColumn({ title, color, icon, columnKey, items, onDr
                     <div className={cn(
                         "text-center py-8 text-xs rounded-lg border-2 border-dashed transition-all",
                         isDragOver
-                            ? "text-gray-300 border-gray-500 bg-gray-700/40"
+                            ? "text-foreground/80 border-gray-500 bg-gray-700/40"
                             : "text-gray-500 border-transparent"
                     )}>
                         {isDragOver ? '⬇ Largar aqui' : 'Sem pedidos'}
@@ -141,7 +141,7 @@ export default function QueueColumn({ title, color, icon, columnKey, items, onDr
 
             {/* Footer count */}
             {items.length > 10 && (
-                <div className="px-4 py-2 border-t border-gray-700 text-center">
+                <div className="px-4 py-2 border-t border-border text-center">
                     <span className="text-[10px] text-gray-500">
                         {items.length} pedido{items.length !== 1 ? 's' : ''}
                     </span>

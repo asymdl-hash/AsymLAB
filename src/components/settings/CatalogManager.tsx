@@ -50,7 +50,7 @@ export default function CatalogManager() {
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg border transition-all ${isActive
                                 ? 'bg-primary/10 text-primary border-primary/30 font-medium'
-                                : 'bg-gray-800 text-gray-400 border-gray-700 hover:border-gray-600 hover:text-gray-200'
+                                : 'bg-muted text-muted-foreground border-border hover:border-muted-foreground hover:text-foreground'
                                 }`}
                         >
                             <Icon className="h-4 w-4" />
@@ -61,7 +61,7 @@ export default function CatalogManager() {
             </div>
 
             {/* Description */}
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted-foreground">
                 {CATALOG_TABS.find(t => t.id === activeTab)?.description}
             </p>
 
@@ -131,22 +131,22 @@ function WorkTypesManager() {
     const filtered = items.filter(i => i.nome.toLowerCase().includes(search.toLowerCase()));
 
     return (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
             {/* Toolbar */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+            <div className="flex items-center justify-between p-4 border-b border-border">
                 <div className="relative flex-1 max-w-xs">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
                         type="text"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         placeholder="Pesquisar..."
-                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-700 rounded-lg bg-gray-800 text-gray-200 focus:outline-none focus:border-primary/50"
+                        className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-muted text-foreground focus:outline-none focus:border-primary/50"
                     />
                 </div>
                 <button
                     onClick={() => setShowAdd(true)}
-                    className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                    className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-foreground rounded-lg hover:bg-primary/90 transition-colors"
                 >
                     <Plus className="h-4 w-4" />
                     Adicionar
@@ -155,13 +155,13 @@ function WorkTypesManager() {
 
             {/* Add form */}
             {showAdd && (
-                <div className="p-4 bg-gray-800/50 border-b border-gray-700 flex items-center gap-3">
+                <div className="p-4 bg-muted/50 border-b border-border flex items-center gap-3">
                     <input
                         type="text"
                         value={addForm.nome}
                         onChange={e => setAddForm({ ...addForm, nome: e.target.value })}
                         placeholder="Nome do tipo..."
-                        className="flex-1 text-sm border border-gray-700 rounded-lg bg-gray-800 text-gray-200 px-3 py-2 focus:outline-none focus:border-primary/50"
+                        className="flex-1 text-sm border border-border rounded-lg bg-muted text-foreground px-3 py-2 focus:outline-none focus:border-primary/50"
                         autoFocus
                     />
                     <input
@@ -173,7 +173,7 @@ function WorkTypesManager() {
                     <select
                         value={addForm.categoria}
                         onChange={e => setAddForm({ ...addForm, categoria: e.target.value })}
-                        className="text-sm border border-gray-700 rounded-lg bg-gray-800 text-gray-200 px-3 py-2"
+                        className="text-sm border border-border rounded-lg bg-muted text-foreground px-3 py-2"
                     >
                         <option value="geral">Geral</option>
                         <option value="fixa">Prótese Fixa</option>
@@ -182,10 +182,10 @@ function WorkTypesManager() {
                         <option value="ortodontia">Ortodontia</option>
                         <option value="ceramica">Cerâmica</option>
                     </select>
-                    <button onClick={handleAdd} disabled={saving} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50">
+                    <button onClick={handleAdd} disabled={saving} className="p-2 bg-green-500 text-foreground rounded-lg hover:bg-green-600 disabled:opacity-50">
                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     </button>
-                    <button onClick={() => setShowAdd(false)} className="p-2 text-gray-400 hover:text-gray-300">
+                    <button onClick={() => setShowAdd(false)} className="p-2 text-muted-foreground hover:text-foreground/80">
                         <X className="h-4 w-4" />
                     </button>
                 </div>
@@ -193,12 +193,12 @@ function WorkTypesManager() {
 
             {/* Table */}
             {loading ? (
-                <div className="text-center py-12 text-gray-400"><Loader2 className="h-5 w-5 mx-auto animate-spin" /></div>
+                <div className="text-center py-12 text-muted-foreground"><Loader2 className="h-5 w-5 mx-auto animate-spin" /></div>
             ) : filtered.length === 0 ? (
-                <div className="text-center py-12 text-gray-400 text-sm">Sem registos</div>
+                <div className="text-center py-12 text-muted-foreground text-sm">Sem registos</div>
             ) : (
                 <table className="w-full text-sm">
-                    <thead className="bg-gray-800/50 text-gray-500 text-xs uppercase tracking-wider">
+                    <thead className="bg-muted/50 text-gray-500 text-xs uppercase tracking-wider">
                         <tr>
                             <th className="text-left px-4 py-3">Cor</th>
                             <th className="text-left px-4 py-3">Nome</th>
@@ -209,17 +209,17 @@ function WorkTypesManager() {
                     </thead>
                     <tbody className="divide-y divide-gray-800">
                         {filtered.map(item => (
-                            <tr key={item.id} className="hover:bg-gray-800/30 transition-colors">
+                            <tr key={item.id} className="hover:bg-muted/30 transition-colors">
                                 {editingId === item.id ? (
                                     <>
                                         <td className="px-4 py-3">
                                             <input type="color" value={editForm.cor} onChange={e => setEditForm({ ...editForm, cor: e.target.value })} className="w-8 h-8 rounded border cursor-pointer" />
                                         </td>
                                         <td className="px-4 py-3">
-                                            <input type="text" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="w-full text-sm border border-gray-700 rounded px-2 bg-gray-800 text-gray-200 py-1 focus:outline-none" />
+                                            <input type="text" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="w-full text-sm border border-border rounded px-2 bg-muted text-foreground py-1 focus:outline-none" />
                                         </td>
                                         <td className="px-4 py-3">
-                                            <select value={editForm.categoria} onChange={e => setEditForm({ ...editForm, categoria: e.target.value })} className="text-sm border border-gray-700 rounded px-2 bg-gray-800 text-gray-200 py-1">
+                                            <select value={editForm.categoria} onChange={e => setEditForm({ ...editForm, categoria: e.target.value })} className="text-sm border border-border rounded px-2 bg-muted text-foreground py-1">
                                                 <option value="geral">Geral</option>
                                                 <option value="fixa">Prótese Fixa</option>
                                                 <option value="removivel">Prótese Removível</option>
@@ -231,18 +231,18 @@ function WorkTypesManager() {
                                         <td className="px-4 py-3">—</td>
                                         <td className="px-4 py-3 text-right flex justify-end gap-1">
                                             <button onClick={handleSave} disabled={saving} className="p-1.5 bg-green-900/40 text-green-400 rounded hover:bg-green-900/60"><Save className="h-3.5 w-3.5" /></button>
-                                            <button onClick={() => setEditingId(null)} className="p-1.5 bg-gray-700 text-gray-400 rounded hover:bg-gray-600"><X className="h-3.5 w-3.5" /></button>
+                                            <button onClick={() => setEditingId(null)} className="p-1.5 bg-gray-700 text-muted-foreground rounded hover:bg-muted"><X className="h-3.5 w-3.5" /></button>
                                         </td>
                                     </>
                                 ) : (
                                     <>
                                         <td className="px-4 py-3">
-                                            <div className="w-6 h-6 rounded-full border border-gray-700" style={{ backgroundColor: item.cor || '#6366f1' }} />
+                                            <div className="w-6 h-6 rounded-full border border-border" style={{ backgroundColor: item.cor || '#6366f1' }} />
                                         </td>
                                         <td className="px-4 py-3 font-medium text-white">{item.nome}</td>
                                         <td className="px-4 py-3 text-gray-500 capitalize">{item.categoria || 'geral'}</td>
                                         <td className="px-4 py-3">
-                                            <button onClick={() => toggleActive(item)} className="text-gray-400 hover:text-primary transition-colors">
+                                            <button onClick={() => toggleActive(item)} className="text-muted-foreground hover:text-primary transition-colors">
                                                 {item.activo ? <ToggleRight className="h-5 w-5 text-green-500" /> : <ToggleLeft className="h-5 w-5" />}
                                             </button>
                                         </td>
@@ -250,17 +250,17 @@ function WorkTypesManager() {
                                             <div className="flex justify-end gap-1">
                                                 <button
                                                     onClick={() => { setEditingId(item.id); setEditForm({ nome: item.nome, cor: item.cor || '#6366f1', categoria: item.categoria || 'geral' }); }}
-                                                    className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-900/30 rounded transition-colors"
+                                                    className="p-1.5 text-muted-foreground hover:text-blue-500 hover:bg-blue-900/30 rounded transition-colors"
                                                 >
                                                     <Edit3 className="h-3.5 w-3.5" />
                                                 </button>
                                                 {deleteConfirm === item.id ? (
                                                     <>
                                                         <button onClick={() => handleDelete(item.id)} className="p-1.5 bg-red-900/40 text-red-400 rounded hover:bg-red-900/60 text-xs">Sim</button>
-                                                        <button onClick={() => setDeleteConfirm(null)} className="p-1.5 bg-gray-700 text-gray-400 rounded hover:bg-gray-600 text-xs">Não</button>
+                                                        <button onClick={() => setDeleteConfirm(null)} className="p-1.5 bg-gray-700 text-muted-foreground rounded hover:bg-muted text-xs">Não</button>
                                                     </>
                                                 ) : (
-                                                    <button onClick={() => setDeleteConfirm(item.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-900/30 rounded transition-colors">
+                                                    <button onClick={() => setDeleteConfirm(item.id)} className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-900/30 rounded transition-colors">
                                                         <Trash2 className="h-3.5 w-3.5" />
                                                     </button>
                                                 )}
@@ -275,7 +275,7 @@ function WorkTypesManager() {
             )}
 
             {/* Footer count */}
-            <div className="px-4 py-2 border-t border-gray-800 text-xs text-gray-400">
+            <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground">
                 {filtered.length} registo(s) · {items.filter(i => i.activo).length} activo(s)
             </div>
         </div>
@@ -318,35 +318,35 @@ function MaterialsManager() {
     const CATEGORIAS = ['ceramica', 'metal', 'resina', 'composto', 'outro'];
 
     return (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-border">
                 <span className="text-sm text-gray-500">{items.length} material(is)</span>
-                <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-foreground rounded-lg hover:bg-primary/90">
                     <Plus className="h-4 w-4" /> Adicionar
                 </button>
             </div>
 
             {showAdd && (
-                <div className="p-4 bg-gray-800/50 border-b border-gray-700 flex items-center gap-3">
-                    <input type="text" value={addForm.nome} onChange={e => setAddForm({ ...addForm, nome: e.target.value })} placeholder="Nome do material..." className="flex-1 text-sm border border-gray-700 rounded-lg bg-gray-800 text-gray-200 px-3 py-2 focus:outline-none" autoFocus />
-                    <select value={addForm.categoria} onChange={e => setAddForm({ ...addForm, categoria: e.target.value })} className="text-sm border border-gray-700 rounded-lg bg-gray-800 text-gray-200 px-3 py-2">
+                <div className="p-4 bg-muted/50 border-b border-border flex items-center gap-3">
+                    <input type="text" value={addForm.nome} onChange={e => setAddForm({ ...addForm, nome: e.target.value })} placeholder="Nome do material..." className="flex-1 text-sm border border-border rounded-lg bg-muted text-foreground px-3 py-2 focus:outline-none" autoFocus />
+                    <select value={addForm.categoria} onChange={e => setAddForm({ ...addForm, categoria: e.target.value })} className="text-sm border border-border rounded-lg bg-muted text-foreground px-3 py-2">
                         {CATEGORIAS.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
                     </select>
                     <input type="color" value={addForm.cor} onChange={e => setAddForm({ ...addForm, cor: e.target.value })} className="w-10 h-10 rounded-lg border cursor-pointer" />
-                    <button onClick={handleAdd} disabled={saving} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50">
+                    <button onClick={handleAdd} disabled={saving} className="p-2 bg-green-500 text-foreground rounded-lg hover:bg-green-600 disabled:opacity-50">
                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     </button>
-                    <button onClick={() => setShowAdd(false)} className="p-2 text-gray-400 hover:text-gray-300"><X className="h-4 w-4" /></button>
+                    <button onClick={() => setShowAdd(false)} className="p-2 text-muted-foreground hover:text-foreground/80"><X className="h-4 w-4" /></button>
                 </div>
             )}
 
             {loading ? (
-                <div className="text-center py-12"><Loader2 className="h-5 w-5 mx-auto animate-spin text-gray-400" /></div>
+                <div className="text-center py-12"><Loader2 className="h-5 w-5 mx-auto animate-spin text-muted-foreground" /></div>
             ) : items.length === 0 ? (
-                <div className="text-center py-12 text-gray-400 text-sm">Sem materiais registados</div>
+                <div className="text-center py-12 text-muted-foreground text-sm">Sem materiais registados</div>
             ) : (
                 <table className="w-full text-sm">
-                    <thead className="bg-gray-800/50 text-gray-500 text-xs uppercase tracking-wider">
+                    <thead className="bg-muted/50 text-gray-500 text-xs uppercase tracking-wider">
                         <tr>
                             <th className="text-left px-4 py-3">Cor</th>
                             <th className="text-left px-4 py-3">Nome</th>
@@ -356,35 +356,35 @@ function MaterialsManager() {
                     </thead>
                     <tbody className="divide-y divide-gray-800">
                         {items.map(item => (
-                            <tr key={item.id} className="hover:bg-gray-800/30">
+                            <tr key={item.id} className="hover:bg-muted/30">
                                 {editingId === item.id ? (
                                     <>
                                         <td className="px-4 py-3"><input type="color" value={editForm.cor} onChange={e => setEditForm({ ...editForm, cor: e.target.value })} className="w-8 h-8 rounded border cursor-pointer" /></td>
-                                        <td className="px-4 py-3"><input type="text" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="w-full text-sm border border-gray-700 rounded px-2 bg-gray-800 text-gray-200 py-1" /></td>
+                                        <td className="px-4 py-3"><input type="text" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="w-full text-sm border border-border rounded px-2 bg-muted text-foreground py-1" /></td>
                                         <td className="px-4 py-3">
-                                            <select value={editForm.categoria} onChange={e => setEditForm({ ...editForm, categoria: e.target.value })} className="text-sm border border-gray-700 rounded px-2 bg-gray-800 text-gray-200 py-1">
+                                            <select value={editForm.categoria} onChange={e => setEditForm({ ...editForm, categoria: e.target.value })} className="text-sm border border-border rounded px-2 bg-muted text-foreground py-1">
                                                 {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
                                             </select>
                                         </td>
                                         <td className="px-4 py-3 text-right flex justify-end gap-1">
                                             <button onClick={handleSave} disabled={saving} className="p-1.5 bg-green-900/40 text-green-400 rounded"><Save className="h-3.5 w-3.5" /></button>
-                                            <button onClick={() => setEditingId(null)} className="p-1.5 bg-gray-700 text-gray-400 rounded"><X className="h-3.5 w-3.5" /></button>
+                                            <button onClick={() => setEditingId(null)} className="p-1.5 bg-gray-700 text-muted-foreground rounded"><X className="h-3.5 w-3.5" /></button>
                                         </td>
                                     </>
                                 ) : (
                                     <>
-                                        <td className="px-4 py-3"><div className="w-6 h-6 rounded-full border border-gray-700" style={{ backgroundColor: item.cor || '#94a3b8' }} /></td>
+                                        <td className="px-4 py-3"><div className="w-6 h-6 rounded-full border border-border" style={{ backgroundColor: item.cor || '#94a3b8' }} /></td>
                                         <td className="px-4 py-3 font-medium text-white">{item.nome}</td>
                                         <td className="px-4 py-3 text-gray-500 capitalize">{item.categoria || 'geral'}</td>
                                         <td className="px-4 py-3 text-right flex justify-end gap-1">
-                                            <button onClick={() => { setEditingId(item.id); setEditForm({ nome: item.nome, categoria: item.categoria || '', cor: item.cor || '#94a3b8' }); }} className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-900/30 rounded"><Edit3 className="h-3.5 w-3.5" /></button>
+                                            <button onClick={() => { setEditingId(item.id); setEditForm({ nome: item.nome, categoria: item.categoria || '', cor: item.cor || '#94a3b8' }); }} className="p-1.5 text-muted-foreground hover:text-blue-500 hover:bg-blue-900/30 rounded"><Edit3 className="h-3.5 w-3.5" /></button>
                                             {deleteConfirm === item.id ? (
                                                 <>
                                                     <button onClick={async () => { await catalogService.deleteMaterial(item.id); setDeleteConfirm(null); load(); }} className="p-1.5 bg-red-900/40 text-red-400 rounded text-xs">Sim</button>
-                                                    <button onClick={() => setDeleteConfirm(null)} className="p-1.5 bg-gray-700 text-gray-400 rounded text-xs">Não</button>
+                                                    <button onClick={() => setDeleteConfirm(null)} className="p-1.5 bg-gray-700 text-muted-foreground rounded text-xs">Não</button>
                                                 </>
                                             ) : (
-                                                <button onClick={() => setDeleteConfirm(item.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-900/30 rounded"><Trash2 className="h-3.5 w-3.5" /></button>
+                                                <button onClick={() => setDeleteConfirm(item.id)} className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-900/30 rounded"><Trash2 className="h-3.5 w-3.5" /></button>
                                             )}
                                         </td>
                                     </>
@@ -432,32 +432,32 @@ function ToothColorsManager() {
     }, {});
 
     return (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-border">
                 <span className="text-sm text-gray-500">{items.length} cor(es) · Escala VITA</span>
-                <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-foreground rounded-lg hover:bg-primary/90">
                     <Plus className="h-4 w-4" /> Adicionar
                 </button>
             </div>
 
             {showAdd && (
-                <div className="p-4 bg-gray-800/50 border-b border-gray-700 flex items-center gap-3">
-                    <input type="text" value={addForm.codigo} onChange={e => setAddForm({ ...addForm, codigo: e.target.value })} placeholder="Código (ex: A1)" className="w-24 text-sm border border-gray-700 rounded-lg bg-gray-800 text-gray-200 px-3 py-2 focus:outline-none" autoFocus />
-                    <input type="text" value={addForm.nome} onChange={e => setAddForm({ ...addForm, nome: e.target.value })} placeholder="Nome descritivo..." className="flex-1 text-sm border border-gray-700 rounded-lg bg-gray-800 text-gray-200 px-3 py-2 focus:outline-none" />
-                    <select value={addForm.grupo} onChange={e => setAddForm({ ...addForm, grupo: e.target.value })} className="text-sm border border-gray-700 rounded-lg bg-gray-800 text-gray-200 px-3 py-2">
+                <div className="p-4 bg-muted/50 border-b border-border flex items-center gap-3">
+                    <input type="text" value={addForm.codigo} onChange={e => setAddForm({ ...addForm, codigo: e.target.value })} placeholder="Código (ex: A1)" className="w-24 text-sm border border-border rounded-lg bg-muted text-foreground px-3 py-2 focus:outline-none" autoFocus />
+                    <input type="text" value={addForm.nome} onChange={e => setAddForm({ ...addForm, nome: e.target.value })} placeholder="Nome descritivo..." className="flex-1 text-sm border border-border rounded-lg bg-muted text-foreground px-3 py-2 focus:outline-none" />
+                    <select value={addForm.grupo} onChange={e => setAddForm({ ...addForm, grupo: e.target.value })} className="text-sm border border-border rounded-lg bg-muted text-foreground px-3 py-2">
                         {['A', 'B', 'C', 'D', 'Bleach'].map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
-                    <button onClick={handleAdd} disabled={saving} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50">
+                    <button onClick={handleAdd} disabled={saving} className="p-2 bg-green-500 text-foreground rounded-lg hover:bg-green-600 disabled:opacity-50">
                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     </button>
-                    <button onClick={() => setShowAdd(false)} className="p-2 text-gray-400 hover:text-gray-300"><X className="h-4 w-4" /></button>
+                    <button onClick={() => setShowAdd(false)} className="p-2 text-muted-foreground hover:text-foreground/80"><X className="h-4 w-4" /></button>
                 </div>
             )}
 
             {loading ? (
-                <div className="text-center py-12"><Loader2 className="h-5 w-5 mx-auto animate-spin text-gray-400" /></div>
+                <div className="text-center py-12"><Loader2 className="h-5 w-5 mx-auto animate-spin text-muted-foreground" /></div>
             ) : items.length === 0 ? (
-                <div className="text-center py-12 text-gray-400 text-sm">
+                <div className="text-center py-12 text-muted-foreground text-sm">
                     <Palette className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     Sem cores registadas
                 </div>
@@ -465,19 +465,19 @@ function ToothColorsManager() {
                 <div className="p-4 space-y-4">
                     {Object.entries(grouped).sort().map(([grupo, colors]) => (
                         <div key={grupo}>
-                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Grupo {grupo}</h4>
+                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Grupo {grupo}</h4>
                             <div className="flex flex-wrap gap-2">
                                 {colors.map(c => (
-                                    <div key={c.id} className="flex items-center gap-2 bg-gray-50 border border-gray-700 rounded-lg bg-gray-800 text-gray-200 px-3 py-2 group">
+                                    <div key={c.id} className="flex items-center gap-2 bg-gray-50 border border-border rounded-lg bg-muted text-foreground px-3 py-2 group">
                                         <span className="text-sm font-mono font-bold text-gray-800">{c.codigo}</span>
                                         <span className="text-xs text-gray-500">{c.nome}</span>
                                         {deleteConfirm === c.id ? (
                                             <>
                                                 <button onClick={async () => { await catalogService.deleteToothColor(c.id); setDeleteConfirm(null); load(); }} className="text-[10px] bg-red-900/40 text-red-400 rounded px-1.5 py-0.5">Sim</button>
-                                                <button onClick={() => setDeleteConfirm(null)} className="text-[10px] bg-gray-700 text-gray-400 rounded px-1.5 py-0.5">Não</button>
+                                                <button onClick={() => setDeleteConfirm(null)} className="text-[10px] bg-gray-700 text-muted-foreground rounded px-1.5 py-0.5">Não</button>
                                             </>
                                         ) : (
-                                            <button onClick={() => setDeleteConfirm(c.id)} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all">
+                                            <button onClick={() => setDeleteConfirm(c.id)} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all">
                                                 <Trash2 className="h-3 w-3" />
                                             </button>
                                         )}
@@ -533,19 +533,19 @@ function TemplatesManager() {
     };
 
     return (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-border">
                 <span className="text-sm text-gray-500">{items.length} template(s)</span>
-                <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-foreground rounded-lg hover:bg-primary/90">
                     <Plus className="h-4 w-4" /> Criar Template
                 </button>
             </div>
 
             {showAdd && (
-                <div className="p-4 bg-gray-800/50 border-b border-gray-700 space-y-3">
+                <div className="p-4 bg-muted/50 border-b border-border space-y-3">
                     <div className="flex gap-3">
-                        <input type="text" value={addForm.titulo} onChange={e => setAddForm({ ...addForm, titulo: e.target.value })} placeholder="Título do template..." className="flex-1 text-sm border border-gray-700 rounded-lg bg-gray-800 text-gray-200 px-3 py-2 focus:outline-none" autoFocus />
-                        <select value={addForm.tipo} onChange={e => setAddForm({ ...addForm, tipo: e.target.value as any })} className="text-sm border border-gray-700 rounded-lg bg-gray-800 text-gray-200 px-3 py-2">
+                        <input type="text" value={addForm.titulo} onChange={e => setAddForm({ ...addForm, titulo: e.target.value })} placeholder="Título do template..." className="flex-1 text-sm border border-border rounded-lg bg-muted text-foreground px-3 py-2 focus:outline-none" autoFocus />
+                        <select value={addForm.tipo} onChange={e => setAddForm({ ...addForm, tipo: e.target.value as any })} className="text-sm border border-border rounded-lg bg-muted text-foreground px-3 py-2">
                             <option value="medico">Médico</option>
                             <option value="lab">Lab</option>
                             <option value="lab_inside">Inside</option>
@@ -565,10 +565,10 @@ function TemplatesManager() {
                                         setAddForm({ ...addForm, fields: updated });
                                     }}
                                     placeholder={`Subtítulo ${i + 1}...`}
-                                    className="flex-1 text-sm border border-gray-700 rounded px-2 bg-gray-800 text-gray-200 py-1.5 focus:outline-none"
+                                    className="flex-1 text-sm border border-border rounded px-2 bg-muted text-foreground py-1.5 focus:outline-none"
                                 />
                                 {addForm.fields.length > 1 && (
-                                    <button onClick={() => setAddForm({ ...addForm, fields: addForm.fields.filter((_, j) => j !== i) })} className="text-gray-400 hover:text-red-500">
+                                    <button onClick={() => setAddForm({ ...addForm, fields: addForm.fields.filter((_, j) => j !== i) })} className="text-muted-foreground hover:text-red-500">
                                         <X className="h-4 w-4" />
                                     </button>
                                 )}
@@ -583,7 +583,7 @@ function TemplatesManager() {
                     </div>
                     <div className="flex justify-end gap-2">
                         <button onClick={() => setShowAdd(false)} className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1.5">Cancelar</button>
-                        <button onClick={handleAdd} disabled={saving} className="text-sm bg-green-500 text-white rounded-lg px-4 py-1.5 hover:bg-green-600 disabled:opacity-50">
+                        <button onClick={handleAdd} disabled={saving} className="text-sm bg-green-500 text-foreground rounded-lg px-4 py-1.5 hover:bg-green-600 disabled:opacity-50">
                             {saving ? 'A guardar...' : 'Criar Template'}
                         </button>
                     </div>
@@ -591,35 +591,35 @@ function TemplatesManager() {
             )}
 
             {loading ? (
-                <div className="text-center py-12"><Loader2 className="h-5 w-5 mx-auto animate-spin text-gray-400" /></div>
+                <div className="text-center py-12"><Loader2 className="h-5 w-5 mx-auto animate-spin text-muted-foreground" /></div>
             ) : items.length === 0 ? (
-                <div className="text-center py-12 text-gray-400 text-sm">Sem templates</div>
+                <div className="text-center py-12 text-muted-foreground text-sm">Sem templates</div>
             ) : (
                 <div className="divide-y divide-gray-800">
                     {items.map(t => (
-                        <div key={t.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-800/30 group">
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${TIPO_COLORS[t.tipo as keyof typeof TIPO_COLORS] || 'bg-gray-100 text-gray-600'}`}>
+                        <div key={t.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 group">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${TIPO_COLORS[t.tipo as keyof typeof TIPO_COLORS] || 'bg-gray-100 text-muted-foreground'}`}>
                                 {t.tipo}
                             </span>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-white">{t.titulo}</p>
-                                <p className="text-[10px] text-gray-400">
+                                <p className="text-[10px] text-muted-foreground">
                                     {t.fields?.length || 0} campos · {t.is_default ? '★ Predefinido' : 'Pessoal'}
                                 </p>
                             </div>
                             {/* Fields preview */}
                             <div className="hidden sm:flex gap-1">
                                 {(t.fields || []).slice(0, 3).map((f: any, i: number) => (
-                                    <span key={i} className="text-[10px] bg-gray-700 text-gray-400 rounded px-1.5 py-0.5">{f.subtitulo}</span>
+                                    <span key={i} className="text-[10px] bg-gray-700 text-muted-foreground rounded px-1.5 py-0.5">{f.subtitulo}</span>
                                 ))}
                             </div>
                             {deleteConfirm === t.id ? (
                                 <div className="flex gap-1">
                                     <button onClick={async () => { await catalogService.deleteTemplate(t.id); setDeleteConfirm(null); load(); }} className="text-xs bg-red-900/40 text-red-400 rounded px-2 py-1">Eliminar</button>
-                                    <button onClick={() => setDeleteConfirm(null)} className="text-xs bg-gray-700 text-gray-400 rounded px-2 py-1">Cancelar</button>
+                                    <button onClick={() => setDeleteConfirm(null)} className="text-xs bg-gray-700 text-muted-foreground rounded px-2 py-1">Cancelar</button>
                                 </div>
                             ) : (
-                                <button onClick={() => setDeleteConfirm(t.id)} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all">
+                                <button onClick={() => setDeleteConfirm(t.id)} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all">
                                     <Trash2 className="h-4 w-4" />
                                 </button>
                             )}
@@ -673,8 +673,8 @@ function StatusesManager() {
     };
 
     return (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-gray-800 flex items-center gap-2">
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-amber-500" />
                 <span className="text-sm text-gray-500">
                     {items.length} estados definidos — pode editar nomes e emojis, mas não adicionar/remover
@@ -682,12 +682,12 @@ function StatusesManager() {
             </div>
 
             {loading ? (
-                <div className="text-center py-12"><Loader2 className="h-5 w-5 mx-auto animate-spin text-gray-400" /></div>
+                <div className="text-center py-12"><Loader2 className="h-5 w-5 mx-auto animate-spin text-muted-foreground" /></div>
             ) : (
                 <div className="p-4 space-y-5">
                     {Object.entries(grouped).map(([cat, statuses]) => (
                         <div key={cat}>
-                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                                 {CAT_LABELS[cat] || cat}
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
@@ -696,18 +696,18 @@ function StatusesManager() {
                                         {editingId === item.id ? (
                                             <>
                                                 <input type="text" value={editForm.emoji} onChange={e => setEditForm({ ...editForm, emoji: e.target.value })} className="w-10 text-center text-sm border border-gray-200 rounded py-1" />
-                                                <input type="text" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="flex-1 text-sm border border-gray-700 rounded px-2 bg-gray-800 text-gray-200 py-1" />
+                                                <input type="text" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="flex-1 text-sm border border-border rounded px-2 bg-muted text-foreground py-1" />
                                                 <button onClick={handleSave} disabled={saving} className="p-1 bg-green-900/40 text-green-400 rounded"><Save className="h-3 w-3" /></button>
-                                                <button onClick={() => setEditingId(null)} className="p-1 bg-gray-700 text-gray-400 rounded"><X className="h-3 w-3" /></button>
+                                                <button onClick={() => setEditingId(null)} className="p-1 bg-gray-700 text-muted-foreground rounded"><X className="h-3 w-3" /></button>
                                             </>
                                         ) : (
                                             <>
                                                 <span className="text-base flex-shrink-0 w-6 text-center">{item.emoji}</span>
                                                 <span className="text-sm text-gray-700 flex-1">{item.nome}</span>
-                                                <span className="text-[10px] text-gray-300 font-mono">#{item.ordem}</span>
+                                                <span className="text-[10px] text-foreground/80 font-mono">#{item.ordem}</span>
                                                 <button
                                                     onClick={() => { setEditingId(item.id); setEditForm({ nome: item.nome || '', emoji: item.emoji || '' }); }}
-                                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-blue-500 transition-all"
+                                                    className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-blue-500 transition-all"
                                                 >
                                                     <Edit3 className="h-3 w-3" />
                                                 </button>

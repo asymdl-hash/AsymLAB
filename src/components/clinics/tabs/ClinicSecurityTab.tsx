@@ -51,9 +51,9 @@ const roleColor = (role: string) => {
         admin: 'bg-purple-100 text-purple-700 border-purple-200',
         doctor: 'bg-blue-100 text-blue-700 border-blue-200',
         clinic_user: 'bg-amber-100 text-amber-700 border-amber-200',
-        staff: 'bg-gray-100 text-gray-600 border-gray-200'
+        staff: 'bg-gray-100 text-muted-foreground border-gray-200'
     };
-    return map[role] || 'bg-gray-100 text-gray-600 border-gray-200';
+    return map[role] || 'bg-gray-100 text-muted-foreground border-gray-200';
 };
 
 // Helper: ícone para o role
@@ -340,7 +340,7 @@ ${appUrl}
                                 onClick={resetInviteForm}
                                 className="p-1 rounded-md hover:bg-gray-100 transition-colors"
                             >
-                                <X className="h-5 w-5 text-gray-400" />
+                                <X className="h-5 w-5 text-muted-foreground" />
                             </button>
                         </div>
                     </CardHeader>
@@ -356,8 +356,8 @@ ${appUrl}
                                         className={cn(
                                             "flex-1 px-4 py-2.5 text-sm font-medium transition-all flex items-center justify-center gap-2",
                                             inviteMode === 'username'
-                                                ? "bg-primary text-white"
-                                                : "bg-white text-gray-600 hover:bg-gray-50"
+                                                ? "bg-primary text-foreground"
+                                                : "bg-white text-muted-foreground hover:bg-gray-50"
                                         )}
                                     >
                                         <User className="h-4 w-4" />
@@ -369,8 +369,8 @@ ${appUrl}
                                         className={cn(
                                             "flex-1 px-4 py-2.5 text-sm font-medium transition-all flex items-center justify-center gap-2",
                                             inviteMode === 'email'
-                                                ? "bg-primary text-white"
-                                                : "bg-white text-gray-600 hover:bg-gray-50"
+                                                ? "bg-primary text-foreground"
+                                                : "bg-white text-muted-foreground hover:bg-gray-50"
                                         )}
                                     >
                                         <Mail className="h-4 w-4" />
@@ -391,7 +391,7 @@ ${appUrl}
                                         autoFocus
                                     />
                                     {inviteMode === 'username' && inviteFullName && (
-                                        <p className="text-xs text-gray-400">
+                                        <p className="text-xs text-muted-foreground">
                                             Username gerado: <code className="bg-gray-100 px-1 rounded text-primary font-mono">{generateUsername(inviteFullName)}</code>
                                         </p>
                                     )}
@@ -499,7 +499,7 @@ ${appUrl}
                                                 className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
                                                 title="Copiar"
                                             >
-                                                {copiedField === 'login' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
+                                                {copiedField === 'login' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
                                             </button>
                                         </div>
                                     </div>
@@ -517,7 +517,7 @@ ${appUrl}
                                                 className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
                                                 title="Copiar"
                                             >
-                                                {copiedField === 'password' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
+                                                {copiedField === 'password' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
                                             </button>
                                         </div>
                                     </div>
@@ -556,7 +556,7 @@ ${appUrl}
                     <CardTitle className="flex items-center gap-2 text-base">
                         <Users className="h-5 w-5 text-primary" />
                         Utilizadores com Acesso
-                        <span className="ml-auto text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                        <span className="ml-auto text-xs font-normal text-muted-foreground bg-gray-100 px-2 py-0.5 rounded-full">
                             {clinicUsers.length}
                         </span>
                     </CardTitle>
@@ -572,7 +572,7 @@ ${appUrl}
                         </div>
                     ) : clinicUsers.length === 0 ? (
                         <div className="text-center py-10 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg">
-                            <Users className="h-10 w-10 mx-auto text-gray-300 mb-2" />
+                            <Users className="h-10 w-10 mx-auto text-foreground/80 mb-2" />
                             <h4 className="text-sm font-medium text-gray-900">Nenhum utilizador associado</h4>
                             <p className="text-sm text-gray-500 mt-1">
                                 Clique em &quot;Convidar Utilizador&quot; para adicionar acesso.
@@ -613,7 +613,7 @@ ${appUrl}
                                                 {roleLabel(user.app_role)}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-400 truncate mt-0.5">
+                                        <p className="text-xs text-muted-foreground truncate mt-0.5">
                                             {user.is_username_account
                                                 ? `@${user.username}`
                                                 : user.email
@@ -631,7 +631,7 @@ ${appUrl}
                                         <button
                                             type="button"
                                             onClick={() => setDeleteTarget(user)}
-                                            className="p-2 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+                                            className="p-2 rounded-lg text-foreground/80 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
                                             title="Remover acesso"
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -648,15 +648,15 @@ ${appUrl}
             <Card className="border-gray-200 bg-gray-50/50">
                 <CardContent className="pt-5 space-y-2 text-xs text-gray-500">
                     <p className="flex items-center gap-2">
-                        <Shield className="h-3.5 w-3.5 text-gray-400" />
+                        <Shield className="h-3.5 w-3.5 text-muted-foreground" />
                         Os acessos são protegidos por <strong>RLS (Row Level Security)</strong> — cada utilizador só vê as clínicas que lhe estão associadas.
                     </p>
                     <p className="flex items-center gap-2">
-                        <Eye className="h-3.5 w-3.5 text-gray-400" />
+                        <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                         Utilizadores com role <strong>&quot;Staff&quot;</strong> têm acesso de apenas leitura via as permissões do frontend.
                     </p>
                     <p className="flex items-center gap-2">
-                        <Crown className="h-3.5 w-3.5 text-gray-400" />
+                        <Crown className="h-3.5 w-3.5 text-muted-foreground" />
                         <strong>Administradores</strong> têm acesso total a todas as clínicas automaticamente e não podem ser removidos.
                     </p>
                 </CardContent>

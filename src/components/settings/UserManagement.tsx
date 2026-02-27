@@ -134,7 +134,7 @@ export default function UserManagement() {
                             "inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border transition-colors",
                             showHelp
                                 ? 'bg-blue-900/30 text-blue-600 border-blue-200'
-                                : 'text-gray-500 bg-gray-800 border-gray-200 hover:bg-gray-800'
+                                : 'text-gray-500 bg-muted border-gray-200 hover:bg-muted'
                         )}
                     >
                         <HelpCircle className="h-4 w-4" />
@@ -144,14 +144,14 @@ export default function UserManagement() {
                     <button
                         onClick={fetchUsers}
                         disabled={loading}
-                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-400 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground bg-muted border border-border rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
                     >
                         <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
                         Atualizar
                     </button>
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-primary rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
                     >
                         <UserPlus className="h-4 w-4" />
                         Novo Utilizador
@@ -171,7 +171,7 @@ export default function UserManagement() {
                             <div
                                 key={role}
                                 className={cn(
-                                    "rounded-lg border p-3 bg-gray-800/80 backdrop-blur-sm transition-all hover:shadow-sm",
+                                    "rounded-lg border p-3 bg-muted/80 backdrop-blur-sm transition-all hover:shadow-sm",
                                     ROLE_COLORS[role] ? `border-${ROLE_COLORS[role].split(' ')[0].replace('bg-', '').replace('/100', '')}-200` : 'border-gray-200'
                                 )}
                             >
@@ -181,7 +181,7 @@ export default function UserManagement() {
                                         "text-sm font-semibold",
                                         role === 'admin' ? 'text-red-700' :
                                             role === 'doctor' ? 'text-blue-700' :
-                                                'text-gray-300'
+                                                'text-foreground/80'
                                     )}>
                                         {ROLE_LABELS[role]}
                                     </span>
@@ -192,7 +192,7 @@ export default function UserManagement() {
                                         {role}
                                     </span>
                                 </div>
-                                <p className="text-xs text-gray-400 mb-2">{info.description}</p>
+                                <p className="text-xs text-muted-foreground mb-2">{info.description}</p>
                                 <div className="space-y-0.5">
                                     {info.permissions.map((perm, i) => (
                                         <div key={i} className="flex items-center gap-1.5 text-[11px] text-gray-500">
@@ -232,14 +232,14 @@ export default function UserManagement() {
             {/* Users List */}
             {loading && users.length === 0 ? (
                 <div className="flex items-center justify-center py-16">
-                    <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                    <span className="ml-2 text-sm text-gray-400">A carregar utilizadores...</span>
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <span className="ml-2 text-sm text-muted-foreground">A carregar utilizadores...</span>
                 </div>
             ) : (
-                <div className="bg-gray-900 rounded-xl border border-gray-800 shadow-sm">
+                <div className="bg-card rounded-xl border border-border shadow-sm">
                     <table className="w-full">
                         <thead>
-                            <tr className="bg-gray-800 border-b border-gray-700">
+                            <tr className="bg-muted border-b border-border">
                                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Utilizador</th>
                                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Login</th>
                                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
@@ -250,7 +250,7 @@ export default function UserManagement() {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {users.map(user => (
-                                <tr key={user.id} className="hover:bg-gray-800/50 transition-colors">
+                                <tr key={user.id} className="hover:bg-muted/50 transition-colors">
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3 min-w-0">
                                             <div className={cn(
@@ -269,9 +269,9 @@ export default function UserManagement() {
                                                         {user.full_name}
                                                     </a>
                                                 ) : (
-                                                    <p className="font-medium text-white text-sm truncate">{user.full_name}</p>
+                                                    <p className="font-medium text-foreground text-sm truncate">{user.full_name}</p>
                                                 )}
-                                                <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                                                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -301,14 +301,14 @@ export default function UserManagement() {
                                         {user.clinics.length > 0 ? (
                                             <div className="flex flex-wrap gap-1">
                                                 {user.clinics.map((c, i) => (
-                                                    <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-700 text-gray-400">
+                                                    <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-700 text-muted-foreground">
                                                         <Building2 className="h-3 w-3 shrink-0" />
                                                         <span className="truncate">{c.clinic_name}</span>
                                                     </span>
                                                 ))}
                                             </div>
                                         ) : (
-                                            <span className="text-xs text-gray-400">—</span>
+                                            <span className="text-xs text-muted-foreground">—</span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 hidden lg:table-cell">
@@ -325,14 +325,14 @@ export default function UserManagement() {
                                             <button
                                                 onClick={() => { setSelectedUser(user); setShowEditModal(true); }}
                                                 title="Editar Utilizador"
-                                                className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-900/30 transition-colors"
+                                                className="p-1.5 rounded-md text-muted-foreground hover:text-blue-600 hover:bg-blue-900/30 transition-colors"
                                             >
                                                 <Edit3 className="h-4 w-4" />
                                             </button>
                                             <button
                                                 onClick={() => { setSelectedUser(user); setShowResetModal(true); }}
                                                 title="Resetar Password"
-                                                className="p-1.5 rounded-md text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                                                className="p-1.5 rounded-md text-muted-foreground hover:text-amber-600 hover:bg-amber-50 transition-colors"
                                             >
                                                 <Key className="h-4 w-4" />
                                             </button>
@@ -346,7 +346,7 @@ export default function UserManagement() {
                                                     }
                                                 }}
                                                 title="Enviar Credenciais por WhatsApp"
-                                                className="p-1.5 rounded-md text-gray-400 hover:text-green-400 hover:bg-green-50 transition-colors"
+                                                className="p-1.5 rounded-md text-muted-foreground hover:text-green-400 hover:bg-green-50 transition-colors"
                                             >
                                                 <MessageCircle className="h-4 w-4" />
                                             </button>
@@ -360,14 +360,14 @@ export default function UserManagement() {
                                                     }
                                                 }}
                                                 title="Enviar Credenciais por Email"
-                                                className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-900/30 transition-colors"
+                                                className="p-1.5 rounded-md text-muted-foreground hover:text-blue-600 hover:bg-blue-900/30 transition-colors"
                                             >
                                                 <Mail className="h-4 w-4" />
                                             </button>
                                             <button
                                                 onClick={() => { setSelectedUser(user); setShowDeleteModal(true); }}
                                                 title="Eliminar Utilizador"
-                                                className="p-1.5 rounded-md text-gray-400 hover:text-red-400 hover:bg-red-900/30 transition-colors"
+                                                className="p-1.5 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-900/30 transition-colors"
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </button>
@@ -430,7 +430,7 @@ export default function UserManagement() {
             {/* First Login Alert */}
             {showFirstLoginAlert && selectedUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => { setShowFirstLoginAlert(false); setSelectedUser(null); }}>
-                    <div className="bg-gray-900 rounded-2xl shadow-xl border border-gray-800 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                    <div className="bg-card rounded-2xl shadow-xl border border-border w-full max-w-sm" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between px-6 py-4 border-b border-amber-100 bg-amber-50/50 rounded-t-2xl">
                             <div className="flex items-center gap-2">
                                 <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
@@ -441,7 +441,7 @@ export default function UserManagement() {
                             <button onClick={() => { setShowFirstLoginAlert(false); setSelectedUser(null); }} className="p-1 rounded-md hover:bg-amber-100"><X className="h-5 w-5 text-amber-400" /></button>
                         </div>
                         <div className="p-6 space-y-4">
-                            <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-800 border border-gray-700">
+                            <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted border border-border">
                                 <div className={cn(
                                     "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold",
                                     selectedUser.app_role === 'admin' ? 'bg-red-900/40 text-red-400' : 'bg-primary/10 text-primary'
@@ -450,7 +450,7 @@ export default function UserManagement() {
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-white">{selectedUser.full_name}</p>
-                                    <p className="text-xs text-gray-400">
+                                    <p className="text-xs text-muted-foreground">
                                         Último login: {new Date(selectedUser.last_sign_in_at!).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                     </p>
                                 </div>
@@ -465,7 +465,7 @@ export default function UserManagement() {
                             </div>
                             <button
                                 onClick={() => { setShowFirstLoginAlert(false); setSelectedUser(null); }}
-                                className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 text-sm font-medium text-gray-400 hover:bg-gray-800 transition-colors"
+                                className="w-full h-10 rounded-lg border border-border bg-muted text-foreground text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
                             >
                                 Entendido
                             </button>
@@ -724,26 +724,26 @@ function CreateUserModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-gray-900 rounded-2xl shadow-xl border border-gray-800 w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 flex-shrink-0">
+            <div className="bg-card rounded-2xl shadow-xl border border-border w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
                     <h3 className="text-lg font-semibold text-white">
                         {created ? '✅ Conta Criada!' : 'Novo Utilizador'}
                     </h3>
-                    <button onClick={handleClose} className="p-1 rounded-md hover:bg-gray-700"><X className="h-5 w-5 text-gray-400" /></button>
+                    <button onClick={handleClose} className="p-1 rounded-md hover:bg-muted"><X className="h-5 w-5 text-muted-foreground" /></button>
                 </div>
 
                 {!created ? (
                     <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
                         {/* Login Type Toggle */}
-                        <div className="flex rounded-lg border border-gray-700 overflow-hidden">
+                        <div className="flex rounded-lg border border-border overflow-hidden">
                             <button
                                 type="button"
                                 onClick={() => setLoginType('username')}
                                 className={cn(
                                     "flex-1 py-2 text-sm font-medium transition-colors",
                                     loginType === 'username'
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                        ? 'bg-primary text-foreground'
+                                        : 'bg-muted text-muted-foreground hover:bg-muted'
                                 )}
                             >
                                 👤 Username
@@ -754,8 +754,8 @@ function CreateUserModal({
                                 className={cn(
                                     "flex-1 py-2 text-sm font-medium transition-colors",
                                     loginType === 'email'
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                        ? 'bg-primary text-foreground'
+                                        : 'bg-muted text-muted-foreground hover:bg-muted'
                                 )}
                             >
                                 📧 Email
@@ -765,31 +765,31 @@ function CreateUserModal({
                         {/* Username or Email */}
                         {loginType === 'username' ? (
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-gray-300">Username</label>
+                                <label className="text-sm font-medium text-foreground/80">Username</label>
                                 <div className="flex items-center">
                                     <input
                                         type="text"
                                         value={username}
                                         onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))}
                                         placeholder="ana.assistente"
-                                        className="flex-1 h-10 rounded-l-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                        className="flex-1 h-10 rounded-l-lg border border-border bg-muted text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                         required
                                     />
                                     <span className="h-10 px-3 flex items-center bg-gray-700 border border-l-0 border-gray-300 rounded-r-lg text-xs text-gray-500">
                                         @asymlab.app
                                     </span>
                                 </div>
-                                <p className="text-xs text-gray-400">Só letras minúsculas, números, pontos e hífens</p>
+                                <p className="text-xs text-muted-foreground">Só letras minúsculas, números, pontos e hífens</p>
                             </div>
                         ) : (
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-gray-300">Email</label>
+                                <label className="text-sm font-medium text-foreground/80">Email</label>
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
                                     placeholder="utilizador@email.com"
-                                    className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                    className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                     required
                                 />
                             </div>
@@ -797,50 +797,50 @@ function CreateUserModal({
 
                         {/* Full Name */}
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-gray-300">Nome Completo</label>
+                            <label className="text-sm font-medium text-foreground/80">Nome Completo</label>
                             <input
                                 type="text"
                                 value={fullName}
                                 onChange={e => setFullName(e.target.value)}
                                 placeholder="Ana Silva"
-                                className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                 required
                             />
                         </div>
 
                         {/* Phone (optional) */}
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-gray-300 flex items-center gap-1">
-                                <Phone className="h-3.5 w-3.5" /> Telemóvel <span className="text-gray-400 font-normal">(opcional)</span>
+                            <label className="text-sm font-medium text-foreground/80 flex items-center gap-1">
+                                <Phone className="h-3.5 w-3.5" /> Telemóvel <span className="text-muted-foreground font-normal">(opcional)</span>
                             </label>
                             <input
                                 type="tel"
                                 value={phone}
                                 onChange={e => setPhone(e.target.value)}
                                 placeholder="+351 912 345 678"
-                                className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                             />
-                            <p className="text-xs text-gray-400">Usado para envio de credenciais por WhatsApp</p>
+                            <p className="text-xs text-muted-foreground">Usado para envio de credenciais por WhatsApp</p>
                         </div>
 
                         {/* Password - só para username accounts */}
                         {loginType === 'username' ? (
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-gray-300">Password</label>
+                                <label className="text-sm font-medium text-foreground/80">Password</label>
                                 <div className="relative">
                                     <input
                                         type={showPassword ? 'text' : 'password'}
                                         value={password}
                                         onChange={e => setPassword(e.target.value)}
                                         placeholder="Mínimo 6 caracteres"
-                                        className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                        className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                         required
                                         minLength={6}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-400"
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-muted-foreground"
                                     >
                                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </button>
@@ -855,11 +855,11 @@ function CreateUserModal({
 
                         {/* Role */}
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-gray-300">Perfil / Role</label>
+                            <label className="text-sm font-medium text-foreground/80">Perfil / Role</label>
                             <select
                                 value={appRole}
                                 onChange={e => setAppRole(e.target.value)}
-                                className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-gray-800"
+                                className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-muted"
                             >
                                 <option value="staff_lab">Staff Lab</option>
                                 <option value="staff_clinic">Staff Clínica</option>
@@ -872,34 +872,34 @@ function CreateUserModal({
 
                         {/* Clinic Selection - Dropdown Multi-select */}
                         <div className="space-y-1.5 relative" ref={clinicDropdownRef}>
-                            <label className="text-sm font-medium text-gray-300">Clínicas Associadas <span className="text-gray-400 font-normal">(opcional)</span></label>
+                            <label className="text-sm font-medium text-foreground/80">Clínicas Associadas <span className="text-muted-foreground font-normal">(opcional)</span></label>
                             {loadingClinics ? (
-                                <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
                                     <Loader2 className="h-3 w-3 animate-spin" /> A carregar clínicas...
                                 </div>
                             ) : clinics.length === 0 ? (
-                                <p className="text-xs text-gray-400 py-1">Nenhuma clínica registada</p>
+                                <p className="text-xs text-muted-foreground py-1">Nenhuma clínica registada</p>
                             ) : (
                                 <>
                                     <button
                                         type="button"
                                         onClick={() => setShowClinicDropdown(!showClinicDropdown)}
-                                        className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm text-left bg-gray-800 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary flex items-center justify-between"
+                                        className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm text-left bg-muted hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary flex items-center justify-between"
                                     >
-                                        <span className={selectedClinics.length === 0 ? 'text-gray-400' : 'text-gray-300'}>
+                                        <span className={selectedClinics.length === 0 ? 'text-muted-foreground' : 'text-foreground/80'}>
                                             {selectedClinics.length === 0
                                                 ? 'Selecionar clínicas...'
                                                 : `${selectedClinics.length} clínica${selectedClinics.length > 1 ? 's' : ''} selecionada${selectedClinics.length > 1 ? 's' : ''}`
                                             }
                                         </span>
-                                        <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform", showClinicDropdown && "rotate-180")} />
+                                        <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", showClinicDropdown && "rotate-180")} />
                                     </button>
                                     {showClinicDropdown && (
-                                        <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                        <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 bg-muted border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
                                             {clinics.map(c => (
                                                 <label
                                                     key={c.id}
-                                                    className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800 cursor-pointer text-sm border-b border-gray-700 last:border-b-0"
+                                                    className="flex items-center gap-2 px-3 py-2 hover:bg-muted cursor-pointer text-sm border-b border-border last:border-b-0"
                                                 >
                                                     <input
                                                         type="checkbox"
@@ -913,7 +913,7 @@ function CreateUserModal({
                                                         }}
                                                         className="rounded border-gray-300 text-primary focus:ring-primary"
                                                     />
-                                                    <span className="text-gray-300">{c.commercial_name || 'Sem nome'}</span>
+                                                    <span className="text-foreground/80">{c.commercial_name || 'Sem nome'}</span>
                                                 </label>
                                             ))}
                                         </div>
@@ -943,12 +943,12 @@ function CreateUserModal({
 
                         {/* Tags / Funções - Creatable Multi-Select */}
                         <div className="space-y-1.5 relative" ref={tagDropdownRef}>
-                            <label className="text-sm font-medium text-gray-300">Funções / Tags <span className="text-gray-400 font-normal">(opcional)</span></label>
+                            <label className="text-sm font-medium text-foreground/80">Funções / Tags <span className="text-muted-foreground font-normal">(opcional)</span></label>
                             <div
                                 onClick={() => setShowTagDropdown(!showTagDropdown)}
-                                className="w-full min-h-[40px] rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 py-2 text-sm cursor-pointer bg-gray-800 hover:border-gray-400 transition-colors flex items-center flex-wrap gap-1.5"
+                                className="w-full min-h-[40px] rounded-lg border border-border bg-muted text-foreground px-3 py-2 text-sm cursor-pointer bg-muted hover:border-gray-400 transition-colors flex items-center flex-wrap gap-1.5"
                             >
-                                {tags.length === 0 && <span className="text-gray-400">Selecionar ou criar funções...</span>}
+                                {tags.length === 0 && <span className="text-muted-foreground">Selecionar ou criar funções...</span>}
                                 {tags.map(tag => (
                                     <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium">
                                         {tag}
@@ -963,7 +963,7 @@ function CreateUserModal({
                                 ))}
                             </div>
                             {showTagDropdown && (
-                                <div className="absolute z-20 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-2 space-y-1 max-h-60 overflow-y-auto">
+                                <div className="absolute z-20 mt-1 w-full bg-muted border border-border rounded-lg shadow-lg p-2 space-y-1 max-h-60 overflow-y-auto">
                                     {/* Input para criar nova tag */}
                                     <div className="flex gap-1.5 mb-1">
                                         <input
@@ -981,7 +981,7 @@ function CreateUserModal({
                                                 }
                                             }}
                                             placeholder="Escrever nova função..."
-                                            className="flex-1 h-8 rounded border border-gray-700 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                            className="flex-1 h-8 rounded border border-border px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
                                             onClick={e => e.stopPropagation()}
                                         />
                                         {tagInput.trim() && (
@@ -994,7 +994,7 @@ function CreateUserModal({
                                                     }
                                                     setTagInput('');
                                                 }}
-                                                className="h-8 px-2 text-xs font-medium text-white bg-primary rounded hover:bg-primary/90 transition-colors"
+                                                className="h-8 px-2 text-xs font-medium text-foreground bg-primary rounded hover:bg-primary/90 transition-colors"
                                             >
                                                 + Criar
                                             </button>
@@ -1002,18 +1002,18 @@ function CreateUserModal({
                                     </div>
                                     {/* Opções predefinidas */}
                                     {PRESET_TAGS.filter(t => !tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase())).map(tag => (
-                                        <label key={tag} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-800 cursor-pointer text-sm">
+                                        <label key={tag} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer text-sm">
                                             <input
                                                 type="checkbox"
                                                 checked={false}
                                                 onChange={() => setTags([...tags, tag])}
                                                 className="rounded border-gray-300 text-primary focus:ring-primary"
                                             />
-                                            <span className="text-gray-300">{tag}</span>
+                                            <span className="text-foreground/80">{tag}</span>
                                         </label>
                                     ))}
                                     {PRESET_TAGS.filter(t => !tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase())).length === 0 && !tagInput.trim() && (
-                                        <p className="text-xs text-gray-400 px-2 py-1">Todas as opções predefinidas selecionadas</p>
+                                        <p className="text-xs text-muted-foreground px-2 py-1">Todas as opções predefinidas selecionadas</p>
                                     )}
                                 </div>
                             )}
@@ -1032,14 +1032,14 @@ function CreateUserModal({
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex-1 h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 text-sm font-medium text-gray-400 hover:bg-gray-800 transition-colors"
+                                className="flex-1 h-10 rounded-lg border border-border bg-muted text-foreground text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
                             >
                                 Cancelar
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="flex-1 h-10 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="flex-1 h-10 rounded-lg bg-primary text-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
                                 {loading ? 'A criar...' : 'Criar Utilizador'}
@@ -1063,15 +1063,15 @@ function CreateUserModal({
                                     {created.loginType === 'email' ? 'Email' : 'Username'}
                                 </label>
                                 <div className="flex items-center gap-2">
-                                    <div className="flex-1 px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-mono">
+                                    <div className="flex-1 px-3 py-2 rounded-lg bg-muted border border-border text-sm font-mono">
                                         {created.loginIdentifier}
                                     </div>
                                     <button
                                         onClick={() => handleCopy(created.loginIdentifier, 'login')}
-                                        className="p-2 rounded-lg border border-gray-700 hover:bg-gray-800 transition-colors"
+                                        className="p-2 rounded-lg border border-border hover:bg-muted transition-colors"
                                         title="Copiar"
                                     >
-                                        {copiedField === 'login' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
+                                        {copiedField === 'login' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
                                     </button>
                                 </div>
                             </div>
@@ -1086,10 +1086,10 @@ function CreateUserModal({
                                         </div>
                                         <button
                                             onClick={() => handleCopy(created.inviteLink!, 'invite')}
-                                            className="p-2 rounded-lg border border-gray-700 hover:bg-gray-800 transition-colors"
+                                            className="p-2 rounded-lg border border-border hover:bg-muted transition-colors"
                                             title="Copiar link"
                                         >
-                                            {copiedField === 'invite' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
+                                            {copiedField === 'invite' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
                                         </button>
                                     </div>
                                 </div>
@@ -1098,15 +1098,15 @@ function CreateUserModal({
                                 <div className="space-y-1">
                                     <label className="text-xs font-medium text-gray-500">Password Temporária</label>
                                     <div className="flex items-center gap-2">
-                                        <div className="flex-1 px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-mono">
+                                        <div className="flex-1 px-3 py-2 rounded-lg bg-muted border border-border text-sm font-mono">
                                             {created.password}
                                         </div>
                                         <button
                                             onClick={() => handleCopy(created.password!, 'password')}
-                                            className="p-2 rounded-lg border border-gray-700 hover:bg-gray-800 transition-colors"
+                                            className="p-2 rounded-lg border border-border hover:bg-muted transition-colors"
                                             title="Copiar password"
                                         >
-                                            {copiedField === 'password' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
+                                            {copiedField === 'password' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
                                         </button>
                                     </div>
                                 </div>
@@ -1135,7 +1135,7 @@ function CreateUserModal({
                             <button
                                 type="button"
                                 onClick={handleSendWhatsApp}
-                                className="flex-1 h-10 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                                className="flex-1 h-10 rounded-lg bg-green-600 text-foreground text-sm font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                             >
                                 <MessageCircle className="h-4 w-4" />
                                 WhatsApp
@@ -1145,7 +1145,7 @@ function CreateUserModal({
                                     type="button"
                                     onClick={handleSendEmail}
                                     disabled={emailSending || emailSent}
-                                    className="flex-1 h-10 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="flex-1 h-10 rounded-lg bg-blue-600 text-foreground text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {emailSending ? <Loader2 className="h-4 w-4 animate-spin" /> : emailSent ? <CheckCircle className="h-4 w-4" /> : <Mail className="h-4 w-4" />}
                                     {emailSending ? 'A enviar...' : emailSent ? 'Enviado!' : created.inviteLink ? 'Enviar Convite' : 'Email'}
@@ -1154,7 +1154,7 @@ function CreateUserModal({
                             <button
                                 type="button"
                                 onClick={handleClose}
-                                className="h-10 px-4 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 text-sm font-medium text-gray-400 hover:bg-gray-800 transition-colors"
+                                className="h-10 px-4 rounded-lg border border-border bg-muted text-foreground text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
                             >
                                 Fechar
                             </button>
@@ -1373,10 +1373,10 @@ function EditUserModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
-            <div className="bg-gray-900 rounded-2xl shadow-xl border border-gray-800 w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 flex-shrink-0">
+            <div className="bg-card rounded-2xl shadow-xl border border-border w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
                     <h3 className="text-lg font-semibold text-white">Editar Utilizador</h3>
-                    <button onClick={onClose} className="p-1 rounded-md hover:bg-gray-700"><X className="h-5 w-5 text-gray-400" /></button>
+                    <button onClick={onClose} className="p-1 rounded-md hover:bg-muted"><X className="h-5 w-5 text-muted-foreground" /></button>
                 </div>
 
                 {/* Banner de confirmação de email pendente */}
@@ -1391,7 +1391,7 @@ function EditUserModal({
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
                     {/* User Info Card */}
-                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-800 border border-gray-700">
+                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted border border-border">
                         <div className={cn(
                             "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold",
                             user.app_role === 'admin' ? 'bg-red-900/40 text-red-400' : 'bg-primary/10 text-primary'
@@ -1399,8 +1399,8 @@ function EditUserModal({
                             {user.full_name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-gray-300">{user.is_username_account ? user.username : user.email}</p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-sm font-medium text-foreground/80">{user.is_username_account ? user.username : user.email}</p>
+                            <p className="text-xs text-muted-foreground">
                                 {user.is_username_account ? '👤 Conta username' : '📧 Conta email'}
                                 {' · '}Criado em {new Date(user.created_at).toLocaleDateString('pt-PT')}
                             </p>
@@ -1409,13 +1409,13 @@ function EditUserModal({
 
                     {/* Full Name */}
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-300">Nome Completo</label>
+                        <label className="text-sm font-medium text-foreground/80">Nome Completo</label>
                         <input
                             type="text"
                             value={fullName}
                             onChange={e => setFullName(e.target.value)}
                             placeholder="Nome completo"
-                            className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                             required
                             autoFocus
                         />
@@ -1424,8 +1424,8 @@ function EditUserModal({
                     {/* Email (só para contas email) */}
                     {!user.is_username_account && (
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
-                                <Mail className="h-4 w-4 text-gray-400" />
+                            <label className="text-sm font-medium text-foreground/80 flex items-center gap-1.5">
+                                <Mail className="h-4 w-4 text-muted-foreground" />
                                 Email
                             </label>
                             <input
@@ -1433,7 +1433,7 @@ function EditUserModal({
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
                                 placeholder="email@exemplo.pt"
-                                className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                 required
                             />
                             {emailChanged && (
@@ -1446,26 +1446,26 @@ function EditUserModal({
 
                     {/* Telemóvel */}
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
-                            <Phone className="h-4 w-4 text-gray-400" />
-                            Telemóvel <span className="text-gray-400 font-normal">(opcional)</span>
+                        <label className="text-sm font-medium text-foreground/80 flex items-center gap-1.5">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            Telemóvel <span className="text-muted-foreground font-normal">(opcional)</span>
                         </label>
                         <input
                             type="tel"
                             value={phone}
                             onChange={e => setPhone(e.target.value)}
                             placeholder="+351 912 345 678"
-                            className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                         />
                     </div>
 
                     {/* Role */}
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-300">Perfil / Role</label>
+                        <label className="text-sm font-medium text-foreground/80">Perfil / Role</label>
                         <select
                             value={appRole}
                             onChange={e => setAppRole(e.target.value)}
-                            className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-gray-800"
+                            className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-muted"
                         >
                             <option value="staff_lab">Staff Lab</option>
                             <option value="staff_clinic">Staff Clínica</option>
@@ -1483,41 +1483,41 @@ function EditUserModal({
 
                     {/* Clinics — Dropdown Multi-select */}
                     <div className="space-y-1.5 relative" ref={clinicDropdownRef}>
-                        <label className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
-                            <Building2 className="h-4 w-4 text-gray-400" />
+                        <label className="text-sm font-medium text-foreground/80 flex items-center gap-1.5">
+                            <Building2 className="h-4 w-4 text-muted-foreground" />
                             Clínicas Associadas
                         </label>
                         {loadingClinics ? (
-                            <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
                                 <Loader2 className="h-3 w-3 animate-spin" />
                                 A carregar clínicas...
                             </div>
                         ) : allClinics.length === 0 ? (
-                            <p className="text-xs text-gray-400">Nenhuma clínica disponível</p>
+                            <p className="text-xs text-muted-foreground">Nenhuma clínica disponível</p>
                         ) : (
                             <>
                                 <button
                                     type="button"
                                     onClick={() => setShowClinicDropdown(!showClinicDropdown)}
-                                    className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm text-left bg-gray-800 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary flex items-center justify-between"
+                                    className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm text-left bg-muted hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary flex items-center justify-between"
                                 >
-                                    <span className={selectedClinics.length === 0 ? 'text-gray-400' : 'text-gray-300'}>
+                                    <span className={selectedClinics.length === 0 ? 'text-muted-foreground' : 'text-foreground/80'}>
                                         {selectedClinics.length === 0
                                             ? 'Selecionar clínicas...'
                                             : `${selectedClinics.length} clínica${selectedClinics.length > 1 ? 's' : ''} selecionada${selectedClinics.length > 1 ? 's' : ''}`
                                         }
                                     </span>
-                                    <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform", showClinicDropdown && "rotate-180")} />
+                                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", showClinicDropdown && "rotate-180")} />
                                 </button>
                                 {showClinicDropdown && (
-                                    <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                    <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 bg-muted border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
                                         {allClinics.map(clinic => {
                                             const isSelected = selectedClinics.includes(clinic.id);
                                             const wasOriginal = originalClinics.includes(clinic.id);
                                             return (
                                                 <label
                                                     key={clinic.id}
-                                                    className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800 cursor-pointer text-sm border-b border-gray-700 last:border-b-0"
+                                                    className="flex items-center gap-2 px-3 py-2 hover:bg-muted cursor-pointer text-sm border-b border-border last:border-b-0"
                                                 >
                                                     <input
                                                         type="checkbox"
@@ -1525,7 +1525,7 @@ function EditUserModal({
                                                         onChange={() => toggleClinic(clinic.id)}
                                                         className="rounded border-gray-300 text-primary focus:ring-primary"
                                                     />
-                                                    <span className="text-gray-300 flex-1">{clinic.commercial_name}</span>
+                                                    <span className="text-foreground/80 flex-1">{clinic.commercial_name}</span>
                                                     {isSelected && !wasOriginal && (
                                                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-900/40 text-green-700 font-medium">NOVO</span>
                                                     )}
@@ -1566,12 +1566,12 @@ function EditUserModal({
 
                     {/* Tags / Funções - Creatable Multi-Select */}
                     <div className="space-y-1.5 relative" ref={tagDropdownRef}>
-                        <label className="text-sm font-medium text-gray-300">Funções / Tags <span className="text-gray-400 font-normal">(opcional)</span></label>
+                        <label className="text-sm font-medium text-foreground/80">Funções / Tags <span className="text-muted-foreground font-normal">(opcional)</span></label>
                         <div
                             onClick={() => setShowTagDropdown(!showTagDropdown)}
-                            className="w-full min-h-[40px] rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 py-2 text-sm cursor-pointer bg-gray-800 hover:border-gray-400 transition-colors flex items-center flex-wrap gap-1.5"
+                            className="w-full min-h-[40px] rounded-lg border border-border bg-muted text-foreground px-3 py-2 text-sm cursor-pointer bg-muted hover:border-gray-400 transition-colors flex items-center flex-wrap gap-1.5"
                         >
-                            {tags.length === 0 && <span className="text-gray-400">Selecionar ou criar funções...</span>}
+                            {tags.length === 0 && <span className="text-muted-foreground">Selecionar ou criar funções...</span>}
                             {tags.map(tag => (
                                 <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium">
                                     {tag}
@@ -1586,7 +1586,7 @@ function EditUserModal({
                             ))}
                         </div>
                         {showTagDropdown && (
-                            <div className="absolute z-20 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-2 space-y-1 max-h-60 overflow-y-auto">
+                            <div className="absolute z-20 mt-1 w-full bg-muted border border-border rounded-lg shadow-lg p-2 space-y-1 max-h-60 overflow-y-auto">
                                 {/* Input para criar nova tag */}
                                 <div className="flex gap-1.5 mb-1">
                                     <input
@@ -1604,7 +1604,7 @@ function EditUserModal({
                                             }
                                         }}
                                         placeholder="Escrever nova função..."
-                                        className="flex-1 h-8 rounded border border-gray-700 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                        className="flex-1 h-8 rounded border border-border px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
                                         onClick={e => e.stopPropagation()}
                                     />
                                     {tagInput.trim() && (
@@ -1617,7 +1617,7 @@ function EditUserModal({
                                                 }
                                                 setTagInput('');
                                             }}
-                                            className="h-8 px-2 text-xs font-medium text-white bg-primary rounded hover:bg-primary/90 transition-colors"
+                                            className="h-8 px-2 text-xs font-medium text-foreground bg-primary rounded hover:bg-primary/90 transition-colors"
                                         >
                                             + Criar
                                         </button>
@@ -1625,18 +1625,18 @@ function EditUserModal({
                                 </div>
                                 {/* Opções predefinidas */}
                                 {PRESET_TAGS.filter(t => !tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase())).map(tag => (
-                                    <label key={tag} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-800 cursor-pointer text-sm">
+                                    <label key={tag} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer text-sm">
                                         <input
                                             type="checkbox"
                                             checked={false}
                                             onChange={() => setTags([...tags, tag])}
                                             className="rounded border-gray-300 text-primary focus:ring-primary"
                                         />
-                                        <span className="text-gray-300">{tag}</span>
+                                        <span className="text-foreground/80">{tag}</span>
                                     </label>
                                 ))}
                                 {PRESET_TAGS.filter(t => !tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase())).length === 0 && !tagInput.trim() && (
-                                    <p className="text-xs text-gray-400 px-2 py-1">Todas as opções predefinidas selecionadas</p>
+                                    <p className="text-xs text-muted-foreground px-2 py-1">Todas as opções predefinidas selecionadas</p>
                                 )}
                             </div>
                         )}
@@ -1647,14 +1647,14 @@ function EditUserModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 text-sm font-medium text-gray-400 hover:bg-gray-800 transition-colors"
+                            className="flex-1 h-10 rounded-lg border border-border bg-muted text-foreground text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !hasChanges}
-                            className="flex-1 h-10 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="flex-1 h-10 rounded-lg bg-blue-600 text-foreground text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                             {loading ? 'A guardar...' : 'Guardar Alterações'}
@@ -1730,7 +1730,7 @@ Qualquer dúvida, contacta o administrador.`;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
-            <div className="bg-gray-900 rounded-2xl shadow-xl border border-gray-800 w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-card rounded-2xl shadow-xl border border-border w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-green-100 bg-green-50/50 rounded-t-2xl flex-shrink-0">
                     <div className="flex items-center gap-2">
@@ -1744,7 +1744,7 @@ Qualquer dúvida, contacta o administrador.`;
 
                 <div className="p-6 space-y-4 overflow-y-auto flex-1">
                     {/* User card */}
-                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-800 border border-gray-700">
+                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted border border-border">
                         <div className={cn(
                             "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold",
                             user.app_role === 'admin' ? 'bg-red-900/40 text-red-400' : 'bg-primary/10 text-primary'
@@ -1753,7 +1753,7 @@ Qualquer dúvida, contacta o administrador.`;
                         </div>
                         <div>
                             <p className="text-sm font-medium text-white">{user.full_name}</p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted-foreground">
                                 {user.is_username_account ? `👤 ${user.username}` : `📧 ${user.email}`}
                             </p>
                         </div>
@@ -1761,8 +1761,8 @@ Qualquer dúvida, contacta o administrador.`;
 
                     {/* Phone input */}
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
-                            <Smartphone className="h-4 w-4 text-gray-400" />
+                        <label className="text-sm font-medium text-foreground/80 flex items-center gap-1.5">
+                            <Smartphone className="h-4 w-4 text-muted-foreground" />
                             Número de Telefone
                         </label>
                         <input
@@ -1770,22 +1770,22 @@ Qualquer dúvida, contacta o administrador.`;
                             value={phone}
                             onChange={e => setPhone(e.target.value)}
                             placeholder="351912345678 (com indicativo)"
-                            className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400"
+                            className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400"
                             autoFocus
                         />
-                        <p className="text-xs text-gray-400">Inclui o indicativo do país (ex: 351 para Portugal)</p>
+                        <p className="text-xs text-muted-foreground">Inclui o indicativo do país (ex: 351 para Portugal)</p>
                     </div>
 
                     {/* Message preview */}
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-300">Pré-visualização da Mensagem</label>
+                        <label className="text-sm font-medium text-foreground/80">Pré-visualização da Mensagem</label>
                         <div className="relative">
-                            <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 text-xs text-gray-400 whitespace-pre-wrap max-h-48 overflow-y-auto font-mono leading-relaxed">
+                            <div className="bg-muted border border-border rounded-lg p-3 text-xs text-muted-foreground whitespace-pre-wrap max-h-48 overflow-y-auto font-mono leading-relaxed">
                                 {message}
                             </div>
                             <button
                                 onClick={handleCopy}
-                                className="absolute top-2 right-2 p-1.5 rounded-md bg-gray-800 border border-gray-700 text-gray-400 hover:text-gray-400 hover:bg-gray-800 transition-colors"
+                                className="absolute top-2 right-2 p-1.5 rounded-md bg-muted border border-border text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-colors"
                                 title="Copiar mensagem"
                             >
                                 {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
@@ -1801,18 +1801,18 @@ Qualquer dúvida, contacta o administrador.`;
                 </div>
 
                 {/* Actions */}
-                <div className="px-6 py-4 border-t border-gray-700 flex items-center gap-3 flex-shrink-0">
+                <div className="px-6 py-4 border-t border-border flex items-center gap-3 flex-shrink-0">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 text-sm font-medium text-gray-400 hover:bg-gray-800 transition-colors"
+                        className="flex-1 h-10 rounded-lg border border-border bg-muted text-foreground text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
                     >
                         Fechar
                     </button>
                     <button
                         onClick={handleSendWhatsApp}
                         disabled={!cleanPhone}
-                        className="flex-1 h-10 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 h-10 rounded-lg bg-green-600 text-foreground text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         <ExternalLink className="h-4 w-4" />
                         Enviar via WhatsApp
@@ -1904,7 +1904,7 @@ Seguem os teus dados de acesso:
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
-            <div className="bg-gray-900 rounded-2xl shadow-xl border border-gray-800 w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-card rounded-2xl shadow-xl border border-border w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-blue-100 bg-blue-900/30/50 rounded-t-2xl flex-shrink-0">
                     <div className="flex items-center gap-2">
@@ -1918,7 +1918,7 @@ Seguem os teus dados de acesso:
 
                 <div className="p-6 space-y-4 overflow-y-auto flex-1">
                     {/* User card */}
-                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-800 border border-gray-700">
+                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted border border-border">
                         <div className={cn(
                             "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold",
                             user.app_role === 'admin' ? 'bg-red-900/40 text-red-400' : 'bg-primary/10 text-primary'
@@ -1927,7 +1927,7 @@ Seguem os teus dados de acesso:
                         </div>
                         <div>
                             <p className="text-sm font-medium text-white">{user.full_name}</p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted-foreground">
                                 {user.is_username_account ? `👤 ${user.username}` : `📧 ${user.email}`}
                             </p>
                         </div>
@@ -1935,8 +1935,8 @@ Seguem os teus dados de acesso:
 
                     {/* Email input */}
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-300 flex items-center gap-1.5">
-                            <Mail className="h-4 w-4 text-gray-400" />
+                        <label className="text-sm font-medium text-foreground/80 flex items-center gap-1.5">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
                             Email do Destinatário
                         </label>
                         <input
@@ -1944,7 +1944,7 @@ Seguem os teus dados de acesso:
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                             placeholder="email@exemplo.com"
-                            className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+                            className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
                             autoFocus
                             disabled={sent}
                         />
@@ -1952,8 +1952,8 @@ Seguem os teus dados de acesso:
 
                     {/* Message preview */}
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-300">Pré-visualização da Mensagem</label>
-                        <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 text-xs text-gray-400 whitespace-pre-wrap max-h-48 overflow-y-auto font-mono leading-relaxed">
+                        <label className="text-sm font-medium text-foreground/80">Pré-visualização da Mensagem</label>
+                        <div className="bg-muted border border-border rounded-lg p-3 text-xs text-muted-foreground whitespace-pre-wrap max-h-48 overflow-y-auto font-mono leading-relaxed">
                             {messagePreview}
                         </div>
                     </div>
@@ -1973,18 +1973,18 @@ Seguem os teus dados de acesso:
                 </div>
 
                 {/* Actions */}
-                <div className="px-6 py-4 border-t border-gray-700 flex items-center gap-3 flex-shrink-0">
+                <div className="px-6 py-4 border-t border-border flex items-center gap-3 flex-shrink-0">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 text-sm font-medium text-gray-400 hover:bg-gray-800 transition-colors"
+                        className="flex-1 h-10 rounded-lg border border-border bg-muted text-foreground text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
                     >
                         Fechar
                     </button>
                     <button
                         onClick={handleSendEmail}
                         disabled={!email.trim() || loading || sent}
-                        className="flex-1 h-10 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 h-10 rounded-lg bg-blue-600 text-foreground text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : sent ? <CheckCircle className="h-4 w-4" /> : <Send className="h-4 w-4" />}
                         {loading ? 'A enviar...' : sent ? 'Enviado!' : 'Enviar Email'}
@@ -2033,32 +2033,32 @@ function ResetPasswordModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
-            <div className="bg-gray-900 rounded-2xl shadow-xl border border-gray-800 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+            <div className="bg-card rounded-2xl shadow-xl border border-border w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
                     <h3 className="text-lg font-semibold text-white">Resetar Password</h3>
-                    <button onClick={onClose} className="p-1 rounded-md hover:bg-gray-700"><X className="h-5 w-5 text-gray-400" /></button>
+                    <button onClick={onClose} className="p-1 rounded-md hover:bg-muted"><X className="h-5 w-5 text-muted-foreground" /></button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-800 border border-gray-700">
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted border border-border">
                         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
                             {user.full_name.charAt(0)}
                         </div>
                         <div>
                             <p className="text-sm font-medium text-white">{user.full_name}</p>
-                            <p className="text-xs text-gray-400">{user.is_username_account ? user.username : user.email}</p>
+                            <p className="text-xs text-muted-foreground">{user.is_username_account ? user.username : user.email}</p>
                         </div>
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-300">Nova Password</label>
+                        <label className="text-sm font-medium text-foreground/80">Nova Password</label>
                         <div className="relative">
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 value={newPassword}
                                 onChange={e => setNewPassword(e.target.value)}
                                 placeholder="Mínimo 6 caracteres"
-                                className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                 required
                                 minLength={6}
                                 autoFocus
@@ -2066,7 +2066,7 @@ function ResetPasswordModal({
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-400"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-muted-foreground"
                             >
                                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </button>
@@ -2077,14 +2077,14 @@ function ResetPasswordModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 text-sm font-medium text-gray-400 hover:bg-gray-800 transition-colors"
+                            className="flex-1 h-10 rounded-lg border border-border bg-muted text-foreground text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={loading || newPassword.length < 6}
-                            className="flex-1 h-10 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="flex-1 h-10 rounded-lg bg-amber-500 text-foreground text-sm font-medium hover:bg-amber-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
                             {loading ? 'A resetar...' : 'Resetar Password'}
@@ -2136,7 +2136,7 @@ function DeleteConfirmModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
-            <div className="bg-gray-900 rounded-2xl shadow-xl border border-gray-800 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="bg-card rounded-2xl shadow-xl border border-border w-full max-w-sm" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between px-6 py-4 border-b border-red-100 bg-red-50/50 rounded-t-2xl">
                     <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-red-900/40 flex items-center justify-center">
@@ -2149,7 +2149,7 @@ function DeleteConfirmModal({
 
                 <div className="p-6 space-y-4">
                     {/* User being deleted */}
-                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-800 border border-gray-700">
+                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted border border-border">
                         <div className={cn(
                             "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold",
                             user.app_role === 'admin' ? 'bg-red-900/40 text-red-400' : 'bg-primary/10 text-primary'
@@ -2158,7 +2158,7 @@ function DeleteConfirmModal({
                         </div>
                         <div>
                             <p className="text-sm font-medium text-white">{user.full_name}</p>
-                            <p className="text-xs text-gray-400">{user.is_username_account ? `👤 ${user.username}` : `📧 ${user.email}`}</p>
+                            <p className="text-xs text-muted-foreground">{user.is_username_account ? `👤 ${user.username}` : `📧 ${user.email}`}</p>
                         </div>
                     </div>
 
@@ -2174,7 +2174,7 @@ function DeleteConfirmModal({
 
                     {/* Confirmation input */}
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-300">
+                        <label className="text-sm font-medium text-foreground/80">
                             Para confirmar, escreva <span className="font-bold text-red-400">ELIMINAR</span>
                         </label>
                         <input
@@ -2182,7 +2182,7 @@ function DeleteConfirmModal({
                             value={confirmText}
                             onChange={e => setConfirmText(e.target.value)}
                             placeholder="Escreva ELIMINAR para confirmar"
-                            className="w-full h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400"
+                            className="w-full h-10 rounded-lg border border-border bg-muted text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400"
                             autoFocus
                         />
                     </div>
@@ -2192,14 +2192,14 @@ function DeleteConfirmModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 h-10 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 text-sm font-medium text-gray-400 hover:bg-gray-800 transition-colors"
+                            className="flex-1 h-10 rounded-lg border border-border bg-muted text-foreground text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             onClick={handleDelete}
                             disabled={loading || !isConfirmed}
-                            className="flex-1 h-10 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="flex-1 h-10 rounded-lg bg-red-600 text-foreground text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                             {loading ? 'A eliminar...' : 'Eliminar Utilizador'}

@@ -60,7 +60,7 @@ export default function DuplicateWarning({ status, message, matches, onDismiss }
                     <div className="mt-2 space-y-1.5">
                         {matches.slice(0, 3).map(m => (
                             <div key={m.id} className="flex items-center gap-2 text-xs">
-                                <span className="font-mono text-gray-500 dark:text-gray-400">{m.t_id}</span>
+                                <span className="font-mono text-gray-500 dark:text-muted-foreground">{m.t_id}</span>
                                 <span className={cn("font-medium", config.text)}>{m.nome}</span>
                                 {m.similarity != null && m.similarity < 100 && (
                                     <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium", config.badgeBg)}>
@@ -68,7 +68,7 @@ export default function DuplicateWarning({ status, message, matches, onDismiss }
                                     </span>
                                 )}
                                 {m.id_paciente_clinica && (
-                                    <span className="text-gray-400 dark:text-gray-500">ID: {m.id_paciente_clinica}</span>
+                                    <span className="text-muted-foreground dark:text-gray-500">ID: {m.id_paciente_clinica}</span>
                                 )}
                                 <button
                                     onClick={() => router.push(`/dashboard/patients/${m.id}`)}
@@ -87,7 +87,7 @@ export default function DuplicateWarning({ status, message, matches, onDismiss }
             {status !== 'block' && (
                 <button
                     onClick={onDismiss}
-                    className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 shrink-0"
+                    className="text-muted-foreground hover:text-muted-foreground dark:text-gray-500 dark:hover:text-foreground/80 shrink-0"
                 >
                     <X className="h-4 w-4" />
                 </button>

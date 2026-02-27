@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { auth, supabase } from '@/lib/supabase';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { AppModule } from '@/lib/permissions';
 import {
     Home,
@@ -23,7 +24,9 @@ import {
     PanelLeft,
     Stethoscope,
     ListTodo,
-    Lock
+    Lock,
+    Sun,
+    Moon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -51,6 +54,7 @@ export default function Sidebar() {
     const { collapsed, toggleCollapsed } = useSidebar();
     const [mobileOpen, setMobileOpen] = useState(false);
     const { user, hasAccess, isReadOnly, role } = useAuth();
+    const { theme, toggleTheme } = useTheme();
 
     // === Badge: contagem de pedidos activos ===
     const [queueCount, setQueueCount] = useState(0);
@@ -264,6 +268,16 @@ export default function Sidebar() {
                                 A Minha Conta
                             </p>
                         </Link>
+                    )}
+
+                    {(!collapsed || isMobile) && (
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2 text-gray-500 hover:text-amber-400 hover:bg-[#1f2937] rounded-md transition-colors"
+                            title={theme === 'light' ? 'Mudar para Dark Mode' : 'Mudar para Light Mode'}
+                        >
+                            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                        </button>
                     )}
 
                     {(!collapsed || isMobile) && (

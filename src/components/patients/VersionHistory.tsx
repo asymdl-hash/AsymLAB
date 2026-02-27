@@ -38,17 +38,17 @@ export default function VersionHistory({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-gray-900 border border-gray-700/50 rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl">
+            <div className="bg-card border border-border/50 rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
-                    <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                <div className="flex items-center justify-between p-4 border-b border-border/50">
+                    <h3 className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
                         <History className="h-4 w-4 text-amber-400" />
                         Histórico de Versões
-                        <span className="text-[10px] bg-gray-700 text-gray-400 rounded-full px-2 py-0.5">
+                        <span className="text-[10px] bg-gray-700 text-muted-foreground rounded-full px-2 py-0.5">
                             v{currentVersion}
                         </span>
                     </h3>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-300 text-xs">
+                    <button onClick={onClose} className="text-gray-500 hover:text-foreground/80 text-xs">
                         Fechar ✕
                     </button>
                 </div>
@@ -70,7 +70,7 @@ export default function VersionHistory({
                     {loading ? (
                         <div className="text-center py-6 text-gray-500 text-sm">A carregar...</div>
                     ) : versions.length === 0 ? (
-                        <div className="text-center py-6 text-gray-600 text-sm">
+                        <div className="text-center py-6 text-muted-foreground text-sm">
                             Sem versões anteriores
                         </div>
                     ) : (
@@ -104,14 +104,14 @@ function VersionCard({ label, fields, conteudo, editorName, editedAt, isExpanded
     isCurrent?: boolean;
 }) {
     return (
-        <div className={`border rounded-lg overflow-hidden ${isCurrent ? 'border-amber-500/30 bg-amber-500/5' : 'border-gray-700/50 bg-gray-800/30'}`}>
+        <div className={`border rounded-lg overflow-hidden ${isCurrent ? 'border-amber-500/30 bg-amber-500/5' : 'border-border/50 bg-muted/30'}`}>
             <button
                 onClick={onToggle}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:brightness-110 transition-all"
             >
                 {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-gray-500" /> : <ChevronRight className="h-3.5 w-3.5 text-gray-500" />}
-                <span className={`text-xs font-medium ${isCurrent ? 'text-amber-400' : 'text-gray-400'}`}>{label}</span>
-                <span className="text-[10px] text-gray-600 flex items-center gap-1 ml-auto">
+                <span className={`text-xs font-medium ${isCurrent ? 'text-amber-400' : 'text-muted-foreground'}`}>{label}</span>
+                <span className="text-[10px] text-muted-foreground flex items-center gap-1 ml-auto">
                     <User className="h-3 w-3" />
                     {editorName}
                     {editedAt && (
@@ -124,17 +124,17 @@ function VersionCard({ label, fields, conteudo, editorName, editedAt, isExpanded
             </button>
 
             {isExpanded && (
-                <div className="px-3 pb-3 border-t border-gray-700/30 space-y-2 mt-0">
+                <div className="px-3 pb-3 border-t border-border/30 space-y-2 mt-0">
                     {fields.length > 0 && fields.map((f, i) => (
                         <div key={i} className="mt-2">
                             <span className="text-[10px] uppercase tracking-wider text-gray-500">{f.subtitulo}</span>
-                            <p className="text-sm text-gray-300 mt-0.5">{f.descricao || <span className="italic text-gray-600">Vazio</span>}</p>
+                            <p className="text-sm text-foreground/80 mt-0.5">{f.descricao || <span className="italic text-muted-foreground">Vazio</span>}</p>
                         </div>
                     ))}
                     {conteudo && (
                         <div className="mt-2">
                             <span className="text-[10px] uppercase tracking-wider text-gray-500">Texto</span>
-                            <p className="text-sm text-gray-300 mt-0.5 whitespace-pre-wrap">{conteudo}</p>
+                            <p className="text-sm text-foreground/80 mt-0.5 whitespace-pre-wrap">{conteudo}</p>
                         </div>
                     )}
                 </div>

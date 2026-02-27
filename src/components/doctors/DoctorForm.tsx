@@ -149,17 +149,17 @@ function DoctorHeroHeader({ initialData, canEdit }: { initialData: DoctorProfile
                             />
                             {uploading && (
                                 <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center z-20">
-                                    <Loader2 className="h-8 w-8 text-white animate-spin" />
+                                    <Loader2 className="h-8 w-8 text-foreground animate-spin" />
                                 </div>
                             )}
                             {canEdit && !uploading && (
                                 <>
                                     <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Camera className="h-6 w-6 text-white" />
+                                        <Camera className="h-6 w-6 text-foreground" />
                                     </div>
                                     <button
                                         onClick={removeAvatar}
-                                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10 shadow-md"
+                                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10 shadow-md"
                                         title="Remover Avatar"
                                         type="button"
                                     >
@@ -175,8 +175,8 @@ function DoctorHeroHeader({ initialData, canEdit }: { initialData: DoctorProfile
                             </span>
                             {canEdit && (
                                 <div className="absolute inset-0 rounded-full bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Upload className="h-5 w-5 text-white mb-0.5" />
-                                    <span className="text-[10px] text-white/80">Upload</span>
+                                    <Upload className="h-5 w-5 text-foreground mb-0.5" />
+                                    <span className="text-[10px] text-foreground/80">Upload</span>
                                 </div>
                             )}
                         </div>
@@ -193,7 +193,7 @@ function DoctorHeroHeader({ initialData, canEdit }: { initialData: DoctorProfile
                     )}
                     {/* Mensagem de erro de upload */}
                     {uploadError && (
-                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-red-500/90 text-white text-xs px-3 py-1 rounded-full shadow-lg">
+                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-red-500/90 text-foreground text-xs px-3 py-1 rounded-full shadow-lg">
                             {uploadError}
                         </div>
                     )}
@@ -202,7 +202,7 @@ function DoctorHeroHeader({ initialData, canEdit }: { initialData: DoctorProfile
                 <div className="flex flex-col gap-1.5">
                     {/* Nome + Badge */}
                     <div className="flex items-center gap-3 flex-wrap">
-                        <h1 className="text-4xl font-bold text-white tracking-tight">
+                        <h1 className="text-4xl font-bold text-foreground tracking-tight">
                             {fullName}
                         </h1>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/15 text-blue-400 border border-blue-500/20">
@@ -212,7 +212,7 @@ function DoctorHeroHeader({ initialData, canEdit }: { initialData: DoctorProfile
                     </div>
 
                     {/* Subtítulo */}
-                    <div className="flex items-center gap-2 text-sm text-gray-400 mt-0.5">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
                         <span>Desde {new Date(initialData.created_at).toLocaleDateString('pt-PT')}</span>
                     </div>
                 </div>
@@ -302,13 +302,13 @@ export default function DoctorForm({ initialData }: DoctorFormProps) {
                         {/* Status bar */}
                         <div className="px-6 py-2 border-b border-gray-100 flex justify-end items-center min-h-[36px]">
                             {saving && (
-                                <span className="text-xs text-gray-400 flex items-center gap-1.5">
+                                <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                                     <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
                                     A guardar...
                                 </span>
                             )}
                             {!saving && lastSaved && (
-                                <span className="text-xs text-gray-400 flex items-center gap-1.5">
+                                <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                                     Guardado às {lastSaved.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
                                 </span>
