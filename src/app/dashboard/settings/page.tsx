@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Settings, Database, Shield, Bell, Palette, Users } from 'lucide-react';
+import { Settings, Database, Shield, Bell, Palette, Users, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BackupSettings from '@/components/settings/BackupSettings';
 import UserManagement from '@/components/settings/UserManagement';
+import CatalogManager from '@/components/settings/CatalogManager';
 import PermissionGuard from '@/components/PermissionGuard';
 
 interface SettingsTab {
@@ -15,6 +16,12 @@ interface SettingsTab {
 }
 
 const settingsTabs: SettingsTab[] = [
+    {
+        id: 'catalogs',
+        label: 'Catálogos',
+        icon: BookOpen,
+        description: 'Gestão de tipos de trabalho, materiais, cores, templates e estados'
+    },
     {
         id: 'backups',
         label: 'Backups',
@@ -48,7 +55,7 @@ const settingsTabs: SettingsTab[] = [
 ];
 
 export default function SettingsPage() {
-    const [activeTab, setActiveTab] = useState('backups');
+    const [activeTab, setActiveTab] = useState('catalogs');
 
     const activeTabConfig = settingsTabs.find(t => t.id === activeTab);
 
@@ -99,6 +106,7 @@ export default function SettingsPage() {
 
                     {/* Conteúdo da tab */}
                     <div className="p-8">
+                        {activeTab === 'catalogs' && <CatalogManager />}
                         {activeTab === 'backups' && <BackupSettings />}
                         {activeTab === 'general' && (
                             <div className="text-center py-16 text-gray-400">
