@@ -14,8 +14,10 @@ import {
     X,
 } from 'lucide-react';
 import { billingService, Invoice, Receipt as ReceiptType, PatientDocument, INVOICE_STATE_CONFIG, DOC_TYPE_CONFIG, PAYMENT_METHODS } from '@/services/billingService';
+import { transportService, TransportGuide, GUIDE_TYPE_CONFIG, GUIDE_STATE_CONFIG, RECEPTION_STATE_CONFIG } from '@/services/transportService';
 import { useAuth } from '@/contexts/AuthContext';
 import NewInvoiceModal from './NewInvoiceModal';
+import NewGuideModal from './NewGuideModal';
 
 interface DocumentsTabProps {
     patientId: string;
@@ -24,6 +26,7 @@ interface DocumentsTabProps {
 const DOC_CATEGORIES = [
     { key: 'facturas', label: 'Facturas', icon: Receipt, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
     { key: 'recibos', label: 'Recibos', icon: FileCheck, color: 'text-blue-400', bg: 'bg-blue-500/15' },
+    { key: 'guias', label: 'Guias', icon: FileText, color: 'text-amber-400', bg: 'bg-amber-500/15' },
     { key: 'documentos', label: 'Documentos', icon: FileText, color: 'text-purple-400', bg: 'bg-purple-500/15' },
 ];
 
@@ -33,9 +36,11 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [receipts, setReceipts] = useState<ReceiptType[]>([]);
     const [documents, setDocuments] = useState<PatientDocument[]>([]);
+    const [guides, setGuides] = useState<TransportGuide[]>([]);
     const [loading, setLoading] = useState(true);
     const [showInvoiceModal, setShowInvoiceModal] = useState(false);
     const [uploadingDoc, setUploadingDoc] = useState(false);
+    const [showGuideModal, setShowGuideModal] = useState<'transporte' | 'recepcao' | null>(null);
     const [showReceiptForm, setShowReceiptForm] = useState<string | null>(null);
     const [receiptValor, setReceiptValor] = useState('');
     const [receiptMetodo, setReceiptMetodo] = useState('transferencia');
@@ -45,14 +50,16 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
     const loadData = useCallback(async () => {
         try {
             setLoading(true);
-            const [inv, rec, docs] = await Promise.all([
+            const [inv, rec, docs, gds] = await Promise.all([
                 billingService.getInvoices(patientId),
                 billingService.getReceipts(patientId),
                 billingService.getDocuments(patientId),
+                transportService.getGuides(patientId),
             ]);
             setInvoices(inv);
             setReceipts(rec);
             setDocuments(docs);
+            setGuides(gds);
         } catch (err) {
             console.error('Erro ao carregar documentos:', err);
         } finally {
@@ -131,6 +138,22 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                         >
                             <Plus className="h-3 w-3" /> Factura
                         </button>
+                    )}
+                    {activeCategory === 'guias' && (
+                        <div className="flex gap-1">
+                            <button
+                                onClick={() => setShowGuideModal('transporte')}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition-colors"
+                            >
+                                🚚 Transporte
+                            </button>
+                            <button
+                                onClick={() => setShowGuideModal('recepcao')}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors"
+                            >
+                                📦 Recepção
+                            </button>
+                        </div>
                     )}
                     {activeCategory === 'documentos' && (
                         <label className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition-colors cursor-pointer">
@@ -307,6 +330,58 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                             )
                         )}
 
+                        {/* ===== GUIAS ===== */}
+                        {activeCategory === 'guias' && (
+                            guides.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <FileText className="h-10 w-10 mx-auto mb-3 text-amber-500/20" />
+                                    <p className="text-sm text-gray-500">Sem guias</p>
+                                    <p className="text-xs text-gray-600 mt-1">Crie uma guia de transporte ou recepção</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-gray-700/50">
+                                    {guides.map(g => {
+                                        const tipo = GUIDE_TYPE_CONFIG[g.tipo] || GUIDE_TYPE_CONFIG.transporte;
+                                        const state = GUIDE_STATE_CONFIG[g.estado] || GUIDE_STATE_CONFIG.rascunho;
+                                        const recState = g.estado_recepcao ? RECEPTION_STATE_CONFIG[g.estado_recepcao] : null;
+                                        return (
+                                            <div key={g.id} className="p-4 hover:bg-gray-700/20 transition-colors">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-base">{tipo.emoji}</span>
+                                                            <span className="text-sm font-semibold text-white">{g.numero}</span>
+                                                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${tipo.bg} ${tipo.color}`}>
+                                                                {tipo.label}
+                                                            </span>
+                                                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${state.bg} ${state.color}`}>
+                                                                {state.label}
+                                                            </span>
+                                                            {recState && (
+                                                                <span className={`text-[10px] ${recState.color}`}>
+                                                                    {recState.emoji} {recState.label}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-gray-400">
+                                                            {g.plan && g.plan.nome}
+                                                            {g.clinica && <span className="text-gray-600"> · {g.clinica.commercial_name}</span>}
+                                                        </p>
+                                                        {g.items && g.items.length > 0 && (
+                                                            <p className="text-[10px] text-gray-600 mt-1">
+                                                                {g.items.map(it => `${it.nome}${it.quantidade > 1 ? ` (${it.quantidade})` : ''}`).join(', ')}
+                                                            </p>
+                                                        )}
+                                                        <p className="text-[10px] text-gray-600 mt-0.5">{formatDate(g.created_at)}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )
+                        )}
+
                         {/* ===== DOCUMENTOS ===== */}
                         {activeCategory === 'documentos' && (
                             documents.length === 0 ? (
@@ -360,6 +435,16 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                     patientId={patientId}
                     onClose={() => setShowInvoiceModal(false)}
                     onCreated={() => { setShowInvoiceModal(false); loadData(); }}
+                />
+            )}
+
+            {/* Guide Modal */}
+            {showGuideModal && (
+                <NewGuideModal
+                    patientId={patientId}
+                    tipo={showGuideModal}
+                    onClose={() => setShowGuideModal(null)}
+                    onCreated={() => { setShowGuideModal(null); loadData(); }}
                 />
             )}
         </div>
