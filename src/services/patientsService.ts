@@ -514,10 +514,35 @@ export const patientsService = {
         if (err2) throw err2;
     },
 
+    // Levenshtein distance — distância de edição entre duas strings
+    _levenshtein(a: string, b: string): number {
+        const m = a.length, n = b.length;
+        if (m === 0) return n;
+        if (n === 0) return m;
+        const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+        for (let i = 0; i <= m; i++) dp[i][0] = i;
+        for (let j = 0; j <= n; j++) dp[0][j] = j;
+        for (let i = 1; i <= m; i++) {
+            for (let j = 1; j <= n; j++) {
+                dp[i][j] = a[i - 1] === b[j - 1]
+                    ? dp[i - 1][j - 1]
+                    : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+            }
+        }
+        return dp[m][n];
+    },
+
+    // Calcular similaridade em percentagem (0-100)
+    _similarity(a: string, b: string): number {
+        const maxLen = Math.max(a.length, b.length);
+        if (maxLen === 0) return 100;
+        return Math.round((1 - this._levenshtein(a, b) / maxLen) * 100);
+    },
+
     // 24. Anti-duplicação: verificar se já existe paciente com nome similar na mesma clínica
     async checkDuplicates(currentPatientId: string, nome: string, clinicaId: string, idPacienteClinica?: string | null): Promise<{
         status: 'ok' | 'warning' | 'block';
-        matches: { id: string; nome: string; t_id: string; id_paciente_clinica: string | null }[];
+        matches: { id: string; nome: string; t_id: string; id_paciente_clinica: string | null; similarity: number }[];
         message: string;
     }> {
         if (!nome || nome.trim().length < 3 || nome === 'Novo Paciente (Rascunho)') {
@@ -541,25 +566,40 @@ export const patientsService = {
 
         const queryNorm = normalize(nome);
 
-        // Encontrar matches por similaridade de nome
-        const matches = data.filter(p => {
-            const candidateNorm = normalize(p.nome);
-            // Match exacto
-            if (candidateNorm === queryNorm) return true;
-            // Contém o nome inteiro
-            if (candidateNorm.includes(queryNorm) || queryNorm.includes(candidateNorm)) return true;
-            // Levenshtein simplificado: mesmo início (primeiros 80% dos caracteres)
-            const minLen = Math.min(candidateNorm.length, queryNorm.length);
-            if (minLen >= 4) {
-                const prefixLen = Math.floor(minLen * 0.8);
-                if (candidateNorm.substring(0, prefixLen) === queryNorm.substring(0, prefixLen)) return true;
-            }
-            return false;
-        });
+        // Encontrar matches por similaridade de nome (com score)
+        const matchesWithScore = data
+            .map(p => {
+                const candidateNorm = normalize(p.nome);
+                // Match exacto
+                if (candidateNorm === queryNorm) return { ...p, similarity: 100 };
+                // Contém o nome inteiro
+                if (candidateNorm.includes(queryNorm) || queryNorm.includes(candidateNorm)) {
+                    return { ...p, similarity: this._similarity(candidateNorm, queryNorm) };
+                }
+                // Levenshtein real: distância ≤ 3 para nomes com ≥ 5 caracteres
+                const dist = this._levenshtein(candidateNorm, queryNorm);
+                const maxLen = Math.max(candidateNorm.length, queryNorm.length);
+                if (maxLen >= 5 && dist <= 3) {
+                    return { ...p, similarity: Math.round((1 - dist / maxLen) * 100) };
+                }
+                // Prefixo 80% (manter para nomes longos com sufixos diferentes)
+                const minLen = Math.min(candidateNorm.length, queryNorm.length);
+                if (minLen >= 6) {
+                    const prefixLen = Math.floor(minLen * 0.8);
+                    if (candidateNorm.substring(0, prefixLen) === queryNorm.substring(0, prefixLen)) {
+                        return { ...p, similarity: this._similarity(candidateNorm, queryNorm) };
+                    }
+                }
+                return null;
+            })
+            .filter((m): m is NonNullable<typeof m> => m !== null)
+            .sort((a, b) => b.similarity - a.similarity);
 
-        if (matches.length === 0) {
+        if (matchesWithScore.length === 0) {
             return { status: 'ok', matches: [], message: '' };
         }
+
+        const matches = matchesWithScore;
 
         // Aplicar regras §3.3 do MODULO_PACIENTES.md
         const hasIdClinica = idPacienteClinica && idPacienteClinica.trim().length > 0;
@@ -585,7 +625,7 @@ export const patientsService = {
                 return {
                     status: 'block',
                     matches,
-                    message: `Paciente com nome similar "${match.nome}" (${match.t_id}) já existe. Preencha o ID Paciente Clínica em ambos para confirmar que são diferentes.`,
+                    message: `Paciente com nome similar "${match.nome}" (${match.t_id}) já existe nesta clínica. Preencha o ID Paciente Clínica em ambos para confirmar que são diferentes.`,
                 };
             }
 
@@ -593,7 +633,7 @@ export const patientsService = {
             return {
                 status: 'warning',
                 matches,
-                message: `Possível duplicado: "${match.nome}" (${match.t_id}). Considere preencher o ID Paciente Clínica para confirmar que são pacientes diferentes.`,
+                message: `Possível duplicado: "${match.nome}" (${match.t_id}) — ${match.similarity}% similar. Preencha o ID Paciente Clínica para confirmar.`,
             };
         }
 

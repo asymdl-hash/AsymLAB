@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 import {
     ArrowLeft,
     AlertTriangle,
@@ -29,7 +30,6 @@ import FilesTab from '@/components/patients/FilesTab';
 import DocumentsTab from '@/components/patients/DocumentsTab';
 import HistoryTab from '@/components/patients/HistoryTab';
 import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
 
 // Status do paciente
 const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
@@ -78,7 +78,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const [dupResult, setDupResult] = useState<{
         status: 'ok' | 'warning' | 'block';
         message: string;
-        matches: { id: string; nome: string; t_id: string; id_paciente_clinica: string | null }[];
+        matches: { id: string; nome: string; t_id: string; id_paciente_clinica: string | null; similarity?: number }[];
     }>({ status: 'ok', message: '', matches: [] });
 
     // Carregar dropdowns
@@ -101,6 +101,8 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     // Auto-save com debounce
     const autoSave = useCallback(async (field: string, value: unknown) => {
         if (readOnly) return;
+        // Bloquear auto-save do nome se houver duplicação block
+        if (field === 'nome' && dupResult.status === 'block') return;
 
         if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -191,7 +193,10 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         <Input
                             value={patient.nome}
                             onChange={(e) => handleFieldChange('nome', e.target.value)}
-                            className="text-lg font-semibold border-0 p-0 h-auto focus-visible:ring-0 bg-transparent text-gray-100"
+                            className={cn(
+                                "text-lg font-semibold border-0 p-0 h-auto focus-visible:ring-0 bg-transparent text-gray-100",
+                                dupResult.status === 'block' && "!border !border-red-500 !ring-1 !ring-red-500/30 px-2 rounded"
+                            )}
                             disabled={readOnly}
                         />
 
