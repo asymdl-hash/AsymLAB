@@ -98,7 +98,7 @@ export default function QueueColumn({ title, color, icon, columnKey, items, onDr
                 "flex flex-col rounded-xl border min-w-[280px] max-w-[340px] flex-1 transition-all duration-200",
                 isDragOver
                     ? colors.dropHighlight + " border-dashed border-2 scale-[1.01]"
-                    : "bg-muted/50 border-border"
+                    : "bg-gray-50/80 dark:bg-muted/50 border-gray-200 dark:border-border"
             )}
         >
             {/* Header */}

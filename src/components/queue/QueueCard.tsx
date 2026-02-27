@@ -62,7 +62,7 @@ export default function QueueCard({ item }: QueueCardProps) {
             onClick={handleClick}
             className={cn(
                 "w-full text-left p-3 rounded-lg border transition-all duration-200 group cursor-pointer",
-                "bg-muted/80 hover:bg-muted border-border hover:border-border hover:shadow-lg hover:shadow-black/20",
+                "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md shadow-sm",
                 item.urgente && "ring-2 ring-amber-400/30 border-amber-500/50"
             )}
         >
