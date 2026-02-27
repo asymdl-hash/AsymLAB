@@ -61,15 +61,15 @@ export default function SettingsPage() {
 
     return (
         <PermissionGuard module="settings">
-            <div className="flex h-full w-full bg-gray-50/50 overflow-hidden">
+            <div className="flex h-full w-full bg-gray-950 overflow-hidden">
                 {/* Sidebar de Tabs */}
-                <div className="w-64 flex-shrink-0 border-r border-gray-200 bg-white h-full overflow-y-auto">
-                    <div className="p-6 border-b border-gray-100">
-                        <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <Settings className="h-5 w-5 text-primary" />
+                <div className="w-64 flex-shrink-0 border-r border-gray-800 bg-gray-900 h-full overflow-y-auto">
+                    <div className="p-6 border-b border-gray-800">
+                        <h1 className="text-lg font-bold text-white flex items-center gap-2">
+                            <Settings className="h-5 w-5 text-amber-500" />
                             Definições
                         </h1>
-                        <p className="text-sm text-gray-400 mt-1">Configurações do sistema</p>
+                        <p className="text-sm text-gray-500 mt-1">Configurações do sistema</p>
                     </div>
 
                     <nav className="p-3 space-y-1">
@@ -84,11 +84,11 @@ export default function SettingsPage() {
                                     className={cn(
                                         "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left",
                                         isActive
-                                            ? "bg-primary/10 text-primary"
-                                            : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                            ? "bg-amber-500/15 text-amber-400"
+                                            : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
                                     )}
                                 >
-                                    <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-primary" : "text-gray-400")} />
+                                    <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-amber-400" : "text-gray-500")} />
                                     <span>{tab.label}</span>
                                 </button>
                             );
@@ -99,9 +99,9 @@ export default function SettingsPage() {
                 {/* Conteúdo */}
                 <div className="flex-1 overflow-y-auto">
                     {/* Header da secção */}
-                    <div className="bg-white border-b border-gray-200 px-8 py-6">
-                        <h2 className="text-xl font-semibold text-gray-900">{activeTabConfig?.label}</h2>
-                        <p className="text-sm text-gray-400 mt-1">{activeTabConfig?.description}</p>
+                    <div className="bg-gray-900 border-b border-gray-800 px-8 py-6">
+                        <h2 className="text-xl font-semibold text-white">{activeTabConfig?.label}</h2>
+                        <p className="text-sm text-gray-500 mt-1">{activeTabConfig?.description}</p>
                     </div>
 
                     {/* Conteúdo da tab */}
@@ -109,19 +109,19 @@ export default function SettingsPage() {
                         {activeTab === 'catalogs' && <CatalogManager />}
                         {activeTab === 'backups' && <BackupSettings />}
                         {activeTab === 'general' && (
-                            <div className="text-center py-16 text-gray-400">
+                            <div className="text-center py-16 text-gray-500">
                                 <Settings className="h-12 w-12 mx-auto mb-3 opacity-20" />
                                 <p className="text-sm">Configurações gerais — em desenvolvimento</p>
                             </div>
                         )}
                         {activeTab === 'notifications' && (
-                            <div className="text-center py-16 text-gray-400">
+                            <div className="text-center py-16 text-gray-500">
                                 <Bell className="h-12 w-12 mx-auto mb-3 opacity-20" />
                                 <p className="text-sm">Notificações — em desenvolvimento</p>
                             </div>
                         )}
                         {activeTab === 'appearance' && (
-                            <div className="text-center py-16 text-gray-400">
+                            <div className="text-center py-16 text-gray-500">
                                 <Palette className="h-12 w-12 mx-auto mb-3 opacity-20" />
                                 <p className="text-sm">Aparência — em desenvolvimento</p>
                             </div>

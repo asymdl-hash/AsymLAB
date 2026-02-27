@@ -5,11 +5,11 @@ import { Stethoscope } from 'lucide-react';
 export default function Doctors() {
     return (
         <div className="flex flex-col items-center justify-center h-full text-center space-y-4 p-8">
-            <div className="bg-gray-100 p-4 rounded-full">
-                <Stethoscope className="w-12 h-12 text-gray-400" />
+            <div className="bg-gray-800 p-4 rounded-full">
+                <Stethoscope className="w-12 h-12 text-gray-600" />
             </div>
             <div>
-                <h2 className="text-xl font-semibold text-gray-900">Selecione um Médico</h2>
+                <h2 className="text-xl font-semibold text-white">Selecione um Médico</h2>
                 <p className="text-gray-500 mt-2">Escolha um médico na lista à esquerda para ver os detalhes.</p>
             </div>
         </div>

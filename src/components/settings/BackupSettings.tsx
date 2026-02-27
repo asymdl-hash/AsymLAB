@@ -225,7 +225,7 @@ export default function BackupSettings() {
                         <Database className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Backup Local</h3>
+                        <h3 className="text-lg font-semibold text-white">Backup Local</h3>
                         <p className="text-sm text-gray-500">Redundância dos dados do Supabase</p>
                     </div>
                 </div>
@@ -233,7 +233,7 @@ export default function BackupSettings() {
                     <Button
                         variant="outline"
                         onClick={() => setShowWizard(true)}
-                        className="gap-2 text-gray-600"
+                        className="gap-2 text-gray-400"
                     >
                         <Settings2 className="h-4 w-4" />
                         Reconfigurar
@@ -264,34 +264,34 @@ export default function BackupSettings() {
                         </div>
 
                         {showDropdown && (
-                            <div className="absolute right-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
+                            <div className="absolute right-0 mt-1 w-56 bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-50 py-1">
                                 <button
                                     onClick={() => handleBackupNow('auto')}
-                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-800 flex items-center gap-2"
                                 >
                                     <Zap className="h-4 w-4 text-amber-500" />
                                     <div>
-                                        <p className="font-medium text-gray-700">Auto</p>
+                                        <p className="font-medium text-gray-300">Auto</p>
                                         <p className="text-[11px] text-gray-400">Decide automaticamente</p>
                                     </div>
                                 </button>
                                 <button
                                     onClick={() => handleBackupNow('full')}
-                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-800 flex items-center gap-2"
                                 >
                                     <Archive className="h-4 w-4 text-blue-500" />
                                     <div>
-                                        <p className="font-medium text-gray-700">Forçar Full</p>
+                                        <p className="font-medium text-gray-300">Forçar Full</p>
                                         <p className="text-[11px] text-gray-400">Backup completo de tudo</p>
                                     </div>
                                 </button>
                                 <button
                                     onClick={() => handleBackupNow('incremental')}
-                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-800 flex items-center gap-2"
                                 >
                                     <Zap className="h-4 w-4 text-emerald-500" />
                                     <div>
-                                        <p className="font-medium text-gray-700">Forçar Incremental</p>
+                                        <p className="font-medium text-gray-300">Forçar Incremental</p>
                                         <p className="text-[11px] text-gray-400">Só dados alterados</p>
                                     </div>
                                 </button>
@@ -316,43 +316,43 @@ export default function BackupSettings() {
             {/* ====== STATS CARDS ====== */}
             {stats && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
                             <Calendar className="h-4 w-4 text-gray-400" />
                             <span className="text-xs text-gray-500 uppercase font-medium">Total</span>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">{stats.total_backups}</p>
+                        <p className="text-2xl font-bold text-white">{stats.total_backups}</p>
                         <p className="text-[11px] text-gray-400 mt-1">
                             <span className="text-blue-500 font-medium">{stats.total_full}</span> Full · <span className="text-emerald-500 font-medium">{stats.total_incremental}</span> Incr
                         </p>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
                             <HardDrive className="h-4 w-4 text-gray-400" />
                             <span className="text-xs text-gray-500 uppercase font-medium">Espaço</span>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">{stats.total_size_display}</p>
+                        <p className="text-2xl font-bold text-white">{stats.total_size_display}</p>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
                             <Database className="h-4 w-4 text-gray-400" />
                             <span className="text-xs text-gray-500 uppercase font-medium">Tabelas</span>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">{config?.tables.length || 0}</p>
+                        <p className="text-2xl font-bold text-white">{config?.tables.length || 0}</p>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
                             <Zap className="h-4 w-4 text-gray-400" />
                             <span className="text-xs text-gray-500 uppercase font-medium">Modo</span>
                         </div>
-                        <p className="text-lg font-bold text-gray-900">{modeLabels[editMode] || 'Auto'}</p>
+                        <p className="text-lg font-bold text-white">{modeLabels[editMode] || 'Auto'}</p>
                     </div>
                 </div>
             )}
 
             {/* ====== CONFIGURAÇÕES ====== */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
-                <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+            <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 space-y-6">
+                <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
                     Configuração
                 </h4>
 
@@ -394,7 +394,7 @@ export default function BackupSettings() {
                             >
                                 <p className={cn(
                                     "text-sm font-medium",
-                                    editMode === mode ? "text-primary" : "text-gray-700"
+                                    editMode === mode ? "text-primary" : "text-gray-300"
                                 )}>
                                     {modeLabels[mode]}
                                 </p>
@@ -458,9 +458,9 @@ export default function BackupSettings() {
                 </div>
 
                 {/* Ativar/Desativar */}
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
                     <div>
-                        <p className="text-sm font-medium text-gray-700">Backup automático diário</p>
+                        <p className="text-sm font-medium text-gray-300">Backup automático diário</p>
                         <p className="text-xs text-gray-400">Executa backup todos os dias no horário definido</p>
                     </div>
                     <button
@@ -471,7 +471,7 @@ export default function BackupSettings() {
                         )}
                     >
                         <span className={cn(
-                            "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200",
+                            "absolute top-0.5 left-0.5 w-5 h-5 bg-gray-800 rounded-full shadow transition-transform duration-200",
                             editEnabled ? "translate-x-6" : "translate-x-0"
                         )} />
                     </button>
@@ -497,15 +497,15 @@ export default function BackupSettings() {
             </div>
 
             {/* ====== TABELAS MONITORIZADAS ====== */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
+            <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
+                <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
                     Tabelas Monitorizadas
                 </h4>
                 <div className="flex flex-wrap gap-2">
                     {config?.tables.map((table) => (
                         <span
                             key={table}
-                            className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-mono"
+                            className="px-3 py-1.5 bg-gray-700 text-gray-400 rounded-lg text-xs font-mono"
                         >
                             {table}
                         </span>
@@ -514,16 +514,16 @@ export default function BackupSettings() {
             </div>
 
             {/* ====== HISTÓRICO ====== */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                    <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
                         Histórico de Backups
                     </h4>
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={loadConfig}
-                        className="text-gray-400 hover:text-gray-600 gap-1"
+                        className="text-gray-400 hover:text-gray-400 gap-1"
                     >
                         <RefreshCw className="h-3.5 w-3.5" />
                         Atualizar
@@ -558,7 +558,7 @@ export default function BackupSettings() {
                                         )}
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <p className="text-sm font-medium text-gray-700">
+                                                <p className="text-sm font-medium text-gray-300">
                                                     {backup.timestamp
                                                         ? new Date(backup.timestamp).toLocaleString('pt-PT')
                                                         : backup.folder}

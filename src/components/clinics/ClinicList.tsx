@@ -68,23 +68,23 @@ export default function ClinicList() {
     );
 
     return (
-        <div className="w-80 border-r border-gray-200 bg-white flex flex-col h-full">
+        <div className="w-80 border-r border-gray-800 bg-gray-900 flex flex-col h-full">
 
             {/* Header da Lista */}
-            <div className="p-4 border-b border-gray-100 space-y-4">
+            <div className="p-4 border-b border-gray-800 space-y-4">
                 <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-gray-800">Clínicas</h2>
+                    <h2 className="font-semibold text-white">Clínicas</h2>
                     {isAdmin && (
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10" title="Nova Clínica" onClick={handleCreateNew}>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10" title="Nova Clínica" onClick={handleCreateNew}>
                             <Plus className="h-5 w-5" />
                         </Button>
                     )}
                 </div>
                 <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
                         placeholder="Pesquisar..."
-                        className="pl-9 bg-gray-50 border-gray-200 focus:bg-white transition-all"
+                        className="pl-9 bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500 focus:bg-gray-800 focus:border-amber-500/50 transition-all"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -94,9 +94,9 @@ export default function ClinicList() {
             {/* Lista Scrollable */}
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
                 {loading ? (
-                    <div className="text-center py-8 text-gray-400 text-sm">Carregando...</div>
+                    <div className="text-center py-8 text-gray-500 text-sm">Carregando...</div>
                 ) : filteredClinics.length === 0 ? (
-                    <div className="text-center py-8 text-gray-400 text-sm">Nenhuma clínica encontrada.</div>
+                    <div className="text-center py-8 text-gray-500 text-sm">Nenhuma clínica encontrada.</div>
                 ) : (
                     filteredClinics.map((clinic) => {
                         const isActive = pathname?.includes(clinic.id);
@@ -108,8 +108,8 @@ export default function ClinicList() {
                                 key={clinic.id}
                                 href={`/dashboard/clinics/${clinic.id}`}
                                 className={cn(
-                                    "flex items-center gap-3 p-3 rounded-lg transition-all group hover:bg-gray-50",
-                                    isActive ? "bg-primary/5 border border-primary/20 shadow-sm" : "border border-transparent"
+                                    "flex items-center gap-3 p-3 rounded-lg transition-all group hover:bg-gray-800",
+                                    isActive ? "bg-amber-500/10 border border-amber-500/20 shadow-sm" : "border border-transparent"
                                 )}
                             >
                                 {/* Avatar: Logo ou Iniciais */}
@@ -117,14 +117,14 @@ export default function ClinicList() {
                                     <img
                                         src={logoUrl}
                                         alt={clinic.commercial_name}
-                                        className="h-10 w-10 rounded-full object-cover shrink-0 border border-gray-100"
+                                        className="h-10 w-10 rounded-full object-cover shrink-0 border border-gray-700"
                                     />
                                 ) : (
                                     <div className={cn(
                                         "h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold transition-colors",
                                         isActive
-                                            ? "bg-primary/15 text-primary"
-                                            : "bg-gradient-to-br from-gray-100 to-gray-200 text-gray-500 group-hover:from-primary/10 group-hover:to-primary/5 group-hover:text-primary"
+                                            ? "bg-amber-500/20 text-amber-400"
+                                            : "bg-gray-800 text-gray-400 group-hover:bg-amber-500/10 group-hover:text-amber-400"
                                     )}>
                                         {initials}
                                     </div>
@@ -132,11 +132,11 @@ export default function ClinicList() {
                                 <div className="flex-1 min-w-0">
                                     <h3 className={cn(
                                         "font-medium text-sm truncate",
-                                        isActive ? "text-gray-900" : "text-gray-700"
+                                        isActive ? "text-white" : "text-gray-300"
                                     )}>
                                         {clinic.commercial_name}
                                     </h3>
-                                    <p className="text-xs text-gray-400 truncate mt-0.5">
+                                    <p className="text-xs text-gray-500 truncate mt-0.5">
                                         {clinic.email || 'Sem email'}
                                     </p>
                                 </div>
@@ -147,7 +147,7 @@ export default function ClinicList() {
             </div>
 
             {/* Footer da Lista */}
-            <div className="p-3 border-t border-gray-100 text-xs text-center text-gray-400 bg-gray-50/50">
+            <div className="p-3 border-t border-gray-800 text-xs text-center text-gray-600 bg-gray-900/80">
                 {filteredClinics.length} Clínicas Registadas
             </div>
         </div>

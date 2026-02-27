@@ -9,17 +9,11 @@ import PermissionGuard, { useModulePermission } from '@/components/PermissionGua
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserHomepage, getUserHomepagePath } from '@/lib/userPreferences';
 
-/* 
- * Dashboard Page - Estilo Soft SaaS Premium (Mobbin/Refero)
- * Layout limpo, minimalista e arejado.
- */
-
 export default function DashboardPage() {
     const { user } = useAuth();
     const { canEdit } = useModulePermission('dashboard');
     const router = useRouter();
 
-    // Redirect para homepage configurada pelo utilizador
     useEffect(() => {
         if (user?.id) {
             const homepage = getUserHomepage(user.id);
@@ -32,34 +26,33 @@ export default function DashboardPage() {
 
     return (
         <PermissionGuard module="dashboard">
-            {/* Header Limpo e Moderno (Soft Style) */}
-            <div className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm">
+            {/* Header */}
+            <div className="bg-gray-900 border-b border-gray-800 sticky top-0 z-40">
                 <div className="container mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
                             <p className="text-gray-500 text-sm mt-0.5">
                                 Panorâmica geral da clínica
                             </p>
                         </div>
 
                         <div className="flex items-center gap-3">
-                            {/* Search Bar (Simulada) */}
                             <div className="relative hidden md:block">
-                                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
                                 <input
                                     type="text"
                                     placeholder="Procurar paciente..."
-                                    className="pl-9 pr-4 py-2 bg-gray-50 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all"
+                                    className="pl-9 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-200 w-64 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50 transition-all placeholder-gray-500"
                                 />
                             </div>
 
-                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-600">
+                            <Button variant="ghost" size="icon" className="text-gray-500 hover:text-gray-300 hover:bg-gray-800">
                                 <Bell className="h-5 w-5" />
                             </Button>
 
                             {canEdit && (
-                                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md font-medium px-4">
+                                <Button className="bg-amber-600 text-white hover:bg-amber-500 shadow-md font-medium px-4">
                                     <Plus className="h-4 w-4 mr-2" />
                                     Novo Paciente
                                 </Button>
@@ -69,50 +62,50 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Conteúdo Principal (Scrollable) */}
-            <div className="container mx-auto px-6 py-8 space-y-8 bg-[#f9fafb] min-h-screen">
+            {/* Conteúdo Principal */}
+            <div className="container mx-auto px-6 py-8 space-y-8 bg-gray-950 min-h-screen">
 
-                {/* Stats Cards (Mobbin Style - Clean & White) */}
+                {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {[
-                        { label: 'Pacientes Ativos', value: '1,248', change: '+12%', color: 'text-green-600', bg: 'bg-green-50' },
-                        { label: 'Consultas Hoje', value: '24', change: '-2%', color: 'text-orange-500', bg: 'bg-orange-50' },
-                        { label: 'Faturação Mês', value: '€ 12.4k', change: '+8%', color: 'text-blue-600', bg: 'bg-blue-50' },
+                        { label: 'Pacientes Ativos', value: '1,248', change: '+12%', color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+                        { label: 'Consultas Hoje', value: '24', change: '-2%', color: 'text-orange-400', bg: 'bg-orange-500/15' },
+                        { label: 'Faturação Mês', value: '€ 12.4k', change: '+8%', color: 'text-blue-400', bg: 'bg-blue-500/15' },
                     ].map((stat) => (
-                        <div key={stat.label} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div key={stat.label} className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-gray-700 transition-all">
                             <div className="flex justify-between items-start mb-4">
                                 <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">{stat.label}</h3>
                                 <span className={`text-xs font-semibold px-2 py-1 rounded-full ${stat.bg} ${stat.color}`}>
                                     {stat.change}
                                 </span>
                             </div>
-                            <div className="text-3xl font-bold text-gray-900">{stat.value}</div>
+                            <div className="text-3xl font-bold text-white">{stat.value}</div>
                         </div>
                     ))}
                 </div>
 
-                {/* Section: Módulos Rápidos */}
+                {/* Módulos Rápidos */}
                 <div>
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-gray-900">Acesso Rápido</h2>
+                        <h2 className="text-lg font-semibold text-white">Acesso Rápido</h2>
                         <div className="flex gap-2">
-                            <Button variant="ghost" size="sm" className="text-gray-400"><Grid className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="sm" className="text-gray-400"><List className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-300 hover:bg-gray-800"><Grid className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-300 hover:bg-gray-800"><List className="h-4 w-4" /></Button>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {[
-                            { name: 'Fichas Clínicas', desc: 'Gerir pacientes e históricos', icon: User, color: 'bg-blue-500' },
-                            { name: 'Agenda Médica', desc: 'Marcações e calendário', icon: Calendar, color: 'bg-indigo-500' },
-                            { name: 'Faturação', desc: 'Emitir faturas e orçamentos', icon: Euro, color: 'bg-emerald-500' },
+                            { name: 'Fichas Clínicas', desc: 'Gerir pacientes e históricos', icon: User, color: 'bg-blue-600' },
+                            { name: 'Agenda Médica', desc: 'Marcações e calendário', icon: Calendar, color: 'bg-indigo-600' },
+                            { name: 'Faturação', desc: 'Emitir faturas e orçamentos', icon: Euro, color: 'bg-emerald-600' },
                         ].map((module) => (
-                            <div key={module.name} className="group bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-primary/30 hover:shadow-md transition-all cursor-pointer flex items-center gap-4">
+                            <div key={module.name} className="group bg-gray-900 p-4 rounded-xl border border-gray-800 hover:border-amber-500/30 hover:bg-gray-800/50 transition-all cursor-pointer flex items-center gap-4">
                                 <div className={`w-12 h-12 rounded-lg ${module.color} flex items-center justify-center text-white shadow-lg`}>
                                     <module.icon className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">{module.name}</h4>
+                                    <h4 className="font-semibold text-white group-hover:text-amber-400 transition-colors">{module.name}</h4>
                                     <p className="text-sm text-gray-500">{module.desc}</p>
                                 </div>
                             </div>
@@ -120,9 +113,9 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Welcome Info (Subtle Footer) */}
-                <div className="mt-8 pt-8 border-t border-gray-200 text-center text-sm text-gray-400">
-                    <p>Ligado como <span className="font-medium text-gray-600">{user?.full_name || user?.email || 'Utilizador'}</span> • AsymLAB v2.4 (Soft SaaS)</p>
+                {/* Footer */}
+                <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm text-gray-600">
+                    <p>Ligado como <span className="font-medium text-gray-400">{user?.full_name || user?.email || 'Utilizador'}</span> • AsymLAB v2.4</p>
                 </div>
             </div>
         </PermissionGuard>
