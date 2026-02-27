@@ -4028,3 +4028,80 @@ help_contents
 ---
 
 > **Próximo passo após a documentação:** Iniciar implementação da **Fase 1 (MVP)** — começar pela migração Supabase das 12 tabelas core.
+
+---
+
+### 7.9 — Arquitectura de Storage (NAS + Cloudflare Tunnel)
+
+> **Decisão arquitectural permanente:** Todos os ficheiros pesados são guardados na NAS local do laboratório, não no Supabase Storage.
+
+#### Infraestrutura
+
+| Componente | Detalhe |
+|------------|--------|
+| **NAS** | Servidor local do laboratório |
+| **Internet** | 100 Mbps upload / 900 Mbps download (escalável) |
+| **UPS** | Alimentação ininterrupta — protege contra cortes de energia |
+| **4G Failover** | Cartão de dados móveis — apenas para situações extremas |
+| **Cloudflare Tunnel** | `cloudflared` na NAS — túnel seguro sem abrir portas |
+| **Servidor ficheiros** | Nginx ou MinIO (S3-compatível) na NAS |
+
+#### Fluxo
+
+```
+Upload:  App → Cloudflare Tunnel → NAS (guarda ficheiro)
+                                  → Supabase (guarda path + metadata)
+
+Fetch:   App → Cloudflare Edge → Tunnel → NAS (serve ficheiro)
+         (zero custos de egress/storage cloud)
+```
+
+#### O que fica onde
+
+| No Supabase (cloud) | Na NAS (local) |
+|---------------------|---------------|
+| Tabelas, metadata, paths | Fotos, vídeos, STLs, PDFs |
+| Auth, RLS, sequências | Thumbnails gerados |
+| Configurações, templates | Reports HTML |
+
+#### Estratégia de Backup e Segurança (5 Camadas)
+
+```
+Camada 1: RAID na NAS           → protege contra falha de disco
+Camada 2: Backup airgap auto    → protege contra ransomware
+Camada 3: Versioning no disco   → protege contra malware adormecido
+Camada 4: UPS                   → protege contra cortes de energia
+Camada 5: 4G failover           → protege contra falha de internet
+```
+
+##### Automated Airgap (backup para disco externo)
+
+| Estado | Internet | Porta USB | Disco Externo |
+|--------|----------|-----------|---------------|
+| **Normal** | ON | OFF (desactivada) | Isolado, invisível |
+| **Backup** | OFF | ON (activada) | Acessível, a copiar |
+| **Pós-backup** | OFF → ON | ON → OFF | Isolado novamente |
+
+- **Frequência**: diária ou semanal, durante a noite
+- **Tipo**: incremental (copia apenas alterações)
+- **Versioning**: disco guarda múltiplas versões — mesmo que o último backup esteja comprometido, versões anteriores sobrevivem
+- **Automatização**: NAS detecta internet → desactiva porta USB. Sem internet → activa porta → backup → desactiva → liga internet
+
+> **Custo total mensal: ~€15** (cartão 4G). Hardware é investimento one-time.
+
+---
+
+### 7.10 — Future Features: Configuração de Infra
+
+> Tarefas de configuração a realizar com assistência quando o hardware estiver disponível.
+
+- [ ] Instalar e configurar `cloudflared` na NAS (Cloudflare Tunnel)
+- [ ] Configurar Nginx ou MinIO na NAS como servidor de ficheiros
+- [ ] Configurar RAID (espelhamento de 2 discos)
+- [ ] Configurar automated airgap (script para desactivar/activar porta USB + internet)
+- [ ] Configurar backup incremental com versioning (Hyper Backup ou rsync)
+- [ ] Configurar UPS e notificações de falha de energia
+- [ ] Configurar 4G failover automático
+- [ ] Configurar health check (notificação se tunnel cair)
+- [ ] Migrar ficheiros existentes do Supabase Storage para NAS
+- [ ] Testar fluxo completo: upload → fetch → backup → restore
