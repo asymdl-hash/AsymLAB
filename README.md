@@ -1,6 +1,6 @@
 # AsymLAB - Sistema de Gestão Clínica
 
-[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/asymdl-hash/AsymLAB/releases)
+[![Version](https://img.shields.io/badge/version-1.50.1-blue.svg)](https://github.com/asymdl-hash/AsymLAB/releases)
 [![Next.js](https://img.shields.io/badge/Next.js-14.0.4-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8)](https://tailwindcss.com/)

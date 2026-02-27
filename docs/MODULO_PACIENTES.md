@@ -2,7 +2,7 @@
 
 > **Documento colaborativo de design.**  
 > Construído iterativamente — cada secção é discutida e validada antes de implementar.  
-> Última actualização: 25/02/2026
+> Última actualização: 27/02/2026
 
 ---
 

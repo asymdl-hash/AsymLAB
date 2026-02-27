@@ -1,77 +1,123 @@
 # 🚀 Roadmap & Features Futuras — AsymLAB
 
 > Funcionalidades planeadas para versões futuras. Ordenadas por prioridade.
+> Última actualização: 27/02/2026 (V1.50.1)
+
+---
+
+## ✅ Concluído (V1.0–V1.50.1)
+
+### Infra & Autenticação
+- [x] Estrutura PWA (Next.js 14, TypeScript, Tailwind v4, Supabase)
+- [x] Autenticação Supabase (login, middleware, roles)
+- [x] Gestão de Utilizadores (4 roles: admin, doctor, staff_clinic, staff_lab)
+- [x] RLS policies completas (SELECT, INSERT, UPDATE, DELETE)
+- [x] Sistema de backups (FULL/INCR/AUTO com Task Scheduler)
+- [x] Light/Dark mode toggle por utilizador
+
+### Módulo Pacientes (MVP ~96%)
+- [x] CRUD Pacientes com auto-save
+- [x] Anti-duplicação Levenshtein (3 estados: ok/warning/block)
+- [x] Status do paciente (rascunho/activo/inactivo/arquivado)
+- [x] Planos de Tratamento — lifecycle 6 estados + ReasonModal
+- [x] Fases — lifecycle 4 estados + sequencial + reordenação
+- [x] Agendamentos — 6 tipos, 7 estados, edição inline
+- [x] Considerações V2 — templates, versioning, share links, lab inside, anexos
+- [x] Tab Ficheiros — upload Supabase Storage, galeria, drag-and-drop
+- [x] Tab Histórico — timeline de eventos
+- [x] Tab Documentação — facturas, recibos, documentos
+- [x] Multi-Badge (33 status em 6 categorias)
+- [x] Guias de Transporte e Recepção (cards, confirmação, estados)
+- [x] Facturação base (invoices, receipts, NewInvoiceModal)
+- [x] Fila de Pedidos Kanban (drag & drop, filtros, hero header)
+- [x] Catálogos (5 sub-tabs: Tipos Trabalho, Materiais, Cores, Templates, Status)
+
+### Módulos Auxiliares
+- [x] Módulo Clínicas (ficha, contactos, pontos de entrega, descontos)
+- [x] Módulo Médicos (ficha, parceiros, clínicas associadas)
+- [x] Homepage configurável por utilizador
+- [x] Badge contagem sidebar com refresh 30s
+
+---
 
 ## 🔴 Alta Prioridade (Próximas versões)
 
-### F. Módulo Pacientes
-- [ ] Ficha do paciente completa
-- [ ] Histórico de consultas
-- [ ] Upload de documentos/exames
-- [ ] Pesquisa e filtros avançados
+### Completar MVP Pacientes (~4%)
+- [ ] Permissões granulares — médico vê só seus pacientes, staff clínica só da sua clínica
+- [ ] Médicos associados N:N — tabela `patient_doctors` existe, falta UI
+- [ ] Materiais por fase — tabela `phase_materials` existe, falta UI
+- [ ] Responsividade mobile/tablet completa
 
-### G. Módulo Agenda
-- [ ] Calendário de marcações
-- [ ] Vista diária/semanal/mensal
-- [ ] Notificações de consultas
-- [ ] Integração com pacientes e médicos
-
-### H. Módulo Faturação
-- [ ] Criação de faturas
-- [ ] Integração com descontos das clínicas
-- [ ] Relatórios de faturação
-- [ ] Exportação PDF
-
-### I. Módulo Relatórios
-- [ ] Dashboard com métricas
-- [ ] Gráficos de evolução
-- [ ] Exportação de dados
+### QA & Estabilização
+- [ ] Testes formais de QA do módulo pacientes
+- [ ] Testes de todas as permissões por role
+- [ ] Fix de bugs encontrados em QA
 
 ---
 
 ## 🟡 Média Prioridade
 
-### Gemini MCP Integration (Google AI)
-- [ ] Integrar Google Gemini MCP servers para funcionalidades AI
-- [ ] **O que é:** MCP servers managed pela Google Cloud que ligam modelos AI a serviços externos (BigQuery, Maps, PostgreSQL, Firestore, etc.)
-- [ ] **Casos de uso potenciais:**
-  - AI assistant para análise de dados clínicos
-  - Sugestões automáticas baseadas em histórico
-  - Processamento de linguagem natural para pesquisa de pacientes
-  - Geração automática de relatórios com insights
-- [ ] **Abordagem:** Criar **branch Vercel** (Preview) para experimentar sem afectar produção
-- [ ] **Referência:** [Google Cloud MCP](https://cloud.google.com/blog/products/ai-machine-learning/open-model-context-protocol-servers)
-- [ ] **Lançamento:** Google lançou MCP servers managed em Dez 2025, expandido em 2026
+### Melhorias Funcionais
+- [ ] Considerações agrupadas por fase/agendamento (lista flat → agrupada)
+- [ ] Auto-transições multi-badge (triggers SQL)
+- [ ] Facturação por fase automática
+- [ ] Lock optimista (concorrência)
+- [ ] Pedidos E📋 com aceitar/transitar/cancelar
+- [ ] Impressão PDF das considerações
 
 ### PWA Improvements
 - [ ] Notificações push nativas
+- [ ] Service Worker cache offline para fichas de pacientes
 - [ ] Sincronização offline avançada
 - [ ] App Store (TWA para Android)
 
+### Gemini MCP Integration (Google AI)
+- [ ] AI assistant para análise de dados clínicos
+- [ ] Sugestões automáticas baseadas em histórico
+- [ ] Processamento de linguagem natural para pesquisa
+- [ ] Geração automática de relatórios com insights
+
 ---
 
-## 🟢 Baixa Prioridade / Exploratório
+## 🟢 Baixa Prioridade / Fases Futuras
 
-### B.6 OAuth Flow Improvements
-- [ ] Teste completo do fluxo de convite via email
-- [ ] Melhorar feedback de entrega de email na UI
-- [ ] Suporte para outros providers OAuth (Google, Microsoft)
+### Fase 2 — Comunicação WhatsApp (0%)
+- [ ] Integração Z-API / Evolution API
+- [ ] Grupos por clínica automatizados
+- [ ] @comandos (solicitações, aprovações, fotos)
+- [ ] Templates de mensagens
+- [ ] Fila anti-spam (FIFO com limites)
+- [ ] Alertas de estado (ASAP, agendamento)
+
+### Fase 3 — Billing Completa (30%)
+- [ ] Integração TOConline (facturas automáticas)
+- [ ] Fechar fase sem factura (2 modals de confirmação)
+- [ ] Relatórios de facturação por período/clínica
+- [ ] Exportação PDF de facturas
+
+### Fase 4 — Premium
+- [ ] Visualizador STL 3D (Three.js)
+- [ ] Merge de pacientes (wizard 3 passos)
+- [ ] Câmara HD integrada
+- [ ] NAS migration (Cloudflare Tunnel)
+- [ ] Analytics avançados por médico/clínica
+- [ ] Machine Learning para previsão de prazos
+
+### Infra
+- [ ] Migração ficheiros para NAS (quando hardware adquirido)
+- [ ] Contactos Inteligentes (flag `is_contact` + contactos por entrega)
+- [ ] Role Contabilidade
+- [ ] OAuth social (Google, Microsoft)
 
 ---
 
 ## 📝 Notas Técnicas
 
 ### Branch Vercel para Experimentação
-Para testar features experimentais (como Gemini MCP) sem afectar produção:
+1. `git checkout -b feature/nome-feature`
+2. `git push origin feature/nome-feature`
+3. Vercel cria Preview Deployment automático
+4. Testar isoladamente em URL separado
+5. Merge para `main` → deploy produção
 
-1. **Criar branch Git:** `git checkout -b feature/gemini-mcp`
-2. **Push para GitHub:** `git push origin feature/gemini-mcp`
-3. **Vercel Preview:** Automaticamente cria um deployment preview em URL separado
-4. **Testar isoladamente:** Todas as alterações ficam no preview, produção intacta
-5. **Quando aprovado:** Merge para `main` → deploy automático para produção
-
-> **Nota:** Cada push para um branch não-main gera um Preview Deployment na Vercel com URL única, permitindo testar sem risco.
-
----
-
-**Última actualização:** 21/02/2026
+> Cada push para branch não-main gera um Preview Deployment com URL única.

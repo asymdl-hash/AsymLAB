@@ -408,7 +408,7 @@ Adicionados indexes de `clinic_id` nas tabelas filhas para acelerar queries de f
 
 ---
 
-## Prioridades Atualizadas
+## Prioridades Atualizadas (27/02/2026 — V1.50.1)
 1. ~~Implementar script de backup~~ ✅ V1.7.0
 2. ~~Painel de backups nas Definições~~ ✅ V1.7.0
 3. ~~Implementar gestão de utilizadores~~ ✅ V1.9.0
@@ -421,14 +421,31 @@ Adicionados indexes de `clinic_id` nas tabelas filhas para acelerar queries de f
 10. ~~Ativar Task Scheduler no servidor local~~ ✅ (operacional — configurado via Wizard)
 11. ~~Backup Incremental~~ ✅ V1.9.0 (FULL/INCR/AUTO com updated_at triggers)
 12. ~~Optimização de Performance~~ ✅ V1.9.1 (Indexes + Edge Runtime)
-13. [ ] Contactos Inteligentes — flag `is_contact` + contactos por entrega (ver §3.5)
-14. [ ] Role Contabilidade (quando Faturação existir — ver §3.5)
-15. [ ] Migração NAS (quando adquirida)
-16. [ ] Reanálise de Performance (quando app crescer — ver §6)
-17. [x] Módulo Médicos — Base (V1.13.0)
-18. [ ] Módulo Médicos — Analytics (ver §7)
-19. [ ] Módulo Médicos — WhatsApp Permissions (ver §8)
-20. [ ] Sidebar Reordenável por Utilizador (V1.14.0)
+13. ~~Módulo Pacientes MVP~~ ✅ V1.10–V1.50.1 (~96% completo)
+14. ~~Anti-Duplicação Levenshtein~~ ✅ V1.42.0
+15. ~~Lifecycle Planos (6 estados)~~ ✅ V1.24.0
+16. ~~Lifecycle Fases (4 estados + sequencial)~~ ✅ V1.30.0
+17. ~~Agendamentos UI (6 tipos, 7 estados)~~ ✅ V1.32.0 + V1.43.0
+18. ~~Considerações V2 (templates, versioning, share, lab inside)~~ ✅ V1.38–V1.40
+19. ~~Multi-Badge (33 status, 6 categorias)~~ ✅ V1.35.0
+20. ~~Fila Kanban (drag & drop, filtros)~~ ✅ V1.27–V1.29
+21. ~~Guias Transporte + Recepção~~ ✅ V1.37 + V1.44
+22. ~~Facturação Base (invoices, receipts)~~ ✅ V1.36.0
+23. ~~Catálogos (5 sub-tabs CRUD, seed data)~~ ✅ V1.41.0
+24. ~~Light/Dark Mode toggle por utilizador~~ ✅ V1.45–V1.47
+25. ~~Hero headers gradient (paciente + fila)~~ ✅ V1.49–V1.50
+26. [x] Módulo Médicos — Base (V1.13.0)
+27. [ ] Permissões granulares pacientes (médico/staff vê só seus)
+28. [ ] Médicos associados N:N (tabela existe, falta UI)
+29. [ ] Materiais por fase (tabela existe, falta UI)
+30. [ ] Responsividade mobile/tablet
+31. [ ] Contactos Inteligentes — flag `is_contact` + contactos por entrega (ver §3.5)
+32. [ ] Role Contabilidade (quando Faturação existir — ver §3.5)
+33. [ ] Migração NAS (quando adquirida)
+34. [ ] Reanálise de Performance (quando app crescer — ver §6)
+35. [ ] Módulo Médicos — Analytics (ver §7)
+36. [ ] Módulo Médicos — WhatsApp Permissions (ver §8)
+37. [ ] Sidebar Reordenável por Utilizador
 
 ---
 
