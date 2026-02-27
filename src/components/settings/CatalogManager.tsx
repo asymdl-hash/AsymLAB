@@ -632,13 +632,13 @@ function TemplatesManager() {
 }
 
 // =====================================================
-// STATUSES MANAGER (read + edit labels/colors)
+// STATUSES MANAGER (read + edit nome/emoji)
 // =====================================================
 function StatusesManager() {
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [editForm, setEditForm] = useState({ label: '', cor: '' });
+    const [editForm, setEditForm] = useState({ nome: '', emoji: '' });
     const [saving, setSaving] = useState(false);
 
     const load = useCallback(async () => {
@@ -655,41 +655,67 @@ function StatusesManager() {
         catch (e) { console.error(e); } finally { setSaving(false); }
     };
 
+    // Group by categoria
+    const grouped = items.reduce<Record<string, any[]>>((acc, item) => {
+        const cat = item.categoria || 'outro';
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(item);
+        return acc;
+    }, {});
+
+    const CAT_LABELS: Record<string, string> = {
+        logistica: '📦 Logística',
+        producao: '🔧 Produção',
+        componentes: '🧩 Componentes',
+        comunicacao: '💬 Comunicação',
+        avaliacao: '📋 Avaliação',
+        billing: '💰 Billing',
+    };
+
     return (
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             <div className="p-4 border-b border-gray-100 flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-amber-500" />
                 <span className="text-sm text-gray-500">
-                    {items.length} estados definidos — pode editar labels e cores, mas não adicionar/remover
+                    {items.length} estados definidos — pode editar nomes e emojis, mas não adicionar/remover
                 </span>
             </div>
 
             {loading ? (
                 <div className="text-center py-12"><Loader2 className="h-5 w-5 mx-auto animate-spin text-gray-400" /></div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-2">
-                    {items.map(item => (
-                        <div key={item.id} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 group">
-                            {editingId === item.id ? (
-                                <>
-                                    <input type="color" value={editForm.cor} onChange={e => setEditForm({ ...editForm, cor: e.target.value })} className="w-6 h-6 rounded border cursor-pointer" />
-                                    <input type="text" value={editForm.label} onChange={e => setEditForm({ ...editForm, label: e.target.value })} className="flex-1 text-sm border border-gray-200 rounded px-2 py-1" />
-                                    <button onClick={handleSave} disabled={saving} className="p-1 bg-green-100 text-green-600 rounded"><Save className="h-3 w-3" /></button>
-                                    <button onClick={() => setEditingId(null)} className="p-1 bg-gray-100 text-gray-500 rounded"><X className="h-3 w-3" /></button>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.cor || '#6b7280' }} />
-                                    <span className="text-xs font-mono text-gray-400 w-24 truncate">{item.codigo}</span>
-                                    <span className="text-sm text-gray-700 flex-1">{item.label}</span>
-                                    <button
-                                        onClick={() => { setEditingId(item.id); setEditForm({ label: item.label || '', cor: item.cor || '#6b7280' }); }}
-                                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-blue-500 transition-all"
-                                    >
-                                        <Edit3 className="h-3 w-3" />
-                                    </button>
-                                </>
-                            )}
+                <div className="p-4 space-y-5">
+                    {Object.entries(grouped).map(([cat, statuses]) => (
+                        <div key={cat}>
+                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                {CAT_LABELS[cat] || cat}
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                                {statuses.map(item => (
+                                    <div key={item.id} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 group">
+                                        {editingId === item.id ? (
+                                            <>
+                                                <input type="text" value={editForm.emoji} onChange={e => setEditForm({ ...editForm, emoji: e.target.value })} className="w-10 text-center text-sm border border-gray-200 rounded py-1" />
+                                                <input type="text" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="flex-1 text-sm border border-gray-200 rounded px-2 py-1" />
+                                                <button onClick={handleSave} disabled={saving} className="p-1 bg-green-100 text-green-600 rounded"><Save className="h-3 w-3" /></button>
+                                                <button onClick={() => setEditingId(null)} className="p-1 bg-gray-100 text-gray-500 rounded"><X className="h-3 w-3" /></button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="text-base flex-shrink-0 w-6 text-center">{item.emoji}</span>
+                                                <span className="text-sm text-gray-700 flex-1">{item.nome}</span>
+                                                <span className="text-[10px] text-gray-300 font-mono">#{item.ordem}</span>
+                                                <button
+                                                    onClick={() => { setEditingId(item.id); setEditForm({ nome: item.nome || '', emoji: item.emoji || '' }); }}
+                                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-blue-500 transition-all"
+                                                >
+                                                    <Edit3 className="h-3 w-3" />
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     ))}
                 </div>

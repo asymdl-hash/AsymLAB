@@ -190,7 +190,7 @@ export const catalogService = {
         return data || [];
     },
 
-    async updateWorkStatus(id: string, updates: Partial<{ label: string; cor: string; descricao: string }>) {
+    async updateWorkStatus(id: string, updates: Partial<{ nome: string; emoji: string; categoria: string; activo: boolean }>) {
         const { data, error } = await supabase
             .from('work_status_catalog')
             .update(updates)
