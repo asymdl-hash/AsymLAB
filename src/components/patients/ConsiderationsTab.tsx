@@ -1,122 +1,152 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     MessageSquare,
-    Send,
+    Plus,
     Filter,
     Building2,
     Microscope,
+    Lock,
     Loader2,
     Clock,
     ChevronDown,
+    ChevronRight,
     Paperclip,
-    X,
     FileText,
-    Download,
     Image as ImageIcon,
+    Reply,
+    Edit3,
+    History,
+    Share2,
+    X,
+    Send,
 } from 'lucide-react';
-import { patientsService } from '@/services/patientsService';
+import { considerationsService, ConsiderationField, ConsiderationTemplate } from '@/services/considerationsService';
+import TemplatePicker from './TemplatePicker';
 
+// ===== TYPES =====
 interface ConsiderationsTabProps {
     patientId: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     plans: any[];
 }
 
 const LADO_CONFIG = {
-    lab: { label: 'Lab', color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/30', bubble: 'bg-blue-900/40', icon: Microscope, align: 'items-start' },
-    clinica: { label: 'Clínica', color: 'text-orange-400', bg: 'bg-orange-500/20', border: 'border-orange-500/30', bubble: 'bg-orange-900/40', icon: Building2, align: 'items-end' },
+    medico: { label: 'Médico', color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30', icon: Building2, accent: 'orange' },
+    lab: { label: 'Lab', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30', icon: Microscope, accent: 'blue' },
+    lab_inside: { label: 'Inside', color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/30', icon: Lock, accent: 'purple' },
+    clinica: { label: 'Clínica', color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30', icon: Building2, accent: 'orange' },
 };
 
+type LadoFilter = 'todos' | 'medico' | 'lab' | 'lab_inside';
+type CreateStep = 'idle' | 'template' | 'compose';
+
+// ===== MAIN COMPONENT =====
 export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTabProps) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [considerations, setConsiderations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filterPhaseId, setFilterPhaseId] = useState<string>('');
-    const [showFilter, setShowFilter] = useState(false);
+    const [activeFilter, setActiveFilter] = useState<LadoFilter>('todos');
+    const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
-    // Input state
-    const [newLado, setNewLado] = useState<'lab' | 'clinica'>('lab');
-    const [newConteudo, setNewConteudo] = useState('');
-    const [newPhaseId, setNewPhaseId] = useState('');
+    // Create state
+    const [createStep, setCreateStep] = useState<CreateStep>('idle');
+    const [createLado, setCreateLado] = useState<'medico' | 'lab' | 'lab_inside'>('lab');
+    const [selectedTemplate, setSelectedTemplate] = useState<ConsiderationTemplate | null>(null);
+    const [fields, setFields] = useState<ConsiderationField[]>([]);
+    const [freeText, setFreeText] = useState('');
+    const [createPhaseId, setCreatePhaseId] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const chatEndRef = useRef<HTMLDivElement>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [replyTo, setReplyTo] = useState<any>(null);
 
-    // Attachment state
-    const [attachedFile, setAttachedFile] = useState<File | null>(null);
-    const [attachedPreview, setAttachedPreview] = useState<string | null>(null);
-    const [uploading, setUploading] = useState(false);
-
-    // Get all phases from all plans
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const allPhases = plans.flatMap((p: any) =>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (p.phases || []).map((phase: any) => ({
             id: phase.id,
             nome: phase.nome,
             planNome: p.nome,
-            ordem: phase.ordem,
         }))
     );
 
     const loadConsiderations = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await patientsService.getConsiderations(patientId, filterPhaseId || undefined);
+            const data = await considerationsService.getConsiderations(patientId, {
+                lado: activeFilter === 'todos' ? undefined : activeFilter,
+            });
             setConsiderations(data);
         } catch (err) {
             console.error('Error loading considerations:', err);
         } finally {
             setLoading(false);
         }
-    }, [patientId, filterPhaseId]);
+    }, [patientId, activeFilter]);
 
-    useEffect(() => {
-        loadConsiderations();
-    }, [loadConsiderations]);
+    useEffect(() => { loadConsiderations(); }, [loadConsiderations]);
 
-    useEffect(() => {
-        if (!loading && considerations.length > 0) {
-            chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, [loading, considerations.length]);
+    // Count by lado
+    const countByLado = (lado: string) => considerations.filter(c => c.lado === lado || (lado === 'medico' && c.lado === 'clinica')).length;
 
+    // Group by phase
+    const grouped = considerations.reduce<Record<string, { phaseName: string; items: any[] }>>((acc, c) => {
+        const phaseId = c.phase_id || '_sem_fase';
+        const phaseName = allPhases.find(p => p.id === c.phase_id)?.nome || 'Sem fase';
+        if (!acc[phaseId]) acc[phaseId] = { phaseName, items: [] };
+        acc[phaseId].items.push(c);
+        return acc;
+    }, {});
+
+    Object.values(grouped).forEach(g => g.items.sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    ));
+
+    // Toggle card expand
+    const toggleCard = (id: string) => {
+        setExpandedCards(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
+
+    // Template selected
+    const handleTemplateSelect = (template: ConsiderationTemplate) => {
+        setSelectedTemplate(template);
+        setFields((template.fields || []).map(f => ({
+            subtitulo: f.subtitulo,
+            descricao: f.descricao_default || '',
+            ordem: f.ordem,
+        })));
+        setCreateStep('compose');
+    };
+
+    // Submit
     const handleSubmit = async () => {
-        if ((!newConteudo.trim() && !attachedFile) || !newPhaseId) return;
+        if (!createPhaseId) return;
+        if (!freeText.trim() && fields.every(f => !f.descricao.trim())) return;
+
         try {
             setSubmitting(true);
+            await considerationsService.createConsideration({
+                patient_id: patientId,
+                phase_id: createPhaseId,
+                lado: createLado,
+                tipo: replyTo ? 'resposta' : 'original',
+                parent_id: replyTo?.id || undefined,
+                template_id: selectedTemplate?.id || undefined,
+                conteudo: freeText,
+                fields: fields.length > 0 ? fields : undefined,
+            });
 
-            let anexo_url: string | undefined;
-            let anexo_nome: string | undefined;
-            let anexo_tipo: string | undefined;
-
-            // Upload file if attached
-            if (attachedFile) {
-                setUploading(true);
-                try {
-                    const result = await patientsService.uploadConsiderationFile(newPhaseId, attachedFile);
-                    anexo_url = result.url;
-                    anexo_nome = result.nome;
-                    anexo_tipo = result.tipo;
-                } catch (err) {
-                    console.error('Error uploading file:', err);
-                } finally {
-                    setUploading(false);
-                }
+            // Track template usage
+            if (selectedTemplate) {
+                await considerationsService.trackTemplateUsage(selectedTemplate.id);
             }
 
-            await patientsService.createConsideration({
-                phase_id: newPhaseId,
-                lado: newLado,
-                conteudo: newConteudo.trim() || (anexo_nome ? `📎 ${anexo_nome}` : ''),
-                anexo_url,
-                anexo_nome,
-                anexo_tipo,
-            });
-            setNewConteudo('');
-            clearAttachment();
+            // Reset
+            setCreateStep('idle');
+            setSelectedTemplate(null);
+            setFields([]);
+            setFreeText('');
+            setReplyTo(null);
             loadConsiderations();
         } catch (err) {
             console.error('Error creating consideration:', err);
@@ -125,50 +155,13 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
         }
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSubmit();
-        }
+    // Reply handler
+    const startReply = (consideration: any) => {
+        setReplyTo(consideration);
+        setCreateLado(consideration.lado === 'medico' || consideration.lado === 'clinica' ? 'lab' : 'medico');
+        setCreatePhaseId(consideration.phase_id || '');
+        setCreateStep('template');
     };
-
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setAttachedFile(file);
-        if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = (ev) => setAttachedPreview(ev.target?.result as string);
-            reader.readAsDataURL(file);
-        } else {
-            setAttachedPreview(null);
-        }
-    };
-
-    const clearAttachment = () => {
-        setAttachedFile(null);
-        setAttachedPreview(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-    };
-
-    const isImage = (tipo: string | null | undefined) => tipo?.startsWith('image/');
-
-    // Group considerations by phase
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const grouped = considerations.reduce<Record<string, { phaseName: string; items: any[] }>>((acc, c) => {
-        const phaseId = c.phase_id || '_sem_fase';
-        const phaseName = c.appointment?.phase?.nome ||
-            allPhases.find(p => p.id === c.phase_id)?.nome ||
-            'Sem fase';
-        if (!acc[phaseId]) acc[phaseId] = { phaseName, items: [] };
-        acc[phaseId].items.push(c);
-        return acc;
-    }, {});
-
-    // Sort items within each group by date ascending (chat order)
-    Object.values(grouped).forEach(g => g.items.sort((a: { created_at: string }, b: { created_at: string }) =>
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    ));
 
     return (
         <div className="flex flex-col h-full min-h-[400px]">
@@ -183,245 +176,332 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                         </span>
                     )}
                 </h3>
-                <div className="flex items-center gap-2">
-                    {allPhases.length > 0 && (
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowFilter(!showFilter)}
-                                className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${filterPhaseId
-                                    ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
-                                    : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600'
-                                    }`}
-                            >
-                                <Filter className="h-3 w-3" />
-                                {filterPhaseId
-                                    ? allPhases.find(p => p.id === filterPhaseId)?.nome || 'Fase'
-                                    : 'Filtrar'
-                                }
-                                <ChevronDown className="h-3 w-3" />
-                            </button>
-                            {showFilter && (
-                                <div className="absolute right-0 top-full mt-1 w-52 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
-                                    <button
-                                        onClick={() => { setFilterPhaseId(''); setShowFilter(false); }}
-                                        className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 ${!filterPhaseId ? 'text-amber-400 font-medium' : 'text-gray-300'
-                                            }`}
-                                    >
-                                        Todas as fases
-                                    </button>
-                                    {allPhases.map((phase) => (
-                                        <button
-                                            key={phase.id}
-                                            onClick={() => { setFilterPhaseId(phase.id); setShowFilter(false); }}
-                                            className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 ${filterPhaseId === phase.id ? 'text-amber-400 font-medium' : 'text-gray-300'
-                                                }`}
-                                        >
-                                            {phase.planNome} → F{phase.ordem} {phase.nome}
-                                        </button>
-                                    ))}
-                                </div>
+                <button
+                    onClick={() => { setCreateStep('template'); setReplyTo(null); }}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors"
+                >
+                    <Plus className="h-3 w-3" />
+                    Nova
+                </button>
+            </div>
+
+            {/* Filter tabs */}
+            <div className="flex items-center gap-1 py-2 border-b border-gray-700/30">
+                {(['todos', 'medico', 'lab', 'lab_inside'] as LadoFilter[]).map(filter => {
+                    const isActive = activeFilter === filter;
+                    const config = filter === 'todos' ? null : LADO_CONFIG[filter];
+                    const count = filter === 'todos' ? considerations.length : countByLado(filter);
+
+                    return (
+                        <button
+                            key={filter}
+                            onClick={() => setActiveFilter(filter)}
+                            className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md transition-colors ${isActive
+                                ? config ? `${config.bg} ${config.color} ${config.border} border` : 'bg-gray-700/50 text-gray-300 border border-gray-600'
+                                : 'text-gray-500 hover:text-gray-400'
+                                }`}
+                        >
+                            {config && <config.icon className="h-3 w-3" />}
+                            {filter === 'todos' ? 'Todos' : config?.label}
+                            {count > 0 && (
+                                <span className="text-[10px] opacity-60">({count})</span>
                             )}
-                        </div>
-                    )}
-                </div>
+                        </button>
+                    );
+                })}
             </div>
 
-            {/* Chat area */}
-            <div className="flex-1 overflow-y-auto py-4 space-y-6 min-h-[200px] max-h-[500px]">
-                {loading ? (
-                    <div className="flex justify-center py-12">
-                        <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
-                    </div>
-                ) : considerations.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                        <MessageSquare className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                        <p className="text-sm">Sem considerações</p>
-                        <p className="text-xs mt-1 text-gray-600">Escreva abaixo para iniciar a comunicação</p>
-                    </div>
-                ) : (
-                    Object.entries(grouped).map(([phaseId, group]) => (
-                        <div key={phaseId}>
-                            {/* Phase divider */}
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="flex-1 h-px bg-gray-700/50" />
-                                <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider px-2">
-                                    📍 {group.phaseName}
-                                </span>
-                                <div className="flex-1 h-px bg-gray-700/50" />
-                            </div>
-                            {/* Messages */}
-                            <div className="space-y-2">
-                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                {group.items.map((c: any) => {
-                                    const config = LADO_CONFIG[c.lado as keyof typeof LADO_CONFIG] || LADO_CONFIG.lab;
-                                    const isLab = c.lado === 'lab';
-                                    const Icon = config.icon;
-                                    return (
-                                        <div key={c.id} className={`flex flex-col ${config.align}`}>
-                                            <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${config.bubble} border ${config.border}`}>
-                                                <p className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">
-                                                    {c.conteudo}
-                                                </p>
-                                            </div>
-                                            <div className={`flex items-center gap-1.5 mt-1 px-2 ${isLab ? '' : 'flex-row-reverse'}`}>
-                                                <Icon className={`h-3 w-3 ${config.color}`} />
-                                                <span className={`text-[10px] font-medium ${config.color}`}>{config.label}</span>
-                                                {c.autor && (
-                                                    <span className="text-[10px] text-gray-500">· {c.autor.full_name}</span>
-                                                )}
-                                                <span className="text-[10px] text-gray-600 flex items-center gap-0.5">
-                                                    · <Clock className="h-2.5 w-2.5" /> {getTimeAgo(c.created_at)}
-                                                </span>
-                                                {c.versao > 1 && (
-                                                    <span className="text-[9px] bg-gray-700 text-gray-400 rounded-full px-1.5 py-0.5">
-                                                        v{c.versao}
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            {/* Attachment preview */}
-                                            {c.anexo_url && (
-                                                <div className="mt-1.5">
-                                                    {isImage(c.anexo_tipo) ? (
-                                                        <a href={c.anexo_url} target="_blank" rel="noopener noreferrer">
-                                                            <img
-                                                                src={c.anexo_url}
-                                                                alt={c.anexo_nome || 'Anexo'}
-                                                                className="max-w-[220px] max-h-[180px] rounded-lg border border-gray-600 object-cover hover:opacity-80 transition-opacity cursor-pointer"
-                                                            />
-                                                        </a>
-                                                    ) : (
-                                                        <a
-                                                            href={c.anexo_url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center gap-2 px-3 py-2 bg-gray-800/60 rounded-lg hover:bg-gray-700 transition-colors text-xs"
-                                                        >
-                                                            <FileText className="h-4 w-4 text-gray-400" />
-                                                            <span className="text-gray-300 truncate max-w-[160px]">{c.anexo_nome || 'Ficheiro'}</span>
-                                                            <Download className="h-3 w-3 text-gray-500" />
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ))
-                )}
-                <div ref={chatEndRef} />
-            </div>
-
-            {/* Input area (always visible, like a chat) */}
-            <div className="border-t border-gray-700/50 pt-3 space-y-2">
-                {/* Phase selector + lado toggle */}
-                <div className="flex items-center gap-2">
-                    {/* Lado toggle */}
-                    <div className="flex rounded-lg overflow-hidden border border-gray-700">
-                        {(Object.entries(LADO_CONFIG) as [string, typeof LADO_CONFIG.lab][]).map(([key, config]) => {
-                            const Icon = config.icon;
+            {/* Create area */}
+            {createStep !== 'idle' && (
+                <div className="p-3 border-b border-gray-700/50 bg-gray-800/30">
+                    {/* Lado selector */}
+                    <div className="flex items-center gap-2 mb-3">
+                        <span className="text-[10px] uppercase tracking-wider text-gray-600">Lado:</span>
+                        {(['medico', 'lab', 'lab_inside'] as const).map(l => {
+                            const cfg = LADO_CONFIG[l];
                             return (
                                 <button
-                                    key={key}
-                                    onClick={() => setNewLado(key as 'lab' | 'clinica')}
-                                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors ${newLado === key
-                                        ? `${config.bg} ${config.color}`
-                                        : 'bg-gray-800 text-gray-500 hover:text-gray-400'
+                                    key={l}
+                                    onClick={() => setCreateLado(l)}
+                                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${createLado === l
+                                        ? `${cfg.bg} ${cfg.color} ${cfg.border} border`
+                                        : 'text-gray-500 hover:text-gray-400'
                                         }`}
                                 >
-                                    <Icon className="h-3 w-3" />
-                                    {config.label}
+                                    <cfg.icon className="h-3 w-3" />
+                                    {cfg.label}
                                 </button>
                             );
                         })}
+                        <button
+                            onClick={() => { setCreateStep('idle'); setReplyTo(null); setSelectedTemplate(null); setFields([]); setFreeText(''); }}
+                            className="ml-auto text-gray-600 hover:text-gray-400"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
                     </div>
+
                     {/* Phase selector */}
-                    <select
-                        value={newPhaseId}
-                        onChange={(e) => setNewPhaseId(e.target.value)}
-                        className="flex-1 text-xs bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-gray-300 appearance-none cursor-pointer"
-                    >
-                        <option value="">Seleccione a fase...</option>
-                        {allPhases.map((p) => (
-                            <option key={p.id} value={p.id}>{p.planNome} → F{p.ordem} {p.nome}</option>
-                        ))}
-                    </select>
-                </div>
-                {/* Text input + send */}
-                <div className="flex gap-2">
-                    <div className="flex-1 space-y-1.5">
-                        {/* Attachment preview */}
-                        {attachedFile && (
-                            <div className="flex items-center gap-2 px-3 py-2 bg-gray-800 rounded-lg border border-gray-700">
-                                {attachedPreview ? (
-                                    <img src={attachedPreview} alt="" className="w-10 h-10 rounded object-cover" />
-                                ) : (
-                                    <FileText className="w-5 h-5 text-gray-400" />
-                                )}
-                                <span className="text-xs text-gray-300 truncate flex-1">{attachedFile.name}</span>
-                                <span className="text-[10px] text-gray-500">{(attachedFile.size / 1024).toFixed(0)}KB</span>
-                                <button onClick={clearAttachment} className="text-gray-500 hover:text-red-400">
-                                    <X className="h-3.5 w-3.5" />
+                    <div className="mb-3">
+                        <select
+                            value={createPhaseId}
+                            onChange={e => setCreatePhaseId(e.target.value)}
+                            className="w-full text-xs bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 text-gray-300"
+                        >
+                            <option value="">Seleccionar fase...</option>
+                            {allPhases.map(p => (
+                                <option key={p.id} value={p.id}>{p.planNome} → {p.nome}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Reply indicator */}
+                    {replyTo && (
+                        <div className="mb-3 flex items-center gap-2 text-xs text-gray-500 bg-gray-800/40 rounded-lg px-3 py-2">
+                            <Reply className="h-3 w-3" />
+                            Em resposta a: <span className="text-gray-400">{replyTo.conteudo?.substring(0, 50)}...</span>
+                        </div>
+                    )}
+
+                    {/* Template picker or compose */}
+                    {createStep === 'template' ? (
+                        <TemplatePicker
+                            tipo={createLado}
+                            onSelect={handleTemplateSelect}
+                            onSkip={() => { setSelectedTemplate(null); setFields([]); setCreateStep('compose'); }}
+                        />
+                    ) : (
+                        /* Compose area */
+                        <div className="space-y-2">
+                            {selectedTemplate && (
+                                <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                                    <FileText className="h-3 w-3" />
+                                    Template: <span className="text-gray-400">{selectedTemplate.titulo}</span>
+                                </div>
+                            )}
+
+                            {/* Fields from template */}
+                            {fields.length > 0 && (
+                                <div className="space-y-2">
+                                    {fields.map((f, i) => (
+                                        <div key={i}>
+                                            <label className="text-[10px] uppercase tracking-wider text-gray-500 mb-1 block">
+                                                {f.subtitulo}
+                                            </label>
+                                            <textarea
+                                                value={f.descricao}
+                                                onChange={e => {
+                                                    const updated = [...fields];
+                                                    updated[i] = { ...updated[i], descricao: e.target.value };
+                                                    setFields(updated);
+                                                }}
+                                                placeholder={`Descrever ${f.subtitulo.toLowerCase()}...`}
+                                                rows={2}
+                                                className="w-full text-sm bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 text-gray-300 placeholder:text-gray-600 resize-none focus:outline-none focus:border-gray-600"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Free text */}
+                            <textarea
+                                value={freeText}
+                                onChange={e => setFreeText(e.target.value)}
+                                placeholder={fields.length > 0 ? 'Notas adicionais (opcional)...' : 'Escrever consideração...'}
+                                rows={3}
+                                className="w-full text-sm bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 text-gray-300 placeholder:text-gray-600 resize-none focus:outline-none focus:border-gray-600"
+                            />
+
+                            {/* Actions */}
+                            <div className="flex items-center justify-end gap-2">
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={submitting || !createPhaseId}
+                                    className="flex items-center gap-1.5 text-xs px-4 py-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg hover:bg-amber-500/30 disabled:opacity-40 transition-colors"
+                                >
+                                    {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                                    {submitting ? 'A enviar...' : 'Enviar'}
                                 </button>
                             </div>
-                        )}
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={!newPhaseId || uploading}
-                                className="px-2.5 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-gray-400 hover:text-amber-400 hover:border-amber-500/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                title="Anexar ficheiro"
-                            >
-                                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
-                            </button>
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                onChange={handleFileSelect}
-                                accept="image/*,.pdf,.doc,.docx,.stl,.zip,.rar"
-                                className="hidden"
-                            />
-                            <textarea
-                                value={newConteudo}
-                                onChange={(e) => setNewConteudo(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                placeholder={newPhaseId ? 'Escreva a consideração... (Enter para enviar)' : 'Seleccione uma fase primeiro...'}
-                                rows={1}
-                                disabled={!newPhaseId}
-                                className="flex-1 text-sm bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-gray-200 placeholder:text-gray-600 resize-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30 outline-none disabled:opacity-40 disabled:cursor-not-allowed"
-                            />
-                            <button
-                                onClick={handleSubmit}
-                                disabled={submitting || (!newConteudo.trim() && !attachedFile) || !newPhaseId}
-                                className="px-4 py-2.5 rounded-xl bg-amber-500 text-gray-900 font-medium hover:bg-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
-                            >
-                                {submitting ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Send className="h-4 w-4" />
-                                )}
-                            </button>
                         </div>
-                    </div>
+                    )}
                 </div>
+            )}
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+                {loading ? (
+                    <div className="flex items-center justify-center py-12">
+                        <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
+                    </div>
+                ) : considerations.length === 0 ? (
+                    <div className="text-center py-12">
+                        <MessageSquare className="h-10 w-10 mx-auto mb-3 text-gray-700" />
+                        <p className="text-sm text-gray-500">Sem considerações</p>
+                        <p className="text-xs text-gray-600 mt-1">Clique em &quot;+ Nova&quot; para criar</p>
+                    </div>
+                ) : (
+                    Object.entries(grouped).map(([phaseId, group]) => (
+                        <div key={phaseId} className="mb-4">
+                            {/* Phase header */}
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="h-px flex-1 bg-gray-700/50" />
+                                <span className="text-[10px] uppercase tracking-wider text-gray-600">
+                                    {group.phaseName}
+                                </span>
+                                <div className="h-px flex-1 bg-gray-700/50" />
+                            </div>
+
+                            {/* Cards */}
+                            {group.items.map(c => (
+                                <ConsiderationCard
+                                    key={c.id}
+                                    consideration={c}
+                                    isExpanded={expandedCards.has(c.id)}
+                                    onToggle={() => toggleCard(c.id)}
+                                    onReply={() => startReply(c)}
+                                />
+                            ))}
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     );
 }
 
+// ===== CONSIDERATION CARD =====
+function ConsiderationCard({ consideration: c, isExpanded, onToggle, onReply }: {
+    consideration: any;
+    isExpanded: boolean;
+    onToggle: () => void;
+    onReply: () => void;
+}) {
+    const lado = c.lado || 'lab';
+    const config = LADO_CONFIG[lado as keyof typeof LADO_CONFIG] || LADO_CONFIG.lab;
+    const hasFields = c.fields && Array.isArray(c.fields) && c.fields.length > 0;
+    const isResponse = c.tipo === 'resposta';
+    const version = c.versao || 1;
+
+    return (
+        <div className={`mb-2 rounded-lg border ${config.border} ${config.bg} overflow-hidden transition-all`}>
+            {/* Card header — always visible */}
+            <button
+                onClick={onToggle}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:brightness-110 transition-all"
+            >
+                <config.icon className={`h-3.5 w-3.5 ${config.color} flex-shrink-0`} />
+
+                {isResponse && (
+                    <Reply className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                )}
+
+                <div className="flex-1 min-w-0">
+                    {/* Template title or first line of content */}
+                    <p className={`text-sm font-medium ${config.color} truncate`}>
+                        {c.template?.titulo || (hasFields ? c.fields[0]?.subtitulo : c.conteudo?.substring(0, 60))}
+                    </p>
+
+                    {/* Subtitle: author + time */}
+                    <p className="text-[10px] text-gray-500 mt-0.5">
+                        {c.autor?.full_name || 'Desconhecido'} · {getTimeAgo(c.created_at)}
+                        {version > 1 && <span className="ml-1 text-amber-500/60">v{version}</span>}
+                    </p>
+                </div>
+
+                {/* Attachment indicator */}
+                {c.anexo_url && (
+                    <Paperclip className="h-3 w-3 text-gray-600 flex-shrink-0" />
+                )}
+
+                <ChevronDown className={`h-4 w-4 text-gray-600 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Expanded content */}
+            {isExpanded && (
+                <div className="px-3 pb-3 border-t border-gray-700/30">
+                    {/* Fields */}
+                    {hasFields && (
+                        <div className="mt-2 space-y-2">
+                            {c.fields.map((f: ConsiderationField, i: number) => (
+                                <div key={i}>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">
+                                        {f.subtitulo}
+                                    </span>
+                                    <p className="text-sm text-gray-300 mt-0.5">
+                                        {f.descricao || <span className="text-gray-600 italic">Sem descrição</span>}
+                                    </p>
+                                    {/* Field attachments */}
+                                    {f.anexos && f.anexos.length > 0 && (
+                                        <div className="flex gap-1.5 mt-1">
+                                            {f.anexos.map((path, j) => (
+                                                <div key={j} className="rounded bg-gray-800/60 p-1">
+                                                    <ImageIcon className="h-4 w-4 text-gray-500" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Free text */}
+                    {c.conteudo && (
+                        <div className={`${hasFields ? 'mt-2 pt-2 border-t border-gray-700/30' : 'mt-2'}`}>
+                            <p className="text-sm text-gray-300 whitespace-pre-wrap">{c.conteudo}</p>
+                        </div>
+                    )}
+
+                    {/* Legacy attachment */}
+                    {c.anexo_url && (
+                        <div className="mt-2 flex items-center gap-2 p-2 bg-gray-800/40 rounded-lg">
+                            {c.anexo_tipo?.startsWith('image') ? (
+                                <ImageIcon className="h-4 w-4 text-green-400" />
+                            ) : (
+                                <FileText className="h-4 w-4 text-blue-400" />
+                            )}
+                            <span className="text-xs text-gray-400 truncate">{c.anexo_nome || 'Ficheiro'}</span>
+                        </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-700/30">
+                        <button
+                            onClick={onReply}
+                            className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-amber-400 transition-colors"
+                        >
+                            <Reply className="h-3 w-3" />
+                            Responder
+                        </button>
+                        <button className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-blue-400 transition-colors">
+                            <History className="h-3 w-3" />
+                            Histórico
+                        </button>
+                        <button className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-green-400 transition-colors">
+                            <Share2 className="h-3 w-3" />
+                            Partilhar
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ===== HELPERS =====
 function getTimeAgo(dateString: string): string {
     const now = new Date();
     const date = new Date(dateString);
     const diffMs = now.getTime() - date.getTime();
-    const diffMin = Math.floor(diffMs / 60000);
-    const diffHrs = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMin < 1) return 'Agora';
-    if (diffMin < 60) return `${diffMin}min`;
-    if (diffHrs < 24) return `${diffHrs}h`;
+    if (diffMins < 1) return 'agora';
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
     if (diffDays < 7) return `${diffDays}d`;
-    return date.toLocaleDateString('pt-PT');
+    return date.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
 }
