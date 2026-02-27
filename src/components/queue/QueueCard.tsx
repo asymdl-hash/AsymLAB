@@ -81,7 +81,7 @@ export default function QueueCard({ item }: QueueCardProps) {
 
             {/* Paciente */}
             <div className="flex items-center justify-between gap-2 mb-1">
-                <h4 className="text-sm font-semibold text-gray-100 truncate group-hover:text-amber-400 transition-colors">
+                <h4 className="text-sm font-semibold text-card-foreground truncate group-hover:text-amber-500 transition-colors">
                     {item.paciente.nome}
                 </h4>
                 <span className="text-[10px] font-mono text-gray-500 shrink-0">{item.paciente.t_id}</span>
@@ -93,12 +93,12 @@ export default function QueueCard({ item }: QueueCardProps) {
             {/* Badges row */}
             <div className="flex items-center gap-1.5 flex-wrap mb-2">
                 {item.tipo_trabalho && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-medium border border-blue-500/30">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 font-medium border border-blue-200 dark:border-blue-500/30">
                         {item.tipo_trabalho.nome}
                     </span>
                 )}
                 {item.clinica && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-600/50 text-card-foreground/80 font-medium">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-600/50 text-gray-700 dark:text-gray-300 font-medium">
                         {item.clinica.commercial_name}
                     </span>
                 )}
@@ -113,7 +113,7 @@ export default function QueueCard({ item }: QueueCardProps) {
             <div className="flex items-center justify-between">
                 {/* Progress */}
                 <div className="flex items-center gap-2">
-                    <div className="w-16 h-1.5 bg-gray-600 rounded-full overflow-hidden">
+                    <div className="w-16 h-1.5 bg-border rounded-full overflow-hidden">
                         <div
                             className="h-full bg-emerald-500 rounded-full transition-all"
                             style={{ width: `${progressPct}%` }}

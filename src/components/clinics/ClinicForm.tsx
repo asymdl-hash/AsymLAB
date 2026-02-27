@@ -337,7 +337,7 @@ export default function ClinicForm({ initialData }: ClinicFormProps) {
 
                 {/* ============ CONTENT CARD (sobrepõe o hero) ============ */}
                 <div className="flex-1 -mt-8 px-6 pb-6 relative z-10">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-full">
+                    <div className="bg-card rounded-xl shadow-soft border border-border p-6 min-h-full">
                         <fieldset disabled={!canEdit} className="space-y-6">
                             {/* Status Bar */}
                             {canEdit && (
