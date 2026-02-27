@@ -247,29 +247,35 @@ export default function QueueView() {
                 </div>
             )}
 
-            {/* ====== HEADER ====== */}
-            <div className="px-6 py-4 border-b border-border bg-muted/50">
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                            <ListTodo className="h-5 w-5 text-amber-500" />
+            {/* ====== HERO HEADER ====== */}
+            <div className="bg-gradient-to-r from-[#111827] via-[#1a2332] to-[#111827] px-6 sm:px-8 pt-6 pb-14 relative overflow-hidden">
+                {/* Glow decorativo */}
+                <div className="absolute top-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 flex items-center justify-between gap-4">
+                    {/* Left: Icon + Title + Stats */}
+                    <div className="flex items-center gap-4">
+                        <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 ring-2 ring-amber-500/25 flex items-center justify-center shadow-lg shadow-amber-500/10">
+                            <ListTodo className="h-7 w-7 text-amber-500" />
                         </div>
                         <div>
-                            <h1 className="text-lg font-bold text-card-foreground">Fila de Pedidos</h1>
-                            <p className="text-xs text-muted-foreground">
+                            <h1 className="text-2xl font-bold text-white tracking-tight">Fila de Pedidos</h1>
+                            <p className="text-sm text-gray-400 mt-0.5">
                                 {totalActive} pedido{totalActive !== 1 ? 's' : ''} activo{totalActive !== 1 ? 's' : ''}
-                                {hasActiveFilters && ` · ${filteredItems.length} visíveis`}
+                                {hasActiveFilters && <span className="text-amber-400/80"> · {filteredItems.length} visíveis</span>}
                             </p>
                         </div>
                     </div>
 
+                    {/* Right: Actions */}
                     <div className="flex items-center gap-2">
                         <Button
                             size="sm"
                             variant="ghost"
                             className={cn(
                                 "h-8 gap-1.5 text-xs",
-                                showFilters ? "text-amber-400 bg-amber-500/10" : "text-muted-foreground hover:text-card-foreground"
+                                showFilters ? "text-amber-400 bg-amber-500/15 hover:bg-amber-500/25" : "text-gray-400 hover:text-white hover:bg-white/10"
                             )}
                             onClick={() => setShowFilters(!showFilters)}
                         >
@@ -284,7 +290,7 @@ export default function QueueView() {
                         <Button
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8 text-gray-500 hover:text-card-foreground"
+                            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
                             onClick={handleRefresh}
                             disabled={refreshing}
                         >
@@ -293,103 +299,111 @@ export default function QueueView() {
                     </div>
                 </div>
 
-                {/* Contadores por estado */}
-                <div className="flex items-center gap-3">
-                    {QUEUE_COLUMNS.map(col => (
-                        <div key={col.key} className="flex items-center gap-1.5">
-                            <span className="text-xs">{col.icon}</span>
-                            <span className="text-xs font-medium text-muted-foreground">
-                                {grouped[col.key]?.length || 0}
-                            </span>
-                        </div>
-                    ))}
+                {/* Estado counters como pills */}
+                <div className="relative z-10 flex items-center gap-2 mt-4 flex-wrap">
+                    {QUEUE_COLUMNS.map(col => {
+                        const count = grouped[col.key]?.length || 0;
+                        return (
+                            <div key={col.key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
+                                <span className="text-xs">{col.icon}</span>
+                                <span className="text-xs text-gray-300 font-medium">{col.label}</span>
+                                <span className="text-xs font-bold text-white ml-0.5">{count}</span>
+                            </div>
+                        );
+                    })}
                 </div>
-
-                {/* ====== FILTROS ====== */}
-                {showFilters && (
-                    <div className="mt-3 pt-3 border-t border-border flex items-center gap-3 flex-wrap">
-                        {/* Pesquisa */}
-                        <div className="relative flex-1 min-w-[200px] max-w-[300px]">
-                            <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-500" />
-                            <Input
-                                placeholder="Pesquisar paciente, T-ID, plano..."
-                                className="pl-8 h-8 text-xs bg-muted border-border text-card-foreground placeholder:text-gray-500"
-                                value={filters.search}
-                                onChange={(e) => updateFilter('search', e.target.value)}
-                            />
-                        </div>
-
-                        {/* Clínica */}
-                        <select
-                            className="h-8 text-xs border border-border rounded-md px-2 bg-muted text-card-foreground/80 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
-                            value={filters.clinica_id || ''}
-                            onChange={(e) => updateFilter('clinica_id', e.target.value || null)}
-                        >
-                            <option value="">Todas as Clínicas</option>
-                            {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-
-                        {/* Médico */}
-                        <select
-                            className="h-8 text-xs border border-border rounded-md px-2 bg-muted text-card-foreground/80 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
-                            value={filters.medico_id || ''}
-                            onChange={(e) => updateFilter('medico_id', e.target.value || null)}
-                        >
-                            <option value="">Todos os Médicos</option>
-                            {doctors.map(d => <option key={d.id} value={d.id}>Dr. {d.name}</option>)}
-                        </select>
-
-                        {/* Tipo Trabalho */}
-                        <select
-                            className="h-8 text-xs border border-border rounded-md px-2 bg-muted text-card-foreground/80 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
-                            value={filters.tipo_trabalho_id || ''}
-                            onChange={(e) => updateFilter('tipo_trabalho_id', e.target.value || null)}
-                        >
-                            <option value="">Todos os Tipos</option>
-                            {workTypes.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                        </select>
-
-                        {/* Urgente toggle */}
-                        <button
-                            className={cn(
-                                "h-8 px-3 text-xs rounded-md border transition-colors font-medium",
-                                filters.urgente === true
-                                    ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
-                                    : "bg-muted border-border text-muted-foreground hover:bg-amber-500/10 hover:text-amber-400"
-                            )}
-                            onClick={() => updateFilter('urgente', filters.urgente === true ? null : true)}
-                        >
-                            ⚡ Urgentes
-                        </button>
-
-                        {/* Reset */}
-                        {hasActiveFilters && (
-                            <button
-                                className="text-xs text-amber-400 hover:underline flex items-center gap-1"
-                                onClick={resetFilters}
-                            >
-                                <X className="h-3 w-3" />
-                                Limpar
-                            </button>
-                        )}
-                    </div>
-                )}
             </div>
 
-            {/* ====== KANBAN BOARD ====== */}
-            <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
-                <div className="flex gap-4 h-full min-w-max">
-                    {QUEUE_COLUMNS.map(col => (
-                        <QueueColumn
-                            key={col.key}
-                            title={col.label}
-                            color={col.color}
-                            icon={col.icon}
-                            columnKey={col.key}
-                            items={grouped[col.key] || []}
-                            onDrop={handleDrop}
-                        />
-                    ))}
+            {/* Content area com overlap negativo */}
+            <div className="px-4 sm:px-6 -mt-8 relative z-20 flex-1 flex flex-col overflow-hidden">
+                <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden flex-1 flex flex-col">
+
+                    {/* ====== FILTROS (dentro do card) ====== */}
+                    {showFilters && (
+                        <div className="px-4 py-3 border-b border-border bg-muted/50 flex items-center gap-3 flex-wrap">
+                            {/* Pesquisa */}
+                            <div className="relative flex-1 min-w-[200px] max-w-[300px]">
+                                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-500" />
+                                <Input
+                                    placeholder="Pesquisar paciente, T-ID, plano..."
+                                    className="pl-8 h-8 text-xs bg-muted border-border text-card-foreground placeholder:text-gray-500"
+                                    value={filters.search}
+                                    onChange={(e) => updateFilter('search', e.target.value)}
+                                />
+                            </div>
+
+                            {/* Clínica */}
+                            <select
+                                className="h-8 text-xs border border-border rounded-md px-2 bg-muted text-card-foreground/80 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
+                                value={filters.clinica_id || ''}
+                                onChange={(e) => updateFilter('clinica_id', e.target.value || null)}
+                            >
+                                <option value="">Todas as Clínicas</option>
+                                {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+
+                            {/* Médico */}
+                            <select
+                                className="h-8 text-xs border border-border rounded-md px-2 bg-muted text-card-foreground/80 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
+                                value={filters.medico_id || ''}
+                                onChange={(e) => updateFilter('medico_id', e.target.value || null)}
+                            >
+                                <option value="">Todos os Médicos</option>
+                                {doctors.map(d => <option key={d.id} value={d.id}>Dr. {d.name}</option>)}
+                            </select>
+
+                            {/* Tipo Trabalho */}
+                            <select
+                                className="h-8 text-xs border border-border rounded-md px-2 bg-muted text-card-foreground/80 focus:outline-none focus:ring-2 focus:ring-amber-500/20 [color-scheme:dark]"
+                                value={filters.tipo_trabalho_id || ''}
+                                onChange={(e) => updateFilter('tipo_trabalho_id', e.target.value || null)}
+                            >
+                                <option value="">Todos os Tipos</option>
+                                {workTypes.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                            </select>
+
+                            {/* Urgente toggle */}
+                            <button
+                                className={cn(
+                                    "h-8 px-3 text-xs rounded-md border transition-colors font-medium",
+                                    filters.urgente === true
+                                        ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                                        : "bg-muted border-border text-muted-foreground hover:bg-amber-500/10 hover:text-amber-400"
+                                )}
+                                onClick={() => updateFilter('urgente', filters.urgente === true ? null : true)}
+                            >
+                                ⚡ Urgentes
+                            </button>
+
+                            {/* Reset */}
+                            {hasActiveFilters && (
+                                <button
+                                    className="text-xs text-amber-400 hover:underline flex items-center gap-1"
+                                    onClick={resetFilters}
+                                >
+                                    <X className="h-3 w-3" />
+                                    Limpar
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ====== KANBAN BOARD ====== */}
+                    <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
+                        <div className="flex gap-4 h-full min-w-max">
+                            {QUEUE_COLUMNS.map(col => (
+                                <QueueColumn
+                                    key={col.key}
+                                    title={col.label}
+                                    color={col.color}
+                                    icon={col.icon}
+                                    columnKey={col.key}
+                                    items={grouped[col.key] || []}
+                                    onDrop={handleDrop}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
