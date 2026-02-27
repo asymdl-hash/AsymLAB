@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { considerationsService, ConsiderationField, ConsiderationTemplate } from '@/services/considerationsService';
 import TemplatePicker from './TemplatePicker';
+import VersionHistory from './VersionHistory';
+import ShareLinkModal from './ShareLinkModal';
 
 // ===== TYPES =====
 interface ConsiderationsTabProps {
@@ -57,6 +59,8 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
     const [createPhaseId, setCreatePhaseId] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [replyTo, setReplyTo] = useState<any>(null);
+    const [historyFor, setHistoryFor] = useState<any>(null);
+    const [shareFor, setShareFor] = useState<any>(null);
 
     const allPhases = plans.flatMap((p: any) =>
         (p.phases || []).map((phase: any) => ({
@@ -361,22 +365,55 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                                     isExpanded={expandedCards.has(c.id)}
                                     onToggle={() => toggleCard(c.id)}
                                     onReply={() => startReply(c)}
+                                    onHistory={() => setHistoryFor(c)}
+                                    onShare={() => setShareFor(c)}
+                                    onForwardInside={() => {
+                                        setReplyTo(c);
+                                        setCreateLado('lab_inside');
+                                        setCreatePhaseId(c.phase_id || '');
+                                        setCreateStep('compose');
+                                    }}
                                 />
                             ))}
                         </div>
                     ))
                 )}
             </div>
+
+            {/* Version History Modal */}
+            {historyFor && (
+                <VersionHistory
+                    considerationId={historyFor.id}
+                    currentFields={historyFor.fields || []}
+                    currentConteudo={historyFor.conteudo || ''}
+                    currentVersion={historyFor.versao || 1}
+                    onClose={() => setHistoryFor(null)}
+                />
+            )}
+
+            {/* Share Link Modal */}
+            {shareFor && (
+                <ShareLinkModal
+                    considerationId={shareFor.id}
+                    currentToken={shareFor.share_token}
+                    currentExpires={shareFor.share_expires_at}
+                    onClose={() => setShareFor(null)}
+                    onRefresh={loadConsiderations}
+                />
+            )}
         </div>
     );
 }
 
 // ===== CONSIDERATION CARD =====
-function ConsiderationCard({ consideration: c, isExpanded, onToggle, onReply }: {
+function ConsiderationCard({ consideration: c, isExpanded, onToggle, onReply, onHistory, onShare, onForwardInside }: {
     consideration: any;
     isExpanded: boolean;
     onToggle: () => void;
     onReply: () => void;
+    onHistory: () => void;
+    onShare: () => void;
+    onForwardInside: () => void;
 }) {
     const lado = c.lado || 'lab';
     const config = LADO_CONFIG[lado as keyof typeof LADO_CONFIG] || LADO_CONFIG.lab;
@@ -475,14 +512,29 @@ function ConsiderationCard({ consideration: c, isExpanded, onToggle, onReply }: 
                             <Reply className="h-3 w-3" />
                             Responder
                         </button>
-                        <button className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-blue-400 transition-colors">
+                        <button
+                            onClick={onHistory}
+                            className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-blue-400 transition-colors"
+                        >
                             <History className="h-3 w-3" />
                             Histórico
                         </button>
-                        <button className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-green-400 transition-colors">
+                        <button
+                            onClick={onShare}
+                            className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-green-400 transition-colors"
+                        >
                             <Share2 className="h-3 w-3" />
                             Partilhar
                         </button>
+                        {c.lado !== 'lab_inside' && (
+                            <button
+                                onClick={onForwardInside}
+                                className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-purple-400 transition-colors ml-auto"
+                            >
+                                <Lock className="h-3 w-3" />
+                                Inside
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
