@@ -435,17 +435,23 @@ Adicionados indexes de `clinic_id` nas tabelas filhas para acelerar queries de f
 24. ~~Light/Dark Mode toggle por utilizador~~ ✅ V1.45–V1.47
 25. ~~Hero headers gradient (paciente + fila)~~ ✅ V1.49–V1.50
 26. [x] Módulo Médicos — Base (V1.13.0)
-27. [ ] Permissões granulares pacientes (médico/staff vê só seus)
-28. [ ] Médicos associados N:N (tabela existe, falta UI)
-29. [ ] Materiais por fase (tabela existe, falta UI)
-30. [ ] Responsividade mobile/tablet
-31. [ ] Contactos Inteligentes — flag `is_contact` + contactos por entrega (ver §3.5)
-32. [ ] Role Contabilidade (quando Faturação existir — ver §3.5)
-33. [ ] Migração NAS (quando adquirida)
-34. [ ] Reanálise de Performance (quando app crescer — ver §6)
-35. [ ] Módulo Médicos — Analytics (ver §7)
-36. [ ] Módulo Médicos — WhatsApp Permissions (ver §8)
-37. [ ] Sidebar Reordenável por Utilizador
+27. ~~Permissões granulares pacientes~~ ✅ V1.52.0
+28. ~~Médicos associados N:N (UI chips)~~ ✅ V1.52.0
+29. ~~Materiais por fase (UI inline)~~ ✅ V1.52.0
+30. ~~Responsividade mobile/tablet~~ ✅ V1.53.0
+31. ~~Modal facturação por fase~~ ✅ V1.55.0
+32. ~~Acções rápidas no Kanban~~ ✅ V1.56.0
+33. ~~Auto-transições multi-badge (SQL triggers)~~ ✅ V1.57.0
+34. ~~Export PDF considerações~~ ✅ V1.58.0
+35. [ ] Contactos Inteligentes — flag `is_contact` + contactos por entrega (ver §3.5)
+36. [ ] Role Contabilidade (quando Faturação existir — ver §3.5)
+37. [ ] Migração NAS (quando adquirida)
+38. [ ] Reanálise de Performance (quando app crescer — ver §6)
+39. [ ] Módulo Médicos — Analytics (ver §7)
+40. [ ] Módulo Médicos — WhatsApp Permissions (ver §8)
+41. [ ] Sidebar Reordenável por Utilizador
+42. [ ] Thumbnails ficheiros (previews no DocumentsTab)
+43. [ ] Lock optimista (concorrência multi-user)
 
 ---
 

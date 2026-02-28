@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { auth, supabase } from '@/lib/supabase';
@@ -26,7 +26,8 @@ import {
     ListTodo,
     Lock,
     Sun,
-    Moon
+    Moon,
+    GripVertical
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -84,7 +85,73 @@ export default function Sidebar() {
     }, [fetchQueueCounts]);
 
     // Filtrar menus por permissão
-    const visibleMenuItems = menuItems.filter(item => hasAccess(item.module));
+    const baseVisibleMenuItems = menuItems.filter(item => hasAccess(item.module));
+
+    // === Sidebar reordenável ===
+    const [menuOrder, setMenuOrder] = useState<string[] | null>(null);
+    const [dragIndex, setDragIndex] = useState<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const dragNodeRef = useRef<HTMLElement | null>(null);
+
+    // Load order from localStorage
+    useEffect(() => {
+        if (user?.id) {
+            try {
+                const saved = localStorage.getItem(`sidebar-order-${user.id}`);
+                if (saved) setMenuOrder(JSON.parse(saved));
+            } catch { /* ignore */ }
+        }
+    }, [user?.id]);
+
+    // Apply custom order
+    const visibleMenuItems = useMemo(() => {
+        if (!menuOrder) return baseVisibleMenuItems;
+        const ordered: MenuItem[] = [];
+        for (const href of menuOrder) {
+            const item = baseVisibleMenuItems.find(i => i.href === href);
+            if (item) ordered.push(item);
+        }
+        // Add any new items not in saved order
+        for (const item of baseVisibleMenuItems) {
+            if (!ordered.find(o => o.href === item.href)) ordered.push(item);
+        }
+        return ordered;
+    }, [baseVisibleMenuItems, menuOrder]);
+
+    const handleMenuDragStart = (e: React.DragEvent, idx: number) => {
+        setDragIndex(idx);
+        dragNodeRef.current = e.currentTarget as HTMLElement;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(idx));
+        setTimeout(() => {
+            if (dragNodeRef.current) dragNodeRef.current.style.opacity = '0.3';
+        }, 0);
+    };
+
+    const handleMenuDragOver = (e: React.DragEvent, idx: number) => {
+        e.preventDefault();
+        if (dragIndex === null || dragIndex === idx) return;
+        setDragOverIndex(idx);
+    };
+
+    const handleMenuDragEnd = () => {
+        if (dragNodeRef.current) dragNodeRef.current.style.opacity = '1';
+        if (dragIndex !== null && dragOverIndex !== null && dragIndex !== dragOverIndex) {
+            const newItems = [...visibleMenuItems];
+            const [moved] = newItems.splice(dragIndex, 1);
+            newItems.splice(dragOverIndex, 0, moved);
+            const newOrder = newItems.map(i => i.href);
+            setMenuOrder(newOrder);
+            if (user?.id) {
+                try {
+                    localStorage.setItem(`sidebar-order-${user.id}`, JSON.stringify(newOrder));
+                } catch { /* ignore */ }
+            }
+        }
+        setDragIndex(null);
+        setDragOverIndex(null);
+        dragNodeRef.current = null;
+    };
 
     // Iniciais do utilizador
     const userInitials = user?.full_name
@@ -177,61 +244,76 @@ export default function Sidebar() {
 
             {/* Navigation */}
             <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-                {visibleMenuItems.map((item) => {
+                {visibleMenuItems.map((item, idx) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
                     const readOnly = isReadOnly(item.module);
+                    const isDragTarget = dragOverIndex === idx && dragIndex !== idx;
 
                     return (
-                        <Link
+                        <div
                             key={item.href}
-                            href={item.href}
+                            draggable={!collapsed || isMobile}
+                            onDragStart={e => handleMenuDragStart(e, idx)}
+                            onDragOver={e => handleMenuDragOver(e, idx)}
+                            onDragEnd={handleMenuDragEnd}
                             className={cn(
-                                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group relative",
-                                isActive
-                                    ? "bg-primary/10 text-primary shadow-[inset_2px_0_0_0_#f59e0b]"
-                                    : "text-gray-400 hover:bg-[#1f2937] hover:text-white",
-                                collapsed && !isMobile && "justify-center px-2"
+                                "relative group",
+                                isDragTarget && "before:absolute before:inset-x-0 before:-top-0.5 before:h-0.5 before:bg-primary before:rounded-full"
                             )}
-                            title={collapsed && !isMobile ? `${item.label}${readOnly ? ' (Leitura)' : ''}` : undefined}
                         >
-                            <Icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", isActive ? "text-primary" : "text-gray-500 group-hover:text-white")} />
-                            {(!collapsed || isMobile) && (
-                                <span className="flex-1 flex items-center gap-2">
-                                    {item.label}
-                                    {readOnly && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 text-gray-400 font-normal flex items-center gap-0.5">
-                                            <Lock className="h-2.5 w-2.5" />
-                                            Leitura
-                                        </span>
-                                    )}
-                                    {/* Queue badge */}
-                                    {item.module === 'queue' && queueCount > 0 && (
-                                        <span className="ml-auto flex items-center gap-1">
-                                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-bold tabular-nums">
-                                                {queueCount}
-                                            </span>
-                                            {urgentCount > 0 && (
-                                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold flex items-center gap-0.5">
-                                                    ⚡{urgentCount}
+                            <Link
+                                href={item.href}
+                                className={cn(
+                                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group relative",
+                                    isActive
+                                        ? "bg-primary/10 text-primary shadow-[inset_2px_0_0_0_#f59e0b]"
+                                        : "text-gray-400 hover:bg-[#1f2937] hover:text-white",
+                                    collapsed && !isMobile && "justify-center px-2"
+                                )}
+                                title={collapsed && !isMobile ? `${item.label}${readOnly ? ' (Leitura)' : ''}` : undefined}
+                            >
+                                <Icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", isActive ? "text-primary" : "text-gray-500 group-hover:text-white")} />
+                                {(!collapsed || isMobile) && (
+                                    <>
+                                        <span className="flex-1 flex items-center gap-2">
+                                            {item.label}
+                                            {readOnly && (
+                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 text-gray-400 font-normal flex items-center gap-0.5">
+                                                    <Lock className="h-2.5 w-2.5" />
+                                                    Leitura
+                                                </span>
+                                            )}
+                                            {/* Queue badge */}
+                                            {item.module === 'queue' && queueCount > 0 && (
+                                                <span className="ml-auto flex items-center gap-1">
+                                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-bold tabular-nums">
+                                                        {queueCount}
+                                                    </span>
+                                                    {urgentCount > 0 && (
+                                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold flex items-center gap-0.5">
+                                                            ⚡{urgentCount}
+                                                        </span>
+                                                    )}
                                                 </span>
                                             )}
                                         </span>
-                                    )}
-                                </span>
-                            )}
+                                        <GripVertical className="h-3 w-3 text-gray-600 opacity-0 group-hover:opacity-50 transition-opacity cursor-grab active:cursor-grabbing flex-shrink-0" />
+                                    </>
+                                )}
 
-                            {/* Collapsed badge dot */}
-                            {collapsed && !isMobile && item.module === 'queue' && queueCount > 0 && (
-                                <div className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-blue-500 text-white text-[9px] font-bold flex items-center justify-center px-1">
-                                    {queueCount}
-                                </div>
-                            )}
+                                {/* Collapsed badge dot */}
+                                {collapsed && !isMobile && item.module === 'queue' && queueCount > 0 && (
+                                    <div className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-blue-500 text-white text-[9px] font-bold flex items-center justify-center px-1">
+                                        {queueCount}
+                                    </div>
+                                )}
 
-                            {collapsed && !isMobile && isActive && (
-                                <div className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-primary" />
-                            )}
-                        </Link>
+                                {collapsed && !isMobile && isActive && (
+                                    <div className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-primary" />
+                                )}
+                            </Link>
+                        </div>
                     );
                 })}
             </nav>
