@@ -232,6 +232,92 @@ ifconfig eth0 up
 - [ ] Domínio/subdomínio configurado (ex: `nas.asymlab.pt`)
 - [ ] Disco USB externo para backup air-gapped
 
+### 2.5 — Estratégia de Armazenamento de Ficheiros (Decisão Arquitectural)
+
+> **Decisão (28/02/2026):** Abordagem híbrida — thumbnails no Supabase, ficheiros completos no PC/NAS.
+
+#### Princípio
+
+| Tipo de ficheiro | Onde fica | Porquê |
+|-----------------|-----------|--------|
+| **Thumbnails** (previews pequenos) | **Supabase Storage** | Pouco espaço, carregamento rápido na ficha |
+| **Ficheiros completos** (PDFs, STLs, fotos HD) | **Pasta local / NAS** | Custo zero de storage cloud |
+
+#### Regras para Thumbnails no Supabase
+
+- **Apenas** pacientes **activos** (não arquivados/inactivos)
+- **Apenas** da **fase activa** do plano de tratamento (não fases passadas)
+- Formato: JPEG comprimido, max 200x200px (~10-30KB cada)
+- Quando paciente é arquivado → thumbnails **removidas** do Supabase
+- Quando fase muda → thumbnails da fase anterior **removidas**, novas carregadas
+- **Estimativa de espaço:** ~50 pacientes activos × 5 thumbnails × 30KB = **~7.5MB** (negligível)
+
+#### Fluxo: Como o Médico Acede aos Ficheiros
+
+```
+AGORA (sem NAS):
+┌─────────────┐                      ┌──────────────────┐
+│  Médico em   │   1. Abre ficha     │  Supabase         │
+│  qualquer    │ ──────────────────→  │  (thumbnails)     │
+│  dispositivo │   2. Vê previews     │  JPEG 200x200     │
+│  (Vercel)    │ ←──────────────────  │  Fase activa      │
+│              │                      └──────────────────┘
+│              │   3. Clica "Ver PDF"                      
+│              │ ──── Cloudflare ───→ ┌──────────────────┐
+│              │      Tunnel (grátis)  │  PC do Lab        │
+│              │ ←── PDF completo ──  │  F:\DB\T-0006\   │
+│              │                      │  faturas\          │
+└─────────────┘                      └──────────────────┘
+
+FUTURO (com NAS):
+┌─────────────┐                      ┌──────────────────┐
+│  Médico em   │   1. Abre ficha     │  Supabase         │
+│  qualquer    │ ──────────────────→  │  (thumbnails)     │
+│  dispositivo │   2. Vê previews     │  Fase activa      │
+│  (Vercel)    │ ←──────────────────  └──────────────────┘
+│              │                                           
+│              │   3. Clica "Ver PDF"                      
+│              │ ──── HTTPS ────────→ ┌──────────────────┐
+│              │                      │  NAS (Synology)   │
+│              │ ←── PDF completo ──  │  T-0006/faturas/  │
+│              │   (Synology Drive)    │  fatura_01.pdf    │
+└─────────────┘                      └──────────────────┘
+```
+
+#### Estrutura de Pastas por Paciente
+
+```
+T-0006/
+├── faturas/
+│   ├── fatura_001.pdf
+│   └── fatura_002.pdf
+├── fotos/
+│   ├── scan_01.jpg          ← ficheiro completo (local/NAS)
+│   └── scan_01_thumb.jpg    ← thumbnail (cópia no Supabase)
+├── modelos_3d/
+│   └── modelo_superior.stl
+└── documentos/
+    └── consentimento.pdf
+```
+
+#### Implementação (Ordem)
+
+| Passo | O quê | Quando |
+|-------|-------|--------|
+| 1 | Gerar thumbnails automaticamente ao upload | Próxima sprint |
+| 2 | Guardar thumbnails no Supabase Storage (bucket `thumbnails`) | Próxima sprint |
+| 3 | Configurar **Cloudflare Tunnel** no PC do lab | Quando faturação estiver pronta |
+| 4 | API endpoint para servir ficheiros via tunnel | Quando faturação estiver pronta |
+| 5 | Migrar para NAS + Synology Drive | Quando NAS for comprada |
+
+#### Custos Estimados
+
+| Item | Supabase (Free Tier) | Observação |
+|------|---------------------|------------|
+| Thumbnails | ~7.5MB de 1GB grátis | < 1% do limite |
+| Cloudflare Tunnel | **Grátis** | Sem limites de tráfego |
+| NAS (futuro) | **0€/mês** | Hardware já pago |
+
 ---
 
 ## 3. Acesso & Segurança (Gestão de Utilizadores)
