@@ -4,6 +4,22 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## V1.58.0 - 2026-02-28
+- Exportar considerações para PDF: botão no header, janela print-friendly com agrupamento por fase e branding AsymLAB
+
+## V1.57.0 - 2026-02-28
+- SQL trigger `fn_badge_auto_transitions` com 14 auto-transições nos fluxos Produção, Componentes, Comunicação e Billing
+- Ex: adicionar "Prova Entregue" remove automaticamente "Para Prova"
+
+## V1.56.0 - 2026-02-28
+- Acções rápidas nos cards Kanban: Pausar, Concluir, Cancelar, Retomar, Reabrir
+- Fix: coluna `data_fim` → `data_conclusao` no queueService
+
+## V1.55.0 - 2026-02-28
+- Modal de facturação ao concluir fase: opções "Gerar Factura" e "Sem Factura"
+- Modal com campos valor/descrição ou motivo para sem factura
+- Lógica sequencial: activa próxima fase pendente ao concluir
+
 ## V1.53.0 - 2026-02-28
 - Responsividade mobile/tablet: hero header stack vertical, tabs scroll horizontal, formulário materiais flex-wrap
 - Classe CSS `.scrollbar-hide` para tabs sem scrollbar visível
