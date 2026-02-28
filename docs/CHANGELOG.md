@@ -4,6 +4,17 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## V1.53.0 - 2026-02-28
+- Responsividade mobile/tablet: hero header stack vertical, tabs scroll horizontal, formulário materiais flex-wrap
+- Classe CSS `.scrollbar-hide` para tabs sem scrollbar visível
+
+## V1.52.0 - 2026-02-28
+- Permissões granulares: `createPatient` e `updatePatient` fazem auto-sync em `patient_doctors`
+- UI Médicos Associados N:N: chips coloridos com add/remove dropdown
+- UI Materiais por Fase: secção inline no PhaseDetail com add/remove
+- 5 novas funções no `patientsService`: getPatientDoctors, syncDoctors, getPhaseMaterials, addPhaseMaterial, removePhaseMaterial
+- Backfill SQL de `patient_doctors` para pacientes existentes
+
 ## V1.50.1 - 2026-02-27
 - Cards da fila de pedidos com fundo branco para melhor contraste
 
