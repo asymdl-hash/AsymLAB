@@ -206,7 +206,7 @@ export const queueService = {
 
         // Se concluir, guardar data_fim
         if (novoEstado === 'concluido') {
-            updateData.data_fim = new Date().toISOString();
+            updateData.data_conclusao = new Date().toISOString();
         }
 
         const { error } = await supabase

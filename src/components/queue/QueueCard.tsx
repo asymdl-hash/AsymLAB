@@ -2,13 +2,14 @@
 
 import { QueueItem } from '@/services/queueService';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, Clock, GripVertical } from 'lucide-react';
+import { AlertTriangle, Clock, GripVertical, Pause, Play, CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React from 'react';
 import WorkBadges from '@/components/patients/WorkBadges';
 
 interface QueueCardProps {
     item: QueueItem;
+    onAction?: (planId: string, newEstado: string) => void;
 }
 
 function timeAgo(dateStr: string): string {
@@ -25,7 +26,7 @@ function timeAgo(dateStr: string): string {
     return `${months}mês`;
 }
 
-export default function QueueCard({ item }: QueueCardProps) {
+export default function QueueCard({ item, onAction }: QueueCardProps) {
     const router = useRouter();
 
     const handleClick = (e: React.MouseEvent) => {
@@ -130,6 +131,82 @@ export default function QueueCard({ item }: QueueCardProps) {
                     <span className="text-[10px]">{timeAgo(item.updated_at)}</span>
                 </div>
             </div>
+
+            {/* Quick Actions */}
+            {onAction && (
+                <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                    {item.estado === 'activo' && (
+                        <>
+                            <button
+                                onClick={e => { e.stopPropagation(); onAction(item.id, 'pausado'); }}
+                                className="flex items-center gap-1 text-[10px] text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-500/10 px-1.5 py-1 rounded transition-colors"
+                                title="Pausar"
+                            >
+                                <Pause className="h-3 w-3" /> Pausar
+                            </button>
+                            <button
+                                onClick={e => { e.stopPropagation(); onAction(item.id, 'concluido'); }}
+                                className="flex items-center gap-1 text-[10px] text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-500/10 px-1.5 py-1 rounded transition-colors"
+                                title="Concluir"
+                            >
+                                <CheckCircle2 className="h-3 w-3" /> Concluir
+                            </button>
+                            <button
+                                onClick={e => { e.stopPropagation(); onAction(item.id, 'cancelado'); }}
+                                className="flex items-center gap-1 text-[10px] text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10 px-1.5 py-1 rounded transition-colors ml-auto"
+                                title="Cancelar"
+                            >
+                                <XCircle className="h-3 w-3" />
+                            </button>
+                        </>
+                    )}
+                    {item.estado === 'pausado' && (
+                        <>
+                            <button
+                                onClick={e => { e.stopPropagation(); onAction(item.id, 'activo'); }}
+                                className="flex items-center gap-1 text-[10px] text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-500/10 px-1.5 py-1 rounded transition-colors"
+                                title="Retomar"
+                            >
+                                <Play className="h-3 w-3" /> Retomar
+                            </button>
+                            <button
+                                onClick={e => { e.stopPropagation(); onAction(item.id, 'cancelado'); }}
+                                className="flex items-center gap-1 text-[10px] text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10 px-1.5 py-1 rounded transition-colors ml-auto"
+                                title="Cancelar"
+                            >
+                                <XCircle className="h-3 w-3" />
+                            </button>
+                        </>
+                    )}
+                    {item.estado === 'reaberto' && (
+                        <>
+                            <button
+                                onClick={e => { e.stopPropagation(); onAction(item.id, 'pausado'); }}
+                                className="flex items-center gap-1 text-[10px] text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-500/10 px-1.5 py-1 rounded transition-colors"
+                                title="Pausar"
+                            >
+                                <Pause className="h-3 w-3" /> Pausar
+                            </button>
+                            <button
+                                onClick={e => { e.stopPropagation(); onAction(item.id, 'concluido'); }}
+                                className="flex items-center gap-1 text-[10px] text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-500/10 px-1.5 py-1 rounded transition-colors"
+                                title="Concluir"
+                            >
+                                <CheckCircle2 className="h-3 w-3" /> Concluir
+                            </button>
+                        </>
+                    )}
+                    {item.estado === 'concluido' && (
+                        <button
+                            onClick={e => { e.stopPropagation(); onAction(item.id, 'reaberto'); }}
+                            className="flex items-center gap-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10 px-1.5 py-1 rounded transition-colors"
+                            title="Reabrir"
+                        >
+                            <RotateCcw className="h-3 w-3" /> Reabrir
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

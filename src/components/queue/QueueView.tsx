@@ -400,6 +400,7 @@ export default function QueueView() {
                                     columnKey={col.key}
                                     items={grouped[col.key] || []}
                                     onDrop={handleDrop}
+                                    onAction={(planId, newEstado) => handleDrop(planId, col.key, newEstado)}
                                 />
                             ))}
                         </div>
