@@ -320,6 +320,35 @@ T-0006/
 
 ---
 
+### 2.6 — Foto Avatar do Paciente (Feature Futura)
+
+> **Decisão (28/02/2026):** Ao clicar no avatar de iniciais, o utilizador pode escolher uma foto do paciente.
+> Funciona igual aos avatares de médicos e clínicas.
+
+#### Fluxo
+
+1. Utilizador clica no **avatar de iniciais** (sidebar ou hero header)
+2. Abre selector de ficheiro → escolhe foto
+3. App redimensiona automaticamente para **120x120px JPEG** (~5-15KB)
+4. Thumbnail guardada:
+   - **Supabase Storage** (bucket `patient-avatars`) — enquanto paciente **activo**
+   - **NAS/Pasta local** (`T-0006/avatar.jpg`) — sempre
+
+#### Gestão automática de storage no Supabase
+
+| Estado do paciente | Avatar no Supabase? | Avatar na NAS? |
+|-------------------|--------------------|-|
+| **Activo** | ✅ Sim (thumbnail) | ✅ Sim (original) |
+| **Inactivo/Arquivado** | ❌ Removido automaticamente | ✅ Mantido |
+| **Reactivado/Consultado** | ✅ Re-carregado da NAS | ✅ Sim |
+
+#### Impacto no storage
+
+- ~100 pacientes activos × 15KB = **~1.5MB** (negligível no free tier)
+- Pacientes inactivos custam **0€** no Supabase (avatar só na NAS)
+
+---
+
 ## 3. Acesso & Segurança (Gestão de Utilizadores)
 **Objetivo:** Permitir criar utilizadores para clínicas com acesso restrito e granular.
 
