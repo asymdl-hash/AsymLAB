@@ -359,7 +359,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                 <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-6">
                     {/* Avatar com iniciais + WhatsApp badge */}
                     <div className="relative flex-shrink-0" ref={whatsappRef}>
-                        <div className="h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28 rounded-full bg-gradient-to-br from-primary/25 to-primary/10 ring-[3px] ring-primary/30 flex items-center justify-center shadow-xl shadow-primary/10">
+                        <div className="h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28 rounded-full bg-transparent ring-[3px] ring-primary/50 flex items-center justify-center shadow-xl shadow-primary/10">
                             <span className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">
                                 {getInitials(patient.nome)}
                             </span>
@@ -421,10 +421,12 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     <div className="flex flex-col gap-1.5 min-w-0 flex-1 w-full sm:w-auto">
                         {/* ID + Nome editável + Status */}
                         <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start">
-                            <span className="text-sm sm:text-base font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md border border-primary/20 shrink-0 tracking-wide">{patient.t_id}</span>
+                            <span className="text-base sm:text-lg font-bold text-primary bg-primary/10 px-3 py-1 rounded-md border border-primary/20 shrink-0 tracking-wide">{patient.t_id}</span>
                             {isLabStaff && (
                                 <button
                                     onClick={async () => {
+                                        const btn = document.getElementById('folder-btn');
+                                        if (btn) btn.classList.add('animate-pulse');
                                         try {
                                             const { data: { session } } = await supabase.auth.getSession();
                                             const res = await fetch('/api/patient-folder', {
@@ -438,8 +440,11 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                             if (!res.ok) throw new Error('Erro ao abrir pasta');
                                         } catch (err) {
                                             console.error('Erro ao abrir pasta:', err);
+                                        } finally {
+                                            if (btn) btn.classList.remove('animate-pulse');
                                         }
                                     }}
+                                    id="folder-btn"
                                     className="h-7 w-7 rounded-md flex items-center justify-center text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
                                     title="Abrir pasta do paciente"
                                 >

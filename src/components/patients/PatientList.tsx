@@ -243,7 +243,8 @@ export default function PatientList() {
                                     "h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold transition-colors relative",
                                     patient.urgente
                                         ? "bg-amber-900/30 text-amber-400"
-                                        : "bg-gradient-to-br from-gray-700 to-gray-800 text-muted-foreground group-hover:from-amber-900/20 group-hover:to-amber-900/10 group-hover:text-amber-400"
+                                        : "bg-gradient-to-br from-gray-700 to-gray-800 text-muted-foreground group-hover:from-amber-900/20 group-hover:to-amber-900/10 group-hover:text-amber-400",
+                                    isActive && !patient.urgente && "ring-2 ring-amber-500/60"
                                 )}>
                                     {initials}
                                     {patient.urgente && (
