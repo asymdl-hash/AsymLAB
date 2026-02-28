@@ -21,9 +21,9 @@ export default function PatientPrintSheet({ patient, onClose }: PatientPrintShee
     };
 
     // Obter fase activa (se existir)
-    const activePlan = patient.treatment_plans?.find(p => p.estado === 'activo' || p.estado === 'em_progresso');
-    const activePhase = activePlan?.phases?.find(ph => ph.estado === 'em_progresso' || ph.estado === 'pendente');
-    const phaseName = activePhase?.nome || activePlan?.descricao || '—';
+    const activePlan = patient.treatment_plans?.find(p => p.estado === 'activo');
+    const activePhase = activePlan?.phases?.find(ph => ph.estado === 'em_curso' || ph.estado === 'pendente');
+    const phaseName = activePhase?.nome || '—';
 
     const handlePrint = () => {
         const today = new Date().toLocaleDateString('pt-PT', {
@@ -150,10 +150,10 @@ body {
     color: rgba(255,255,255,0.55);
 }
 
-/* Linha 2: Grelha Clínica | Médico | Fase | Data */
+/* Linha 2: Grelha Clínica | Médico | Fase */
 .header-fields {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 0;
     border-top: 1px solid rgba(255,255,255,0.08);
     padding-top: 14px;
@@ -212,16 +212,8 @@ body {
 .footer {
     background: #f8fafc;
     border-top: 1px solid #e2e8f0;
-    padding: 14px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.footer-left {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    padding: 16px 40px;
+    text-align: center;
 }
 
 .footer-lab-name {
@@ -229,23 +221,19 @@ body {
     font-weight: 700;
     color: #334155;
     letter-spacing: 0.5px;
+    margin-bottom: 4px;
 }
 
 .footer-lab-details {
     font-size: 8px;
     color: #94a3b8;
-    line-height: 1.6;
+    line-height: 1.8;
 }
 
-.footer-right {
-    text-align: right;
+.footer-print-date {
+    margin-top: 6px;
     font-size: 8px;
-    color: #94a3b8;
-    line-height: 1.6;
-}
-
-.footer-right strong {
-    color: #64748b;
+    color: #b0b8c4;
 }
 
 @media print {
@@ -290,11 +278,6 @@ body {
             <div class="field">
                 <div class="field-label">Fase</div>
                 <div class="field-value">${phaseName}</div>
-            </div>
-            <div class="field">
-                <div class="field-label">Data</div>
-                <div class="field-value">${today}</div>
-            </div>
         </div>
     </div>
 </div>
@@ -307,17 +290,11 @@ body {
 
 <!-- ═══ FOOTER ═══ -->
 <div class="footer">
-    <div class="footer-left">
-        <div class="footer-lab-name">AsymLAB — Laboratório de Prótese Dentária</div>
-        <div class="footer-lab-details">
-            NIF: 517 852 463 · Rua do Laboratório, 123 · 4000-001 Porto<br>
-            Tel: +351 912 345 678 · geral@asymlab.pt
-        </div>
+    <div class="footer-lab-name">AsymLAB — Laboratório de Prótese Dentária</div>
+    <div class="footer-lab-details">
+        NIF: 517 852 463 · Rua do Laboratório, 123 · 4000-001 Porto · Tel: +351 912 345 678 · geral@asymlab.pt
     </div>
-    <div class="footer-right">
-        <div><strong>${patient.t_id}</strong> · ${patient.nome}</div>
-        <div>Impresso em ${today} · Impressão nº ${printCount}</div>
-    </div>
+    <div class="footer-print-date">Impresso em ${today}</div>
 </div>
 </body>
 </html>`);
