@@ -4,6 +4,15 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## V1.60.0 - 2026-02-28
+- Thumbnails nos ficheiros: imagens com preview 48x48, PDFs com badge vermelho, outros com emoji do tipo
+- Contactos Inteligentes marcado como ✅ (já implementado)
+
+## V1.59.0 - 2026-02-28
+- Sidebar reordenável por utilizador: drag-and-drop com GripVertical handle
+- Ordem persistida em localStorage por user_id
+- Indicador visual amber na posição de drop
+
 ## V1.58.0 - 2026-02-28
 - Exportar considerações para PDF: botão no header, janela print-friendly com agrupamento por fase e branding AsymLAB
 
