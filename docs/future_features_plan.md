@@ -94,55 +94,143 @@
 
 ---
 
-## 2. Migração para NAS 🔜 FUTURO (Adiado)
+## 2. Migração para NAS 🔜 FUTURO (Quando NAS for adquirida)
 
-> **Nota:** Esta tarefa será implementada quando a NAS for adquirida. Não é prioritária neste momento.
+> **Decisão (28/02/2026):** Hardware e arquitectura definidos. Implementar quando NAS for comprada.
 
-### Fase 1 — NAS como Drive de Rede (Simples, já suportado)
-- A NAS aparece como drive de rede (ex: `Z:\AsymLAB\DB\Supabase`)
-- O **PC continua a correr o backup**, mas guarda na NAS
-- Basta alterar o path nas Definições da app
-- **Requisito:** PC ligado na hora do backup
-- **Sem instalação de software na NAS**
+### 2.0 — Hardware Decidido
 
-### Fase 2 — NAS Autónoma (Ideal, futuro)
-Wizard passo-a-passo na app de Definições:
+#### Lista de Compras
+
+| Item | Modelo | Especificação | Preço est. |
+|------|--------|---------------|------------|
+| **NAS** | Synology DS925+ | 4 bays, 2x 2.5GbE, M.2 NVMe slots, Docker | ~€550 |
+| **Discos (Storage)** | 2x Seagate IronWolf Pro 8TB | NAS-rated, 5 anos garantia, 300TB/ano workload | ~€400 |
+| **SSD Cache** | 2x Crucial T500 1TB NVMe | Cache de leitura/escrita nos slots M.2 internos | ~€160 |
+| **UPS** | APC BX1600MI | 1600VA/900W, ~5h autonomia a 55W, USB auto-shutdown | ~€180 |
+| **Disco Backup** | WD Elements 8TB USB | Backup air-gapped externo | ~€150 |
+| | | **Total** | **~€1.440** |
+
+#### Porquê DS925+ (Plus Series):
+- **RAM expansível** — escala sem trocar NAS
+- **2.5GbE** — 3x mais rápido que rede normal (STLs pesados)
+- **M.2 NVMe** — SSD cache = ficheiros frequentes servidos instantaneamente
+- **Docker** — pode correr o "Lab API" directamente na NAS (elimina PC)
+- **4 bays** — começa com 2 discos RAID 1, adiciona mais 2 no futuro (RAID 5)
+
+#### Porquê IronWolf **Pro** em vez de normal:
+- 5 anos garantia (vs 3 anos)
+- 300TB/ano workload (vs 180TB)
+- Sensores de vibração para NAS multi-disco
+
+### 2.1 — Arquitectura: Uma Só App (AsymLAB via Vercel)
+
+> **Decisão:** NÃO teremos duas apps separadas (AsymLAB + AsymLAB LOCAL).
+> A Synology Drive fornece acesso remoto aos ficheiros — o botão 📁 redireciona para o portal da NAS.
 
 ```
-Passo 1: Escolher diretório da NAS
-  └── Selecionar drive de rede montada
-  └── App valida se o caminho é acessível e tem permissão de escrita
-
-Passo 2: Copiar ficheiros para a NAS
-  └── App copia automaticamente:
-      - scripts/backup-supabase.js
-      - DB/Supabase/config.json (com path atualizado)
-      - .env.local (variáveis Supabase)
-
-Passo 3: Instalar Node.js na NAS
-  └── Depende da marca da NAS:
-      - Synology → Package Center → Node.js
-      - QNAP → App Center → Node.js
-      - TrueNAS → pkg install node
-  └── App mostra instruções específicas com screenshots
-
-Passo 4: Agendar na NAS
-  └── Synology → Task Scheduler no DSM
-  └── QNAP → crontab via SSH
-  └── TrueNAS → cron
-  └── App gera o comando cron específico:
-      30 23 * * * cd /caminho/backup && node backup-supabase.js
-
-Passo 5: Verificação
-  └── App tenta contactar a NAS e confirma que o backup corre
-  └── Indica se a migração foi bem-sucedida
+┌─────────────────────────────────────────────────┐
+│             Supabase (Cloud)                     │
+│  Base de dados principal — fonte de verdade      │
+└────────────┬────────────────────────────────────┘
+             │
+     ┌───────▼───────┐         ┌──────────────────┐
+     │   Vercel       │         │   Synology NAS    │
+     │   (App única)  │         │   (DS925+)        │
+     │                │         │                    │
+     │  • UI completa │  📁──►  │  • Synology Drive  │
+     │  • Botão 📁    │         │    (acesso remoto)  │
+     │    redireciona  │         │  • Ficheiros STL   │
+     │    para NAS    │         │  • Fotos/scans      │
+     │  • Acessível   │         │  • Backup local     │
+     │    de qualquer  │         │  • API local (Docker)│
+     │    lugar        │         │                    │
+     └────────────────┘         └──────────────────┘
 ```
 
-### ⚠️ Dependências da Fase 2:
-- Marca/modelo da NAS (determina o sistema operativo)
-- Acesso SSH à NAS
-- Node.js disponível na NAS
-- **Implementar quando a NAS for adquirida**
+**Botão 📁 — Comportamento:**
+- Redireciona para URL da NAS (ex: `https://nas.asymlab.pt/Pacientes/T-0006`)
+- Funciona em qualquer sítio (lab, casa, mobile)
+- Sem necessidade de localhost
+
+### 2.2 — Migração do PC actual para NAS
+
+| Passo | Acção | Detalhes |
+|-------|-------|---------|
+| 1 | Instalar NAS + discos | Criar volume RAID 1, instalar DSM |
+| 2 | Copiar pastas | `F:\AsymLAB\DB\Pacientes\` → `\\NAS\AsymLAB\DB\Pacientes\` |
+| 3 | Activar Synology Drive | Acesso remoto via browser/app |
+| 4 | Mudar path no código | **1 linha:** `PATIENTS_BASE_PATH = '\\\\NAS\\AsymLAB\\DB\\Pacientes'` |
+| 5 | Mudar botão 📁 | **1 linha:** redirecionar para URL Synology Drive |
+| 6 | Configurar backup air-gapped | Ver §2.3 |
+| 7 | Migrar scripts de backup Supabase | PC → NAS (Node.js no Docker) |
+
+### 2.3 — Backup Air-Gapped Automático (Protecção Anti-Ransomware)
+
+> **Decisão:** Backup diário isolado às 1h da manhã com corte total de rede durante o processo.
+
+**Fluxo automático (Task Scheduler da Synology):**
+
+```
+00:55  → Script desliga interface de rede da NAS (ifconfig eth0 down)
+         NAS fica COMPLETAMENTE isolada — sem internet, sem rede local
+         
+01:00  → Monta disco USB externo (WD Elements 8TB)
+         Hyper Backup executa backup incremental (só mudanças do dia)
+         
+01:15  → Ejecta disco USB (sync && umount)
+         Disco fica fisicamente ligado mas logicamente inacessível
+         
+01:16  → Religa interface de rede (ifconfig eth0 up)
+         NAS volta a estar acessível normalmente
+```
+
+**Janela de exposição:** ~20 minutos/dia em que o disco está montado, mas **sem rede** — impossível atacar remotamente.
+
+**Script bash para a Synology:**
+```bash
+#!/bin/bash
+# /volume1/scripts/airgap-backup.sh
+
+# 1. Desligar rede
+ifconfig eth0 down
+sleep 10
+
+# 2. Montar USB e fazer backup (Hyper Backup faz via API)
+# O Hyper Backup é agendado separadamente para 01:00
+
+# 3. Esperar pelo backup (estimativa 15 min)
+sleep 900
+
+# 4. Ejectar USB
+sync
+umount /volumeUSB1/usbshare
+
+# 5. Religar rede
+ifconfig eth0 up
+```
+
+**Impacto:** Durante ~20 min às 1h da manhã, ninguém acede à NAS. Sem impacto real.
+
+### 2.4 — Configuração UPS + NAS
+
+| Configuração | Detalhe |
+|-------------|---------|
+| Cabo USB | UPS → NAS (porta USB) |
+| DSM → Energy | Activar "Quando UPS atinge nível crítico → Desligar NAS em segurança" |
+| DSM → Startup | "Ligar automaticamente quando eletricidade volta" ✅ |
+| Autonomia | ~5h com NAS + router a 55W |
+
+### ⚠️ Nota: Supabase Storage NÃO será usado
+
+> **Decisão (28/02/2026):** Ficheiros de pacientes ficam na NAS local, **não** no Supabase Storage.
+> **Razão:** Custo de storage cloud seria demasiado elevado para o volume de STLs, fotos e scans esperado.
+
+### ⚠️ Dependências para implementar:
+- [ ] NAS adquirida e instalada no laboratório
+- [ ] Synology Drive activado e acessível remotamente
+- [ ] Domínio/subdomínio configurado (ex: `nas.asymlab.pt`)
+- [ ] Disco USB externo para backup air-gapped
 
 ---
 
