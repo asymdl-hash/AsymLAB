@@ -111,6 +111,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const doctorMultiRef = useRef<HTMLDivElement>(null);
     const teamRef = useRef<HTMLDivElement>(null);
     const whatsappRef = useRef<HTMLDivElement>(null);
+    const whatsappPopupRef = useRef<HTMLDivElement | null>(null);
 
     // Click-outside para fechar popups sem overlay
     useEffect(() => {
@@ -121,7 +122,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
             if (showTeam && teamRef.current && !teamRef.current.contains(e.target as Node)) {
                 setShowTeam(false);
             }
-            if (showWhatsApp && whatsappRef.current && !whatsappRef.current.contains(e.target as Node)) {
+            if (showWhatsApp && whatsappRef.current && !whatsappRef.current.contains(e.target as Node) && (!whatsappPopupRef.current || !whatsappPopupRef.current.contains(e.target as Node))) {
                 setShowWhatsApp(false);
                 // Save directo ao fechar (sem debounce)
                 if (whatsappUrl !== (patient.whatsapp_group_url || '')) {
@@ -360,7 +361,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         </button>
                         {/* WhatsApp popup */}
                         {showWhatsApp && createPortal(
-                            <div ref={el => { if (el && whatsappRef.current) { const r = whatsappRef.current.getBoundingClientRect(); el.style.top = `${r.bottom + 8}px`; el.style.left = `${Math.max(8, r.left - 80)}px`; } }} className="fixed bg-white rounded-xl shadow-2xl z-[9999] p-4 w-[320px] border border-gray-200">
+                            <div ref={el => { whatsappPopupRef.current = el; if (el && whatsappRef.current) { const r = whatsappRef.current.getBoundingClientRect(); el.style.top = `${r.bottom + 8}px`; el.style.left = `${Math.max(8, r.left - 80)}px`; } }} className="fixed bg-white rounded-xl shadow-2xl z-[9999] p-4 w-[320px] border border-gray-200">
                                 <div className="flex items-center gap-2 mb-3">
                                     <MessageCircle className={cn("h-4 w-4", patient.whatsapp_group_url ? "text-green-500" : "text-gray-400")} />
                                     <span className="text-xs font-semibold text-gray-700">Grupo WhatsApp</span>
