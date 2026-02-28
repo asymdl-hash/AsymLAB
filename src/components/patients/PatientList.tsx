@@ -275,7 +275,7 @@ export default function PatientList() {
                                     </div>
                                     <h3 className={cn(
                                         "font-semibold text-sm mt-0.5 leading-tight",
-                                        isActive ? "text-gray-100" : "text-card-foreground/80"
+                                        isActive ? "text-white" : "text-card-foreground/90"
                                     )}>
                                         {patient.nome}
                                     </h3>
