@@ -4,6 +4,8 @@ export async function GET(request: NextRequest) {
     const host = request.headers.get('host') || '';
     const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
 
+    const iconsDir = isLocal ? '/icons-local' : '/icons';
+
     const manifest = {
         name: isLocal ? 'AsymLAB LOCAL' : 'AsymLAB',
         short_name: isLocal ? 'AsymLAB LOCAL' : 'AsymLAB',
@@ -16,14 +18,14 @@ export async function GET(request: NextRequest) {
         theme_color: isLocal ? '#166534' : '#0f172a',
         orientation: 'portrait-primary',
         icons: [
-            { src: '/icons/icon-72x72.png', sizes: '72x72', type: 'image/png', purpose: 'any maskable' },
-            { src: '/icons/icon-96x96.png', sizes: '96x96', type: 'image/png', purpose: 'any maskable' },
-            { src: '/icons/icon-128x128.png', sizes: '128x128', type: 'image/png', purpose: 'any maskable' },
-            { src: '/icons/icon-144x144.png', sizes: '144x144', type: 'image/png', purpose: 'any maskable' },
-            { src: '/icons/icon-152x152.png', sizes: '152x152', type: 'image/png', purpose: 'any maskable' },
-            { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-            { src: '/icons/icon-384x384.png', sizes: '384x384', type: 'image/png', purpose: 'any maskable' },
-            { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+            { src: `${iconsDir}/icon-72x72.png`, sizes: '72x72', type: 'image/png', purpose: 'any maskable' },
+            { src: `${iconsDir}/icon-96x96.png`, sizes: '96x96', type: 'image/png', purpose: 'any maskable' },
+            { src: `${iconsDir}/icon-128x128.png`, sizes: '128x128', type: 'image/png', purpose: 'any maskable' },
+            { src: `${iconsDir}/icon-144x144.png`, sizes: '144x144', type: 'image/png', purpose: 'any maskable' },
+            { src: `${iconsDir}/icon-152x152.png`, sizes: '152x152', type: 'image/png', purpose: 'any maskable' },
+            { src: `${iconsDir}/icon-192x192.png`, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+            { src: `${iconsDir}/icon-384x384.png`, sizes: '384x384', type: 'image/png', purpose: 'any maskable' },
+            { src: `${iconsDir}/icon-512x512.png`, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
         screenshots: [
             { src: '/screenshots/desktop.png', sizes: '1280x720', type: 'image/png', form_factor: 'wide' },
