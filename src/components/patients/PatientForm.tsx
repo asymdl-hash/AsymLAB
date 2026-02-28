@@ -286,7 +286,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                 </div>
             )}
             {/* ============ HERO HEADER ============ */}
-            <div className="bg-gradient-to-r from-[#111827] via-[#1a2332] to-[#111827] px-4 sm:px-8 pt-6 sm:pt-8 pb-14 sm:pb-16 relative z-30">
+            <div className={cn("bg-gradient-to-r from-[#111827] via-[#1a2332] to-[#111827] px-4 sm:px-8 pt-6 sm:pt-8 pb-14 sm:pb-16 relative", (showDoctorMulti || showTeam) && "z-30")}>
                 {/* Subtle pattern overlay */}
                 <div className="absolute inset-0 opacity-5 pointer-events-none" style={{
                     backgroundImage: 'radial-gradient(circle at 25% 50%, rgba(245,158,11,0.3) 0%, transparent 50%), radial-gradient(circle at 75% 50%, rgba(245,158,11,0.15) 0%, transparent 50%)'
