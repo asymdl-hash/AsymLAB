@@ -26,6 +26,7 @@ import {
     Check,
     Phone,
     MessageCircle,
+    Printer,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +41,7 @@ import ConsiderationsTab from '@/components/patients/ConsiderationsTab';
 import FilesTab from '@/components/patients/FilesTab';
 import DocumentsTab from '@/components/patients/DocumentsTab';
 import HistoryTab from '@/components/patients/HistoryTab';
+import PatientPrintSheet from '@/components/patients/PatientPrintSheet';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Status do paciente
@@ -77,6 +79,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [showNewPlan, setShowNewPlan] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showPrint, setShowPrint] = useState(false);
     const [clinics, setClinics] = useState<{ id: string; commercial_name: string }[]>([]);
     const [doctors, setDoctors] = useState<{ user_id: string; full_name: string }[]>([]);
     const router = useRouter();
@@ -661,6 +664,15 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                             <AlertTriangle className="h-3.5 w-3.5" />
                             <span className="hidden sm:inline">Urgente</span>
                         </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
+                            onClick={() => setShowPrint(true)}
+                            title="Imprimir ficha clínica"
+                        >
+                            <Printer className="h-4 w-4" />
+                        </Button>
                         {isAdmin && (
                             <Button
                                 variant="ghost"
@@ -905,6 +917,14 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                             patientName={patient.nome}
                             onConfirm={handleDeleteConfirm}
                             onCancel={() => setShowDeleteModal(false)}
+                        />
+                    )}
+
+                    {/* Modal Impressão Ficha Clínica */}
+                    {showPrint && (
+                        <PatientPrintSheet
+                            patient={patient}
+                            onClose={() => setShowPrint(false)}
                         />
                     )}
                 </div>
