@@ -588,11 +588,28 @@ export default function DocumentsTab({ patientId }: DocumentsTabProps) {
                                 <div className="divide-y divide-gray-700/50">
                                     {documents.map(doc => {
                                         const typeConfig = DOC_TYPE_CONFIG[doc.tipo] || DOC_TYPE_CONFIG.outro;
+                                        const isImage = doc.file_url && /\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i.test(doc.file_url);
+                                        const isPDF = doc.file_url && /\.pdf$/i.test(doc.file_url);
+
                                         return (
                                             <div key={doc.id} className="p-4 hover:bg-muted/20 transition-colors">
                                                 <div className="flex items-center justify-between gap-3">
-                                                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                        <span className="text-base">{typeConfig.emoji}</span>
+                                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                        {/* Thumbnail / Icon */}
+                                                        {isImage ? (
+                                                            <a href={doc.file_url} target="_blank" rel="noreferrer"
+                                                                className="w-12 h-12 rounded-lg overflow-hidden border border-border hover:border-blue-500 transition-colors flex-shrink-0 bg-muted">
+                                                                <img src={doc.file_url} alt={doc.nome} className="w-full h-full object-cover" />
+                                                            </a>
+                                                        ) : isPDF ? (
+                                                            <div className="w-12 h-12 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+                                                                <span className="text-[10px] font-bold text-red-400 uppercase">PDF</span>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="w-12 h-12 rounded-lg bg-muted/50 border border-border flex items-center justify-center flex-shrink-0">
+                                                                <span className="text-xl">{typeConfig.emoji}</span>
+                                                            </div>
+                                                        )}
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-sm text-card-foreground truncate">{doc.nome}</p>
                                                             <p className="text-[10px] text-muted-foreground">{typeConfig.label} · {formatDate(doc.uploaded_at)}</p>

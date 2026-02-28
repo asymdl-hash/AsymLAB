@@ -443,7 +443,7 @@ Adicionados indexes de `clinic_id` nas tabelas filhas para acelerar queries de f
 32. ~~Acções rápidas no Kanban~~ ✅ V1.56.0
 33. ~~Auto-transições multi-badge (SQL triggers)~~ ✅ V1.57.0
 34. ~~Export PDF considerações~~ ✅ V1.58.0
-35. [ ] Contactos Inteligentes — flag `is_contact` + contactos por entrega (ver §3.5)
+35. ~~Contactos Inteligentes~~ ✅ (já implementado — ClinicContactsList + ClinicDeliveryTab)
 36. [ ] Role Contabilidade (quando Faturação existir — ver §3.5)
 37. [ ] Migração NAS (quando adquirida)
 38. [ ] Reanálise de Performance (quando app crescer — ver §6)
