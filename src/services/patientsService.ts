@@ -157,7 +157,7 @@ export const patientsService = {
     async getDoctors() {
         const { data, error } = await supabase
             .from('user_profiles')
-            .select('user_id, full_name')
+            .select('user_id, full_name, phone')
             .eq('app_role', 'doctor')
             .order('full_name');
 

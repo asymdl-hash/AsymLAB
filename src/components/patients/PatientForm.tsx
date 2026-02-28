@@ -19,6 +19,8 @@ import {
     X,
     UserPlus,
     Users,
+    Stethoscope,
+    Copy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -281,8 +283,9 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     </div>
 
                     <div className="flex flex-col gap-1.5 min-w-0 flex-1 w-full sm:w-auto">
-                        {/* Nome editável + Status */}
+                        {/* ID + Nome editável + Status */}
                         <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start">
+                            <span className="font-mono text-sm sm:text-base font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md border border-primary/20 shrink-0 tracking-wide">{patient.t_id}</span>
                             <Input
                                 value={patient.nome}
                                 onChange={(e) => handleFieldChange('nome', e.target.value)}
@@ -322,7 +325,6 @@ export default function PatientForm({ initialData }: PatientFormProps) {
 
                         {/* Info secundária */}
                         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-sm text-gray-400 mt-0.5">
-                            <span className="font-mono text-xs bg-white/10 px-2 py-0.5 rounded">{patient.t_id}</span>
                             <div className="flex items-center gap-1.5">
                                 <span className="text-gray-500">Clínica:</span>
                                 <select
@@ -337,7 +339,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                         autoSave('clinica_id', e.target.value);
                                     }}
                                     disabled={readOnly}
-                                    className="text-xs font-medium border-0 bg-transparent text-gray-300 focus:outline-none cursor-pointer"
+                                    className="text-xs font-medium border-0 bg-transparent text-white focus:outline-none cursor-pointer [&>option]:text-black [&>option]:bg-white"
                                 >
                                     {clinics.map(c => (
                                         <option key={c.id} value={c.id}>{c.commercial_name}</option>
@@ -358,10 +360,10 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                         autoSave('medico_principal_id', e.target.value);
                                     }}
                                     disabled={readOnly}
-                                    className="text-xs font-medium border-0 bg-transparent text-gray-300 focus:outline-none cursor-pointer"
+                                    className="text-xs font-medium border-0 bg-transparent text-white focus:outline-none cursor-pointer [&>option]:text-black [&>option]:bg-white"
                                 >
                                     {doctors.map(d => (
-                                        <option key={d.user_id} value={d.user_id}>Dr. {d.full_name}</option>
+                                        <option key={d.user_id} value={d.user_id}>{d.full_name}</option>
                                     ))}
                                 </select>
                             </div>
@@ -423,66 +425,121 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         onDismiss={() => setDupResult({ status: 'ok', message: '', matches: [] })}
                     />
 
-                    {/* Médicos Associados N:N */}
+                    {/* Equipa — Médicos + Colaboradores */}
                     <div className="px-4 sm:px-6 py-3 border-b border-border/50">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Médicos Associados</span>
-                        </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                            {associatedDoctors.map(doc => (
-                                <span
-                                    key={doc.doctor_id}
-                                    className={cn(
-                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
-                                        doc.doctor_id === patient.medico_principal_id
-                                            ? "bg-primary/10 text-primary border-primary/20"
-                                            : "bg-muted text-card-foreground/70 border-border/50"
-                                    )}
-                                >
-                                    Dr. {doc.full_name}
-                                    {doc.doctor_id === patient.medico_principal_id && (
-                                        <span className="text-[9px] opacity-60">(principal)</span>
-                                    )}
-                                    {doc.doctor_id !== patient.medico_principal_id && !readOnly && (
-                                        <button
-                                            onClick={() => handleRemoveDoctor(doc.doctor_id)}
-                                            className="ml-0.5 h-3.5 w-3.5 rounded-full hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center transition-colors"
-                                        >
-                                            <X className="h-2.5 w-2.5" />
-                                        </button>
-                                    )}
-                                </span>
-                            ))}
-                            {!readOnly && (
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setShowDoctorPicker(!showDoctorPicker)}
-                                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border border-dashed border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary transition-colors"
-                                    >
-                                        <UserPlus className="h-3 w-3" />
-                                        Adicionar
-                                    </button>
-                                    {showDoctorPicker && (
-                                        <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 py-1 min-w-[200px] max-h-48 overflow-y-auto">
-                                            {doctors
-                                                .filter(d => !associatedDoctors.some(ad => ad.doctor_id === d.user_id))
-                                                .map(d => (
-                                                    <button
-                                                        key={d.user_id}
-                                                        onClick={() => handleAddDoctor(d.user_id)}
-                                                        className="w-full text-left px-3 py-1.5 text-xs text-card-foreground hover:bg-muted transition-colors"
-                                                    >
-                                                        Dr. {d.full_name}
-                                                    </button>
-                                                ))}
-                                            {doctors.filter(d => !associatedDoctors.some(ad => ad.doctor_id === d.user_id)).length === 0 && (
-                                                <span className="block px-3 py-1.5 text-xs text-muted-foreground">Todos os médicos já estão associados</span>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            {/* Coluna: Médicos */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Stethoscope className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Médicos</span>
+                                    {!readOnly && (
+                                        <div className="relative ml-auto">
+                                            <button
+                                                onClick={() => setShowDoctorPicker(!showDoctorPicker)}
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border border-dashed border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary transition-colors"
+                                            >
+                                                <UserPlus className="h-2.5 w-2.5" />
+                                                Adicionar
+                                            </button>
+                                            {showDoctorPicker && (
+                                                <div className="absolute top-full right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 py-1 min-w-[200px] max-h-48 overflow-y-auto">
+                                                    {doctors
+                                                        .filter(d => !associatedDoctors.some(ad => ad.doctor_id === d.user_id))
+                                                        .map(d => (
+                                                            <button
+                                                                key={d.user_id}
+                                                                onClick={() => handleAddDoctor(d.user_id)}
+                                                                className="w-full text-left px-3 py-1.5 text-xs text-card-foreground hover:bg-muted transition-colors"
+                                                            >
+                                                                {d.full_name}
+                                                            </button>
+                                                        ))}
+                                                    {doctors.filter(d => !associatedDoctors.some(ad => ad.doctor_id === d.user_id)).length === 0 && (
+                                                        <span className="block px-3 py-1.5 text-xs text-muted-foreground">Todos os médicos já estão associados</span>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                     )}
                                 </div>
-                            )}
+                                <div className="space-y-1.5">
+                                    {associatedDoctors.map(doc => {
+                                        const isPrincipal = doc.doctor_id === patient.medico_principal_id;
+                                        const docProfile = doctors.find(d => d.user_id === doc.doctor_id);
+                                        return (
+                                            <div key={doc.doctor_id} className={cn(
+                                                "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs group transition-colors",
+                                                isPrincipal ? "bg-primary/8 border border-primary/15" : "hover:bg-muted/50"
+                                            )}>
+                                                <Stethoscope className={cn("h-3.5 w-3.5 shrink-0", isPrincipal ? "text-primary" : "text-muted-foreground")} />
+                                                <span className={cn("font-medium truncate", isPrincipal ? "text-primary" : "text-card-foreground/80")}>
+                                                    {doc.full_name}
+                                                </span>
+                                                {/* Badge principal / tornar principal */}
+                                                {isPrincipal ? (
+                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-semibold shrink-0">Principal</span>
+                                                ) : !readOnly ? (
+                                                    <button
+                                                        onClick={() => {
+                                                            setPatient(prev => ({ ...prev, medico_principal_id: doc.doctor_id }));
+                                                            autoSave('medico_principal_id', doc.doctor_id);
+                                                        }}
+                                                        className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground hover:bg-primary/15 hover:text-primary font-medium shrink-0 opacity-0 group-hover:opacity-100 transition-all"
+                                                        title="Tornar médico principal"
+                                                    >
+                                                        ★ Principal
+                                                    </button>
+                                                ) : null}
+                                                {/* Telefone + copiar */}
+                                                {(docProfile as any)?.phone && (
+                                                    <div className="ml-auto flex items-center gap-1 shrink-0">
+                                                        <span className="text-[10px] text-muted-foreground font-mono">{(docProfile as any).phone}</span>
+                                                        <button
+                                                            onClick={() => { navigator.clipboard.writeText((docProfile as any).phone); }}
+                                                            className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-card-foreground transition-colors"
+                                                            title="Copiar telefone"
+                                                        >
+                                                            <Copy className="h-2.5 w-2.5" />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                {/* Remover */}
+                                                {!isPrincipal && !readOnly && (
+                                                    <button
+                                                        onClick={() => handleRemoveDoctor(doc.doctor_id)}
+                                                        className="p-0.5 rounded-full hover:bg-red-500/20 hover:text-red-400 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                                                    >
+                                                        <X className="h-2.5 w-2.5" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                    {associatedDoctors.length === 0 && (
+                                        <p className="text-[10px] text-muted-foreground italic px-1">Nenhum médico associado</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Separador vertical */}
+                            <div className="hidden sm:block w-px bg-border/50" />
+
+                            {/* Coluna: Equipa (colaboradores da clínica) */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Equipa</span>
+                                </div>
+                                <div className="space-y-1.5">
+                                    {associatedDoctors.length === 0 && (
+                                        <p className="text-[10px] text-muted-foreground italic px-1">Adicione médicos para ver a equipa associada</p>
+                                    )}
+                                    {associatedDoctors.length > 0 && (
+                                        <p className="text-[10px] text-muted-foreground italic px-1">Colaboradores serão mostrados com base na clínica e médicos associados</p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
