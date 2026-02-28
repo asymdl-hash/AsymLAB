@@ -416,6 +416,49 @@ PACIENTE
 
 ---
 
+### 3.24 — WhatsApp Group URL (V1.63.1)
+
+> **Badge visual no avatar** do paciente para indicar se existe grupo WhatsApp associado.
+
+| Aspecto | Detalhe |
+|---------|---------|
+| **Campo BD** | `patients.whatsapp_group_url` (TEXT, nullable) |
+| **Ícone** | Canto inferior-direito do avatar no hero header |
+| **Cor cinza** | Sem URL → sem grupo associado |
+| **Cor verde** | URL preenchido → grupo WhatsApp activo |
+| **Edição** | Popup com input ao clicar no ícone + botão "Guardar" |
+| **Save** | Directo (sem debounce) via `updatePatient()` |
+| **Componente** | `PatientForm.tsx` — `whatsappRef` + `whatsappPopupRef` (portal) |
+
+> [!IMPORTANT]
+> **Integração futura:** Quando a criação automática de grupos WhatsApp for implementada (via Zappi/API),
+> o campo `whatsapp_group_url` deve ser preenchido automaticamente pelo sistema.
+> O ícone passará a verde sem intervenção manual.
+
+---
+
+### 3.25 — Impressão Ficha Clínica (V1.63.2)
+
+> **Botão 🖨️ no hero header** para imprimir ficha clínica A4 do paciente.
+
+| Aspecto | Detalhe |
+|---------|---------|
+| **Botão** | Ícone printer no hero header (ao lado de urgente e delete) |
+| **Modal** | Pré-visualização com dados do paciente antes de imprimir |
+| **Layout A4** | Header escuro edge-to-edge, corpo branco, footer centrado |
+| **Header** | Avatar + T-ID + Nome (esquerda) · Nº Impressão (direita) |
+| **Campos** | Clínica · Médico · Fase (grelha no header) |
+| **Corpo** | "Observações Clínicas" — área em branco para anotações manuais |
+| **Footer** | AsymLAB info (NIF, morada, telefone, email) + data impressão |
+| **Componente** | `PatientPrintSheet.tsx` — abre `window.open` com HTML/CSS inline |
+| **Nº Impressão** | Contador local que incrementa a cada impressão na sessão |
+
+> [!NOTE]
+> Os dados do footer (NIF, morada, telefone) são valores de demonstração.
+> Devem ser atualizados com os dados reais do laboratório antes do lançamento.
+
+---
+
 ## Etapa 4 — Fluxos e Workflows 🟡
 
 > **Objectivo:** Mapear todos os fluxos de trabalho do sistema, identificando triggers, transições automáticas, e pontos de decisão.
