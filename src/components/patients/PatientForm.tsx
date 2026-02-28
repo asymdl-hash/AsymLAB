@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
@@ -405,8 +406,8 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                     )}
                                     <ChevronDown className={cn("h-3 w-3 text-gray-500 transition-transform", showDoctorMulti && "rotate-180")} />
                                 </button>
-                                {showDoctorMulti && (
-                                    <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-2xl z-50 py-2 min-w-[280px] border border-gray-200">
+                                {showDoctorMulti && createPortal(
+                                    <div ref={el => { if (el && doctorMultiRef.current) { const r = doctorMultiRef.current.getBoundingClientRect(); el.style.top = `${r.bottom + 8}px`; el.style.left = `${r.left}px`; } }} className="fixed bg-white rounded-xl shadow-2xl z-[9999] py-2 min-w-[280px] border border-gray-200">
                                         <div className="px-3 py-1.5 border-b border-gray-100">
                                             <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Médicos do Caso</span>
                                         </div>
@@ -455,7 +456,8 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                                 </div>
                                             );
                                         })}
-                                    </div>
+                                    </div>,
+                                    document.body
                                 )}
                             </div>
                             {patient.id_paciente_clinica && (
@@ -474,8 +476,8 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                     )}
                                     <ChevronDown className={cn("h-3 w-3 transition-transform", showTeam && "rotate-180")} />
                                 </button>
-                                {showTeam && (
-                                    <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-2xl z-50 p-3 min-w-[300px] max-w-sm border border-gray-200">
+                                {showTeam && createPortal(
+                                    <div ref={el => { if (el && teamRef.current) { const r = teamRef.current.getBoundingClientRect(); el.style.top = `${r.bottom + 8}px`; el.style.left = `${Math.min(r.left, window.innerWidth - 320)}px`; } }} className="fixed bg-white rounded-xl shadow-2xl z-[9999] p-3 min-w-[300px] max-w-sm border border-gray-200">
                                         {/* Médicos */}
                                         {associatedDoctors.length > 0 && (
                                             <>
@@ -553,7 +555,8 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                         {associatedDoctors.length === 0 && clinicTeam.length === 0 && (
                                             <p className="text-[10px] text-gray-400 italic">Nenhum membro na equipa</p>
                                         )}
-                                    </div>
+                                    </div>,
+                                    document.body
                                 )}
                             </div>
                         </div>
