@@ -53,14 +53,17 @@ html { margin: 0 !important; padding: 0 !important; width: 210mm; height: 297mm;
 
 body {
     font-family: 'Inter', -apple-system, sans-serif;
-    width: 210mm;
-    height: 297mm;
     margin: 0 !important;
     padding: 0 !important;
     background: white;
     color: #1a1a2e;
-    display: flex;
-    flex-direction: column;
+}
+
+.page {
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    background: white;
 }
 
 /* ═══════════════ HEADER ═══════════════ */
@@ -184,10 +187,7 @@ body {
 
 /* ═══════════════ BODY ═══════════════ */
 .body {
-    flex: 1;
     padding: 28px 40px;
-    display: flex;
-    flex-direction: column;
     background: white;
 }
 
@@ -203,16 +203,18 @@ body {
 }
 
 .observations {
-    flex: 1;
 }
 
 /* ═══════════════ FOOTER ═══════════════ */
 .footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     background: #f8fafc;
     border-top: 1px solid #e2e8f0;
     padding: 16px 40px;
     text-align: center;
-    margin-top: auto;
 }
 
 .footer-lab-name {
@@ -246,6 +248,7 @@ body {
 </style>
 </head>
 <body>
+<div class="page">
 <!-- ═══ HEADER ═══ -->
 <div class="header">
     <div class="header-inner">
@@ -294,6 +297,8 @@ body {
         NIF: 517 852 463 · Rua do Laboratório, 123 · 4000-001 Porto · Tel: +351 912 345 678 · geral@asymlab.pt
     </div>
     <div class="footer-print-date">Impresso em ${today}</div>
+</div>
+</div>
 </div>
 </body>
 </html>`);
