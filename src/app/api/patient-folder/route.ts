@@ -88,11 +88,10 @@ export async function POST(request: NextRequest) {
         }
 
         if (!silent) {
-            // explorer.exe abre em foreground (start abre em background)
-            exec(`explorer.exe "${folderPath}"`, (error) => {
-                if (error && !error.message.includes('Command failed')) {
-                    console.error('Erro ao abrir pasta:', error.message);
-                }
+            // Shell.Application COM traz a janela para primeiro plano (contorna protecção anti-focus-steal do Windows)
+            const psCmd = `powershell -NoProfile -Command "(New-Object -ComObject Shell.Application).Explore('${folderPath.replace(/'/g, "''")}')"`;
+            exec(psCmd, (error) => {
+                if (error) console.error('Erro ao abrir pasta:', error.message);
             });
         }
 
