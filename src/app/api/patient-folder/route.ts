@@ -88,10 +88,11 @@ export async function POST(request: NextRequest) {
         }
 
         if (!silent) {
-            // Usar start para abrir Explorer (mais fiável que exec('explorer'))
-            const cmd = `start "" "${folderPath}"`;
-            exec(cmd, (error, stdout, stderr) => {
-                if (error) console.error('Erro ao abrir pasta:', error.message, stderr);
+            // explorer.exe abre em foreground (start abre em background)
+            exec(`explorer.exe "${folderPath}"`, (error) => {
+                if (error && !error.message.includes('Command failed')) {
+                    console.error('Erro ao abrir pasta:', error.message);
+                }
             });
         }
 
