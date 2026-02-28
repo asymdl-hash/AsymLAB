@@ -25,6 +25,7 @@ import {
     ChevronDown,
     Check,
     Phone,
+    MessageCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -105,8 +106,11 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const [showDoctorMulti, setShowDoctorMulti] = useState(false);
     const [showTeam, setShowTeam] = useState(false);
     const [clinicTeam, setClinicTeam] = useState<{ user_id: string; full_name: string; phone: string | null; role: string | null }[]>([]);
+    const [showWhatsApp, setShowWhatsApp] = useState(false);
+    const [whatsappUrl, setWhatsappUrl] = useState(initialData.whatsapp_group_url || '');
     const doctorMultiRef = useRef<HTMLDivElement>(null);
     const teamRef = useRef<HTMLDivElement>(null);
+    const whatsappRef = useRef<HTMLDivElement>(null);
 
     // Click-outside para fechar popups sem overlay
     useEffect(() => {
@@ -117,10 +121,17 @@ export default function PatientForm({ initialData }: PatientFormProps) {
             if (showTeam && teamRef.current && !teamRef.current.contains(e.target as Node)) {
                 setShowTeam(false);
             }
+            if (showWhatsApp && whatsappRef.current && !whatsappRef.current.contains(e.target as Node)) {
+                setShowWhatsApp(false);
+                // Auto-save ao fechar
+                if (whatsappUrl !== (patient.whatsapp_group_url || '')) {
+                    autoSave('whatsapp_group_url', whatsappUrl || null);
+                }
+            }
         }
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showDoctorMulti, showTeam]);
+    }, [showDoctorMulti, showTeam, showWhatsApp, whatsappUrl, patient.whatsapp_group_url]);
 
     // Carregar dropdowns
     useEffect(() => {
@@ -320,11 +331,58 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                 </Button>
 
                 <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-6">
-                    {/* Avatar com iniciais */}
-                    <div className="h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28 rounded-full bg-gradient-to-br from-primary/25 to-primary/10 ring-[3px] ring-primary/30 flex items-center justify-center shadow-xl shadow-primary/10 flex-shrink-0">
-                        <span className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">
-                            {getInitials(patient.nome)}
-                        </span>
+                    {/* Avatar com iniciais + WhatsApp badge */}
+                    <div className="relative flex-shrink-0" ref={whatsappRef}>
+                        <div className="h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28 rounded-full bg-gradient-to-br from-primary/25 to-primary/10 ring-[3px] ring-primary/30 flex items-center justify-center shadow-xl shadow-primary/10">
+                            <span className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">
+                                {getInitials(patient.nome)}
+                            </span>
+                        </div>
+                        {/* WhatsApp badge */}
+                        <button
+                            onClick={() => setShowWhatsApp(!showWhatsApp)}
+                            className={cn(
+                                "absolute -bottom-1 -right-1 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center shadow-lg border-2 border-[#1a2332] transition-colors cursor-pointer",
+                                patient.whatsapp_group_url
+                                    ? "bg-green-500 hover:bg-green-400 text-white"
+                                    : "bg-gray-600 hover:bg-gray-500 text-gray-300"
+                            )}
+                            title={patient.whatsapp_group_url ? 'Grupo WhatsApp associado' : 'Adicionar grupo WhatsApp'}
+                        >
+                            <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
+                        {/* WhatsApp popup */}
+                        {showWhatsApp && createPortal(
+                            <div ref={el => { if (el && whatsappRef.current) { const r = whatsappRef.current.getBoundingClientRect(); el.style.top = `${r.bottom + 8}px`; el.style.left = `${Math.max(8, r.left - 80)}px`; } }} className="fixed bg-white rounded-xl shadow-2xl z-[9999] p-4 w-[320px] border border-gray-200">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <MessageCircle className={cn("h-4 w-4", patient.whatsapp_group_url ? "text-green-500" : "text-gray-400")} />
+                                    <span className="text-xs font-semibold text-gray-700">Grupo WhatsApp</span>
+                                </div>
+                                <input
+                                    type="url"
+                                    value={whatsappUrl}
+                                    onChange={(e) => setWhatsappUrl(e.target.value)}
+                                    placeholder="https://chat.whatsapp.com/..."
+                                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 text-gray-800 placeholder:text-gray-400"
+                                />
+                                <div className="flex items-center justify-between mt-3">
+                                    <span className={cn("text-[10px] font-medium", patient.whatsapp_group_url ? "text-green-600" : "text-gray-400")}>
+                                        {patient.whatsapp_group_url ? '✓ Grupo associado' : 'Sem grupo associado'}
+                                    </span>
+                                    <button
+                                        onClick={() => {
+                                            setPatient(prev => ({ ...prev, whatsapp_group_url: whatsappUrl || null }));
+                                            autoSave('whatsapp_group_url', whatsappUrl || null);
+                                            setShowWhatsApp(false);
+                                        }}
+                                        className="text-xs px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium transition-colors"
+                                    >
+                                        Guardar
+                                    </button>
+                                </div>
+                            </div>,
+                            document.body
+                        )}
                     </div>
 
                     <div className="flex flex-col gap-1.5 min-w-0 flex-1 w-full sm:w-auto">
