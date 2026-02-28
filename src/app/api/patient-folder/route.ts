@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { existsSync, mkdirSync, renameSync, readdirSync, copyFileSync, statSync } from 'fs';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 
@@ -88,10 +88,12 @@ export async function POST(request: NextRequest) {
         }
 
         if (!silent) {
-            // Abre a pasta (pode ficar em background — limitação do Windows anti-focus-steal)
-            exec(`start "" "${folderPath}"`, (error) => {
-                if (error) console.error('Erro ao abrir pasta:', error.message);
+            // spawn detached = mais rápido que exec (não cria shell intermediário)
+            const child = spawn('explorer.exe', [folderPath], {
+                detached: true,
+                stdio: 'ignore',
             });
+            child.unref();
         }
 
         return NextResponse.json({ success: true, path: folderPath });

@@ -243,9 +243,7 @@ export default function PatientList() {
                                     "h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold transition-colors relative",
                                     patient.urgente
                                         ? "bg-amber-900/30 text-amber-400"
-                                        : isActive
-                                            ? "bg-white/15 text-white"
-                                            : "bg-gradient-to-br from-gray-700 to-gray-800 text-muted-foreground group-hover:from-amber-900/20 group-hover:to-amber-900/10 group-hover:text-amber-400"
+                                        : "bg-gradient-to-br from-gray-700 to-gray-800 text-muted-foreground group-hover:from-amber-900/20 group-hover:to-amber-900/10 group-hover:text-amber-400"
                                 )}>
                                     {initials}
                                     {patient.urgente && (
@@ -258,7 +256,7 @@ export default function PatientList() {
                                     <div className="flex items-center gap-2">
                                         <span className={cn(
                                             "text-[10px] font-bold px-1.5 py-0.5 rounded",
-                                            isActive ? "bg-white/15 text-white" : "bg-muted text-gray-400 group-hover:bg-amber-500/10 group-hover:text-amber-400"
+                                            "bg-muted text-gray-400 group-hover:bg-amber-500/10 group-hover:text-amber-400"
                                         )}>
                                             {patient.t_id}
                                         </span>
