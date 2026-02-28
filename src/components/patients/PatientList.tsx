@@ -256,33 +256,34 @@ export default function PatientList() {
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                        <h3 className={cn(
-                                            "font-medium text-sm truncate",
-                                            isActive ? "text-gray-100" : "text-card-foreground/80"
+                                        <span className={cn(
+                                            "text-[10px] font-bold font-mono px-1.5 py-0.5 rounded",
+                                            isActive ? "bg-amber-500/20 text-amber-400" : "bg-muted text-gray-400 group-hover:bg-amber-500/10 group-hover:text-amber-400"
                                         )}>
-                                            {patient.nome}
-                                        </h3>
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <span className="text-xs font-mono text-gray-500">
                                             {patient.t_id}
                                         </span>
-                                        {patient.clinica && (
-                                            <span className="text-xs text-gray-500 truncate">
-                                                · {patient.clinica.commercial_name}
-                                            </span>
-                                        )}
+                                        {/* Status badge */}
+                                        {(() => {
+                                            const estado = (patient as any).estado || 'rascunho';
+                                            const cfg = PATIENT_STATUS_CONFIG[estado] || PATIENT_STATUS_CONFIG.rascunho;
+                                            return estado !== 'activo' ? (
+                                                <span className={cn('text-[9px] font-medium px-1.5 py-0.5 rounded-full', cfg.bg, cfg.color)}>
+                                                    {cfg.label}
+                                                </span>
+                                            ) : null;
+                                        })()}
                                     </div>
-                                    {/* Status badge */}
-                                    {(() => {
-                                        const estado = (patient as any).estado || 'rascunho';
-                                        const cfg = PATIENT_STATUS_CONFIG[estado] || PATIENT_STATUS_CONFIG.rascunho;
-                                        return estado !== 'activo' ? (
-                                            <span className={cn('text-[9px] font-medium px-1.5 py-0.5 rounded-full mt-0.5 inline-block w-fit', cfg.bg, cfg.color)}>
-                                                {cfg.label}
-                                            </span>
-                                        ) : null;
-                                    })()}
+                                    <h3 className={cn(
+                                        "font-semibold text-sm mt-0.5 leading-tight",
+                                        isActive ? "text-gray-100" : "text-card-foreground/80"
+                                    )}>
+                                        {patient.nome}
+                                    </h3>
+                                    {patient.clinica && (
+                                        <span className="text-[11px] text-gray-500 truncate block mt-0.5">
+                                            {patient.clinica.commercial_name}
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Badge de planos activos */}
