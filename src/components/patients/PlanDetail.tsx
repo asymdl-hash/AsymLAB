@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     ArrowLeft,
@@ -21,6 +21,7 @@ import {
     Trash2,
     Pencil,
     Check,
+    Package,
 } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
 import NewPhaseModal from './NewPhaseModal';
@@ -450,6 +451,55 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const appointments = phase.appointments || [];
 
+    // Materials state
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [materials, setMaterials] = useState<any[]>([]);
+    const [showAddMaterial, setShowAddMaterial] = useState(false);
+    const [newMatNome, setNewMatNome] = useState('');
+    const [newMatQty, setNewMatQty] = useState('1');
+    const [newMatUnit, setNewMatUnit] = useState('un');
+    const [addingMat, setAddingMat] = useState(false);
+
+    // Load materials
+    useEffect(() => {
+        patientsService.getPhaseMaterials(phase.id)
+            .then(setMaterials)
+            .catch(err => console.error('Erro materiais:', err));
+    }, [phase.id]);
+
+    const handleAddMaterial = async () => {
+        if (!newMatNome.trim() || addingMat) return;
+        setAddingMat(true);
+        try {
+            const mat = await patientsService.addPhaseMaterial({
+                phase_id: phase.id,
+                nome: newMatNome.trim(),
+                quantidade: parseInt(newMatQty) || 1,
+                unidade: newMatUnit,
+            });
+            setMaterials(prev => [...prev, mat]);
+            setNewMatNome('');
+            setNewMatQty('1');
+            setNewMatUnit('un');
+            setShowAddMaterial(false);
+        } catch (err) {
+            console.error('Erro ao adicionar material:', err);
+        } finally {
+            setAddingMat(false);
+        }
+    };
+
+    const handleRemoveMaterial = async (matId: string) => {
+        const prev = [...materials];
+        setMaterials(m => m.filter(x => x.id !== matId));
+        try {
+            await patientsService.removePhaseMaterial(matId);
+        } catch (err) {
+            console.error('Erro ao remover material:', err);
+            setMaterials(prev);
+        }
+    };
+
     // Suppress unused var lint
     void onReload;
 
@@ -543,7 +593,87 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                 )}
             </div>
 
-            {/* Placeholder for materiais */}
+            {/* === Materiais da Fase === */}
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                        <Package className="w-3.5 h-3.5" />
+                        Materiais
+                        {materials.length > 0 && (
+                            <span className="text-[10px] font-normal bg-muted px-1.5 py-0.5 rounded-full">{materials.length}</span>
+                        )}
+                    </h3>
+                    <button onClick={() => setShowAddMaterial(!showAddMaterial)}
+                        className="text-sm text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1">
+                        <Plus className="w-3.5 h-3.5" /> Adicionar
+                    </button>
+                </div>
+
+                {/* Inline add form */}
+                {showAddMaterial && (
+                    <div className="flex items-center gap-2 mb-3 p-2 border border-dashed border-border rounded-lg bg-muted/30">
+                        <input
+                            value={newMatNome}
+                            onChange={(e) => setNewMatNome(e.target.value)}
+                            placeholder="Nome do material..."
+                            className="flex-1 bg-muted border border-border rounded px-2 py-1.5 text-xs text-card-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-none"
+                            autoFocus
+                            onKeyDown={(e) => e.key === 'Enter' && handleAddMaterial()}
+                        />
+                        <input
+                            type="number"
+                            value={newMatQty}
+                            onChange={(e) => setNewMatQty(e.target.value)}
+                            min="1"
+                            className="w-14 bg-muted border border-border rounded px-2 py-1.5 text-xs text-card-foreground text-center"
+                        />
+                        <select
+                            value={newMatUnit}
+                            onChange={(e) => setNewMatUnit(e.target.value)}
+                            className="bg-muted border border-border rounded px-2 py-1.5 text-xs text-card-foreground"
+                        >
+                            <option value="un">un</option>
+                            <option value="g">g</option>
+                            <option value="ml">ml</option>
+                            <option value="pcs">pcs</option>
+                            <option value="kit">kit</option>
+                        </select>
+                        <button onClick={handleAddMaterial} disabled={!newMatNome.trim() || addingMat}
+                            className="p-1.5 rounded bg-green-600 hover:bg-green-500 text-white disabled:opacity-40">
+                            <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => setShowAddMaterial(false)}
+                            className="p-1.5 rounded bg-muted hover:bg-muted text-muted-foreground">
+                            <X className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                )}
+
+                {materials.length === 0 && !showAddMaterial ? (
+                    <div className="text-center py-4 text-muted-foreground border border-dashed border-border rounded-lg">
+                        <Package className="w-6 h-6 mx-auto mb-1 opacity-40" />
+                        <p className="text-xs">Sem materiais associados</p>
+                    </div>
+                ) : materials.length > 0 && (
+                    <div className="space-y-1">
+                        {materials.map((mat) => (
+                            <div key={mat.id} className="flex items-center gap-2 px-3 py-2 bg-muted/30 border border-border/50 rounded-lg group hover:border-border">
+                                <Package className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                                <span className="flex-1 text-sm text-card-foreground">{mat.nome}</span>
+                                <span className="text-xs text-muted-foreground font-mono">{mat.quantidade} {mat.unidade || 'un'}</span>
+                                <button
+                                    onClick={() => handleRemoveMaterial(mat.id)}
+                                    className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-400 text-muted-foreground transition-all"
+                                >
+                                    <Trash2 className="w-3 h-3" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Notas da Fase */}
             {phase.notas && (
                 <div className="border border-border rounded-lg p-4">
                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Notas da Fase</h3>

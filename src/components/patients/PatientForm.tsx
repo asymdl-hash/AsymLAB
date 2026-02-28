@@ -16,6 +16,9 @@ import {
     Plus,
     ChevronRight,
     Circle,
+    X,
+    UserPlus,
+    Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -81,22 +84,28 @@ export default function PatientForm({ initialData }: PatientFormProps) {
         matches: { id: string; nome: string; t_id: string; id_paciente_clinica: string | null; similarity?: number }[];
     }>({ status: 'ok', message: '', matches: [] });
 
+    // Estado médicos associados N:N
+    const [associatedDoctors, setAssociatedDoctors] = useState<{ doctor_id: string; full_name: string }[]>([]);
+    const [showDoctorPicker, setShowDoctorPicker] = useState(false);
+
     // Carregar dropdowns
     useEffect(() => {
         async function loadDropdowns() {
             try {
-                const [cls, docs] = await Promise.all([
+                const [cls, docs, assocDocs] = await Promise.all([
                     patientsService.getClinics(),
                     patientsService.getDoctors(),
+                    patientsService.getPatientDoctors(initialData.id),
                 ]);
                 setClinics(cls);
                 setDoctors(docs);
+                setAssociatedDoctors(assocDocs);
             } catch (err) {
                 console.error('Erro ao carregar dropdowns:', err);
             }
         }
         loadDropdowns();
-    }, []);
+    }, [initialData.id]);
 
     // Auto-save com debounce
     const autoSave = useCallback(async (field: string, value: unknown) => {
@@ -175,6 +184,38 @@ export default function PatientForm({ initialData }: PatientFormProps) {
         if (words.length === 0) return '?';
         if (words.length === 1) return words[0].charAt(0).toUpperCase();
         return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+    };
+
+    // Handlers médicos associados
+    const handleAddDoctor = async (doctorId: string) => {
+        if (readOnly) return;
+        const doc = doctors.find(d => d.user_id === doctorId);
+        if (!doc || associatedDoctors.some(d => d.doctor_id === doctorId)) return;
+
+        const updated = [...associatedDoctors, { doctor_id: doctorId, full_name: doc.full_name }];
+        setAssociatedDoctors(updated);
+        setShowDoctorPicker(false);
+        try {
+            await patientsService.syncDoctors(patient.id, updated.map(d => d.doctor_id));
+        } catch (err) {
+            console.error('Erro ao sincronizar médicos:', err);
+            setAssociatedDoctors(associatedDoctors); // rollback
+        }
+    };
+
+    const handleRemoveDoctor = async (doctorId: string) => {
+        if (readOnly) return;
+        // Não permitir remover o médico principal
+        if (doctorId === patient.medico_principal_id) return;
+
+        const updated = associatedDoctors.filter(d => d.doctor_id !== doctorId);
+        setAssociatedDoctors(updated);
+        try {
+            await patientsService.syncDoctors(patient.id, updated.map(d => d.doctor_id));
+        } catch (err) {
+            console.error('Erro ao sincronizar médicos:', err);
+            setAssociatedDoctors(associatedDoctors); // rollback
+        }
     };
 
     return (
@@ -346,6 +387,69 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         matches={dupResult.matches}
                         onDismiss={() => setDupResult({ status: 'ok', message: '', matches: [] })}
                     />
+
+                    {/* Médicos Associados N:N */}
+                    <div className="px-4 sm:px-6 py-3 border-b border-border/50">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Médicos Associados</span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {associatedDoctors.map(doc => (
+                                <span
+                                    key={doc.doctor_id}
+                                    className={cn(
+                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
+                                        doc.doctor_id === patient.medico_principal_id
+                                            ? "bg-primary/10 text-primary border-primary/20"
+                                            : "bg-muted text-card-foreground/70 border-border/50"
+                                    )}
+                                >
+                                    Dr. {doc.full_name}
+                                    {doc.doctor_id === patient.medico_principal_id && (
+                                        <span className="text-[9px] opacity-60">(principal)</span>
+                                    )}
+                                    {doc.doctor_id !== patient.medico_principal_id && !readOnly && (
+                                        <button
+                                            onClick={() => handleRemoveDoctor(doc.doctor_id)}
+                                            className="ml-0.5 h-3.5 w-3.5 rounded-full hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center transition-colors"
+                                        >
+                                            <X className="h-2.5 w-2.5" />
+                                        </button>
+                                    )}
+                                </span>
+                            ))}
+                            {!readOnly && (
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowDoctorPicker(!showDoctorPicker)}
+                                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border border-dashed border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary transition-colors"
+                                    >
+                                        <UserPlus className="h-3 w-3" />
+                                        Adicionar
+                                    </button>
+                                    {showDoctorPicker && (
+                                        <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 py-1 min-w-[200px] max-h-48 overflow-y-auto">
+                                            {doctors
+                                                .filter(d => !associatedDoctors.some(ad => ad.doctor_id === d.user_id))
+                                                .map(d => (
+                                                    <button
+                                                        key={d.user_id}
+                                                        onClick={() => handleAddDoctor(d.user_id)}
+                                                        className="w-full text-left px-3 py-1.5 text-xs text-card-foreground hover:bg-muted transition-colors"
+                                                    >
+                                                        Dr. {d.full_name}
+                                                    </button>
+                                                ))}
+                                            {doctors.filter(d => !associatedDoctors.some(ad => ad.doctor_id === d.user_id)).length === 0 && (
+                                                <span className="block px-3 py-1.5 text-xs text-muted-foreground">Todos os médicos já estão associados</span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     {/* Tabs */}
                     <Tabs defaultValue="planos" className="flex-1 flex flex-col overflow-hidden">

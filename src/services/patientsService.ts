@@ -87,6 +87,15 @@ export const patientsService = {
             .single();
 
         if (error) throw error;
+
+        // Sync patient_doctors para permissões RLS (médico vê seus pacientes)
+        if (patient && data.medico_principal_id) {
+            await supabase.from('patient_doctors').upsert(
+                { patient_id: patient.id, doctor_id: data.medico_principal_id },
+                { onConflict: 'patient_id,doctor_id' }
+            );
+        }
+
         return patient;
     },
 
@@ -98,6 +107,14 @@ export const patientsService = {
             .eq('id', id);
 
         if (error) throw error;
+
+        // Se medico_principal_id mudou, garantir que está em patient_doctors
+        if (data.medico_principal_id && typeof data.medico_principal_id === 'string') {
+            await supabase.from('patient_doctors').upsert(
+                { patient_id: id, doctor_id: data.medico_principal_id },
+                { onConflict: 'patient_id,doctor_id' }
+            );
+        }
     },
 
     // 5. Soft delete
@@ -638,5 +655,91 @@ export const patientsService = {
         }
 
         return { status: 'ok', matches: [], message: '' };
+    },
+
+    // =================== PATIENT DOCTORS (N:N) ===================
+
+    // 25. Obter médicos associados a um paciente
+    async getPatientDoctors(patientId: string): Promise<{ doctor_id: string; full_name: string }[]> {
+        const { data, error } = await supabase
+            .from('patient_doctors')
+            .select(`
+                doctor_id,
+                doctor:user_profiles!patient_doctors_doctor_id_fkey(full_name)
+            `)
+            .eq('patient_id', patientId);
+
+        if (error) throw error;
+        return (data || []).map((d: Record<string, unknown>) => ({
+            doctor_id: d.doctor_id as string,
+            full_name: ((d.doctor as Record<string, string> | null)?.full_name) || 'Desconhecido',
+        }));
+    },
+
+    // 26. Sincronizar médicos associados (idempotente: delete all + insert all)
+    async syncDoctors(patientId: string, doctorIds: string[]): Promise<void> {
+        // Remover todos os médicos actuais
+        const { error: delErr } = await supabase
+            .from('patient_doctors')
+            .delete()
+            .eq('patient_id', patientId);
+        if (delErr) throw delErr;
+
+        // Inserir novos (se houver)
+        if (doctorIds.length > 0) {
+            const rows = doctorIds.map(id => ({ patient_id: patientId, doctor_id: id }));
+            const { error: insErr } = await supabase
+                .from('patient_doctors')
+                .insert(rows);
+            if (insErr) throw insErr;
+        }
+    },
+
+    // =================== PHASE MATERIALS ===================
+
+    // 27. Obter materiais de uma fase
+    async getPhaseMaterials(phaseId: string) {
+        const { data, error } = await supabase
+            .from('phase_materials')
+            .select('*')
+            .eq('phase_id', phaseId)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        return data || [];
+    },
+
+    // 28. Adicionar material a uma fase
+    async addPhaseMaterial(data: {
+        phase_id: string;
+        nome: string;
+        quantidade?: number;
+        unidade?: string;
+        notas?: string;
+    }) {
+        const { data: mat, error } = await supabase
+            .from('phase_materials')
+            .insert({
+                phase_id: data.phase_id,
+                nome: data.nome,
+                quantidade: data.quantidade || 1,
+                unidade: data.unidade || 'un',
+                notas: data.notas || null,
+            })
+            .select('*')
+            .single();
+
+        if (error) throw error;
+        return mat;
+    },
+
+    // 29. Remover material de uma fase
+    async removePhaseMaterial(materialId: string) {
+        const { error } = await supabase
+            .from('phase_materials')
+            .delete()
+            .eq('id', materialId);
+
+        if (error) throw error;
     },
 };
