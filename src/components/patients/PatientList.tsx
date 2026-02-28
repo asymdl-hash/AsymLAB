@@ -234,7 +234,7 @@ export default function PatientList() {
                                 href={`/dashboard/patients/${patient.id}`}
                                 className={cn(
                                     "flex items-center gap-3 p-3 rounded-lg transition-all group hover:bg-muted",
-                                    isActive ? "bg-amber-500/10 border border-amber-500/20 shadow-sm" : "border border-transparent",
+                                    isActive ? "bg-white/10 border border-white/15 shadow-sm" : "border border-transparent",
                                     patient.urgente && "ring-1 ring-amber-500/30"
                                 )}
                             >
@@ -244,7 +244,7 @@ export default function PatientList() {
                                     patient.urgente
                                         ? "bg-amber-900/30 text-amber-400"
                                         : isActive
-                                            ? "bg-amber-500/15 text-amber-400"
+                                            ? "bg-white/15 text-white"
                                             : "bg-gradient-to-br from-gray-700 to-gray-800 text-muted-foreground group-hover:from-amber-900/20 group-hover:to-amber-900/10 group-hover:text-amber-400"
                                 )}>
                                     {initials}
@@ -258,7 +258,7 @@ export default function PatientList() {
                                     <div className="flex items-center gap-2">
                                         <span className={cn(
                                             "text-[10px] font-bold px-1.5 py-0.5 rounded",
-                                            isActive ? "bg-amber-500/20 text-amber-400" : "bg-muted text-gray-400 group-hover:bg-amber-500/10 group-hover:text-amber-400"
+                                            isActive ? "bg-white/15 text-white" : "bg-muted text-gray-400 group-hover:bg-amber-500/10 group-hover:text-amber-400"
                                         )}>
                                             {patient.t_id}
                                         </span>
@@ -275,7 +275,7 @@ export default function PatientList() {
                                     </div>
                                     <h3 className={cn(
                                         "font-semibold text-sm mt-0.5 leading-tight",
-                                        isActive ? "text-amber-100" : "text-card-foreground/90"
+                                        "text-card-foreground/90"
                                     )}>
                                         {patient.nome}
                                     </h3>
