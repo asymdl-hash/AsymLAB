@@ -42,32 +42,37 @@ export default function PatientPrintSheet({ patient, onClose }: PatientPrintShee
                 <style>
                     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
                     
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+                    html { margin: 0 !important; padding: 0 !important; }
                     
                     @page {
                         size: A4;
-                        margin: 0;
+                        margin: 0 !important;
                     }
                     
                     body {
                         font-family: 'Inter', -apple-system, sans-serif;
                         width: 210mm;
-                        min-height: 297mm;
-                        margin: 0;
-                        padding: 0;
+                        height: 297mm;
+                        margin: 0 !important;
+                        padding: 0 !important;
                         background: white;
                         color: #1a1a2e;
                         display: flex;
                         flex-direction: column;
+                        position: absolute;
+                        top: 0;
+                        left: 0;
                     }
                     
-                    /* === HEADER === */
+                    /* === HEADER — edge-to-edge topo/esquerda/direita === */
                     .header {
                         background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
                         color: white;
-                        padding: 28px 36px 24px 36px;
+                        padding: 32px 40px 28px 40px;
                         position: relative;
                         overflow: hidden;
+                        width: 100%;
                     }
                     
                     .header::before {
@@ -92,25 +97,25 @@ export default function PatientPrintSheet({ patient, onClose }: PatientPrintShee
                     }
                     
                     .avatar {
-                        width: 56px;
-                        height: 56px;
+                        width: 60px;
+                        height: 60px;
                         border-radius: 50%;
                         background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.08));
                         border: 2px solid rgba(245,158,11,0.3);
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        font-size: 20px;
+                        font-size: 22px;
                         font-weight: 700;
                         color: #f59e0b;
                         flex-shrink: 0;
                     }
                     
                     .patient-info h1 {
-                        font-size: 22px;
+                        font-size: 24px;
                         font-weight: 700;
                         letter-spacing: -0.5px;
-                        margin-bottom: 4px;
+                        margin-bottom: 0;
                     }
                     
                     .patient-id {
@@ -124,6 +129,7 @@ export default function PatientPrintSheet({ patient, onClose }: PatientPrintShee
                         border-radius: 4px;
                         border: 1px solid rgba(245,158,11,0.25);
                         letter-spacing: 1px;
+                        margin-bottom: 6px;
                     }
                     
                     .header-right {
@@ -148,7 +154,7 @@ export default function PatientPrintSheet({ patient, onClose }: PatientPrintShee
                     /* === BODY === */
                     .body {
                         flex: 1;
-                        padding: 24px 36px;
+                        padding: 28px 40px;
                         display: flex;
                         flex-direction: column;
                     }
@@ -166,12 +172,11 @@ export default function PatientPrintSheet({ patient, onClose }: PatientPrintShee
                     
                     .observations {
                         flex: 1;
-                        min-height: 160mm;
                     }
                     
                     /* === FOOTER === */
                     .footer {
-                        padding: 16px 36px;
+                        padding: 14px 40px;
                         border-top: 1px solid #e2e8f0;
                         display: flex;
                         justify-content: space-between;
@@ -190,7 +195,12 @@ export default function PatientPrintSheet({ patient, onClose }: PatientPrintShee
                     }
                     
                     @media print {
-                        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        html, body { 
+                            -webkit-print-color-adjust: exact; 
+                            print-color-adjust: exact;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                        }
                     }
                 </style>
             </head>
