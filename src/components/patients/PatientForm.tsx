@@ -221,7 +221,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     return (
         <div className="flex flex-col h-full">
             {/* ============ HERO HEADER ============ */}
-            <div className="bg-gradient-to-r from-[#111827] via-[#1a2332] to-[#111827] px-6 sm:px-8 pt-8 pb-16 relative overflow-hidden">
+            <div className="bg-gradient-to-r from-[#111827] via-[#1a2332] to-[#111827] px-4 sm:px-8 pt-6 sm:pt-8 pb-14 sm:pb-16 relative overflow-hidden">
                 {/* Subtle pattern overlay */}
                 <div className="absolute inset-0 opacity-5" style={{
                     backgroundImage: 'radial-gradient(circle at 25% 50%, rgba(245,158,11,0.3) 0%, transparent 50%), radial-gradient(circle at 75% 50%, rgba(245,158,11,0.15) 0%, transparent 50%)'
@@ -237,22 +237,22 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
 
-                <div className="relative z-10 flex items-center gap-6">
+                <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-6">
                     {/* Avatar com iniciais */}
-                    <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-gradient-to-br from-primary/25 to-primary/10 ring-[3px] ring-primary/30 flex items-center justify-center shadow-xl shadow-primary/10 flex-shrink-0">
-                        <span className="text-2xl sm:text-3xl font-bold text-primary">
+                    <div className="h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28 rounded-full bg-gradient-to-br from-primary/25 to-primary/10 ring-[3px] ring-primary/30 flex items-center justify-center shadow-xl shadow-primary/10 flex-shrink-0">
+                        <span className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">
                             {getInitials(patient.nome)}
                         </span>
                     </div>
 
-                    <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                    <div className="flex flex-col gap-1.5 min-w-0 flex-1 w-full sm:w-auto">
                         {/* Nome editável + Status */}
-                        <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start">
                             <Input
                                 value={patient.nome}
                                 onChange={(e) => handleFieldChange('nome', e.target.value)}
                                 className={cn(
-                                    "text-2xl sm:text-3xl font-bold border-0 p-0 h-auto focus-visible:ring-0 bg-transparent text-white tracking-tight",
+                                    "text-xl sm:text-2xl md:text-3xl font-bold border-0 p-0 h-auto focus-visible:ring-0 bg-transparent text-white tracking-tight text-center sm:text-left",
                                     dupResult.status === 'block' && "!border !border-red-500 !ring-1 !ring-red-500/30 px-2 rounded"
                                 )}
                                 disabled={readOnly}
@@ -286,7 +286,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         </div>
 
                         {/* Info secundária */}
-                        <div className="flex items-center gap-4 text-sm text-gray-400 mt-0.5 flex-wrap">
+                        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-sm text-gray-400 mt-0.5">
                             <span className="font-mono text-xs bg-white/10 px-2 py-0.5 rounded">{patient.t_id}</span>
                             <div className="flex items-center gap-1.5">
                                 <span className="text-gray-500">Clínica:</span>
@@ -337,7 +337,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     </div>
 
                     {/* Ações (direita) */}
-                    <div className="flex items-center gap-2 shrink-0 self-start mt-1">
+                    <div className="flex items-center gap-2 shrink-0 self-center sm:self-start mt-1">
                         {saving && (
                             <span className="text-xs text-gray-400 animate-pulse">Guardando...</span>
                         )}
@@ -453,7 +453,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
 
                     {/* Tabs */}
                     <Tabs defaultValue="planos" className="flex-1 flex flex-col overflow-hidden">
-                        <TabsList className="w-full justify-start px-4 sm:px-6 pt-2 bg-card border-b border-border/50 rounded-none h-auto flex-wrap gap-1">
+                        <TabsList className="w-full justify-start px-4 sm:px-6 pt-2 bg-card border-b border-border/50 rounded-none h-auto overflow-x-auto flex-nowrap gap-1 scrollbar-hide">
                             <TabsTrigger value="planos" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
                                 <ClipboardList className="h-3.5 w-3.5" />
                                 <span>Planos</span>

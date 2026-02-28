@@ -611,12 +611,12 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
 
                 {/* Inline add form */}
                 {showAddMaterial && (
-                    <div className="flex items-center gap-2 mb-3 p-2 border border-dashed border-border rounded-lg bg-muted/30">
+                    <div className="flex flex-wrap items-center gap-2 mb-3 p-2 border border-dashed border-border rounded-lg bg-muted/30">
                         <input
                             value={newMatNome}
                             onChange={(e) => setNewMatNome(e.target.value)}
                             placeholder="Nome do material..."
-                            className="flex-1 bg-muted border border-border rounded px-2 py-1.5 text-xs text-card-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-none"
+                            className="flex-1 min-w-[120px] bg-muted border border-border rounded px-2 py-1.5 text-xs text-card-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-none"
                             autoFocus
                             onKeyDown={(e) => e.key === 'Enter' && handleAddMaterial()}
                         />
@@ -683,7 +683,7 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
 
             {/* Acções Rápidas da Fase */}
             {phase.estado !== 'concluida' && phase.estado !== 'cancelada' && (
-                <div className="mt-6 flex items-center gap-2 pt-4 border-t border-border">
+                <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-border">
                     {phase.estado === 'pendente' && (
                         <button
                             onClick={() => onStateChange(phase.id, 'em_curso')}
@@ -712,7 +712,7 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                 </div>
             )}
             {(phase.estado === 'concluida' || phase.estado === 'cancelada') && (
-                <div className="mt-6 flex items-center gap-2 pt-4 border-t border-border">
+                <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-border">
                     <button
                         onClick={() => onStateChange(phase.id, 'pendente')}
                         className="px-4 py-2 text-sm font-medium rounded-lg bg-muted text-card-foreground/80 hover:bg-muted transition-colors flex items-center gap-2"
