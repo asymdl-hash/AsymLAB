@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { patientsService, PatientFullDetails } from '@/services/patientsService';
+import { useOptimisticLock } from '@/hooks/useOptimisticLock';
 import NewPlanModal from '@/components/patients/NewPlanModal';
 import DeleteConfirmModal from '@/components/patients/DeleteConfirmModal';
 import DuplicateWarning from '@/components/patients/DuplicateWarning';
@@ -77,6 +78,14 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
     const dupCheckRef = useRef<NodeJS.Timeout | null>(null);
 
+    // Lock optimista
+    const lock = useOptimisticLock('patients', patient.id);
+    useEffect(() => {
+        if ((initialData as any).updated_at) {
+            lock.setLoadedAt((initialData as any).updated_at);
+        }
+    }, [initialData]);
+
     // Estado anti-duplicação
     const [dupResult, setDupResult] = useState<{
         status: 'ok' | 'warning' | 'block';
@@ -107,7 +116,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
         loadDropdowns();
     }, [initialData.id]);
 
-    // Auto-save com debounce
+    // Auto-save com debounce + lock optimista
     const autoSave = useCallback(async (field: string, value: unknown) => {
         if (readOnly) return;
         // Bloquear auto-save do nome se houver duplicação block
@@ -118,7 +127,15 @@ export default function PatientForm({ initialData }: PatientFormProps) {
         debounceRef.current = setTimeout(async () => {
             try {
                 setSaving(true);
+                // Verificar lock optimista antes de salvar
+                const canSave = await lock.checkBeforeSave();
+                if (!canSave) {
+                    setSaving(false);
+                    return; // Conflito detectado — banner será mostrado
+                }
                 await patientsService.updatePatient(patient.id, { [field]: value });
+                // Actualizar loadedAt após save bem-sucedido
+                lock.setLoadedAt(new Date().toISOString());
                 setLastSaved(new Date());
                 window.dispatchEvent(new Event('patient-updated'));
             } catch (error) {
@@ -127,7 +144,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                 setSaving(false);
             }
         }, 600);
-    }, [patient.id, readOnly]);
+    }, [patient.id, readOnly, lock]);
 
     const handleFieldChange = (field: string, value: unknown) => {
         setPatient(prev => ({ ...prev, [field]: value }));
@@ -220,6 +237,24 @@ export default function PatientForm({ initialData }: PatientFormProps) {
 
     return (
         <div className="flex flex-col h-full">
+            {/* Conflict Banner */}
+            {lock.hasConflict && (
+                <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2.5 flex items-center justify-between gap-3 animate-in slide-in-from-top">
+                    <div className="flex items-center gap-2 text-amber-400 text-xs">
+                        <span className="text-base">⚠️</span>
+                        <span>Este paciente foi alterado por outro utilizador. As suas alterações podem não ser guardadas.</span>
+                    </div>
+                    <button
+                        onClick={async () => {
+                            await lock.refreshLoadedAt();
+                            window.location.reload();
+                        }}
+                        className="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-medium hover:bg-amber-500/30 transition-colors whitespace-nowrap"
+                    >
+                        ↻ Recarregar
+                    </button>
+                </div>
+            )}
             {/* ============ HERO HEADER ============ */}
             <div className="bg-gradient-to-r from-[#111827] via-[#1a2332] to-[#111827] px-4 sm:px-8 pt-6 sm:pt-8 pb-14 sm:pb-16 relative overflow-hidden">
                 {/* Subtle pattern overlay */}
