@@ -88,32 +88,8 @@ export async function POST(request: NextRequest) {
         }
 
         if (!silent) {
-            // Win32 API trick: AttachThreadInput + SetForegroundWindow para forçar foreground
-            const escapedPath = folderPath.replace(/\\/g, '\\\\').replace(/'/g, "''");
-            const psScript = `
-                Add-Type @"
-                using System;
-                using System.Runtime.InteropServices;
-                public class FocusHelper {
-                    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
-                    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint pid);
-                    [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
-                    [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint a, uint b, bool attach);
-                    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
-                    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int cmd);
-                }
-"@
-                $p = Start-Process explorer.exe -ArgumentList '${escapedPath}' -PassThru
-                Start-Sleep -Milliseconds 600
-                $fg = [FocusHelper]::GetForegroundWindow()
-                $fgTid = [FocusHelper]::GetWindowThreadProcessId($fg, [ref]0)
-                $myTid = [FocusHelper]::GetCurrentThreadId()
-                [FocusHelper]::AttachThreadInput($myTid, $fgTid, $true)
-                [FocusHelper]::ShowWindow($p.MainWindowHandle, 5)
-                [FocusHelper]::SetForegroundWindow($p.MainWindowHandle)
-                [FocusHelper]::AttachThreadInput($myTid, $fgTid, $false)
-            `.trim();
-            exec(`powershell -NoProfile -Command "${psScript.replace(/"/g, '\\"')}"`, (error) => {
+            // Abre a pasta (pode ficar em background — limitação do Windows anti-focus-steal)
+            exec(`start "" "${folderPath}"`, (error) => {
                 if (error) console.error('Erro ao abrir pasta:', error.message);
             });
         }
