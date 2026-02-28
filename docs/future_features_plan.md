@@ -286,19 +286,12 @@ FUTURO (com NAS):
 
 #### Estrutura de Pastas por Paciente
 
-```
-T-0006/
-├── faturas/
-│   ├── fatura_001.pdf
-│   └── fatura_002.pdf
-├── fotos/
-│   ├── scan_01.jpg          ← ficheiro completo (local/NAS)
-│   └── scan_01_thumb.jpg    ← thumbnail (cópia no Supabase)
-├── modelos_3d/
-│   └── modelo_superior.stl
-└── documentos/
-    └── consentimento.pdf
-```
+> ⚠️ **A DEFINIR:** A organização das subpastas de cada paciente será discutida e decidida em conjunto antes da implementação.
+> A estrutura actual (apenas pasta raiz `T-XXXX/`) será expandida com subpastas específicas para:
+> - Informação pessoal do paciente (perfil, avatar, documentos pessoais)
+> - Planos de tratamento e respectivos ficheiros
+> - Faturação
+> - Outros documentos
 
 #### Implementação (Ordem)
 
@@ -332,7 +325,8 @@ T-0006/
 3. App redimensiona automaticamente para **120x120px JPEG** (~5-15KB)
 4. Thumbnail guardada:
    - **Supabase Storage** (bucket `patient-avatars`) — enquanto paciente **activo**
-   - **NAS/Pasta local** (`T-0006/avatar.jpg`) — sempre
+   - **NAS/Pasta local** — pasta `perfil/` dentro da pasta do paciente (ex: `T-0006/perfil/avatar.jpg`)
+   - Localização exacta depende da estrutura de pastas final (§2.5 — a definir)
 
 #### Gestão automática de storage no Supabase
 
