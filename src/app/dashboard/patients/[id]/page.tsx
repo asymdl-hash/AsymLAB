@@ -34,6 +34,13 @@ export default function PatientPage({ params }: { params: { id: string } }) {
                     });
 
                     if (newPatient) {
+                        // Criar pasta do paciente automaticamente (silencioso)
+                        fetch('/api/patient-folder', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ t_id: newPatient.t_id, silent: true }),
+                        }).catch(() => { }); // Não bloquear se falhar
+
                         window.dispatchEvent(new Event('patient-updated'));
                         router.replace(`/dashboard/patients/${newPatient.id}`);
                     }

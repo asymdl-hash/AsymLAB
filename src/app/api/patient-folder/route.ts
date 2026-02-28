@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const { t_id } = await request.json();
+        const { t_id, silent } = await request.json();
 
         if (!t_id || typeof t_id !== 'string') {
             return NextResponse.json({ error: 'T-ID inválido' }, { status: 400 });
@@ -90,12 +90,14 @@ export async function POST(request: NextRequest) {
             mkdirSync(folderPath, { recursive: true });
         }
 
-        // Abrir no File Explorer (Windows)
-        exec(`explorer "${folderPath}"`, (error) => {
-            if (error) {
-                console.error('Erro ao abrir explorer:', error);
-            }
-        });
+        // Abrir no File Explorer (Windows) — apenas se não for silent
+        if (!silent) {
+            exec(`explorer "${folderPath}"`, (error) => {
+                if (error) {
+                    console.error('Erro ao abrir explorer:', error);
+                }
+            });
+        }
 
         return NextResponse.json({
             success: true,
