@@ -257,7 +257,7 @@ export default function PatientList() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
                                         <span className={cn(
-                                            "text-[10px] font-bold font-mono px-1.5 py-0.5 rounded",
+                                            "text-[10px] font-bold px-1.5 py-0.5 rounded",
                                             isActive ? "bg-amber-500/20 text-amber-400" : "bg-muted text-gray-400 group-hover:bg-amber-500/10 group-hover:text-amber-400"
                                         )}>
                                             {patient.t_id}
@@ -275,7 +275,7 @@ export default function PatientList() {
                                     </div>
                                     <h3 className={cn(
                                         "font-semibold text-sm mt-0.5 leading-tight",
-                                        isActive ? "text-white" : "text-card-foreground/90"
+                                        isActive ? "text-amber-100" : "text-card-foreground/90"
                                     )}>
                                         {patient.nome}
                                     </h3>

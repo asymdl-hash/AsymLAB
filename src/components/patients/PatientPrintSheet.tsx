@@ -133,7 +133,7 @@ html,body{margin:0!important;padding:0!important;background:#fff;font-family:'In
               <span className="text-sm font-bold text-amber-400">{getInitials(patient.nome)}</span>
             </div>
             <div>
-              <span className="font-mono text-xs font-bold text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded">{patient.t_id}</span>
+              <span className="text-xs font-bold text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded">{patient.t_id}</span>
               <h3 className="text-base font-semibold mt-0.5">{patient.nome}</h3>
             </div>
           </div>

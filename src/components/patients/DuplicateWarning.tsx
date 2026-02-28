@@ -60,7 +60,7 @@ export default function DuplicateWarning({ status, message, matches, onDismiss }
                     <div className="mt-2 space-y-1.5">
                         {matches.slice(0, 3).map(m => (
                             <div key={m.id} className="flex items-center gap-2 text-xs">
-                                <span className="font-mono text-gray-500 dark:text-muted-foreground">{m.t_id}</span>
+                                <span className="text-gray-500 dark:text-muted-foreground">{m.t_id}</span>
                                 <span className={cn("font-medium", config.text)}>{m.nome}</span>
                                 {m.similarity != null && m.similarity < 100 && (
                                     <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium", config.badgeBg)}>

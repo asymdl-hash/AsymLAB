@@ -406,7 +406,23 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     <div className="flex flex-col gap-1.5 min-w-0 flex-1 w-full sm:w-auto">
                         {/* ID + Nome editável + Status */}
                         <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start">
-                            <span className="font-mono text-sm sm:text-base font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md border border-primary/20 shrink-0 tracking-wide">{patient.t_id}</span>
+                            <span className="text-sm sm:text-base font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md border border-primary/20 shrink-0 tracking-wide">{patient.t_id}</span>
+                            <button
+                                onClick={() => {
+                                    const nasPath = `\\\\NAS\\AsymLAB\\Pacientes\\${patient.t_id}`;
+                                    navigator.clipboard.writeText(nasPath);
+                                    alert(`Caminho copiado:\n${nasPath}`);
+                                }}
+                                className="h-7 w-7 rounded-md flex items-center justify-center text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
+                                title="Abrir pasta do paciente na NAS"
+                            >
+                                <FolderOpen className="h-4 w-4" />
+                            </button>
+                            {patient.created_at && (
+                                <span className="text-[10px] text-gray-500 hidden sm:inline">
+                                    Criado em {new Date(patient.created_at).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                </span>
+                            )}
                             <Input
                                 value={patient.nome}
                                 onChange={(e) => handleFieldChange('nome', e.target.value)}
