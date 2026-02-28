@@ -44,7 +44,7 @@ export default function PatientPrintSheet({ patient, onClose }: PatientPrintShee
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-html { margin: 0 !important; padding: 0 !important; width: 210mm; height: 297mm; overflow: hidden; }
+html { margin: 0 !important; padding: 0 !important; width: 210mm; height: 297mm; }
 
 @page {
     size: A4;
@@ -61,7 +61,6 @@ body {
     color: #1a1a2e;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 
 /* ═══════════════ HEADER ═══════════════ */
@@ -189,6 +188,7 @@ body {
     padding: 28px 40px;
     display: flex;
     flex-direction: column;
+    background: white;
 }
 
 .section-title {
@@ -212,6 +212,7 @@ body {
     border-top: 1px solid #e2e8f0;
     padding: 16px 40px;
     text-align: center;
+    margin-top: auto;
 }
 
 .footer-lab-name {
