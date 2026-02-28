@@ -123,9 +123,16 @@ export default function PatientForm({ initialData }: PatientFormProps) {
             }
             if (showWhatsApp && whatsappRef.current && !whatsappRef.current.contains(e.target as Node)) {
                 setShowWhatsApp(false);
-                // Auto-save ao fechar
+                // Save directo ao fechar (sem debounce)
                 if (whatsappUrl !== (patient.whatsapp_group_url || '')) {
-                    autoSave('whatsapp_group_url', whatsappUrl || null);
+                    const url = whatsappUrl || null;
+                    setPatient(prev => ({ ...prev, whatsapp_group_url: url }));
+                    patientsService.updatePatient(patient.id, { whatsapp_group_url: url })
+                        .then(() => {
+                            lock.setLoadedAt(new Date().toISOString());
+                            setLastSaved(new Date());
+                        })
+                        .catch(err => console.error('Erro ao guardar WhatsApp URL:', err));
                 }
             }
         }
@@ -370,10 +377,17 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                         {patient.whatsapp_group_url ? '✓ Grupo associado' : 'Sem grupo associado'}
                                     </span>
                                     <button
-                                        onClick={() => {
-                                            setPatient(prev => ({ ...prev, whatsapp_group_url: whatsappUrl || null }));
-                                            autoSave('whatsapp_group_url', whatsappUrl || null);
+                                        onClick={async () => {
+                                            const url = whatsappUrl || null;
+                                            setPatient(prev => ({ ...prev, whatsapp_group_url: url }));
                                             setShowWhatsApp(false);
+                                            try {
+                                                await patientsService.updatePatient(patient.id, { whatsapp_group_url: url });
+                                                lock.setLoadedAt(new Date().toISOString());
+                                                setLastSaved(new Date());
+                                            } catch (err) {
+                                                console.error('Erro ao guardar WhatsApp URL:', err);
+                                            }
                                         }}
                                         className="text-xs px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium transition-colors"
                                     >
