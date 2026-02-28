@@ -4,6 +4,11 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## V1.61.0 - 2026-02-28
+- Lock optimista multi-user: hook `useOptimisticLock` reutilizável para proteger edições concorrentes
+- Integração no PatientForm: verifica `updated_at` antes de cada auto-save
+- Banner amber de conflito com botão "Recarregar" se outro utilizador editou entretanto
+
 ## V1.60.0 - 2026-02-28
 - Thumbnails nos ficheiros: imagens com preview 48x48, PDFs com badge vermelho, outros com emoji do tipo
 - Contactos Inteligentes marcado como ✅ (já implementado)

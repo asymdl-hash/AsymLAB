@@ -449,9 +449,9 @@ Adicionados indexes de `clinic_id` nas tabelas filhas para acelerar queries de f
 38. [ ] Reanálise de Performance (quando app crescer — ver §6)
 39. [ ] Módulo Médicos — Analytics (ver §7)
 40. [ ] Módulo Médicos — WhatsApp Permissions (ver §8)
-41. [ ] Sidebar Reordenável por Utilizador
-42. [ ] Thumbnails ficheiros (previews no DocumentsTab)
-43. [ ] Lock optimista (concorrência multi-user)
+41. ~~Sidebar Reordenável por Utilizador~~ ✅ V1.59.0
+42. ~~Thumbnails ficheiros (previews no DocumentsTab)~~ ✅ V1.60.0
+43. ~~Lock optimista (concorrência multi-user)~~ ✅ V1.61.0
 
 ---
 
