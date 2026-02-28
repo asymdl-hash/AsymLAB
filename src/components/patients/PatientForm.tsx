@@ -103,6 +103,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const [showDoctorPicker, setShowDoctorPicker] = useState(false);
     const [showDoctorMulti, setShowDoctorMulti] = useState(false);
     const [showTeam, setShowTeam] = useState(false);
+    const [clinicTeam, setClinicTeam] = useState<{ user_id: string; full_name: string; phone: string | null; role: string | null }[]>([]);
 
     // Carregar dropdowns
     useEffect(() => {
@@ -122,6 +123,28 @@ export default function PatientForm({ initialData }: PatientFormProps) {
         }
         loadDropdowns();
     }, [initialData.id]);
+
+    // Carregar equipa da clínica
+    useEffect(() => {
+        async function loadClinicTeam() {
+            if (!patient.clinica_id) return;
+            try {
+                const { data, error } = await (await import('@/lib/supabase')).supabase
+                    .from('user_clinic_access')
+                    .select('user_id, user_profiles!inner(full_name, phone, app_role)')
+                    .eq('clinic_id', patient.clinica_id);
+                if (!error && data) {
+                    setClinicTeam(data.map((d: any) => ({
+                        user_id: d.user_id,
+                        full_name: d.user_profiles.full_name,
+                        phone: d.user_profiles.phone,
+                        role: d.user_profiles.app_role,
+                    })).filter((d: any) => d.role !== 'doctor')); // Só colaboradores (não médicos)
+                }
+            } catch { /* ignore */ }
+        }
+        loadClinicTeam();
+    }, [patient.clinica_id]);
 
     // Auto-save com debounce + lock optimista
     const autoSave = useCallback(async (field: string, value: unknown) => {
@@ -328,7 +351,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                             )}
                         </div>
 
-                        {/* Info secundária */}
+                        {/* Linha: Clínica | Médicos | Equipa Associada */}
                         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-sm text-gray-400 mt-0.5">
                             <div className="flex items-center gap-1.5">
                                 <span className="text-gray-500">Clínica:</span>
@@ -381,7 +404,6 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                                         "flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors group",
                                                         isSelected ? "bg-primary/5" : "hover:bg-gray-50"
                                                     )}>
-                                                        {/* Checkbox */}
                                                         <button
                                                             onClick={() => {
                                                                 if (isSelected && !isPrincipal) {
@@ -392,23 +414,16 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                                             }}
                                                             className={cn(
                                                                 "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
-                                                                isSelected
-                                                                    ? "bg-primary border-primary text-white"
-                                                                    : "border-gray-300 hover:border-primary/50",
+                                                                isSelected ? "bg-primary border-primary text-white" : "border-gray-300 hover:border-primary/50",
                                                                 isPrincipal && "cursor-default"
                                                             )}
                                                             disabled={isPrincipal}
                                                         >
                                                             {isSelected && <Check className="h-2.5 w-2.5" />}
                                                         </button>
-                                                        {/* Nome */}
-                                                        <span className={cn(
-                                                            "text-xs flex-1 truncate",
-                                                            isSelected ? "text-gray-900 font-medium" : "text-gray-600"
-                                                        )}>
+                                                        <span className={cn("text-xs flex-1 truncate", isSelected ? "text-gray-900 font-medium" : "text-gray-600")}>
                                                             {d.full_name}
                                                         </span>
-                                                        {/* Badge principal */}
                                                         {isPrincipal ? (
                                                             <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">Principal</span>
                                                         ) : isSelected && !readOnly ? (
@@ -433,64 +448,104 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                             {patient.id_paciente_clinica && (
                                 <span className="text-xs text-gray-500">ID Clínica: <span className="text-gray-300">{patient.id_paciente_clinica}</span></span>
                             )}
-                        </div>
-
-                        {/* Equipa Associada — expandível */}
-                        <div className="mt-1.5">
-                            <button
-                                onClick={() => setShowTeam(!showTeam)}
-                                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors"
-                            >
-                                <Users className="h-3 w-3" />
-                                <span>Equipa Associada</span>
-                                {associatedDoctors.length > 0 && (
-                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/10 text-gray-400 font-medium">{associatedDoctors.length}</span>
-                                )}
-                                <ChevronDown className={cn("h-3 w-3 transition-transform", showTeam && "rotate-180")} />
-                            </button>
-                            {showTeam && (
-                                <div className="mt-2 bg-white rounded-xl shadow-lg border border-gray-200 p-3 min-w-[300px] max-w-md">
-                                    {associatedDoctors.length === 0 ? (
-                                        <p className="text-[10px] text-gray-400 italic">Nenhum médico associado</p>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            {associatedDoctors.map(doc => {
-                                                const isPrincipal = doc.doctor_id === patient.medico_principal_id;
-                                                const docProfile = doctors.find(d => d.user_id === doc.doctor_id);
-                                                return (
-                                                    <div key={doc.doctor_id} className={cn(
-                                                        "flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs",
-                                                        isPrincipal ? "bg-primary/5 border border-primary/10" : "hover:bg-gray-50"
-                                                    )}>
-                                                        <Stethoscope className={cn("h-3.5 w-3.5 shrink-0", isPrincipal ? "text-primary" : "text-gray-400")} />
-                                                        <div className="flex-1 min-w-0">
-                                                            <span className={cn("font-medium block truncate", isPrincipal ? "text-primary" : "text-gray-800")}>
-                                                                {doc.full_name}
-                                                            </span>
-                                                            {(docProfile as any)?.phone && (
-                                                                <div className="flex items-center gap-1 mt-0.5">
-                                                                    <Phone className="h-2.5 w-2.5 text-gray-400" />
-                                                                    <span className="text-[10px] text-gray-500 font-mono">{(docProfile as any).phone}</span>
-                                                                    <button
-                                                                        onClick={() => navigator.clipboard.writeText((docProfile as any).phone)}
-                                                                        className="p-0.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
-                                                                        title="Copiar telefone"
-                                                                    >
-                                                                        <Copy className="h-2.5 w-2.5" />
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        {isPrincipal && (
-                                                            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold shrink-0">Principal</span>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
+                            {/* Equipa Associada — inline, popup flutuante */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowTeam(!showTeam)}
+                                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors"
+                                >
+                                    <Users className="h-3 w-3" />
+                                    <span>Equipa</span>
+                                    {(associatedDoctors.length + clinicTeam.length) > 0 && (
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/10 text-gray-400 font-medium">{associatedDoctors.length + clinicTeam.length}</span>
                                     )}
-                                </div>
-                            )}
+                                    <ChevronDown className={cn("h-3 w-3 transition-transform", showTeam && "rotate-180")} />
+                                </button>
+                                {showTeam && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setShowTeam(false)} />
+                                        <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-2xl z-50 p-3 min-w-[300px] max-w-sm border border-gray-200">
+                                            {/* Médicos */}
+                                            {associatedDoctors.length > 0 && (
+                                                <>
+                                                    <div className="px-1 pb-1.5 mb-1.5 border-b border-gray-100">
+                                                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Médicos</span>
+                                                    </div>
+                                                    <div className="space-y-1 mb-3">
+                                                        {associatedDoctors.map(doc => {
+                                                            const isPrincipal = doc.doctor_id === patient.medico_principal_id;
+                                                            const docProfile = doctors.find(d => d.user_id === doc.doctor_id);
+                                                            return (
+                                                                <div key={doc.doctor_id} className={cn(
+                                                                    "flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs",
+                                                                    isPrincipal ? "bg-primary/5" : "hover:bg-gray-50"
+                                                                )}>
+                                                                    <Stethoscope className={cn("h-3 w-3 shrink-0", isPrincipal ? "text-primary" : "text-gray-400")} />
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <span className={cn("font-medium block truncate text-[11px]", isPrincipal ? "text-primary" : "text-gray-800")}>
+                                                                            {doc.full_name}
+                                                                        </span>
+                                                                        {(docProfile as any)?.phone && (
+                                                                            <div className="flex items-center gap-1 mt-0.5">
+                                                                                <Phone className="h-2.5 w-2.5 text-gray-400" />
+                                                                                <span className="text-[10px] text-gray-500 font-mono">{(docProfile as any).phone}</span>
+                                                                                <button
+                                                                                    onClick={() => navigator.clipboard.writeText((docProfile as any).phone)}
+                                                                                    className="p-0.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+                                                                                    title="Copiar telefone"
+                                                                                >
+                                                                                    <Copy className="h-2.5 w-2.5" />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    {isPrincipal && (
+                                                                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold shrink-0">Principal</span>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </>
+                                            )}
+                                            {/* Colaboradores da Clínica */}
+                                            {clinicTeam.length > 0 && (
+                                                <>
+                                                    <div className="px-1 pb-1.5 mb-1.5 border-b border-gray-100">
+                                                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Colaboradores</span>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        {clinicTeam.map(member => (
+                                                            <div key={member.user_id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs hover:bg-gray-50">
+                                                                <Users className="h-3 w-3 shrink-0 text-gray-400" />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <span className="font-medium block truncate text-[11px] text-gray-800">{member.full_name}</span>
+                                                                    {member.phone && (
+                                                                        <div className="flex items-center gap-1 mt-0.5">
+                                                                            <Phone className="h-2.5 w-2.5 text-gray-400" />
+                                                                            <span className="text-[10px] text-gray-500 font-mono">{member.phone}</span>
+                                                                            <button
+                                                                                onClick={() => navigator.clipboard.writeText(member.phone!)}
+                                                                                className="p-0.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+                                                                                title="Copiar telefone"
+                                                                            >
+                                                                                <Copy className="h-2.5 w-2.5" />
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
+                                            {associatedDoctors.length === 0 && clinicTeam.length === 0 && (
+                                                <p className="text-[10px] text-gray-400 italic">Nenhum membro na equipa</p>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
 
