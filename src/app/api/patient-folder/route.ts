@@ -88,8 +88,10 @@ export async function POST(request: NextRequest) {
         }
 
         if (!silent) {
-            exec(`explorer "${folderPath}"`, (error) => {
-                if (error) console.error('Erro ao abrir explorer:', error);
+            // Usar start para abrir Explorer (mais fiável que exec('explorer'))
+            const cmd = `start "" "${folderPath}"`;
+            exec(cmd, (error, stdout, stderr) => {
+                if (error) console.error('Erro ao abrir pasta:', error.message, stderr);
             });
         }
 
