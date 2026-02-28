@@ -274,6 +274,27 @@ PACIENTE
 
 **Criação automática:** Quando um paciente é criado, o sistema sugere a criação do grupo WA. Badge "Criar Grupo" aparece até ser feito.
 
+#### 📌 Implementação Parcial (V1.63.1)
+
+> **Campo:** `patients.whatsapp_group_url` (TEXT, nullable) — armazena a URL de convite do grupo WhatsApp associado ao paciente.
+
+**UI implementada:**
+- **Ícone no avatar** (hero header da ficha do paciente) — canto inferior-direito
+  - 🔘 **Cinza** quando `whatsapp_group_url` é NULL (sem grupo)
+  - 🟢 **Verde** quando `whatsapp_group_url` tem URL (grupo associado)
+- **Popup de edição** — ao clicar no ícone, abre popup com input para URL e botão "Guardar"
+- **Save directo** — grava imediatamente no Supabase (sem debounce)
+
+**Fluxos de preenchimento do campo `whatsapp_group_url`:**
+
+| Fluxo | Origem | Acção Esperada |
+|-------|--------|----------------|
+| **Manual** | Utilizador cola URL no popup | Guardar URL → ícone fica verde |
+| **Automático (futuro)** | Z-API cria grupo via API | Endpoint `/api/whatsapp/create-group` grava URL automaticamente |
+| **Via @criargrupo (futuro)** | Comando WhatsApp | Bot cria grupo e preenche URL no paciente |
+
+> **Integração futura com Z-API:** Quando o módulo de automações WhatsApp for implementado (Fase 2 — Comunicação), o campo `whatsapp_group_url` será preenchido automaticamente pela API ao criar o grupo. A tabela `wa_groups` (5.8) manterá os metadados completos do grupo, mas o campo na tabela `patients` serve de **atalho rápido** para o link de convite.
+
 ### 3.13 — Fila de Mensagens WhatsApp
 
 > Sistema interno de fiabilidade para envio de mensagens.
