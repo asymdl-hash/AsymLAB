@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import PWARegister from '@/components/PWARegister';
+import DynamicMeta from '@/components/DynamicMeta';
 
 // Inter: A fonte padrão para interfaces modernas e limpas (SaaS Premium)
 const inter = Inter({
@@ -42,6 +43,7 @@ export default function RootLayout({
             </head>
             <body className={`${inter.variable} font-sans antialiased bg-background text-foreground selection:bg-primary/20 selection:text-primary-foreground`}>
                 <PWARegister />
+                <DynamicMeta />
                 {children}
             </body>
         </html>
