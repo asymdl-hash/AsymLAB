@@ -256,6 +256,14 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const handleDeleteConfirm = async () => {
         try {
             await patientsService.softDeletePatient(patient.id);
+
+            // Arquivar pasta do paciente (silencioso, não bloqueia)
+            fetch('/api/patient-folder', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ t_id: patient.t_id }),
+            }).catch(() => { });
+
             window.dispatchEvent(new Event('patient-updated'));
             router.push('/dashboard/patients');
         } catch (error) {
