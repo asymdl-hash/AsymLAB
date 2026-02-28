@@ -201,21 +201,34 @@ export async function PATCH(request: NextRequest) {
 
             copyRecursive(sourcePath, targetPath);
 
-            // Arquivar pasta source (não apagar)
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const archivedName = `_MERGED_${sourceId}_to_${targetId}_${timestamp}`;
-            const archivedPath = path.join(PATIENTS_BASE_PATH, archivedName);
-            renameSync(sourcePath, archivedPath);
+            // Arquivar pasta source (não apagar) — pode falhar se pasta aberta
+            let archived = false;
+            try {
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const archivedName = `_MERGED_${sourceId}_to_${targetId}_${timestamp}`;
+                const archivedPath = path.join(PATIENTS_BASE_PATH, archivedName);
+                renameSync(sourcePath, archivedPath);
+                archived = true;
+            } catch (renameErr: any) {
+                console.warn('Aviso: ficheiros copiados mas pasta source não pôde ser arquivada (pode estar aberta):', renameErr.message);
+            }
+
+            return NextResponse.json({
+                success: true,
+                filesMoved,
+                archived,
+                message: `${filesMoved} ficheiros movidos de ${sourceId} para ${targetId}${archived ? '' : ' (pasta source mantida - fechar Explorer e tentar novamente)'}`,
+            });
         }
 
         return NextResponse.json({
             success: true,
-            filesMoved,
-            message: `${filesMoved} ficheiros movidos de ${sourceId} para ${targetId}`,
+            filesMoved: 0,
+            message: `Pasta source ${sourceId} não existia`,
         });
-    } catch (error) {
-        console.error('Erro PATCH patient-folder:', error);
-        return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
+    } catch (error: any) {
+        console.error('Erro PATCH patient-folder:', error?.message || error);
+        return NextResponse.json({ error: 'Erro interno', details: error?.message || String(error) }, { status: 500 });
     }
 }
 
