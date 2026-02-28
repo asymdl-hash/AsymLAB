@@ -408,13 +408,20 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start">
                             <span className="text-sm sm:text-base font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md border border-primary/20 shrink-0 tracking-wide">{patient.t_id}</span>
                             <button
-                                onClick={() => {
-                                    const nasPath = `\\\\NAS\\AsymLAB\\Pacientes\\${patient.t_id}`;
-                                    navigator.clipboard.writeText(nasPath);
-                                    alert(`Caminho copiado:\n${nasPath}`);
+                                onClick={async () => {
+                                    try {
+                                        const res = await fetch('/api/patient-folder', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ t_id: patient.t_id }),
+                                        });
+                                        if (!res.ok) throw new Error('Erro ao abrir pasta');
+                                    } catch (err) {
+                                        console.error('Erro ao abrir pasta:', err);
+                                    }
                                 }}
                                 className="h-7 w-7 rounded-md flex items-center justify-center text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
-                                title="Abrir pasta do paciente na NAS"
+                                title="Abrir pasta do paciente"
                             >
                                 <FolderOpen className="h-4 w-4" />
                             </button>
