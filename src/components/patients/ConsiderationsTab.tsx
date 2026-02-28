@@ -21,6 +21,7 @@ import {
     Share2,
     X,
     Send,
+    Printer,
 } from 'lucide-react';
 import { considerationsService, ConsiderationField, ConsiderationTemplate } from '@/services/considerationsService';
 import TemplatePicker from './TemplatePicker';
@@ -167,6 +168,85 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
         setCreateStep('template');
     };
 
+    // Export PDF
+    const exportPDF = () => {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return;
+
+        const now = new Date().toLocaleDateString('pt-PT');
+        const patientName = (considerations[0]?.patient?.nome) || 'Paciente';
+
+        // Build considerations HTML grouped by phase
+        let considerationsHTML = '';
+        for (const [, group] of Object.entries(grouped)) {
+            const g = group as { phaseName: string; items: any[] };
+            considerationsHTML += `<div class="phase-group">`;
+            considerationsHTML += `<h3 class="phase-name">📋 ${g.phaseName}</h3>`;
+            for (const c of g.items) {
+                const ladoCfg = LADO_CONFIG[c.lado as keyof typeof LADO_CONFIG];
+                const dateStr = new Date(c.created_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' });
+                considerationsHTML += `<div class="consideration">`;
+                considerationsHTML += `<div class="consideration-header">`;
+                considerationsHTML += `<span class="lado-badge lado-${c.lado}">${ladoCfg?.label || c.lado}</span>`;
+                considerationsHTML += `<span class="date">${dateStr}</span>`;
+                considerationsHTML += `</div>`;
+                if (c.fields && c.fields.length > 0) {
+                    for (const f of c.fields) {
+                        considerationsHTML += `<div class="field">`;
+                        considerationsHTML += `<strong>${f.subtitulo}</strong>`;
+                        considerationsHTML += `<p>${f.descricao || '-'}</p>`;
+                        considerationsHTML += `</div>`;
+                    }
+                }
+                if (c.conteudo) {
+                    considerationsHTML += `<p class="content">${c.conteudo}</p>`;
+                }
+                considerationsHTML += `</div>`;
+            }
+            considerationsHTML += `</div>`;
+        }
+
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Considerações - ${patientName} - ${now}</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a; }
+                    .header { border-bottom: 2px solid #d4a017; padding-bottom: 16px; margin-bottom: 24px; }
+                    .header h1 { font-size: 20px; margin: 0 0 4px; color: #333; }
+                    .header .subtitle { font-size: 12px; color: #888; }
+                    .phase-group { margin-bottom: 24px; }
+                    .phase-name { font-size: 14px; font-weight: 600; color: #555; border-bottom: 1px solid #eee; padding-bottom: 6px; margin-bottom: 12px; }
+                    .consideration { background: #f9f9f9; border: 1px solid #e8e8e8; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; }
+                    .consideration-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+                    .lado-badge { font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 2px 8px; border-radius: 12px; }
+                    .lado-medico, .lado-clinica { background: #fff3e0; color: #e65100; }
+                    .lado-lab { background: #e3f2fd; color: #1565c0; }
+                    .lado-lab_inside { background: #f3e5f5; color: #7b1fa2; }
+                    .date { font-size: 11px; color: #999; }
+                    .field { margin-bottom: 6px; }
+                    .field strong { font-size: 12px; color: #444; display: block; margin-bottom: 2px; }
+                    .field p { font-size: 12px; color: #666; margin: 0; }
+                    .content { font-size: 12px; color: #555; margin: 4px 0 0; white-space: pre-wrap; }
+                    .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #eee; text-align: center; font-size: 10px; color: #bbb; }
+                    @media print { body { padding: 20px; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Considerações</h1>
+                    <div class="subtitle">${patientName} · ${considerations.length} consideração(ões) · Exportado em ${now}</div>
+                </div>
+                ${considerationsHTML}
+                <div class="footer">AsymLAB · Gerado automaticamente</div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        setTimeout(() => printWindow.print(), 300);
+    };
+
     return (
         <div className="flex flex-col h-full min-h-[400px]">
             {/* Header */}
@@ -180,13 +260,24 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
                         </span>
                     )}
                 </h3>
-                <button
-                    onClick={() => { setCreateStep('template'); setReplyTo(null); }}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors"
-                >
-                    <Plus className="h-3 w-3" />
-                    Nova
-                </button>
+                <div className="flex items-center gap-2">
+                    {considerations.length > 0 && (
+                        <button
+                            onClick={exportPDF}
+                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-muted/50 text-muted-foreground border border-border/50 rounded-lg hover:bg-muted/80 transition-colors"
+                        >
+                            <Printer className="h-3 w-3" />
+                            PDF
+                        </button>
+                    )}
+                    <button
+                        onClick={() => { setCreateStep('template'); setReplyTo(null); }}
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors"
+                    >
+                        <Plus className="h-3 w-3" />
+                        Nova
+                    </button>
+                </div>
             </div>
 
             {/* Filter tabs */}
