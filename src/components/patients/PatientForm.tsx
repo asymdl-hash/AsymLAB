@@ -43,6 +43,7 @@ import DocumentsTab from '@/components/patients/DocumentsTab';
 import HistoryTab from '@/components/patients/HistoryTab';
 import PatientPrintSheet from '@/components/patients/PatientPrintSheet';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 // Status do paciente
 const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
@@ -258,11 +259,16 @@ export default function PatientForm({ initialData }: PatientFormProps) {
             await patientsService.softDeletePatient(patient.id);
 
             // Arquivar pasta do paciente (silencioso, não bloqueia)
-            fetch('/api/patient-folder', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ t_id: patient.t_id }),
-            }).catch(() => { });
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                fetch('/api/patient-folder', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.access_token}`,
+                    },
+                    body: JSON.stringify({ t_id: patient.t_id }),
+                }).catch(() => { });
+            });
 
             window.dispatchEvent(new Event('patient-updated'));
             router.push('/dashboard/patients');
@@ -420,9 +426,13 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                 <button
                                     onClick={async () => {
                                         try {
+                                            const { data: { session } } = await supabase.auth.getSession();
                                             const res = await fetch('/api/patient-folder', {
                                                 method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Authorization': `Bearer ${session?.access_token}`,
+                                                },
                                                 body: JSON.stringify({ t_id: patient.t_id }),
                                             });
                                             if (!res.ok) throw new Error('Erro ao abrir pasta');

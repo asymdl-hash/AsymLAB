@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { patientsService, PatientFullDetails } from '@/services/patientsService';
 import PatientForm from '@/components/patients/PatientForm';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function PatientPage({ params }: { params: { id: string } }) {
     const [patient, setPatient] = useState<PatientFullDetails | null>(null);
@@ -35,11 +36,16 @@ export default function PatientPage({ params }: { params: { id: string } }) {
 
                     if (newPatient) {
                         // Criar pasta do paciente automaticamente (silencioso)
-                        fetch('/api/patient-folder', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ t_id: newPatient.t_id, silent: true }),
-                        }).catch(() => { }); // Não bloquear se falhar
+                        supabase.auth.getSession().then(({ data: { session } }) => {
+                            fetch('/api/patient-folder', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${session?.access_token}`,
+                                },
+                                body: JSON.stringify({ t_id: newPatient.t_id, silent: true }),
+                            }).catch(() => { });
+                        });
 
                         window.dispatchEvent(new Event('patient-updated'));
                         router.replace(`/dashboard/patients/${newPatient.id}`);
