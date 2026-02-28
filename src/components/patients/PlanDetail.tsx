@@ -24,6 +24,7 @@ import {
     Package,
 } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
+import { billingService } from '@/services/billingService';
 import NewPhaseModal from './NewPhaseModal';
 import NewAppointmentModal from './NewAppointmentModal';
 import WorkBadges from './WorkBadges';
@@ -78,6 +79,8 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
     const [changingState, setChangingState] = useState(false);
     const [reordering, setReordering] = useState(false);
     const [reasonModal, setReasonModal] = useState<{ action: 'pausar' | 'cancelar' | 'reabrir'; planId: string } | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [invoiceModal, setInvoiceModal] = useState<{ phaseId: string; phaseName: string } | null>(null);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sortedPhases = [...(plan.phases || [])].sort((a: any, b: any) => a.ordem - b.ordem);
@@ -117,24 +120,39 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
     }, [reasonModal, handleStateChange]);
 
     const handlePhaseStateChange = useCallback(async (phaseId: string, newState: string) => {
+        // Intercept: when concluding a phase, show invoice modal first
+        if (newState === 'concluida') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const phase = sortedPhases.find((p: any) => p.id === phaseId);
+            setInvoiceModal({ phaseId, phaseName: phase?.nome || 'Fase' });
+            return;
+        }
+
         try {
             await patientsService.updateRecord('phases', phaseId, { estado: newState });
+            onReload();
+        } catch (err) {
+            console.error('Error changing phase state:', err);
+        }
+    }, [onReload, sortedPhases]);
+
+    const concludePhaseAfterInvoice = useCallback(async (phaseId: string) => {
+        try {
+            await patientsService.updateRecord('phases', phaseId, { estado: 'concluida' });
 
             // Lógica sequencial: ao concluir uma fase, activar a próxima pendente
-            if (newState === 'concluida') {
-                const currentIndex = sortedPhases.findIndex((p: { id: string }) => p.id === phaseId);
-                const nextPhase = sortedPhases.slice(currentIndex + 1).find(
-                    (p: { estado: string }) => p.estado === 'pendente'
-                );
-                if (nextPhase) {
-                    await patientsService.updateRecord('phases', nextPhase.id, { estado: 'em_curso' });
-                    setSelectedPhaseId(nextPhase.id);
-                }
+            const currentIndex = sortedPhases.findIndex((p: { id: string }) => p.id === phaseId);
+            const nextPhase = sortedPhases.slice(currentIndex + 1).find(
+                (p: { estado: string }) => p.estado === 'pendente'
+            );
+            if (nextPhase) {
+                await patientsService.updateRecord('phases', nextPhase.id, { estado: 'em_curso' });
+                setSelectedPhaseId(nextPhase.id);
             }
 
             onReload();
         } catch (err) {
-            console.error('Error changing phase state:', err);
+            console.error('Error concluding phase:', err);
         }
     }, [onReload, sortedPhases]);
 
@@ -425,6 +443,16 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                     action={reasonModal.action}
                     onSubmit={handleReasonSubmit}
                     onClose={() => setReasonModal(null)}
+                />
+            )}
+            {invoiceModal && (
+                <InvoicePhaseModal
+                    phaseId={invoiceModal.phaseId}
+                    phaseName={invoiceModal.phaseName}
+                    patientId={patientId}
+                    planId={plan.id}
+                    onClose={() => setInvoiceModal(null)}
+                    onConclude={concludePhaseAfterInvoice}
                 />
             )}
         </div>
@@ -1022,3 +1050,167 @@ function ReasonModal({ action, onSubmit, onClose }: {
         </div>
     );
 }
+
+// === Sub-componente: InvoicePhaseModal ===
+function InvoicePhaseModal({ phaseId, phaseName, patientId, planId, onClose, onConclude }: {
+    phaseId: string;
+    phaseName: string;
+    patientId: string;
+    planId: string;
+    onClose: () => void;
+    onConclude: (phaseId: string) => void;
+}) {
+    const [mode, setMode] = useState<'choose' | 'invoice' | 'skip'>('choose');
+    const [valor, setValor] = useState('');
+    const [descricao, setDescricao] = useState('');
+    const [motivo, setMotivo] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+
+    const handleGenerateInvoice = async () => {
+        if (!valor || submitting) return;
+        try {
+            setSubmitting(true);
+            await billingService.createInvoice({
+                patient_id: patientId,
+                plan_id: planId,
+                phase_id: phaseId,
+                valor: parseFloat(valor),
+                descricao: descricao || `Fase: ${phaseName}`,
+            });
+            onClose();
+            await onConclude(phaseId);
+        } catch (err) {
+            console.error('Erro ao gerar factura:', err);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleSkipInvoice = async () => {
+        if (submitting) return;
+        try {
+            setSubmitting(true);
+            await patientsService.updateRecord('phases', phaseId, {
+                sem_factura: true,
+                sem_factura_em: new Date().toISOString(),
+            });
+            onClose();
+            await onConclude(phaseId);
+        } catch (err) {
+            console.error('Erro ao saltar factura:', err);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md">
+                <div className="p-5 border-b border-border">
+                    <h3 className="text-lg font-semibold text-card-foreground">Concluir Fase: {phaseName}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Deseja gerar uma factura para esta fase?</p>
+                </div>
+
+                <div className="p-5">
+                    {mode === 'choose' && (
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={() => setMode('invoice')}
+                                className="flex items-center gap-3 p-4 rounded-xl border border-green-500/30 bg-green-500/5 hover:bg-green-500/10 transition-colors text-left"
+                            >
+                                <div className="h-10 w-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                    <CheckCircle2 className="h-5 w-5 text-green-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-card-foreground">Gerar Factura</p>
+                                    <p className="text-xs text-muted-foreground">Criar factura associada a esta fase</p>
+                                </div>
+                            </button>
+                            <button
+                                onClick={() => setMode('skip')}
+                                className="flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 transition-colors text-left"
+                            >
+                                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                                    <XCircle className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-card-foreground">Sem Factura</p>
+                                    <p className="text-xs text-muted-foreground">Concluir sem gerar factura</p>
+                                </div>
+                            </button>
+                        </div>
+                    )}
+
+                    {mode === 'invoice' && (
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-xs text-muted-foreground mb-1 block">Valor (€) *</label>
+                                <input
+                                    type="number"
+                                    value={valor}
+                                    onChange={e => setValor(e.target.value)}
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0"
+                                    className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-card-foreground"
+                                    autoFocus
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-muted-foreground mb-1 block">Descrição</label>
+                                <input
+                                    value={descricao}
+                                    onChange={e => setDescricao(e.target.value)}
+                                    placeholder={`Fase: ${phaseName}`}
+                                    className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-card-foreground"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {mode === 'skip' && (
+                        <div>
+                            <label className="text-xs text-muted-foreground mb-1 block">Motivo (opcional)</label>
+                            <textarea
+                                value={motivo}
+                                onChange={e => setMotivo(e.target.value)}
+                                placeholder="Porque não será gerada factura..."
+                                rows={2}
+                                className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-card-foreground resize-none"
+                                autoFocus
+                            />
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex justify-end gap-3 p-5 border-t border-border">
+                    <button
+                        onClick={() => { if (mode === 'choose') onClose(); else setMode('choose'); }}
+                        className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
+                    >
+                        {mode === 'choose' ? 'Cancelar' : 'Voltar'}
+                    </button>
+                    {mode === 'invoice' && (
+                        <button
+                            onClick={handleGenerateInvoice}
+                            disabled={!valor || submitting}
+                            className="px-4 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-500 disabled:opacity-40 transition-colors"
+                        >
+                            {submitting ? 'A gerar...' : 'Gerar Factura e Concluir'}
+                        </button>
+                    )}
+                    {mode === 'skip' && (
+                        <button
+                            onClick={handleSkipInvoice}
+                            disabled={submitting}
+                            className="px-4 py-2 rounded-lg text-sm font-medium bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 disabled:opacity-40 transition-colors"
+                        >
+                            {submitting ? 'A processar...' : 'Concluir Sem Factura'}
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
