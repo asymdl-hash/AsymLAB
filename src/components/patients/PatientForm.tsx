@@ -21,6 +21,9 @@ import {
     Users,
     Stethoscope,
     Copy,
+    ChevronDown,
+    Check,
+    Phone,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,6 +101,8 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     // Estado médicos associados N:N
     const [associatedDoctors, setAssociatedDoctors] = useState<{ doctor_id: string; full_name: string }[]>([]);
     const [showDoctorPicker, setShowDoctorPicker] = useState(false);
+    const [showDoctorMulti, setShowDoctorMulti] = useState(false);
+    const [showTeam, setShowTeam] = useState(false);
 
     // Carregar dropdowns
     useEffect(() => {
@@ -346,29 +351,145 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                     ))}
                                 </select>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-gray-500">Médico:</span>
-                                <select
-                                    value={patient.medico_principal_id || ''}
-                                    onChange={(e) => {
-                                        const sel = doctors.find(d => d.user_id === e.target.value);
-                                        setPatient(prev => ({
-                                            ...prev,
-                                            medico_principal_id: e.target.value,
-                                            medico: sel ? { user_id: sel.user_id, full_name: sel.full_name } : prev.medico,
-                                        }));
-                                        autoSave('medico_principal_id', e.target.value);
-                                    }}
-                                    disabled={readOnly}
-                                    className="text-xs font-medium border-0 bg-transparent text-white focus:outline-none cursor-pointer [&>option]:text-black [&>option]:bg-white"
+                            {/* Médicos — Multi-select dropdown */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowDoctorMulti(!showDoctorMulti)}
+                                    className="flex items-center gap-1.5 text-xs cursor-pointer hover:text-white transition-colors"
                                 >
-                                    {doctors.map(d => (
-                                        <option key={d.user_id} value={d.user_id}>{d.full_name}</option>
-                                    ))}
-                                </select>
+                                    <span className="text-gray-500">Médicos:</span>
+                                    <span className="font-medium text-white">
+                                        {doctors.find(d => d.user_id === patient.medico_principal_id)?.full_name || 'Selecionar'}
+                                    </span>
+                                    {associatedDoctors.length > 1 && (
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/15 text-gray-300 font-medium">+{associatedDoctors.length - 1}</span>
+                                    )}
+                                    <ChevronDown className={cn("h-3 w-3 text-gray-500 transition-transform", showDoctorMulti && "rotate-180")} />
+                                </button>
+                                {showDoctorMulti && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setShowDoctorMulti(false)} />
+                                        <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-2xl z-50 py-2 min-w-[280px] border border-gray-200">
+                                            <div className="px-3 py-1.5 border-b border-gray-100">
+                                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Médicos do Caso</span>
+                                            </div>
+                                            {doctors.map(d => {
+                                                const isSelected = associatedDoctors.some(ad => ad.doctor_id === d.user_id);
+                                                const isPrincipal = d.user_id === patient.medico_principal_id;
+                                                return (
+                                                    <div key={d.user_id} className={cn(
+                                                        "flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors group",
+                                                        isSelected ? "bg-primary/5" : "hover:bg-gray-50"
+                                                    )}>
+                                                        {/* Checkbox */}
+                                                        <button
+                                                            onClick={() => {
+                                                                if (isSelected && !isPrincipal) {
+                                                                    handleRemoveDoctor(d.user_id);
+                                                                } else if (!isSelected) {
+                                                                    handleAddDoctor(d.user_id);
+                                                                }
+                                                            }}
+                                                            className={cn(
+                                                                "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                                                                isSelected
+                                                                    ? "bg-primary border-primary text-white"
+                                                                    : "border-gray-300 hover:border-primary/50",
+                                                                isPrincipal && "cursor-default"
+                                                            )}
+                                                            disabled={isPrincipal}
+                                                        >
+                                                            {isSelected && <Check className="h-2.5 w-2.5" />}
+                                                        </button>
+                                                        {/* Nome */}
+                                                        <span className={cn(
+                                                            "text-xs flex-1 truncate",
+                                                            isSelected ? "text-gray-900 font-medium" : "text-gray-600"
+                                                        )}>
+                                                            {d.full_name}
+                                                        </span>
+                                                        {/* Badge principal */}
+                                                        {isPrincipal ? (
+                                                            <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">Principal</span>
+                                                        ) : isSelected && !readOnly ? (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setPatient(prev => ({ ...prev, medico_principal_id: d.user_id }));
+                                                                    autoSave('medico_principal_id', d.user_id);
+                                                                }}
+                                                                className="text-[9px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 hover:bg-primary/10 hover:text-primary font-medium opacity-0 group-hover:opacity-100 transition-all"
+                                                            >
+                                                                ★ Tornar principal
+                                                            </button>
+                                                        ) : null}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                             {patient.id_paciente_clinica && (
                                 <span className="text-xs text-gray-500">ID Clínica: <span className="text-gray-300">{patient.id_paciente_clinica}</span></span>
+                            )}
+                        </div>
+
+                        {/* Equipa Associada — expandível */}
+                        <div className="mt-1.5">
+                            <button
+                                onClick={() => setShowTeam(!showTeam)}
+                                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors"
+                            >
+                                <Users className="h-3 w-3" />
+                                <span>Equipa Associada</span>
+                                {associatedDoctors.length > 0 && (
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/10 text-gray-400 font-medium">{associatedDoctors.length}</span>
+                                )}
+                                <ChevronDown className={cn("h-3 w-3 transition-transform", showTeam && "rotate-180")} />
+                            </button>
+                            {showTeam && (
+                                <div className="mt-2 bg-white rounded-xl shadow-lg border border-gray-200 p-3 min-w-[300px] max-w-md">
+                                    {associatedDoctors.length === 0 ? (
+                                        <p className="text-[10px] text-gray-400 italic">Nenhum médico associado</p>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {associatedDoctors.map(doc => {
+                                                const isPrincipal = doc.doctor_id === patient.medico_principal_id;
+                                                const docProfile = doctors.find(d => d.user_id === doc.doctor_id);
+                                                return (
+                                                    <div key={doc.doctor_id} className={cn(
+                                                        "flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs",
+                                                        isPrincipal ? "bg-primary/5 border border-primary/10" : "hover:bg-gray-50"
+                                                    )}>
+                                                        <Stethoscope className={cn("h-3.5 w-3.5 shrink-0", isPrincipal ? "text-primary" : "text-gray-400")} />
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className={cn("font-medium block truncate", isPrincipal ? "text-primary" : "text-gray-800")}>
+                                                                {doc.full_name}
+                                                            </span>
+                                                            {(docProfile as any)?.phone && (
+                                                                <div className="flex items-center gap-1 mt-0.5">
+                                                                    <Phone className="h-2.5 w-2.5 text-gray-400" />
+                                                                    <span className="text-[10px] text-gray-500 font-mono">{(docProfile as any).phone}</span>
+                                                                    <button
+                                                                        onClick={() => navigator.clipboard.writeText((docProfile as any).phone)}
+                                                                        className="p-0.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+                                                                        title="Copiar telefone"
+                                                                    >
+                                                                        <Copy className="h-2.5 w-2.5" />
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        {isPrincipal && (
+                                                            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold shrink-0">Principal</span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
@@ -425,123 +546,6 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         onDismiss={() => setDupResult({ status: 'ok', message: '', matches: [] })}
                     />
 
-                    {/* Equipa — Médicos + Colaboradores */}
-                    <div className="px-4 sm:px-6 py-3 border-b border-border/50">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            {/* Coluna: Médicos */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Stethoscope className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Médicos</span>
-                                    {!readOnly && (
-                                        <div className="relative ml-auto">
-                                            <button
-                                                onClick={() => setShowDoctorPicker(!showDoctorPicker)}
-                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border border-dashed border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary transition-colors"
-                                            >
-                                                <UserPlus className="h-2.5 w-2.5" />
-                                                Adicionar
-                                            </button>
-                                            {showDoctorPicker && (
-                                                <div className="absolute top-full right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 py-1 min-w-[200px] max-h-48 overflow-y-auto">
-                                                    {doctors
-                                                        .filter(d => !associatedDoctors.some(ad => ad.doctor_id === d.user_id))
-                                                        .map(d => (
-                                                            <button
-                                                                key={d.user_id}
-                                                                onClick={() => handleAddDoctor(d.user_id)}
-                                                                className="w-full text-left px-3 py-1.5 text-xs text-card-foreground hover:bg-muted transition-colors"
-                                                            >
-                                                                {d.full_name}
-                                                            </button>
-                                                        ))}
-                                                    {doctors.filter(d => !associatedDoctors.some(ad => ad.doctor_id === d.user_id)).length === 0 && (
-                                                        <span className="block px-3 py-1.5 text-xs text-muted-foreground">Todos os médicos já estão associados</span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="space-y-1.5">
-                                    {associatedDoctors.map(doc => {
-                                        const isPrincipal = doc.doctor_id === patient.medico_principal_id;
-                                        const docProfile = doctors.find(d => d.user_id === doc.doctor_id);
-                                        return (
-                                            <div key={doc.doctor_id} className={cn(
-                                                "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs group transition-colors",
-                                                isPrincipal ? "bg-primary/8 border border-primary/15" : "hover:bg-muted/50"
-                                            )}>
-                                                <Stethoscope className={cn("h-3.5 w-3.5 shrink-0", isPrincipal ? "text-primary" : "text-muted-foreground")} />
-                                                <span className={cn("font-medium truncate", isPrincipal ? "text-primary" : "text-card-foreground/80")}>
-                                                    {doc.full_name}
-                                                </span>
-                                                {/* Badge principal / tornar principal */}
-                                                {isPrincipal ? (
-                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-semibold shrink-0">Principal</span>
-                                                ) : !readOnly ? (
-                                                    <button
-                                                        onClick={() => {
-                                                            setPatient(prev => ({ ...prev, medico_principal_id: doc.doctor_id }));
-                                                            autoSave('medico_principal_id', doc.doctor_id);
-                                                        }}
-                                                        className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground hover:bg-primary/15 hover:text-primary font-medium shrink-0 opacity-0 group-hover:opacity-100 transition-all"
-                                                        title="Tornar médico principal"
-                                                    >
-                                                        ★ Principal
-                                                    </button>
-                                                ) : null}
-                                                {/* Telefone + copiar */}
-                                                {(docProfile as any)?.phone && (
-                                                    <div className="ml-auto flex items-center gap-1 shrink-0">
-                                                        <span className="text-[10px] text-muted-foreground font-mono">{(docProfile as any).phone}</span>
-                                                        <button
-                                                            onClick={() => { navigator.clipboard.writeText((docProfile as any).phone); }}
-                                                            className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-card-foreground transition-colors"
-                                                            title="Copiar telefone"
-                                                        >
-                                                            <Copy className="h-2.5 w-2.5" />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                                {/* Remover */}
-                                                {!isPrincipal && !readOnly && (
-                                                    <button
-                                                        onClick={() => handleRemoveDoctor(doc.doctor_id)}
-                                                        className="p-0.5 rounded-full hover:bg-red-500/20 hover:text-red-400 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0"
-                                                    >
-                                                        <X className="h-2.5 w-2.5" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                    {associatedDoctors.length === 0 && (
-                                        <p className="text-[10px] text-muted-foreground italic px-1">Nenhum médico associado</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Separador vertical */}
-                            <div className="hidden sm:block w-px bg-border/50" />
-
-                            {/* Coluna: Equipa (colaboradores da clínica) */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Equipa</span>
-                                </div>
-                                <div className="space-y-1.5">
-                                    {associatedDoctors.length === 0 && (
-                                        <p className="text-[10px] text-muted-foreground italic px-1">Adicione médicos para ver a equipa associada</p>
-                                    )}
-                                    {associatedDoctors.length > 0 && (
-                                        <p className="text-[10px] text-muted-foreground italic px-1">Colaboradores serão mostrados com base na clínica e médicos associados</p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     {/* Tabs */}
                     <Tabs defaultValue="planos" className="flex-1 flex flex-col overflow-hidden">
