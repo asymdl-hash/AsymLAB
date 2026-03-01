@@ -1,11 +1,12 @@
 # 🚀 Roadmap & Features Futuras — AsymLAB
 
 > Funcionalidades planeadas para versões futuras. Ordenadas por prioridade.
-> Última actualização: 27/02/2026 (V1.50.1)
+> Última actualização: 01/03/2026 (V1.66.0)
+> Ver decisões detalhadas: [DECISOES.md](DECISOES.md)
 
 ---
 
-## ✅ Concluído (V1.0–V1.50.1)
+## ✅ Concluído (V1.0–V1.66.0)
 
 ### Infra & Autenticação
 - [x] Estrutura PWA (Next.js 14, TypeScript, Tailwind v4, Supabase)
@@ -48,6 +49,33 @@
 - [ ] Materiais por fase — tabela `phase_materials` existe, falta UI
 - [ ] Responsividade mobile/tablet completa
 
+### Infraestrutura NAS (0%) → [PACIENTES_NAS.md](../modulos/PACIENTES_NAS.md)
+- [ ] Criação automática de subpastas ao criar paciente/plano/fase/agendamento
+- [ ] Rename automático de pastas (tipo agendamento, material, data)
+- [ ] Padrão NAS=master, Supabase=cache (últimas 50-100 msgs chat)
+
+### Novos Modelos de Dados → [DECISOES.md](DECISOES.md)
+- [ ] Tipo agendamento N:N + principal (`appointment_types`, `is_primary`)
+- [ ] `milling_records` — registos fresagem com CNC, material, STLs
+- [ ] `teeth_records` — registos dentes (obrigatório por tipo trabalho)
+- [ ] `component_records` — registos componentes
+- [ ] `guides` — guias recepção + transporte
+- [ ] `phase_reports` + `plan_reports` — relatórios versionados
+- [ ] Audit log completo (todos os eventos da ficha)
+- [ ] Catálogo tipos trabalho: colunas `requires_teeth_record`, `requires_component_record`, `requires_color_scale`
+
+### Widgets (0%) → [DECISOES.md](DECISOES.md#6-widgets)
+- [ ] Widget Fresagem — escolher material (separado da Fila Pedidos)
+- [ ] Widget Dentes — registar dentes
+- [ ] Widget Componentes — registar componentes
+- [ ] Banner avisos no topo da ficha do paciente
+
+### Chat Interno (0%) → [DECISOES.md](DECISOES.md#3-chat-interno)
+- [ ] Mensagens + anexos com thumbnails
+- [ ] Galeria full-screen (setas, swipe, ir para pasta/mensagem)
+- [ ] Pesquisa accent-insensitive com sugestões
+- [ ] Navegação por Plano → Fase → Agendamento
+
 ### QA & Estabilização
 - [ ] Testes formais de QA do módulo pacientes
 - [ ] Testes de todas as permissões por role
@@ -89,11 +117,20 @@
 - [ ] Fila anti-spam (FIFO com limites)
 - [ ] Alertas de estado (ASAP, agendamento)
 
-### Fase 3 — Billing Completa (30%)
-- [ ] Integração TOConline (facturas automáticas)
-- [ ] Fechar fase sem factura (2 modals de confirmação)
+### Fase 3 — Billing Completa (30%) → [DECISOES.md](DECISOES.md#5-faturação--toconline)
+- [ ] Integração TOConline — API REST + OAuth (sandbox obrigatório)
+- [ ] Facturas automáticas com preview + confirmação humana
+- [ ] Recibos automáticos (trigger: registo pagamento)
+- [ ] Regras: fase só fecha quando nº_recibos == nº_faturas
 - [ ] Relatórios de facturação por período/clínica
 - [ ] Exportação PDF de facturas
+
+### Calendário (0%) → [DECISOES.md](DECISOES.md#4-calendário)
+- [ ] FullCalendar com visual Google Calendar
+- [ ] Mini-janela nos cards (guia transporte, marcar entregue)
+- [ ] Integração Google Calendar (calendários partilhados pelas clínicas)
+- [ ] Associar eventos externos a pacientes
+- [ ] Marcos na timeline (indicação de recolhas)
 
 ### Fase 4 — Premium
 - [ ] Visualizador STL 3D (Three.js)
