@@ -58,9 +58,10 @@ export default function PlanTimeline({ plans, onPhaseClick }: PlanTimelineProps)
 
     return (
         <div className="relative max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-4 mb-2 z-20">
-            <div className="bg-card/95 dark:bg-[#111827]/95 backdrop-blur-xl rounded-xl border border-border/50 shadow-lg px-5 py-4">
-                {/* Linha topo: selector de plano + progresso */}
-                <div className="flex items-center justify-between mb-4">
+            <div className="bg-card/95 dark:bg-[#111827]/95 backdrop-blur-xl rounded-xl border border-border/50 shadow-lg px-5 pt-3 pb-5">
+                {/* Título + selector de plano + progresso */}
+                <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/60 mr-3 shrink-0">Timeline</span>
                     <div className="flex items-center gap-2.5 min-w-0">
                         {plans.length > 1 ? (
                             <div className="relative">
@@ -118,7 +119,7 @@ export default function PlanTimeline({ plans, onPhaseClick }: PlanTimelineProps)
                         )}
                     </div>
 
-                    <span className="text-[10px] font-medium text-muted-foreground shrink-0 tabular-nums">
+                    <span className="text-[10px] font-medium text-muted-foreground shrink-0 tabular-nums bg-muted/50 px-2 py-0.5 rounded-full">
                         {completedPhases}/{totalPhases} fases
                     </span>
                 </div>
