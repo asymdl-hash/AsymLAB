@@ -1,0 +1,10 @@
+A contagem das Considerações Médico deve ser por fase?
+
+Por exemplo a cada fase a contagem volta a reiniciar
+
+Ou
+
+A cada Plano de tratamento voltava a reiniciar?
+
+
+Pois tenho medo que no mesmo plano de tratamento termos a mesma numeração da consideração se for reiniciada a cada fase

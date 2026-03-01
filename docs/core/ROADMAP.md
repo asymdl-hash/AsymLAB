@@ -54,15 +54,15 @@
 - [ ] Rename automático de pastas (tipo agendamento, material, data)
 - [ ] Padrão NAS=master, Supabase=cache (últimas 50-100 msgs chat)
 
-### Novos Modelos de Dados → [DECISOES.md](DECISOES.md)
-- [ ] Tipo agendamento N:N + principal (`appointment_types`, `is_primary`)
-- [ ] `milling_records` — registos fresagem com CNC, material, STLs
-- [ ] `teeth_records` — registos dentes (obrigatório por tipo trabalho)
-- [ ] `component_records` — registos componentes
-- [ ] `guides` — guias recepção + transporte
-- [ ] `phase_reports` + `plan_reports` — relatórios versionados
-- [ ] Audit log completo (todos os eventos da ficha)
-- [ ] Catálogo tipos trabalho: colunas `requires_teeth_record`, `requires_component_record`, `requires_color_scale`
+### Novos Modelos de Dados ✅ → [DECISOES.md](DECISOES.md)
+- [x] Tipo agendamento N:N + principal (`appointment_work_types`, `is_primary`)
+- [x] `milling_records` — registos fresagem com CNC, material, status
+- [x] `teeth_records` — registos dentes (obrigatório por tipo trabalho)
+- [x] `component_records` — registos componentes
+- [x] `phase_reports` + `plan_reports` — relatórios versionados
+- [x] Audit log completo (`activity_log` com 14 categorias)
+- [x] Catálogo tipos trabalho: colunas `requires_teeth_record`, `requires_component_record`, `requires_color_scale`
+- [x] Fases: `descricao` + `tipo_fase` (normal/remake)
 
 ### Widgets (0%) → [DECISOES.md](DECISOES.md#6-widgets)
 - [ ] Widget Fresagem — escolher material (separado da Fila Pedidos)

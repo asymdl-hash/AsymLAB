@@ -1,7 +1,7 @@
 # 📚 AsymLAB — Índice Central de Documentação
 
 > **Ponto de entrada único** para toda a documentação do projecto.
-> Última actualização: 01/03/2026 · Versão: V1.66.0
+> Última actualização: 01/03/2026 · Versão: V1.68.0
 
 ---
 

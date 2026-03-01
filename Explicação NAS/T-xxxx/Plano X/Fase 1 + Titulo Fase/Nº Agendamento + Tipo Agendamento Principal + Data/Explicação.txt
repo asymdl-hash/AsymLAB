@@ -1,0 +1,23 @@
+Os registos de fresagem, os dentes e os componentes Eles estão dentro dos agendamentos.
+
+Mas isto porque é importante saber para que agendamento foram atribuídos.
+
+É importante saber que cada fase pode ter varios agendamentos e cada agendamento ter o(s) seus registo(s) de fresagem ou componentes.
+Mas o indicativo de ter vários agendamentos por fase significa que estamos a ter muitas provas para efetuar essa fase.
+Idealmente seria registado uma vez componentes e uma vez Dentes por fase. E as fresagens teriam um ou mais registos no agendamento 1 e um ou mais registos no agendamento 2. Onde agendamento 1 seria do tipo para prova e o agendamento 2 seria para colocação.
+E para certos médicos que já temos tudo muito bem oleado já nem eles pedem prova e já pedem para colocação.
+
+Contudo algumas clinicas/ médicos temos vários agendamentos entre fases. E com isso vamos ter esses agendamentos e consequentemente registos "extra" que significa menos eficiência e produtividade. Mesmo apesar de alguns desses agendamentos saírem com fatura, pois temos sentido que alguns médicos aproveitam-se de não cobrarmos algumas provas de maquete e então no futuro iremos cobrar um valor simbólico. O que poderemos usar essa métrica para analytics e identificar por clinica e medico segundos os agendamentos por fase a eficiência. Claro está tendo em conta tipos de trabalho, ou até ter uma avaliação geral e poder filtrar por tipo de trabalho ou tipos de trabalho se me faço entender.
+
+Em que eficiência de 100% seria cada fase ter apenas um agendamento
+
+Por isso que já apliquei aquela regra de recibos tem de ser igual ao nº de faturas. Pois cada fase se fosse 100% eficiente teria apenas uma fatura e um recibo. Mas na eventualidade de acontecer o que disse, terá mais faturas acrescentadas em agendamentos e por isso a regra de nº recibos = a nº faturas para a fase ser fechada.
+
+
+As considerações também estão dentro dos agendamentos para saber a quais estão atribuídas.
+Apesar de elas serem parte da fase, mas é importante saber quando foram criadas (atribuídas) e que nas fases posteriores ao criar considerações, seja Médico, Lab ou Lab inside dá para importar considerações das fases/agendamentos anteriores para poder ter contexto nessa consideração.
+Mesmo que essa consideração steja a ser criada e atribuída no agendamento 2 da fase 3 a consideração anterior importada fica dentro dessa consideração.
+
+Achas isto viável? a difreneça é que vamos ficar com um PDF maior mas ficamos com tudo registado. Mesmo no resumo da fase iremos saber que fomos importar considerações anteriores e quais.Podendo importar varias e de cada importação podemos escolher se a consideração toda ou aepnas alguns títulos de cada template que lá esteja, ou cada anexo, ou informação de texto livre. No momento de importar iriamos escolher a consideração, da consideração o que iriamos importar. Assim o médico pode escolher o que acha importante ficar como registo para essa fase do que tinhamos falado anteriormente.
+
+O que achas?

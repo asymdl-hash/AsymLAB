@@ -1,0 +1,16 @@
+A subpasta "Nº Agendamento + Tipo Agendamento Principal + Data" Temos que ter cuidado para que o directorio não fique muito comprido e depois impeça a criação dos ficheiros ou subpastas por causa do limite
+
+Para isso:
+
+- Nº e agendamento tem que ser "X" e não "NºX ( Este cuidado tem que ser aplicado a pasta Plano também. Dever ser "Plano X" e não "Plano NºX)
+- Tipo de Agendamento Principal, como o agendamento pode ter vários tipos de agendamento só um pode ser marcado como principal, algo como temos para o dropdwon médicos no hero header. Podemos trocar qual o tipo de agenamento principal.
+E sempre que for trocada a pasta também é editada ok? e seria do tipo "Para Prova"
+
+Tanto no link que enviamos para a criação do paciente, como a alteração do plano com os arrobas como na própria aplicação temos a opção de na fase ter uma descrição da fase. Assim como nota da fase. Que o usuário pode escrever para descrever ou notificar.
+Na app quando tem descrição o símbolo "i" fica verde quando tem descrição e fica a vermelho quando tem nota. Se já tiver descrição o vermelho sobrepõe-se ao verde ok?
+
+E ao clicar no "i" mostra a informação
+
+E no relatório da fase mostra tanto a descrição como a nota ok?
+
+Como vamos ter vários momentos que a informação vai mudando então convem que o relatório da fase seja versionado

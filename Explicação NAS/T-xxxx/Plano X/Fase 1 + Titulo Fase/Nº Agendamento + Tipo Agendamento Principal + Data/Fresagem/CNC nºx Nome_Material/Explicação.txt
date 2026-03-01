@@ -1,0 +1,5 @@
+Nesta pasta para além do que já expliquei também irá ficar um PDF gerado quando guardarem o registo da fresagem.
+Caso seja editado esse registo o PDF muda de versão e mantem a anterior.
+Assim iremos saber se mudamos muitas vezes o material, podemos usar na analytics não?
+
+Esqueci-me mas podemos colocar também no momento do registo de fresagem mostrar por ordem de uso os materiais que mais foram escolhidos para esta clinica, estes médicos e nestes tipos de trabalho que achas?

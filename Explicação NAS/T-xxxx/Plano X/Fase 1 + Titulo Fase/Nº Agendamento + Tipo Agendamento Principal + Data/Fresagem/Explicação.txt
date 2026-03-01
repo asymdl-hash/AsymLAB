@@ -1,0 +1,33 @@
+Cada registo de Fresagem tem que ser atribuído a um agendamento por isso que esta pasta fica aqui dentro deste agendamento
+
+Por default atribui ao futuro agendamento mais próximo
+Caso não exista agendamento no futuro é criado um automaticamente sem data
+Caso não exista data a pasta do agendamento na zona da data fica "Sem Info" e quando tiver data edita a pasta, e o mesmo acontece para os tipos de agendamento
+
+Nesta pasta é onde vou colocar os stl's para eu aceder através dos computadores de fresagem pegarem nesses ficheiros e fazerem o CAM.
+Sempre que te disser Stl's é para simplificar pois pode ser STL, OBK, PLY, ou outros formatos no futuro ok?
+
+Esta pasta também vai ter outro tipos de ficheiro como o constructioninfo do exocad
+Assim como outros ficheiros que o computador do CAM vai criar nesta pasta ao gerar o CAM
+
+Coloquei exemplos para perceberes. Uma pasta tem o exemplo de não ter cam e a outra sim
+
+Por isso que preciso que na frente de cada registo de fresagem um símbolo pasta que faça a hiperligação para esta pasta. Para quando for criado um registo eu consiga vir logo a esta pasta colar os ficheiros
+
+E teremos uma situação que já falei mas não sei se gravaste ou ficou perdida:
+No catalogo tipos de trabalho temos que colocar uma coluna que activa uma opção para quando esse tipo de trabalho estiver selecionado e no status estiver "Para colocação" e existir anexos na escala de cor e/ou escalas de cor selecionadas os funcionários X,Y e Z (Escolha múltipla) o status do trabalho também fica com "Escolher Material".
+E é esse status "Esolher Material" que faz com que os funcionários selecionados vao receber no widget Fresagem os pacientes que eles têm que escolher o material de fresagem. Que basicamente é criar um registo na fresagem no plano de tratamento que esta activo, na fase em andamento e para o próximo agendamento futuro. como as regras que falei acima.
+
+O funcionário ao clicar no paciente no widget deve reencaminhar para uma janela onde mostra as imagens anexadas a escala de cor ou a escala de cor selecionada em cima, mostra os tipos de trabalho escolhidos, o medico, clinica. Se não houver imagens anexadas a escala de cor tem um botão para explorar todas as imagens anexadas ao plano de tratamento, de todas as fases e agendamentos anteriores. Em modo galeria como já temos falado
+e o campo de fresagem em baixo para escolher o material de fresagem.
+Quando acontecer esta combinações de situações automaticamente o registo é criado. Mas fica sem escolha de material. Apenas tem nº de registo e o material fica como "Sem Info". Isto irá permitir que mesmo que o funcionário ainda não tenha escolhido o material se consiga colocar os sTL's na pasta.
+Quando ele selecionar o material a pasta actualiza o nome de material de "Sem info" para o nome do material.
+Caso eu ao colocar os stls verifique que vou precisar de fresar em 2 materiais diferentes. Posso adicionar um novo registo manualmente e esse registo entra naquela janela que falamos. Assim também já posso colocar os ficheiros para o caso de termos vários materiais. Assim como posso abrir esse registo e  escolher o material e não ter que esperar que o funcionário escolha caso eu já saiba.
+
+O utilizador Pode criar vários registos mesmo que só tenha um e no final dá o ok e guarda. Cada registo terá a sua pasta.
+
+
+Quando escolhido o material o status "Escolher Material" desaparece
+
+
+Tinhamos referido que os agendamentos que tivessem "Para Colocação" seria a altura em eu a próxima fase iria iniciar-se. E que no final dessa fase que estaria a terminar teríamos um relatório da fase. Nesse relatório deve ter os registos do material ok?

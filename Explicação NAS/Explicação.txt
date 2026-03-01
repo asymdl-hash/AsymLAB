@@ -1,0 +1,4 @@
+Os pacientes na NAS devem ser só identificados pelo ID e não pelo ID + Nome. Caso contrario vamos ficar com um directorio muito grande e podemos ter problemas com essa limitação no directorio
+
+Tens ficheiros de bocós de nota que quando têm o nome explicação referem-se a minha explicação.
+Tens outros que dizem metadata que estão la como representação do ficherio metadata que não sei o tipo de ficheiro.

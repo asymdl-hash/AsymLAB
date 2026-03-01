@@ -1,0 +1,28 @@
+﻿<Nestings>
+  <Nesting>
+    <Filename>D:\Zirkonzahn\MaterialBlocks\372\372_TMIF0120_Nesting_2026-02-19_11-39-06</Filename>
+    <Timestamp>2026-02-19T11:47:49.3415438+00:00</Timestamp>
+    <Block>
+      <id>372</id>
+      <lot>18743</lot>
+      <artno>TMIF0120</artno>
+      <shrinkage>0%</shrinkage>
+      <image>372_TMIF0120_Nesting_2026-02-19_11-39-06.texture.png</image>
+      <MaterialColor>Prime A1</MaterialColor>
+      <Diameter>95</Diameter>
+      <Height>20</Height>
+      <MaterialType>PMMA</MaterialType>
+      <ShrinkPercentage>0,000%</ShrinkPercentage>
+      <MachineName>M1</MachineName>
+    </Block>
+    <Reconstruction>
+      <Status>Fraesen</Status>
+    </Reconstruction>
+    <NestedReconstructions>
+      <NestedReconstruction>
+        <PrintInfoNumber>1</PrintInfoNumber>
+        <PrintInfoFileName>T-3445 Provisorio-19022026-22-crown_cad.zzn</PrintInfoFileName>
+      </NestedReconstruction>
+    </NestedReconstructions>
+  </Nesting>
+</Nestings>

@@ -1,0 +1,4 @@
+Era aqui que ficava todo o registo das mensagens do chat interno e todo o log que acontecia como anexar ficheiros, a marcação de mensagens vistas e etc.
+
+Para pacientes que não tivessem planos de tratamento activos à mais de 6 meses, esta info ficaria apenas na NAS e não no supabase. Que achas?
+Quando fosse reaberto novo plano de tratamento já voltava para o supabase. Já que este chat interno vai sempre aparecer independentemente dos planos de tratamento, fases ou agendamentos em que estejamos

@@ -1,0 +1,11 @@
+Este sitio será onde iremos escolher os dentes que usamos.
+
+
+No Catalogo Tipos de trabalho temos que ter uma coluna "Dentes" que está activa ou desactiva
+
+Quando activa significa que quando tem esse tipo de trabalho a fase desse trabalho não pode ser fechada enquanto não for colocado pelo menos um registo no campo Dentes.
+Cria um PDF com esse registo e caso seja editado faz o versionamento como já falamos.
+
+Seria interessante ter a indicação de quem criou o registo, mesmo que criado automaticamente ficava como quem o editou primeiro e o registo de quem o editou, se foi outra pessoa
+
+Se tiveres duvidas sobre este campo dentes avisa-me

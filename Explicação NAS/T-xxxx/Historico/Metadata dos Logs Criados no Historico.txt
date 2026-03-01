@@ -1,0 +1,5 @@
+Isto aqui seria o registo da metadata de tudo o que aconteceu como tínhamos falado.
+
+Este ficheiro ficaria sempre aqui na NAS, mas quando o plano de tratamento ficasse fechado ele saía do supabase que achas?
+Se o plano de tratamento fosse consultado o supabase viria buscar? Ou achas que será tao pouco informação que irá consumir mais bandwitch?
+Pois este histórico vai sempre aparecer independentemente dos planos de tratamento, fases ou agendamentos em que estejamos
