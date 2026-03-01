@@ -33,6 +33,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { patientsService, PatientFullDetails } from '@/services/patientsService';
+import PlanTimeline from '@/components/patients/PlanTimeline';
 import { useOptimisticLock } from '@/hooks/useOptimisticLock';
 import NewPlanModal from '@/components/patients/NewPlanModal';
 import DeleteConfirmModal from '@/components/patients/DeleteConfirmModal';
@@ -736,6 +737,20 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     </div>
                 </div>
             </div >
+
+            {/* Timeline Horizontal */}
+            <PlanTimeline
+                plans={patient.treatment_plans || []}
+                onPhaseClick={(planId, phaseId) => {
+                    // Scroll para a fase correspondente na tab Planos
+                    const el = document.getElementById(`phase-${phaseId}`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.classList.add('ring-2', 'ring-primary/50');
+                        setTimeout(() => el.classList.remove('ring-2', 'ring-primary/50'), 2000);
+                    }
+                }}
+            />
 
             {/* Content Card com overlap negativo */}
             < div className="max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 relative z-20 flex-1 flex flex-col pb-4 overflow-hidden" >
