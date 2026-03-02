@@ -25,9 +25,11 @@ import {
 } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
 import { billingService } from '@/services/billingService';
+import { catalogService } from '@/services/catalogService';
 import NewPhaseModal from './NewPhaseModal';
 import NewAppointmentModal from './NewAppointmentModal';
 import WorkBadges from './WorkBadges';
+import Odontogram from './Odontogram';
 
 // === Config de estados ===
 const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: string; darkColor: string; darkBg: string }> = {
@@ -488,11 +490,23 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
     const [newMatUnit, setNewMatUnit] = useState('un');
     const [addingMat, setAddingMat] = useState(false);
 
-    // Load materials
+    // Odontogram state
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [phaseTeeth, setPhaseTeeth] = useState<any[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [workTypes, setWorkTypes] = useState<any[]>([]);
+
+    // Load materials + teeth + work types
     useEffect(() => {
         patientsService.getPhaseMaterials(phase.id)
             .then(setMaterials)
             .catch(err => console.error('Erro materiais:', err));
+        patientsService.getPhaseTeeth(phase.id)
+            .then(setPhaseTeeth)
+            .catch(err => console.error('Erro teeth:', err));
+        catalogService.getWorkTypes()
+            .then(setWorkTypes)
+            .catch(err => console.error('Erro work types:', err));
     }, [phase.id]);
 
     const handleAddMaterial = async () => {
@@ -582,6 +596,25 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* Odontograma */}
+            <div className="mb-6">
+                <Odontogram
+                    teeth={phaseTeeth.map((t: { tooth_number: number; work_type_id: string | null }) => ({
+                        tooth_number: t.tooth_number,
+                        work_type_id: t.work_type_id,
+                    }))}
+                    workTypes={workTypes}
+                    onChange={async (newTeeth) => {
+                        try {
+                            await patientsService.syncPhaseTeeth(phase.id, newTeeth);
+                            setPhaseTeeth(newTeeth);
+                        } catch (err) {
+                            console.error('Erro ao guardar odontograma:', err);
+                        }
+                    }}
+                />
             </div>
 
             {/* Agendamentos */}

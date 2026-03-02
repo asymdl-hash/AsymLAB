@@ -742,4 +742,40 @@ export const patientsService = {
 
         if (error) throw error;
     },
+
+    // 30. Obter dentes de uma fase (odontograma)
+    async getPhaseTeeth(phaseId: string) {
+        const { data, error } = await supabase
+            .from('phase_teeth')
+            .select('id, phase_id, tooth_number, work_type_id')
+            .eq('phase_id', phaseId)
+            .order('tooth_number', { ascending: true });
+
+        if (error) throw error;
+        return data || [];
+    },
+
+    // 31. Sincronizar dentes de uma fase (replace all)
+    async syncPhaseTeeth(phaseId: string, teeth: { tooth_number: number; work_type_id: string | null }[]) {
+        // Apagar dentes existentes
+        const { error: delError } = await supabase
+            .from('phase_teeth')
+            .delete()
+            .eq('phase_id', phaseId);
+
+        if (delError) throw delError;
+
+        // Inserir novos (se houver)
+        if (teeth.length > 0) {
+            const { error: insError } = await supabase
+                .from('phase_teeth')
+                .insert(teeth.map(t => ({
+                    phase_id: phaseId,
+                    tooth_number: t.tooth_number,
+                    work_type_id: t.work_type_id,
+                })));
+
+            if (insError) throw insError;
+        }
+    },
 };
