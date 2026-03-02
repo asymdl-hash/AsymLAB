@@ -296,6 +296,8 @@ function MaterialsManager() {
     const [saving, setSaving] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
     const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
+    const [showAddCategory, setShowAddCategory] = useState(false);
+    const [newCatForm, setNewCatForm] = useState({ categoria: '', label: '', widget_dentes_default: true, widget_fresagem_default: true, widget_componentes_default: false });
 
     const sb = async () => (await import('@/lib/supabase')).supabase;
 
@@ -394,7 +396,21 @@ function MaterialsManager() {
         });
     };
 
-    const CATEGORIAS = ['ceramica', 'metal', 'resina', 'composto', 'outro'];
+    const handleAddCategory = async () => {
+        if (!newCatForm.categoria.trim() || !newCatForm.label.trim()) return;
+        try {
+            setSaving(true);
+            const supabase = await sb();
+            const { error } = await supabase.from('material_categories').insert(newCatForm);
+            if (error) throw error;
+            setNewCatForm({ categoria: '', label: '', widget_dentes_default: true, widget_fresagem_default: true, widget_componentes_default: false });
+            setShowAddCategory(false);
+            load();
+        } catch (e) { console.error(e); } finally { setSaving(false); }
+    };
+
+    // Categorias dinâmicas da tabela
+    const CATEGORIAS = categories.map(c => c.categoria);
 
     // Agrupar materiais por categoria
     const grouped = items.reduce<Record<string, any[]>>((acc, item) => {
@@ -410,10 +426,45 @@ function MaterialsManager() {
         <div className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-border">
                 <span className="text-sm text-gray-500">{items.length} material(is) · {categoryOrder.length} categorias</span>
-                <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-card-foreground rounded-lg hover:bg-primary/90">
-                    <Plus className="h-4 w-4" /> Adicionar
-                </button>
+                <div className="flex gap-2">
+                    <button onClick={() => setShowAddCategory(true)} className="flex items-center gap-1.5 text-sm px-3 py-2 border border-border text-muted-foreground rounded-lg hover:text-card-foreground hover:border-primary/50 transition-colors">
+                        <Plus className="h-3.5 w-3.5" /> Nova Categoria
+                    </button>
+                    <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-card-foreground rounded-lg hover:bg-primary/90">
+                        <Plus className="h-4 w-4" /> Adicionar Material
+                    </button>
+                </div>
             </div>
+
+            {showAddCategory && (
+                <div className="p-4 bg-purple-900/10 border-b border-purple-700/30 space-y-3">
+                    <div className="flex items-center gap-3">
+                        <input type="text" value={newCatForm.categoria} onChange={e => setNewCatForm({ ...newCatForm, categoria: e.target.value.toLowerCase().replace(/\s+/g, '_') })} placeholder="ID (ex: ceramica)" className="w-36 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2 focus:outline-none" autoFocus />
+                        <input type="text" value={newCatForm.label} onChange={e => setNewCatForm({ ...newCatForm, label: e.target.value })} placeholder="Nome visível (ex: Cerâmica)" className="flex-1 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2 focus:outline-none" />
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span className="font-medium">Defaults:</span>
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" checked={newCatForm.widget_dentes_default} onChange={e => setNewCatForm({ ...newCatForm, widget_dentes_default: e.target.checked })} className="rounded" />
+                            🦷 Dentes
+                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" checked={newCatForm.widget_fresagem_default} onChange={e => setNewCatForm({ ...newCatForm, widget_fresagem_default: e.target.checked })} className="rounded" />
+                            🔧 Fresagem
+                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" checked={newCatForm.widget_componentes_default} onChange={e => setNewCatForm({ ...newCatForm, widget_componentes_default: e.target.checked })} className="rounded" />
+                            📦 Componentes
+                        </label>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <button onClick={() => setShowAddCategory(false)} className="text-sm text-muted-foreground hover:text-card-foreground px-3 py-1.5">Cancelar</button>
+                        <button onClick={handleAddCategory} disabled={saving || !newCatForm.categoria.trim() || !newCatForm.label.trim()} className="text-sm bg-purple-600 text-white rounded-lg px-4 py-1.5 hover:bg-purple-700 disabled:opacity-50">
+                            {saving ? 'A guardar...' : 'Criar Categoria'}
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {showAdd && (
                 <div className="p-4 bg-muted/50 border-b border-border flex items-center gap-3">
