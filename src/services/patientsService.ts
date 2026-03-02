@@ -96,6 +96,11 @@ export const patientsService = {
             );
         }
 
+        // NAS: criar subpastas do paciente (fire-and-forget)
+        if (patient?.t_id) {
+            this._nasCreateFolder({ action: 'create_patient', t_id: patient.t_id });
+        }
+
         return patient;
     },
 
@@ -199,6 +204,13 @@ export const patientsService = {
             .single();
 
         if (error) throw error;
+
+        // NAS: criar subpastas do plano (fire-and-forget)
+        // Precisamos do t_id do paciente e do número de ordem do plano
+        if (plan) {
+            this._nasCreatePlanFolder(data.patient_id, plan);
+        }
+
         return plan;
     },
 
@@ -231,6 +243,12 @@ export const patientsService = {
             .single();
 
         if (error) throw error;
+
+        // NAS: criar subpastas da fase (fire-and-forget)
+        if (phase) {
+            this._nasCreatePhaseFolder(data.treatment_plan_id, phase);
+        }
+
         return phase;
     },
 
@@ -258,6 +276,12 @@ export const patientsService = {
             .single();
 
         if (error) throw error;
+
+        // NAS: criar subpastas do agendamento (fire-and-forget)
+        if (appointment) {
+            this._nasCreateAppointmentFolder(data.phase_id, appointment);
+        }
+
         return appointment;
     },
 
@@ -776,6 +800,127 @@ export const patientsService = {
                 })));
 
             if (insError) throw insError;
+        }
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // NAS Helpers — Criação automática de pastas (fire-and-forget)
+    // Conforme PACIENTES_NAS.md
+    // ═══════════════════════════════════════════════════════════
+
+    _nasCreateFolder(body: Record<string, unknown>) {
+        fetch('/api/patient-folder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        }).catch(err => console.warn('[NAS] Erro ao criar pasta:', err));
+    },
+
+    async _nasCreatePlanFolder(patientId: string, plan: { id: string }) {
+        try {
+            // Obter t_id do paciente
+            const { data: patient } = await supabase
+                .from('patients')
+                .select('t_id')
+                .eq('id', patientId)
+                .single();
+            if (!patient?.t_id) return;
+
+            // Contar quantos planos este paciente tem para determinar ordem
+            const { count } = await supabase
+                .from('treatment_plans')
+                .select('id', { count: 'exact', head: true })
+                .eq('patient_id', patientId)
+                .is('deleted_at', null);
+
+            this._nasCreateFolder({
+                action: 'create_plan',
+                t_id: patient.t_id,
+                plan_order: count || 1,
+            });
+        } catch (err) {
+            console.warn('[NAS] Erro ao criar pasta plano:', err);
+        }
+    },
+
+    async _nasCreatePhaseFolder(planId: string, phase: { nome: string; ordem: number }) {
+        try {
+            // Obter t_id + plan_order
+            const { data: planData } = await supabase
+                .from('treatment_plans')
+                .select('patient_id, patients!inner(t_id)')
+                .eq('id', planId)
+                .single();
+            if (!planData) return;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const t_id = (planData as any).patients?.t_id;
+            if (!t_id) return;
+
+            // Determinar ordem do plano
+            const { data: plans } = await supabase
+                .from('treatment_plans')
+                .select('id')
+                .eq('patient_id', planData.patient_id)
+                .is('deleted_at', null)
+                .order('created_at');
+            const planOrder = (plans?.findIndex(p => p.id === planId) ?? 0) + 1;
+
+            this._nasCreateFolder({
+                action: 'create_phase',
+                t_id,
+                plan_order: planOrder,
+                phase_order: phase.ordem,
+                phase_name: phase.nome,
+            });
+        } catch (err) {
+            console.warn('[NAS] Erro ao criar pasta fase:', err);
+        }
+    },
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async _nasCreateAppointmentFolder(phaseId: string, appointment: any) {
+        try {
+            // Obter hierarquia: phase → plan → patient
+            const { data: phaseData } = await supabase
+                .from('phases')
+                .select('nome, ordem, plan_id, treatment_plans!inner(patient_id, patients!inner(t_id))')
+                .eq('id', phaseId)
+                .single();
+            if (!phaseData) return;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const planInfo = (phaseData as any).treatment_plans;
+            const t_id = planInfo?.patients?.t_id;
+            if (!t_id) return;
+
+            // Determinar ordem do plano
+            const { data: plans } = await supabase
+                .from('treatment_plans')
+                .select('id')
+                .eq('patient_id', planInfo.patient_id)
+                .is('deleted_at', null)
+                .order('created_at');
+            const planOrder = (plans?.findIndex((p: { id: string }) => p.id === planInfo.id) ?? 0) + 1;
+
+            // Contar agendamentos nesta fase para determinar ordem
+            const { count } = await supabase
+                .from('appointments')
+                .select('id', { count: 'exact', head: true })
+                .eq('phase_id', phaseId);
+
+            this._nasCreateFolder({
+                action: 'create_appointment',
+                t_id,
+                plan_order: planOrder,
+                phase_order: phaseData.ordem,
+                phase_name: phaseData.nome,
+                appt_order: count || 1,
+                appt_type: appointment.tipo,
+                appt_date: appointment.data_prevista,
+            });
+        } catch (err) {
+            console.warn('[NAS] Erro ao criar pasta agendamento:', err);
         }
     },
 };

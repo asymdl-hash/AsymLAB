@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, mkdirSync, renameSync, readdirSync, copyFileSync, statSync } from 'fs';
-import { exec, spawn } from 'child_process';
+import { existsSync, mkdirSync, renameSync, readdirSync, copyFileSync } from 'fs';
+import { spawn } from 'child_process';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 
@@ -58,9 +58,96 @@ function sanitizeId(t_id: string): string {
     return t_id.replace(/[^a-zA-Z0-9\-_]/g, '');
 }
 
+function sanitizeFolderName(name: string): string {
+    // Permitir caracteres UTF-8 comuns mas remover chars perigosos para filesystem
+    return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '').trim() || 'Sem Info';
+}
+
 // ═══════════════════════════════════════════════════════════
-// POST — Criar pasta + opcionalmente abrir no Explorer
-// Body: { t_id: string, silent?: boolean }
+// Hierarquias de subpastas conforme PACIENTES_NAS.md
+// ═══════════════════════════════════════════════════════════
+
+const PATIENT_SUBFOLDERS = [
+    'Chat Interno',
+    'Chat Interno/Galeria',
+    'Historico',
+    'Info',
+    'Info/Alertas',
+    'Info/Logo',
+];
+
+const PLAN_SUBFOLDERS = [
+    'Info Plano',
+    'Info Plano/CBCT',
+    'Info Plano/Considerações',
+    'Info Plano/Escala de Cor',
+    'Info Plano/Face',
+    'Info Plano/Face/Natural',
+    'Info Plano/Face/Repouso',
+    'Info Plano/Face/Sorriso Alto',
+    'Info Plano/Intra-Orais',
+    'Info Plano/Orto-Periapical',
+    'Info Plano/Outras Fotos',
+    'Info Plano/Relatório Plano',
+    "Info Plano/Stl's",
+];
+
+const PHASE_SUBFOLDERS = [
+    'Documentação',
+    'Documentação/Faturas',
+    'Documentação/Recibos',
+    'Documentação/Outros Documentos',
+];
+
+const APPOINTMENT_SUBFOLDERS = [
+    'Componentes',
+    'Dentes',
+    'Fresagem',
+    'Guias',
+    'Guias/Guia Recepção',
+    'Guias/Guia Transporte',
+];
+
+function ensureDirs(basePath: string, subfolders: string[]) {
+    if (!existsSync(basePath)) {
+        mkdirSync(basePath, { recursive: true });
+    }
+    for (const sub of subfolders) {
+        const fullPath = path.join(basePath, sub);
+        if (!existsSync(fullPath)) {
+            mkdirSync(fullPath, { recursive: true });
+        }
+    }
+}
+
+function openInExplorer(folderPath: string) {
+    const child = spawn('explorer.exe', [folderPath], {
+        detached: true,
+        stdio: 'ignore',
+    });
+    child.unref();
+}
+
+// Regras de nomeação conforme PACIENTES_NAS.md §2
+const APPT_TYPE_LABELS: Record<string, string> = {
+    moldagem: 'Moldagem',
+    para_prova: 'Prova',
+    para_colocacao: 'Colocação',
+    reparacao: 'Reparação',
+    ajuste: 'Ajuste',
+    outro: 'Outro',
+};
+
+// ═══════════════════════════════════════════════════════════
+// POST — Criar pastas com hierarquia completa
+// Suporta múltiplas acções:
+//   { action: "create_patient", t_id }
+//   { action: "create_plan", t_id, plan_order }
+//   { action: "create_phase", t_id, plan_order, phase_order, phase_name }
+//   { action: "create_appointment", t_id, plan_order, phase_order, phase_name,
+//     appt_order, appt_type, appt_date }
+//   { action: "open", t_id }  — apenas abre no Explorer
+//   { t_id, silent? }         — backward compatible (cria raiz + abre)
 // ═══════════════════════════════════════════════════════════
 export async function POST(request: NextRequest) {
     const auth = await verifyLabStaff(request);
@@ -69,7 +156,9 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const { t_id, silent } = await request.json();
+        const body = await request.json();
+        const { action, t_id, silent } = body;
+
         if (!t_id || typeof t_id !== 'string') {
             return NextResponse.json({ error: 'T-ID inválido' }, { status: 400 });
         }
@@ -77,26 +166,103 @@ export async function POST(request: NextRequest) {
         const safeId = sanitizeId(t_id);
         if (!safeId) return NextResponse.json({ error: 'T-ID inválido' }, { status: 400 });
 
-        const folderPath = path.join(PATIENTS_BASE_PATH, safeId);
+        const patientPath = path.join(PATIENTS_BASE_PATH, safeId);
 
+        // Garantir que a pasta base de pacientes existe
         if (!existsSync(PATIENTS_BASE_PATH)) {
             mkdirSync(PATIENTS_BASE_PATH, { recursive: true });
         }
 
-        if (!existsSync(folderPath)) {
-            mkdirSync(folderPath, { recursive: true });
-        }
+        switch (action) {
+            // ─── Criar paciente com subpastas ───
+            case 'create_patient': {
+                ensureDirs(patientPath, PATIENT_SUBFOLDERS);
+                return NextResponse.json({
+                    success: true,
+                    path: patientPath,
+                    created: PATIENT_SUBFOLDERS,
+                });
+            }
 
-        if (!silent) {
-            // spawn detached = mais rápido que exec (não cria shell intermediário)
-            const child = spawn('explorer.exe', [folderPath], {
-                detached: true,
-                stdio: 'ignore',
-            });
-            child.unref();
-        }
+            // ─── Criar plano com subpastas ───
+            case 'create_plan': {
+                const planOrder = body.plan_order || 1;
+                const planFolderName = `Plano ${planOrder}`;
+                const planPath = path.join(patientPath, planFolderName);
 
-        return NextResponse.json({ success: true, path: folderPath });
+                ensureDirs(planPath, PLAN_SUBFOLDERS);
+                return NextResponse.json({
+                    success: true,
+                    path: planPath,
+                    created: PLAN_SUBFOLDERS,
+                });
+            }
+
+            // ─── Criar fase com subpastas ───
+            case 'create_phase': {
+                const pOrder = body.plan_order || 1;
+                const phOrder = body.phase_order || 1;
+                const phName = sanitizeFolderName(body.phase_name || 'Sem Info');
+                const phaseFolderName = `Fase ${phOrder} + ${phName}`;
+                const phasePath = path.join(patientPath, `Plano ${pOrder}`, phaseFolderName);
+
+                ensureDirs(phasePath, PHASE_SUBFOLDERS);
+                return NextResponse.json({
+                    success: true,
+                    path: phasePath,
+                    created: PHASE_SUBFOLDERS,
+                });
+            }
+
+            // ─── Criar agendamento com subpastas ───
+            case 'create_appointment': {
+                const plOrder = body.plan_order || 1;
+                const fOrder = body.phase_order || 1;
+                const fName = sanitizeFolderName(body.phase_name || 'Sem Info');
+                const aOrder = body.appt_order || 1;
+                const aType = APPT_TYPE_LABELS[body.appt_type] || 'Outro';
+                const aDate = body.appt_date
+                    ? new Date(body.appt_date).toLocaleDateString('pt-PT', {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                    }).replace(/\//g, '-')
+                    : 'Sem Info';
+                const apptFolderName = `Ag ${aOrder} + ${aType} + ${aDate}`;
+                const apptPath = path.join(
+                    patientPath,
+                    `Plano ${plOrder}`,
+                    `Fase ${fOrder} + ${fName}`,
+                    apptFolderName
+                );
+
+                ensureDirs(apptPath, APPOINTMENT_SUBFOLDERS);
+                return NextResponse.json({
+                    success: true,
+                    path: apptPath,
+                    created: APPOINTMENT_SUBFOLDERS,
+                });
+            }
+
+            // ─── Apenas abrir no Explorer ───
+            case 'open': {
+                if (existsSync(patientPath)) {
+                    openInExplorer(patientPath);
+                    return NextResponse.json({ success: true, path: patientPath });
+                }
+                return NextResponse.json({ error: 'Pasta não existe' }, { status: 404 });
+            }
+
+            // ─── Backward compatible (sem action) ───
+            default: {
+                // Cria pasta raiz + subpastas do paciente
+                ensureDirs(patientPath, PATIENT_SUBFOLDERS);
+
+                if (!silent) {
+                    openInExplorer(patientPath);
+                }
+
+                return NextResponse.json({ success: true, path: patientPath });
+            }
+        }
     } catch (error) {
         console.error('Erro POST patient-folder:', error);
         return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
@@ -212,8 +378,9 @@ export async function PATCH(request: NextRequest) {
                 const archivedPath = path.join(PATIENTS_BASE_PATH, archivedName);
                 renameSync(sourcePath, archivedPath);
                 archived = true;
-            } catch (renameErr: any) {
-                console.warn('Aviso: ficheiros copiados mas pasta source não pôde ser arquivada (pode estar aberta):', renameErr.message);
+            } catch (renameErr: unknown) {
+                const msg = renameErr instanceof Error ? renameErr.message : String(renameErr);
+                console.warn('Aviso: ficheiros copiados mas pasta source não pôde ser arquivada (pode estar aberta):', msg);
             }
 
             return NextResponse.json({
@@ -229,9 +396,10 @@ export async function PATCH(request: NextRequest) {
             filesMoved: 0,
             message: `Pasta source ${sourceId} não existia`,
         });
-    } catch (error: any) {
-        console.error('Erro PATCH patient-folder:', error?.message || error);
-        return NextResponse.json({ error: 'Erro interno', details: error?.message || String(error) }, { status: 500 });
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.error('Erro PATCH patient-folder:', msg);
+        return NextResponse.json({ error: 'Erro interno', details: msg }, { status: 500 });
     }
 }
 
