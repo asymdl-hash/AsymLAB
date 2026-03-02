@@ -327,6 +327,63 @@ export const patientsService = {
         };
     },
 
+    // ═══════════════════════════════════════════════════════════
+    // Widget Dentes — CRUD teeth_records
+    // ═══════════════════════════════════════════════════════════
+
+    async getTeethRecords(appointmentId: string) {
+        const { data, error } = await supabase
+            .from('teeth_records')
+            .select('*')
+            .eq('appointment_id', appointmentId)
+            .order('created_at');
+        if (error) throw error;
+        return data || [];
+    },
+
+    async createTeethRecord(appointmentId: string, teethData: unknown[], notas?: string) {
+        const { data: user } = await supabase.auth.getUser();
+        const { data, error } = await supabase
+            .from('teeth_records')
+            .insert({
+                appointment_id: appointmentId,
+                teeth_data: teethData,
+                version_number: 1,
+                notas: notas || null,
+                created_by: user?.user?.id,
+                updated_by: user?.user?.id,
+            })
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async updateTeethRecord(id: string, teethData: unknown[], notas?: string) {
+        // Buscar versão actual
+        const { data: current } = await supabase
+            .from('teeth_records')
+            .select('version_number')
+            .eq('id', id)
+            .single();
+
+        const { data: user } = await supabase.auth.getUser();
+        const newVersion = (current?.version_number || 0) + 1;
+
+        const { error } = await supabase
+            .from('teeth_records')
+            .update({
+                teeth_data: teethData,
+                version_number: newVersion,
+                notas: notas || null,
+                updated_by: user?.user?.id,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', id);
+        if (error) throw error;
+        return newVersion;
+    },
+
     // 12. Criar fase dentro de um plano
     async createPhase(data: {
         treatment_plan_id: string;

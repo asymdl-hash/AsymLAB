@@ -14,7 +14,7 @@ import { TOOTH_CENTERS } from './tooth_centers';
 
 interface WorkType { id: string; nome: string; cor: string | null; activo?: boolean; }
 interface ToothData { tooth_number: number; work_type_id: string | null; }
-interface OdontogramProps { teeth: ToothData[]; workTypes: WorkType[]; onChange: (teeth: ToothData[]) => void; disabled?: boolean; }
+interface OdontogramProps { teeth: ToothData[]; workTypes: WorkType[]; onChange: (teeth: ToothData[]) => void; disabled?: boolean; selectionMode?: 'assign' | 'toggle'; }
 interface OdontogramModalProps extends OdontogramProps { open: boolean; onClose: () => void; }
 
 // Ordem das arcadas
@@ -26,7 +26,7 @@ const ALL_TEETH = [...UPPER, ...LOWER];
 // Odontogram Content — SVG com paths pré-posicionados
 // ═══════════════════════════════════════════════════════════
 
-function OdontogramContent({ teeth, workTypes, onChange, disabled = false }: OdontogramProps) {
+export function OdontogramContent({ teeth, workTypes, onChange, disabled = false, selectionMode = 'assign' }: OdontogramProps) {
     const [selected, setSelected] = useState<Set<number>>(new Set());
     const [showAssign, setShowAssign] = useState(true);
     const lastRef = useRef<number | null>(null);
@@ -42,8 +42,46 @@ function OdontogramContent({ teeth, workTypes, onChange, disabled = false }: Odo
         return m;
     }, [workTypes]);
 
+    // Modo toggle: click directo adiciona/remove do array
+    const toggleTooth = useCallback((e: React.MouseEvent, num: number) => {
+        if (disabled) return;
+        e.stopPropagation();
+
+        // Calcular dentes a toggle
+        const toToggle = new Set<number>();
+
+        if (e.shiftKey && lastRef.current !== null) {
+            const last = lastRef.current;
+            const a1 = UPPER.includes(last), a2 = UPPER.includes(num);
+            if (a1 === a2) {
+                const ar = a2 ? UPPER : LOWER;
+                const [i, j] = [ar.indexOf(last), ar.indexOf(num)].sort((a, b) => a - b);
+                for (let k = i; k <= j; k++) toToggle.add(ar[k]);
+            } else {
+                toToggle.add(num);
+            }
+        } else {
+            toToggle.add(num);
+        }
+
+        // Aplicar toggle
+        const updated = [...teeth];
+        toToggle.forEach(t => {
+            const idx = updated.findIndex(x => x.tooth_number === t);
+            if (idx >= 0) {
+                // Se shift, não remover — só adicionar
+                if (!e.shiftKey) updated.splice(idx, 1);
+            } else {
+                updated.push({ tooth_number: t, work_type_id: null });
+            }
+        });
+        onChange(updated);
+        lastRef.current = num;
+    }, [disabled, teeth, onChange]);
+
     const click = useCallback((e: React.MouseEvent, num: number) => {
         if (disabled) return;
+        if (selectionMode === 'toggle') return toggleTooth(e, num);
         e.stopPropagation();
         setSelected(prev => {
             const n = new Set(prev);
@@ -64,7 +102,7 @@ function OdontogramContent({ teeth, workTypes, onChange, disabled = false }: Odo
             return n;
         });
         lastRef.current = num;
-    }, [disabled]);
+    }, [disabled, selectionMode, toggleTooth]);
 
     const assign = useCallback((wtId: string | null) => {
         if (selected.size === 0) return;
