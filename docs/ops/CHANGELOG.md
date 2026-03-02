@@ -4,6 +4,20 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## V1.77.0 - 2026-03-02
+- Widget Componentes: formulário com material, quantidade, ref. fabricante/fornecedor, fornecedor
+- Odontograma integrado para associar dentes a componentes
+- Botão 📂 pasta por registo (subfolder "Componentes" no NAS)
+- Service CRUD `component_records` com versionamento
+- Integrado no PlanDetail abaixo do Widget Dentes (tema roxo)
+
+## V1.76.0-V1.76.2 - 2026-03-02
+- Catálogo materiais unificado: colunas `widget_dentes`, `widget_fresagem`, `widget_componentes`
+- TeethWidget usa materiais filtrados do catálogo (não work_types)
+- Fix shift+click: extrair shiftKey antes callback async + preventDefault
+- Botão 📂 pasta por registo no TeethWidget
+- Label painel odontograma customizável ("Materiais")
+
 ## V1.75.0 - 2026-03-02
 - Widget Dentes inline no card de agendamento — odontograma 32 dentes com modo toggle
 - Click individual selecciona/desselecciona, Shift+Click para range na mesma arcada

@@ -70,7 +70,7 @@
 - [x] Widget Dentes — odontograma assign materiais, múltiplos registos, versionamento (V1.75.0-V1.76.0)
 - [x] Catálogo materiais unificado — flags `widget_dentes`, `widget_fresagem`, `widget_componentes` (V1.76.0)
 - [ ] Widget Dentes: botões acção por registo — 📂 abrir pasta, 📱 WhatsApp / 📧 Email (conforme config clínica)
-- [ ] Widget Componentes — registar componentes
+- [x] Widget Componentes — material/qtd/refs/fornecedor, odontograma, pasta, versionamento (V1.77.0)
 - [ ] Banner avisos no topo da ficha do paciente
 - [ ] Config clínica: `canal_comunicacao` (whatsapp | email) para controlar botões partilha
 
