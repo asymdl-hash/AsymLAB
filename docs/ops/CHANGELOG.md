@@ -4,6 +4,15 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## V1.75.0 - 2026-03-02
+- Widget Dentes inline no card de agendamento — odontograma 32 dentes com modo toggle
+- Click individual selecciona/desselecciona, Shift+Click para range na mesma arcada
+- Múltiplos registos por agendamento (materiais/trabalhos diferentes)
+- Versionamento automático (version_number incrementa a cada edição)
+- Service: getTeethRecords, createTeethRecord, updateTeethRecord
+- OdontogramContent: novo prop `selectionMode='toggle'` para selecção directa
+- Migração: coluna `teeth_data` adicionada ao `milling_records`
+
 ## V1.74.0 - 2026-03-02
 - Widget Fresagem inline no card de agendamento — 3 estados (pendente→em_curso→concluido)
 - Dropdown materiais agrupados por categoria, botão 📂 abrir pasta, botão 🔄 actualizar

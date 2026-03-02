@@ -65,9 +65,9 @@
 - [x] Catálogo tipos trabalho: colunas `requires_teeth_record`, `requires_component_record`, `requires_color_scale`
 - [x] Fases: `descricao` + `tipo_fase` (normal/remake)
 
-### Widgets (~25%) → [DECISOES.md](DECISOES.md#6-widgets)
+### Widgets (~50%) → [DECISOES.md](DECISOES.md#6-widgets)
 - [x] Widget Fresagem — selecção material, 3 estados, check NAS (V1.74.0)
-- [ ] Widget Dentes — registar dentes
+- [x] Widget Dentes — odontograma toggle, múltiplos registos, versionamento (V1.75.0)
 - [ ] Widget Componentes — registar componentes
 - [ ] Banner avisos no topo da ficha do paciente
 
