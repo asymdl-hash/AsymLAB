@@ -136,8 +136,8 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
         <div className="mt-3">
             {/* Header compacto */}
             <div className={`p-2.5 rounded-lg border ${records.length > 0
-                ? 'bg-emerald-500/10 border-emerald-500/30'
-                : 'bg-gray-500/10 border-gray-500/30'
+                    ? 'bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30'
+                    : 'bg-muted/50 border-border'
                 }`}>
                 <div className="flex items-center justify-between">
                     <button
@@ -145,7 +145,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                         className="flex items-center gap-2 text-left flex-1 min-w-0"
                     >
                         <span className="text-lg">🦷</span>
-                        <span className={`text-xs font-medium ${records.length > 0 ? 'text-emerald-400' : 'text-muted-foreground'
+                        <span className={`text-xs font-medium ${records.length > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
                             }`}>
                             {records.length > 0
                                 ? `${totalTeeth} dentes · ${records.length} registo${records.length > 1 ? 's' : ''}`
@@ -174,7 +174,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                 {expanded && records.length > 0 && !isEditing && (
                     <div className="mt-2 space-y-1.5">
                         {records.map((rec, idx) => (
-                            <div key={rec.id} className="flex items-center justify-between bg-black/20 rounded-md px-2.5 py-1.5">
+                            <div key={rec.id} className="flex items-center justify-between bg-muted/50 rounded-md px-2.5 py-1.5">
                                 <div className="flex items-center gap-2 min-w-0">
                                     <span className="text-[10px] font-mono text-muted-foreground">#{idx + 1}</span>
                                     <span className="text-xs text-card-foreground truncate">
@@ -184,7 +184,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                 </div>
                                 <button
                                     onClick={() => handleStartEdit(rec)}
-                                    className="p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-card-foreground transition-all"
+                                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
                                     title="Editar registo"
                                 >
                                     <Edit2 className="w-3 h-3" />
@@ -197,7 +197,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
 
             {/* Odontograma editor (expandido) */}
             {expanded && isEditing && (
-                <div className="mt-2 p-3 bg-black/20 rounded-lg border border-border">
+                <div className="mt-2 p-3 bg-muted/30 rounded-lg border border-border">
                     <div className="flex items-center justify-between mb-2">
                         <h4 className="text-xs font-semibold text-card-foreground">
                             {creating ? '➕ Novo Registo de Dentes' : `✏️ Editar Registo (V${records.find(r => r.id === editingId)?.version_number || 1})`}
@@ -214,7 +214,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                             </button>
                             <button
                                 onClick={handleCancel}
-                                className="p-1.5 rounded-md hover:bg-white/10 text-muted-foreground hover:text-card-foreground transition-all"
+                                className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
                             >
                                 <X className="w-3.5 h-3.5" />
                             </button>
@@ -223,7 +223,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
 
                     {/* Contagem e instrução */}
                     <p className="text-[10px] text-muted-foreground mb-2">
-                        {editTeeth.length} dentes seleccionados · Click para seleccionar · Shift+Click para range · Ctrl+Click para multi
+                        {editTeeth.length} dentes atribuídos · 1) Seleccione dentes · 2) Escolha tipo de trabalho no painel
                     </p>
 
                     {/* Odontograma selector */}
@@ -232,7 +232,6 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                         workTypes={workTypes}
                         onChange={setEditTeeth}
                         disabled={false}
-                        selectionMode="toggle"
                     />
 
                     {/* Notas */}
@@ -241,8 +240,8 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                         onChange={(e) => setEditNotes(e.target.value)}
                         rows={2}
                         placeholder="Notas do registo..."
-                        className="w-full mt-2 bg-muted border border-gray-600 rounded px-2 py-1 text-xs text-card-foreground 
-                                   placeholder:text-gray-500 resize-none"
+                        className="w-full mt-2 bg-background border border-border rounded px-2 py-1 text-xs text-foreground 
+                                   placeholder:text-muted-foreground resize-none"
                     />
                 </div>
             )}

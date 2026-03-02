@@ -36,9 +36,9 @@ interface NasHierarchy {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-    pendente: { label: 'Pendente', color: 'text-amber-400', bg: 'bg-amber-500/15 border-amber-500/30', icon: '⏳' },
-    em_curso: { label: 'Em Curso', color: 'text-blue-400', bg: 'bg-blue-500/15 border-blue-500/30', icon: '🔄' },
-    concluido: { label: 'Concluído', color: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/30', icon: '✅' },
+    pendente: { label: 'Pendente', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-500/15 border-amber-300 dark:border-amber-500/30', icon: '⏳' },
+    em_curso: { label: 'Em Curso', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-500/15 border-blue-300 dark:border-blue-500/30', icon: '🔄' },
+    concluido: { label: 'Concluído', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-500/15 border-emerald-300 dark:border-emerald-500/30', icon: '✅' },
 };
 
 export default function MillingWidget({ appointmentId, onReload }: MillingWidgetProps) {
@@ -242,7 +242,7 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
                             onClick={handleCheckFiles}
                             disabled={checking || !hierarchy}
                             title="Verificar ficheiros na pasta"
-                            className="p-1.5 rounded-md hover:bg-white/10 text-muted-foreground 
+                            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground 
                                        hover:text-card-foreground transition-all disabled:opacity-50"
                         >
                             {checking ? (
@@ -255,7 +255,7 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
                             onClick={handleOpenFolder}
                             disabled={!hierarchy}
                             title="Abrir pasta Fresagem no Explorer"
-                            className="p-1.5 rounded-md hover:bg-white/10 text-muted-foreground 
+                            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground 
                                        hover:text-card-foreground transition-all disabled:opacity-50"
                         >
                             <FolderOpen className="w-3.5 h-3.5" />
