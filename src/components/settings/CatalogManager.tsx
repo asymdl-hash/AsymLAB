@@ -283,7 +283,7 @@ function WorkTypesManager() {
 }
 
 // =====================================================
-// MATERIALS MANAGER
+// MATERIALS MANAGER (milling_materials — com toggles de widget)
 // =====================================================
 function MaterialsManager() {
     const [items, setItems] = useState<any[]>([]);
@@ -296,8 +296,15 @@ function MaterialsManager() {
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
     const load = useCallback(async () => {
-        try { setLoading(true); setItems(await catalogService.getMaterials()); }
-        catch (e) { console.error(e); }
+        try {
+            setLoading(true);
+            const { data, error } = await (await import('@/lib/supabase')).supabase
+                .from('milling_materials')
+                .select('*')
+                .order('ordem', { ascending: true });
+            if (error) throw error;
+            setItems(data || []);
+        } catch (e) { console.error(e); }
         finally { setLoading(false); }
     }, []);
 
@@ -305,14 +312,48 @@ function MaterialsManager() {
 
     const handleAdd = async () => {
         if (!addForm.nome.trim()) return;
-        try { setSaving(true); await catalogService.createMaterial(addForm); setAddForm({ nome: '', categoria: 'ceramica', cor: '#94a3b8' }); setShowAdd(false); load(); }
-        catch (e) { console.error(e); } finally { setSaving(false); }
+        try {
+            setSaving(true);
+            const { data: maxOrdem } = await (await import('@/lib/supabase')).supabase
+                .from('milling_materials').select('ordem').order('ordem', { ascending: false }).limit(1).single();
+            const { error } = await (await import('@/lib/supabase')).supabase
+                .from('milling_materials')
+                .insert({
+                    nome: addForm.nome,
+                    categoria: addForm.categoria || 'ceramica',
+                    cor: addForm.cor || '#94a3b8',
+                    activo: true,
+                    ordem: (maxOrdem?.ordem || 0) + 1,
+                    widget_dentes: true,
+                    widget_fresagem: true,
+                    widget_componentes: false,
+                });
+            if (error) throw error;
+            setAddForm({ nome: '', categoria: 'ceramica', cor: '#94a3b8' });
+            setShowAdd(false);
+            load();
+        } catch (e) { console.error(e); } finally { setSaving(false); }
     };
 
     const handleSave = async () => {
         if (!editingId) return;
-        try { setSaving(true); await catalogService.updateMaterial(editingId, editForm); setEditingId(null); load(); }
-        catch (e) { console.error(e); } finally { setSaving(false); }
+        try {
+            setSaving(true);
+            const { error } = await (await import('@/lib/supabase')).supabase
+                .from('milling_materials').update(editForm).eq('id', editingId);
+            if (error) throw error;
+            setEditingId(null);
+            load();
+        } catch (e) { console.error(e); } finally { setSaving(false); }
+    };
+
+    const toggleWidgetFlag = async (id: string, field: 'widget_dentes' | 'widget_fresagem' | 'widget_componentes', current: boolean) => {
+        try {
+            const { error } = await (await import('@/lib/supabase')).supabase
+                .from('milling_materials').update({ [field]: !current }).eq('id', id);
+            if (error) throw error;
+            load();
+        } catch (e) { console.error(e); }
     };
 
     const CATEGORIAS = ['ceramica', 'metal', 'resina', 'composto', 'outro'];
@@ -320,7 +361,7 @@ function MaterialsManager() {
     return (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-border">
-                <span className="text-sm text-gray-500">{items.length} material(is)</span>
+                <span className="text-sm text-gray-500">{items.length} material(is) de fresagem</span>
                 <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-card-foreground rounded-lg hover:bg-primary/90">
                     <Plus className="h-4 w-4" /> Adicionar
                 </button>
@@ -351,6 +392,9 @@ function MaterialsManager() {
                             <th className="text-left px-4 py-3">Cor</th>
                             <th className="text-left px-4 py-3">Nome</th>
                             <th className="text-left px-4 py-3">Categoria</th>
+                            <th className="text-center px-2 py-3" title="Widget Dentes">🦷</th>
+                            <th className="text-center px-2 py-3" title="Widget Fresagem">🔧</th>
+                            <th className="text-center px-2 py-3" title="Widget Componentes">📦</th>
                             <th className="text-right px-4 py-3">Acções</th>
                         </tr>
                     </thead>
@@ -366,6 +410,9 @@ function MaterialsManager() {
                                                 {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
                                             </select>
                                         </td>
+                                        <td className="text-center px-2 py-3">—</td>
+                                        <td className="text-center px-2 py-3">—</td>
+                                        <td className="text-center px-2 py-3">—</td>
                                         <td className="px-4 py-3 text-right flex justify-end gap-1">
                                             <button onClick={handleSave} disabled={saving} className="p-1.5 bg-green-900/40 text-green-400 rounded"><Save className="h-3.5 w-3.5" /></button>
                                             <button onClick={() => setEditingId(null)} className="p-1.5 bg-muted text-muted-foreground rounded"><X className="h-3.5 w-3.5" /></button>
@@ -376,11 +423,29 @@ function MaterialsManager() {
                                         <td className="px-4 py-3"><div className="w-6 h-6 rounded-full border border-border" style={{ backgroundColor: item.cor || '#94a3b8' }} /></td>
                                         <td className="px-4 py-3 font-medium text-card-foreground">{item.nome}</td>
                                         <td className="px-4 py-3 text-gray-500 capitalize">{item.categoria || 'geral'}</td>
+                                        <td className="text-center px-2 py-3">
+                                            <button onClick={() => toggleWidgetFlag(item.id, 'widget_dentes', item.widget_dentes)}
+                                                className="text-muted-foreground hover:text-primary transition-colors">
+                                                {item.widget_dentes ? <ToggleRight className="h-5 w-5 text-green-500" /> : <ToggleLeft className="h-5 w-5" />}
+                                            </button>
+                                        </td>
+                                        <td className="text-center px-2 py-3">
+                                            <button onClick={() => toggleWidgetFlag(item.id, 'widget_fresagem', item.widget_fresagem)}
+                                                className="text-muted-foreground hover:text-primary transition-colors">
+                                                {item.widget_fresagem ? <ToggleRight className="h-5 w-5 text-green-500" /> : <ToggleLeft className="h-5 w-5" />}
+                                            </button>
+                                        </td>
+                                        <td className="text-center px-2 py-3">
+                                            <button onClick={() => toggleWidgetFlag(item.id, 'widget_componentes', item.widget_componentes)}
+                                                className="text-muted-foreground hover:text-primary transition-colors">
+                                                {item.widget_componentes ? <ToggleRight className="h-5 w-5 text-green-500" /> : <ToggleLeft className="h-5 w-5" />}
+                                            </button>
+                                        </td>
                                         <td className="px-4 py-3 text-right flex justify-end gap-1">
                                             <button onClick={() => { setEditingId(item.id); setEditForm({ nome: item.nome, categoria: item.categoria || '', cor: item.cor || '#94a3b8' }); }} className="p-1.5 text-muted-foreground hover:text-blue-500 hover:bg-blue-900/30 rounded"><Edit3 className="h-3.5 w-3.5" /></button>
                                             {deleteConfirm === item.id ? (
                                                 <>
-                                                    <button onClick={async () => { await catalogService.deleteMaterial(item.id); setDeleteConfirm(null); load(); }} className="p-1.5 bg-red-900/40 text-red-400 rounded text-xs">Sim</button>
+                                                    <button onClick={async () => { await (await import('@/lib/supabase')).supabase.from('milling_materials').delete().eq('id', item.id); setDeleteConfirm(null); load(); }} className="p-1.5 bg-red-900/40 text-red-400 rounded text-xs">Sim</button>
                                                     <button onClick={() => setDeleteConfirm(null)} className="p-1.5 bg-muted text-muted-foreground rounded text-xs">Não</button>
                                                 </>
                                             ) : (
