@@ -283,10 +283,11 @@ function WorkTypesManager() {
 }
 
 // =====================================================
-// MATERIALS MANAGER (milling_materials — com toggles de widget)
+// MATERIALS MANAGER (milling_materials — agrupado por categoria com defaults)
 // =====================================================
 function MaterialsManager() {
     const [items, setItems] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAdd, setShowAdd] = useState(false);
     const [addForm, setAddForm] = useState({ nome: '', categoria: 'ceramica', cor: '#94a3b8' });
@@ -294,29 +295,47 @@ function MaterialsManager() {
     const [editForm, setEditForm] = useState({ nome: '', categoria: '', cor: '' });
     const [saving, setSaving] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
+
+    const sb = async () => (await import('@/lib/supabase')).supabase;
 
     const load = useCallback(async () => {
         try {
             setLoading(true);
-            const { data, error } = await (await import('@/lib/supabase')).supabase
-                .from('milling_materials')
-                .select('*')
-                .order('ordem', { ascending: true });
-            if (error) throw error;
-            setItems(data || []);
+            const supabase = await sb();
+            const [matsRes, catsRes] = await Promise.all([
+                supabase.from('milling_materials').select('*').order('ordem', { ascending: true }),
+                supabase.from('material_categories').select('*').order('categoria', { ascending: true }),
+            ]);
+            if (matsRes.error) throw matsRes.error;
+            if (catsRes.error) throw catsRes.error;
+            setItems(matsRes.data || []);
+            setCategories(catsRes.data || []);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
     }, []);
 
     useEffect(() => { load(); }, [load]);
 
+    // Buscar defaults da categoria
+    const getCatDefaults = (cat: string) => {
+        const found = categories.find(c => c.categoria === cat);
+        return {
+            widget_dentes: found?.widget_dentes_default ?? true,
+            widget_fresagem: found?.widget_fresagem_default ?? true,
+            widget_componentes: found?.widget_componentes_default ?? false,
+        };
+    };
+
     const handleAdd = async () => {
         if (!addForm.nome.trim()) return;
         try {
             setSaving(true);
-            const { data: maxOrdem } = await (await import('@/lib/supabase')).supabase
+            const supabase = await sb();
+            const { data: maxOrdem } = await supabase
                 .from('milling_materials').select('ordem').order('ordem', { ascending: false }).limit(1).single();
-            const { error } = await (await import('@/lib/supabase')).supabase
+            const defaults = getCatDefaults(addForm.categoria);
+            const { error } = await supabase
                 .from('milling_materials')
                 .insert({
                     nome: addForm.nome,
@@ -324,9 +343,7 @@ function MaterialsManager() {
                     cor: addForm.cor || '#94a3b8',
                     activo: true,
                     ordem: (maxOrdem?.ordem || 0) + 1,
-                    widget_dentes: true,
-                    widget_fresagem: true,
-                    widget_componentes: false,
+                    ...defaults,
                 });
             if (error) throw error;
             setAddForm({ nome: '', categoria: 'ceramica', cor: '#94a3b8' });
@@ -339,8 +356,8 @@ function MaterialsManager() {
         if (!editingId) return;
         try {
             setSaving(true);
-            const { error } = await (await import('@/lib/supabase')).supabase
-                .from('milling_materials').update(editForm).eq('id', editingId);
+            const supabase = await sb();
+            const { error } = await supabase.from('milling_materials').update(editForm).eq('id', editingId);
             if (error) throw error;
             setEditingId(null);
             load();
@@ -349,19 +366,50 @@ function MaterialsManager() {
 
     const toggleWidgetFlag = async (id: string, field: 'widget_dentes' | 'widget_fresagem' | 'widget_componentes', current: boolean) => {
         try {
-            const { error } = await (await import('@/lib/supabase')).supabase
-                .from('milling_materials').update({ [field]: !current }).eq('id', id);
+            const supabase = await sb();
+            const { error } = await supabase.from('milling_materials').update({ [field]: !current }).eq('id', id);
             if (error) throw error;
             load();
         } catch (e) { console.error(e); }
     };
 
+    // Toggle toda a categoria (batch + update default)
+    const toggleCategoryWidget = async (cat: string, field: 'widget_dentes' | 'widget_fresagem' | 'widget_componentes', currentDefault: boolean) => {
+        try {
+            const supabase = await sb();
+            const defaultField = `${field}_default`;
+            // Actualizar default da categoria
+            await supabase.from('material_categories').update({ [defaultField]: !currentDefault }).eq('categoria', cat);
+            // Batch update todos os materiais nessa categoria
+            await supabase.from('milling_materials').update({ [field]: !currentDefault }).eq('categoria', cat);
+            load();
+        } catch (e) { console.error(e); }
+    };
+
+    const toggleCollapse = (cat: string) => {
+        setCollapsedCats(prev => {
+            const n = new Set(prev);
+            if (n.has(cat)) n.delete(cat); else n.add(cat);
+            return n;
+        });
+    };
+
     const CATEGORIAS = ['ceramica', 'metal', 'resina', 'composto', 'outro'];
+
+    // Agrupar materiais por categoria
+    const grouped = items.reduce<Record<string, any[]>>((acc, item) => {
+        const cat = item.categoria || 'outro';
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(item);
+        return acc;
+    }, {});
+
+    const categoryOrder = Object.keys(grouped).sort();
 
     return (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-border">
-                <span className="text-sm text-gray-500">{items.length} material(is) de fresagem</span>
+                <span className="text-sm text-gray-500">{items.length} material(is) · {categoryOrder.length} categorias</span>
                 <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-card-foreground rounded-lg hover:bg-primary/90">
                     <Plus className="h-4 w-4" /> Adicionar
                 </button>
@@ -386,78 +434,122 @@ function MaterialsManager() {
             ) : items.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground text-sm">Sem materiais registados</div>
             ) : (
-                <table className="w-full text-sm">
-                    <thead className="bg-muted/50 text-gray-500 text-xs uppercase tracking-wider">
-                        <tr>
-                            <th className="text-left px-4 py-3">Cor</th>
-                            <th className="text-left px-4 py-3">Nome</th>
-                            <th className="text-left px-4 py-3">Categoria</th>
-                            <th className="text-center px-2 py-3" title="Widget Dentes">🦷</th>
-                            <th className="text-center px-2 py-3" title="Widget Fresagem">🔧</th>
-                            <th className="text-center px-2 py-3" title="Widget Componentes">📦</th>
-                            <th className="text-right px-4 py-3">Acções</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-800">
-                        {items.map(item => (
-                            <tr key={item.id} className="hover:bg-muted/30">
-                                {editingId === item.id ? (
-                                    <>
-                                        <td className="px-4 py-3"><input type="color" value={editForm.cor} onChange={e => setEditForm({ ...editForm, cor: e.target.value })} className="w-8 h-8 rounded border cursor-pointer" /></td>
-                                        <td className="px-4 py-3"><input type="text" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="w-full text-sm border border-border rounded px-2 bg-muted text-card-foreground py-1" /></td>
-                                        <td className="px-4 py-3">
-                                            <select value={editForm.categoria} onChange={e => setEditForm({ ...editForm, categoria: e.target.value })} className="text-sm border border-border rounded px-2 bg-muted text-card-foreground py-1">
-                                                {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
-                                            </select>
-                                        </td>
-                                        <td className="text-center px-2 py-3">—</td>
-                                        <td className="text-center px-2 py-3">—</td>
-                                        <td className="text-center px-2 py-3">—</td>
-                                        <td className="px-4 py-3 text-right flex justify-end gap-1">
-                                            <button onClick={handleSave} disabled={saving} className="p-1.5 bg-green-900/40 text-green-400 rounded"><Save className="h-3.5 w-3.5" /></button>
-                                            <button onClick={() => setEditingId(null)} className="p-1.5 bg-muted text-muted-foreground rounded"><X className="h-3.5 w-3.5" /></button>
-                                        </td>
-                                    </>
-                                ) : (
-                                    <>
-                                        <td className="px-4 py-3"><div className="w-6 h-6 rounded-full border border-border" style={{ backgroundColor: item.cor || '#94a3b8' }} /></td>
-                                        <td className="px-4 py-3 font-medium text-card-foreground">{item.nome}</td>
-                                        <td className="px-4 py-3 text-gray-500 capitalize">{item.categoria || 'geral'}</td>
-                                        <td className="text-center px-2 py-3">
-                                            <button onClick={() => toggleWidgetFlag(item.id, 'widget_dentes', item.widget_dentes)}
-                                                className="text-muted-foreground hover:text-primary transition-colors">
-                                                {item.widget_dentes ? <ToggleRight className="h-5 w-5 text-green-500" /> : <ToggleLeft className="h-5 w-5" />}
+                <div>
+                    {categoryOrder.map(cat => {
+                        const catItems = grouped[cat];
+                        const catData = categories.find(c => c.categoria === cat);
+                        const isCollapsed = collapsedCats.has(cat);
+                        const dDefault = catData?.widget_dentes_default ?? true;
+                        const fDefault = catData?.widget_fresagem_default ?? true;
+                        const cDefault = catData?.widget_componentes_default ?? false;
+
+                        return (
+                            <div key={cat}>
+                                {/* Category header */}
+                                <div className="flex items-center bg-muted/60 border-b border-t border-border px-4 py-2.5">
+                                    <button
+                                        onClick={() => toggleCollapse(cat)}
+                                        className="flex items-center gap-2 flex-1 text-left"
+                                    >
+                                        <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${!isCollapsed ? 'rotate-90' : ''}`} />
+                                        <span className="text-xs font-semibold text-card-foreground uppercase tracking-wider">{catData?.label || cat}</span>
+                                        <span className="text-[10px] text-muted-foreground">({catItems.length})</span>
+                                    </button>
+                                    {/* Category-level toggles */}
+                                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                                        <div className="flex items-center gap-1">
+                                            <span>🦷</span>
+                                            <button onClick={() => toggleCategoryWidget(cat, 'widget_dentes', dDefault)}
+                                                className="hover:text-primary transition-colors" title="Default Dentes para esta categoria">
+                                                {dDefault ? <ToggleRight className="h-4 w-4 text-green-500" /> : <ToggleLeft className="h-4 w-4" />}
                                             </button>
-                                        </td>
-                                        <td className="text-center px-2 py-3">
-                                            <button onClick={() => toggleWidgetFlag(item.id, 'widget_fresagem', item.widget_fresagem)}
-                                                className="text-muted-foreground hover:text-primary transition-colors">
-                                                {item.widget_fresagem ? <ToggleRight className="h-5 w-5 text-green-500" /> : <ToggleLeft className="h-5 w-5" />}
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <span>🔧</span>
+                                            <button onClick={() => toggleCategoryWidget(cat, 'widget_fresagem', fDefault)}
+                                                className="hover:text-primary transition-colors" title="Default Fresagem para esta categoria">
+                                                {fDefault ? <ToggleRight className="h-4 w-4 text-green-500" /> : <ToggleLeft className="h-4 w-4" />}
                                             </button>
-                                        </td>
-                                        <td className="text-center px-2 py-3">
-                                            <button onClick={() => toggleWidgetFlag(item.id, 'widget_componentes', item.widget_componentes)}
-                                                className="text-muted-foreground hover:text-primary transition-colors">
-                                                {item.widget_componentes ? <ToggleRight className="h-5 w-5 text-green-500" /> : <ToggleLeft className="h-5 w-5" />}
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <span>📦</span>
+                                            <button onClick={() => toggleCategoryWidget(cat, 'widget_componentes', cDefault)}
+                                                className="hover:text-primary transition-colors" title="Default Componentes para esta categoria">
+                                                {cDefault ? <ToggleRight className="h-4 w-4 text-green-500" /> : <ToggleLeft className="h-4 w-4" />}
                                             </button>
-                                        </td>
-                                        <td className="px-4 py-3 text-right flex justify-end gap-1">
-                                            <button onClick={() => { setEditingId(item.id); setEditForm({ nome: item.nome, categoria: item.categoria || '', cor: item.cor || '#94a3b8' }); }} className="p-1.5 text-muted-foreground hover:text-blue-500 hover:bg-blue-900/30 rounded"><Edit3 className="h-3.5 w-3.5" /></button>
-                                            {deleteConfirm === item.id ? (
-                                                <>
-                                                    <button onClick={async () => { await (await import('@/lib/supabase')).supabase.from('milling_materials').delete().eq('id', item.id); setDeleteConfirm(null); load(); }} className="p-1.5 bg-red-900/40 text-red-400 rounded text-xs">Sim</button>
-                                                    <button onClick={() => setDeleteConfirm(null)} className="p-1.5 bg-muted text-muted-foreground rounded text-xs">Não</button>
-                                                </>
-                                            ) : (
-                                                <button onClick={() => setDeleteConfirm(item.id)} className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-900/30 rounded"><Trash2 className="h-3.5 w-3.5" /></button>
-                                            )}
-                                        </td>
-                                    </>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Materials in category */}
+                                {!isCollapsed && (
+                                    <table className="w-full text-sm">
+                                        <tbody className="divide-y divide-gray-800/50">
+                                            {catItems.map(item => (
+                                                <tr key={item.id} className="hover:bg-muted/30">
+                                                    {editingId === item.id ? (
+                                                        <>
+                                                            <td className="px-4 py-2.5 w-12"><input type="color" value={editForm.cor} onChange={e => setEditForm({ ...editForm, cor: e.target.value })} className="w-7 h-7 rounded border cursor-pointer" /></td>
+                                                            <td className="px-4 py-2.5"><input type="text" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="w-full text-sm border border-border rounded px-2 bg-muted text-card-foreground py-1" /></td>
+                                                            <td className="text-center px-2 py-2.5">—</td>
+                                                            <td className="text-center px-2 py-2.5">—</td>
+                                                            <td className="text-center px-2 py-2.5">—</td>
+                                                            <td className="px-4 py-2.5 text-right">
+                                                                <div className="flex justify-end gap-1">
+                                                                    <button onClick={handleSave} disabled={saving} className="p-1.5 bg-green-900/40 text-green-400 rounded"><Save className="h-3.5 w-3.5" /></button>
+                                                                    <button onClick={() => setEditingId(null)} className="p-1.5 bg-muted text-muted-foreground rounded"><X className="h-3.5 w-3.5" /></button>
+                                                                </div>
+                                                            </td>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <td className="px-4 py-2.5 w-12"><div className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: item.cor || '#94a3b8' }} /></td>
+                                                            <td className="px-4 py-2.5 font-medium text-card-foreground">{item.nome}</td>
+                                                            <td className="text-center px-2 py-2.5">
+                                                                <button onClick={() => toggleWidgetFlag(item.id, 'widget_dentes', item.widget_dentes)}
+                                                                    className={`transition-colors ${item.widget_dentes !== dDefault ? 'ring-1 ring-amber-500/50 rounded' : ''}`}
+                                                                    title={item.widget_dentes !== dDefault ? 'Diferente do default da categoria' : ''}>
+                                                                    {item.widget_dentes ? <ToggleRight className="h-4.5 w-4.5 text-green-500" /> : <ToggleLeft className="h-4.5 w-4.5 text-muted-foreground" />}
+                                                                </button>
+                                                            </td>
+                                                            <td className="text-center px-2 py-2.5">
+                                                                <button onClick={() => toggleWidgetFlag(item.id, 'widget_fresagem', item.widget_fresagem)}
+                                                                    className={`transition-colors ${item.widget_fresagem !== fDefault ? 'ring-1 ring-amber-500/50 rounded' : ''}`}
+                                                                    title={item.widget_fresagem !== fDefault ? 'Diferente do default da categoria' : ''}>
+                                                                    {item.widget_fresagem ? <ToggleRight className="h-4.5 w-4.5 text-green-500" /> : <ToggleLeft className="h-4.5 w-4.5 text-muted-foreground" />}
+                                                                </button>
+                                                            </td>
+                                                            <td className="text-center px-2 py-2.5">
+                                                                <button onClick={() => toggleWidgetFlag(item.id, 'widget_componentes', item.widget_componentes)}
+                                                                    className={`transition-colors ${item.widget_componentes !== cDefault ? 'ring-1 ring-amber-500/50 rounded' : ''}`}
+                                                                    title={item.widget_componentes !== cDefault ? 'Diferente do default da categoria' : ''}>
+                                                                    {item.widget_componentes ? <ToggleRight className="h-4.5 w-4.5 text-green-500" /> : <ToggleLeft className="h-4.5 w-4.5 text-muted-foreground" />}
+                                                                </button>
+                                                            </td>
+                                                            <td className="px-4 py-2.5 text-right">
+                                                                <div className="flex justify-end gap-1">
+                                                                    <button onClick={() => { setEditingId(item.id); setEditForm({ nome: item.nome, categoria: item.categoria || '', cor: item.cor || '#94a3b8' }); }} className="p-1.5 text-muted-foreground hover:text-blue-500 hover:bg-blue-900/30 rounded"><Edit3 className="h-3.5 w-3.5" /></button>
+                                                                    {deleteConfirm === item.id ? (
+                                                                        <>
+                                                                            <button onClick={async () => { const s = await sb(); await s.from('milling_materials').delete().eq('id', item.id); setDeleteConfirm(null); load(); }} className="p-1.5 bg-red-900/40 text-red-400 rounded text-xs">Sim</button>
+                                                                            <button onClick={() => setDeleteConfirm(null)} className="p-1.5 bg-muted text-muted-foreground rounded text-xs">Não</button>
+                                                                        </>
+                                                                    ) : (
+                                                                        <button onClick={() => setDeleteConfirm(item.id)} className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-900/30 rounded"><Trash2 className="h-3.5 w-3.5" /></button>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </>
+                                                    )}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 )}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                            </div>
+                        );
+                    })}
+                </div>
             )}
         </div>
     );
