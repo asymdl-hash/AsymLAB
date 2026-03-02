@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, mkdirSync, renameSync, readdirSync, copyFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, copyFileSync } from 'fs';
+import { rename } from 'fs/promises';
 import { spawn } from 'child_process';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
@@ -128,6 +129,32 @@ function openInExplorer(folderPath: string) {
     child.unref();
 }
 
+async function retryRename(oldPath: string, newPath: string, maxRetries = 3): Promise<void> {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            await rename(oldPath, newPath);
+            return;
+        } catch (err: unknown) {
+            const code = (err as NodeJS.ErrnoException).code;
+            if (code === 'EPERM' && i < maxRetries - 1) {
+                console.warn(`[NAS] EPERM ao renomear (tentativa ${i + 1}/${maxRetries}), a tentar novamente...`);
+                await new Promise(r => setTimeout(r, 500 * (i + 1)));
+                continue;
+            }
+            // Fallback: copiar recursivamente + apagar original
+            if (code === 'EPERM') {
+                console.warn('[NAS] EPERM persistente — usando fallback copy+delete');
+                const { cpSync, rmSync } = await import('fs');
+                cpSync(oldPath, newPath, { recursive: true });
+                try { rmSync(oldPath, { recursive: true, force: true }); }
+                catch { console.warn('[NAS] Não foi possível apagar pasta original (será limpa mais tarde)'); }
+                return;
+            }
+            throw err;
+        }
+    }
+}
+
 // Regras de nomeação conforme PACIENTES_NAS.md §2
 const APPT_TYPE_LABELS: Record<string, string> = {
     moldagem: 'Moldagem',
@@ -242,6 +269,66 @@ export async function POST(request: NextRequest) {
                 });
             }
 
+            // ─── Renomear pasta de agendamento (tipo ou data mudou) ───
+            case 'rename_appointment': {
+                const rPlOrder = body.plan_order || 1;
+                const rFOrder = body.phase_order || 1;
+                const rFName = sanitizeFolderName(body.phase_name || 'Sem Info');
+                const rAOrder = body.appt_order || 1;
+                const rAType = APPT_TYPE_LABELS[body.appt_type] || 'Outro';
+                const rADate = body.appt_date
+                    ? new Date(body.appt_date).toLocaleDateString('pt-PT', {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                    }).replace(/\//g, '-')
+                    : 'Sem Info';
+
+                const phaseDirPath = path.join(
+                    patientPath,
+                    `Plano ${rPlOrder}`,
+                    `Fase ${rFOrder} + ${rFName}`
+                );
+
+                const newApptName = `Ag ${rAOrder} + ${rAType} + ${rADate}`;
+
+                // Procurar pasta existente com prefixo "Ag {order} + "
+                if (existsSync(phaseDirPath)) {
+                    const entries = readdirSync(phaseDirPath, { withFileTypes: true });
+                    const prefix = `Ag ${rAOrder} + `;
+                    const existing = entries.find(e => e.isDirectory() && e.name.startsWith(prefix));
+
+                    if (existing && existing.name !== newApptName) {
+                        const oldPath = path.join(phaseDirPath, existing.name);
+                        const newPath = path.join(phaseDirPath, newApptName);
+                        await retryRename(oldPath, newPath);
+                        return NextResponse.json({
+                            success: true,
+                            renamed: true,
+                            from: existing.name,
+                            to: newApptName,
+                            path: newPath,
+                        });
+                    }
+
+                    // Se não existe, criar a pasta (fallback)
+                    if (!existing) {
+                        const newPath = path.join(phaseDirPath, newApptName);
+                        ensureDirs(newPath, APPOINTMENT_SUBFOLDERS);
+                        return NextResponse.json({
+                            success: true,
+                            renamed: false,
+                            created: true,
+                            path: newPath,
+                        });
+                    }
+                }
+
+                return NextResponse.json({
+                    success: true,
+                    renamed: false,
+                    message: 'Pasta já tem o nome correcto ou fase não existe',
+                });
+            }
+
             // ─── Apenas abrir no Explorer ───
             case 'open': {
                 if (existsSync(patientPath)) {
@@ -264,8 +351,10 @@ export async function POST(request: NextRequest) {
             }
         }
     } catch (error) {
-        console.error('Erro POST patient-folder:', error);
-        return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
+        const msg = error instanceof Error ? error.message : String(error);
+        const stack = error instanceof Error ? error.stack : '';
+        console.error('Erro POST patient-folder:', msg, stack);
+        return NextResponse.json({ error: 'Erro interno', detail: msg }, { status: 500 });
     }
 }
 
@@ -299,7 +388,7 @@ export async function DELETE(request: NextRequest) {
         const archivedName = `_DELETED_${safeId}_${timestamp}`;
         const archivedPath = path.join(PATIENTS_BASE_PATH, archivedName);
 
-        renameSync(folderPath, archivedPath);
+        await retryRename(folderPath, archivedPath);
 
         return NextResponse.json({
             success: true,
@@ -376,7 +465,7 @@ export async function PATCH(request: NextRequest) {
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
                 const archivedName = `_MERGED_${sourceId}_to_${targetId}_${timestamp}`;
                 const archivedPath = path.join(PATIENTS_BASE_PATH, archivedName);
-                renameSync(sourcePath, archivedPath);
+                await retryRename(sourcePath, archivedPath);
                 archived = true;
             } catch (renameErr: unknown) {
                 const msg = renameErr instanceof Error ? renameErr.message : String(renameErr);

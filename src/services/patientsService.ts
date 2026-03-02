@@ -222,6 +222,11 @@ export const patientsService = {
             .eq('id', id);
 
         if (error) throw error;
+
+        // NAS: rename automático quando tipo ou data do agendamento muda
+        if (table === 'appointments' && (data.tipo || data.data_prevista !== undefined)) {
+            this._nasRenameAppointment(id);
+        }
     },
 
     // 12. Criar fase dentro de um plano
@@ -921,6 +926,61 @@ export const patientsService = {
             });
         } catch (err) {
             console.warn('[NAS] Erro ao criar pasta agendamento:', err);
+        }
+    },
+
+    async _nasRenameAppointment(appointmentId: string) {
+        try {
+            // Obter dados actualizados do agendamento
+            const { data: appt } = await supabase
+                .from('appointments')
+                .select('id, tipo, data_prevista, phase_id')
+                .eq('id', appointmentId)
+                .single();
+            if (!appt) return;
+
+            // Obter hierarquia: phase → plan → patient
+            const { data: phaseData } = await supabase
+                .from('phases')
+                .select('nome, ordem, plan_id, treatment_plans!inner(patient_id, patients!inner(t_id))')
+                .eq('id', appt.phase_id)
+                .single();
+            if (!phaseData) return;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const planInfo = (phaseData as any).treatment_plans;
+            const t_id = planInfo?.patients?.t_id;
+            if (!t_id) return;
+
+            // Determinar ordem do plano
+            const { data: plans } = await supabase
+                .from('treatment_plans')
+                .select('id')
+                .eq('patient_id', planInfo.patient_id)
+                .is('deleted_at', null)
+                .order('created_at');
+            const planOrder = (plans?.findIndex((p: { id: string }) => p.id === planInfo.id) ?? 0) + 1;
+
+            // Determinar ordem do agendamento dentro da fase
+            const { data: appts } = await supabase
+                .from('appointments')
+                .select('id')
+                .eq('phase_id', appt.phase_id)
+                .order('created_at');
+            const apptOrder = (appts?.findIndex(a => a.id === appointmentId) ?? 0) + 1;
+
+            this._nasCreateFolder({
+                action: 'rename_appointment',
+                t_id,
+                plan_order: planOrder,
+                phase_order: phaseData.ordem,
+                phase_name: phaseData.nome,
+                appt_order: apptOrder,
+                appt_type: appt.tipo,
+                appt_date: appt.data_prevista,
+            });
+        } catch (err) {
+            console.warn('[NAS] Erro ao renomear pasta agendamento:', err);
         }
     },
 };
