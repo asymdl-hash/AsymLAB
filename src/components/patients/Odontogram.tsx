@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import { TOOTH_PATHS } from './tooth_paths_data';
-import { TOOTH_LABEL_POSITIONS } from './tooth_label_map';
+import { TOOTH_CENTERS } from './tooth_centers';
 
 // ═══════════════════════════════════════════════════════════
 // FDI ISO 3950 — Odontograma V7
@@ -110,8 +110,8 @@ function OdontogramContent({ teeth, workTypes, onChange, disabled = false }: Odo
                         const stroke = isSel ? '#60a5fa' : hasWt ? (wt.cor || '#6b7280') : 'rgba(255,255,255,0.22)';
                         const strokeWidth = isSel ? 1.5 : 0.7;
 
-                        // Posição do label (número FDI)
-                        const labelPos = TOOTH_LABEL_POSITIONS[toothId as keyof typeof TOOTH_LABEL_POSITIONS];
+                        // Posição do label (número FDI) — usa centro do dente
+                        const labelPos = TOOTH_CENTERS[toothId as keyof typeof TOOTH_CENTERS];
                         const lx = labelPos?.x ?? 0;
                         const ly = labelPos?.y ?? 0;
 
