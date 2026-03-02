@@ -329,6 +329,82 @@ export async function POST(request: NextRequest) {
                 });
             }
 
+            // ─── Verificar ficheiros na pasta Fresagem ───
+            case 'check_milling_files': {
+                const cmPlOrder = body.plan_order || 1;
+                const cmFOrder = body.phase_order || 1;
+                const cmFName = sanitizeFolderName(body.phase_name || 'Sem Info');
+                const cmAOrder = body.appt_order || 1;
+
+                const cmPhasePath = path.join(
+                    patientPath,
+                    `Plano ${cmPlOrder}`,
+                    `Fase ${cmFOrder} + ${cmFName}`
+                );
+
+                // Encontrar pasta do agendamento pelo prefixo
+                if (existsSync(cmPhasePath)) {
+                    const entries = readdirSync(cmPhasePath, { withFileTypes: true });
+                    const prefix = `Ag ${cmAOrder} + `;
+                    const apptDir = entries.find(e => e.isDirectory() && e.name.startsWith(prefix));
+
+                    if (apptDir) {
+                        const fresagemPath = path.join(cmPhasePath, apptDir.name, 'Fresagem');
+                        if (existsSync(fresagemPath)) {
+                            const files = readdirSync(fresagemPath);
+                            // Ignorar PDFs automáticos e pastas
+                            const designFiles = files.filter(f => {
+                                const ext = f.toLowerCase().split('.').pop() || '';
+                                return !['pdf'].includes(ext) && f !== '.gitkeep';
+                            });
+                            return NextResponse.json({
+                                success: true,
+                                hasFiles: designFiles.length > 0,
+                                fileCount: designFiles.length,
+                                files: designFiles.slice(0, 10), // primeiros 10 para debug
+                                path: fresagemPath,
+                            });
+                        }
+                        return NextResponse.json({ success: true, hasFiles: false, path: fresagemPath });
+                    }
+                }
+                return NextResponse.json({ success: true, hasFiles: false });
+            }
+
+            // ─── Abrir subpasta específica no Explorer ───
+            case 'open_subfolder': {
+                const osPlOrder = body.plan_order || 1;
+                const osFOrder = body.phase_order || 1;
+                const osFName = sanitizeFolderName(body.phase_name || 'Sem Info');
+                const osAOrder = body.appt_order || 1;
+                const subfolder = body.subfolder || 'Fresagem';
+
+                const osPhasePath = path.join(
+                    patientPath,
+                    `Plano ${osPlOrder}`,
+                    `Fase ${osFOrder} + ${osFName}`
+                );
+
+                if (existsSync(osPhasePath)) {
+                    const entries = readdirSync(osPhasePath, { withFileTypes: true });
+                    const prefix = `Ag ${osAOrder} + `;
+                    const apptDir = entries.find(e => e.isDirectory() && e.name.startsWith(prefix));
+
+                    if (apptDir) {
+                        const targetPath = path.join(osPhasePath, apptDir.name, String(subfolder));
+                        if (existsSync(targetPath)) {
+                            openInExplorer(targetPath);
+                            return NextResponse.json({ success: true, path: targetPath });
+                        }
+                        // Criar se não existir
+                        mkdirSync(targetPath, { recursive: true });
+                        openInExplorer(targetPath);
+                        return NextResponse.json({ success: true, path: targetPath, created: true });
+                    }
+                }
+                return NextResponse.json({ error: 'Pasta não encontrada' }, { status: 404 });
+            }
+
             // ─── Apenas abrir no Explorer ───
             case 'open': {
                 if (existsSync(patientPath)) {

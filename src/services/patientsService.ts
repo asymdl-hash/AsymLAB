@@ -229,6 +229,104 @@ export const patientsService = {
         }
     },
 
+    // ═══════════════════════════════════════════════════════════
+    // Widget Fresagem — CRUD milling_records + materiais
+    // ═══════════════════════════════════════════════════════════
+
+    async getMillingMaterials() {
+        const { data, error } = await supabase
+            .from('milling_materials')
+            .select('*')
+            .eq('activo', true)
+            .order('ordem');
+        if (error) throw error;
+        return data || [];
+    },
+
+    async getMillingRecord(appointmentId: string) {
+        const { data, error } = await supabase
+            .from('milling_records')
+            .select('*')
+            .eq('appointment_id', appointmentId)
+            .order('sequence_number')
+            .limit(1)
+            .maybeSingle();
+        if (error) throw error;
+        return data;
+    },
+
+    async createMillingRecord(appointmentId: string, materialId: string, materialName: string) {
+        const { data: user } = await supabase.auth.getUser();
+        const { data, error } = await supabase
+            .from('milling_records')
+            .insert({
+                appointment_id: appointmentId,
+                material_id: materialId,
+                material_name: materialName,
+                status: 'em_curso',
+                created_by: user?.user?.id,
+            })
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async updateMillingRecord(id: string, updates: Record<string, unknown>) {
+        const { error } = await supabase
+            .from('milling_records')
+            .update({ ...updates, updated_at: new Date().toISOString() })
+            .eq('id', id);
+        if (error) throw error;
+    },
+
+    async getAppointmentHierarchy(appointmentId: string) {
+        // Resolver hierarquia: appointment → phase → plan → patient
+        const { data: appt } = await supabase
+            .from('appointments')
+            .select('id, tipo, data_prevista, phase_id')
+            .eq('id', appointmentId)
+            .single();
+        if (!appt) return null;
+
+        const { data: phaseData } = await supabase
+            .from('phases')
+            .select('nome, ordem, plan_id, treatment_plans!inner(id, patient_id, patients!inner(t_id))')
+            .eq('id', appt.phase_id)
+            .single();
+        if (!phaseData) return null;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const planInfo = (phaseData as any).treatment_plans;
+        const t_id = planInfo?.patients?.t_id;
+        if (!t_id) return null;
+
+        // Determinar ordem do plano
+        const { data: plans } = await supabase
+            .from('treatment_plans')
+            .select('id')
+            .eq('patient_id', planInfo.patient_id)
+            .is('deleted_at', null)
+            .order('created_at');
+        const planOrder = (plans?.findIndex((p: { id: string }) => p.id === planInfo.id) ?? 0) + 1;
+
+        // Determinar ordem do agendamento
+        const { data: appts } = await supabase
+            .from('appointments')
+            .select('id')
+            .eq('phase_id', appt.phase_id)
+            .order('created_at');
+        const apptOrder = (appts?.findIndex(a => a.id === appointmentId) ?? 0) + 1;
+
+        return {
+            t_id,
+            plan_order: planOrder,
+            phase_order: phaseData.ordem,
+            phase_name: phaseData.nome,
+            appt_order: apptOrder,
+        };
+    },
+
     // 12. Criar fase dentro de um plano
     async createPhase(data: {
         treatment_plan_id: string;
