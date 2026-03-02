@@ -50,9 +50,9 @@
 - [x] Permissões granulares — `has_patient_access()` com 3 regras: admin/lab vê tudo, staff clínica vê da clínica, médico vê seus pacientes
 - [x] Responsividade mobile/tablet — instrução touch, avatar, botões full-width, título break-words
 
-### Infraestrutura NAS (~50%) → [PACIENTES_NAS.md](../modulos/PACIENTES_NAS.md)
+### Infraestrutura NAS (~75%) → [PACIENTES_NAS.md](../modulos/PACIENTES_NAS.md)
 - [x] Criação automática de subpastas ao criar paciente/plano/fase/agendamento (V1.72.0)
-- [ ] Rename automático de pastas (tipo agendamento, material, data)
+- [x] Rename automático de pastas quando tipo/data do agendamento muda (V1.73.0)
 - [ ] Padrão NAS=master, Supabase=cache (últimas 50-100 msgs chat)
 
 ### Novos Modelos de Dados ✅ → [DECISOES.md](DECISOES.md)
