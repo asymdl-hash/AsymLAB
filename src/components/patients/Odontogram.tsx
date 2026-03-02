@@ -83,17 +83,23 @@ export function OdontogramContent({ teeth, workTypes, onChange, disabled = false
         if (disabled) return;
         if (selectionMode === 'toggle') return toggleTooth(e, num);
         e.stopPropagation();
+        e.preventDefault();
+
+        // Extrair propriedades do evento ANTES do callback assíncrono
+        const isShift = e.shiftKey;
+        const isCtrl = e.ctrlKey || e.metaKey;
+        const last = lastRef.current;
+
         setSelected(prev => {
             const n = new Set(prev);
-            if (e.shiftKey && lastRef.current !== null) {
-                const last = lastRef.current;
+            if (isShift && last !== null) {
                 const a1 = UPPER.includes(last), a2 = UPPER.includes(num);
                 if (a1 === a2) {
                     const ar = a2 ? UPPER : LOWER;
                     const [i, j] = [ar.indexOf(last), ar.indexOf(num)].sort((a, b) => a - b);
                     for (let k = i; k <= j; k++) n.add(ar[k]);
                 } else { n.has(num) ? n.delete(num) : n.add(num); }
-            } else if (e.ctrlKey || e.metaKey) {
+            } else if (isCtrl) {
                 n.has(num) ? n.delete(num) : n.add(num);
             } else {
                 if (n.size === 1 && n.has(num)) n.clear();
