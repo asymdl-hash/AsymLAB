@@ -388,6 +388,80 @@ export const patientsService = {
         return newVersion;
     },
 
+    // ═══════════════════════════════════════════════════════════
+    // Widget Componentes — CRUD component_records
+    // ═══════════════════════════════════════════════════════════
+
+    async getComponentRecords(appointmentId: string) {
+        const { data, error } = await supabase
+            .from('component_records')
+            .select('*')
+            .eq('appointment_id', appointmentId)
+            .order('created_at', { ascending: true });
+        if (error) throw error;
+        return data || [];
+    },
+
+    async createComponentRecord(appointmentId: string, record: {
+        teeth_data?: unknown[];
+        material_id?: string;
+        material_name: string;
+        quantidade?: number;
+        ref_fabricante?: string;
+        ref_fornecedor?: string;
+        fornecedor?: string;
+        notas?: string;
+    }) {
+        const { data, error } = await supabase
+            .from('component_records')
+            .insert({
+                appointment_id: appointmentId,
+                teeth_data: record.teeth_data || [],
+                material_id: record.material_id || null,
+                material_name: record.material_name,
+                quantidade: record.quantidade || 1,
+                ref_fabricante: record.ref_fabricante || '',
+                ref_fornecedor: record.ref_fornecedor || '',
+                fornecedor: record.fornecedor || '',
+                notas: record.notas || null,
+                version_number: 1,
+            })
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async updateComponentRecord(id: string, record: {
+        teeth_data?: unknown[];
+        material_id?: string;
+        material_name?: string;
+        quantidade?: number;
+        ref_fabricante?: string;
+        ref_fornecedor?: string;
+        fornecedor?: string;
+        notas?: string;
+    }) {
+        const { data: current } = await supabase
+            .from('component_records')
+            .select('version_number')
+            .eq('id', id)
+            .single();
+
+        const newVersion = (current?.version_number || 0) + 1;
+
+        const { error } = await supabase
+            .from('component_records')
+            .update({
+                ...record,
+                version_number: newVersion,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', id);
+        if (error) throw error;
+        return newVersion;
+    },
+
     // 12. Criar fase dentro de um plano
     async createPhase(data: {
         treatment_plan_id: string;

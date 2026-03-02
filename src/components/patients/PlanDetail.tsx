@@ -32,6 +32,7 @@ import WorkBadges from './WorkBadges';
 import Odontogram from './Odontogram';
 import MillingWidget from './MillingWidget';
 import TeethWidget from './TeethWidget';
+import ComponentsWidget from './ComponentsWidget';
 
 // === Config de estados ===
 const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: string; darkColor: string; darkBg: string }> = {
@@ -960,6 +961,9 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, 
 
             {/* Widget Dentes */}
             <TeethWidget appointmentId={appointment.id} />
+
+            {/* Widget Componentes */}
+            <ComponentsWidget appointmentId={appointment.id} />
 
             {/* Confirmação de delete */}
             {confirmDelete && (
