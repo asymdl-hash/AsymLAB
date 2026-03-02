@@ -1,7 +1,7 @@
 # 🚀 Roadmap & Features Futuras — AsymLAB
 
 > Funcionalidades planeadas para versões futuras. Ordenadas por prioridade.
-> Última actualização: 02/03/2026 (V1.70.1)
+> Última actualização: 02/03/2026 (V1.74.0)
 > Ver decisões detalhadas: [DECISOES.md](DECISOES.md)
 
 ---
@@ -65,8 +65,8 @@
 - [x] Catálogo tipos trabalho: colunas `requires_teeth_record`, `requires_component_record`, `requires_color_scale`
 - [x] Fases: `descricao` + `tipo_fase` (normal/remake)
 
-### Widgets (0%) → [DECISOES.md](DECISOES.md#6-widgets)
-- [ ] Widget Fresagem — escolher material (separado da Fila Pedidos)
+### Widgets (~25%) → [DECISOES.md](DECISOES.md#6-widgets)
+- [x] Widget Fresagem — selecção material, 3 estados, check NAS (V1.74.0)
 - [ ] Widget Dentes — registar dentes
 - [ ] Widget Componentes — registar componentes
 - [ ] Banner avisos no topo da ficha do paciente

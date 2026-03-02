@@ -4,6 +4,30 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## V1.74.0 - 2026-03-02
+- Widget Fresagem inline no card de agendamento — 3 estados (pendente→em_curso→concluido)
+- Dropdown materiais agrupados por categoria, botão 📂 abrir pasta, botão 🔄 actualizar
+- Service: getMillingMaterials, getMillingRecord, createMillingRecord, updateMillingRecord, getAppointmentHierarchy
+- API: actions `check_milling_files` (verifica ficheiros NAS) e `open_subfolder` (abre pasta no Explorer)
+- Tabela `milling_materials` criada no Supabase com 7 materiais placeholder e RLS
+
+## V1.73.0 - 2026-03-02
+- NAS rename automático — renomeia pasta agendamento quando tipo/data muda
+- `retryRename` com 3 tentativas + fallback copy+delete para EPERM Windows
+- `_nasRenameAppointment` + trigger no `updateRecord`
+
+## V1.72.1 - 2026-03-02
+- Seed 3 pacientes de teste (Maria, Carlos, Ana) com hierarquia completa
+
+## V1.72.0 - 2026-03-02
+- NAS criação automática de subpastas: paciente, plano, fase, agendamento
+- 4 actions: `create_patient`, `create_plan`, `create_phase`, `create_appointment`
+- Triggers fire-and-forget em patientsService
+
+## V1.70.1 - 2026-03-02
+- Odontograma V7 — labels alinhados, SVGs anatómicos reais 32 dentes FDI ISO 3950
+- Responsividade mobile completa módulo pacientes
+
 ## V1.61.0 - 2026-02-28
 - Lock optimista multi-user: hook `useOptimisticLock` reutilizável para proteger edições concorrentes
 - Integração no PatientForm: verifica `updated_at` antes de cada auto-save

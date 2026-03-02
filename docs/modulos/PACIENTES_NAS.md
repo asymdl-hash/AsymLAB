@@ -2,7 +2,7 @@
 
 > Especificação completa da estrutura de pastas NAS para o módulo pacientes.
 > Baseada na demonstração NAS criada pelo utilizador (01/03/2026).
-> Última actualização: 01/03/2026
+> Última actualização: 02/03/2026
 
 ---
 
@@ -162,6 +162,7 @@ T-{id}/Plano {n}/Fase {n}/Ag {n} + {tipo_principal} + {data}/
 - Cada registo CNC tem pasta própria com ficheiros CAM
 - Registo criado automaticamente quando status = "Para Colocação" + escala cor
 - Material = "Sem Info" até funcionário escolher via Widget Fresagem
+- **Widget Fresagem implementado (V1.74.0)**: 3 estados (pendente→em_curso→concluido), dropdown materiais, check NAS, open folder
 - Materiais sugeridos por frequência (clínica × médico × tipo trabalho)
 - Pasta `Nesting/` para ficheiros de nesting
 
