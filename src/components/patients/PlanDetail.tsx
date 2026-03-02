@@ -209,18 +209,18 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
         <div className="h-full flex flex-col bg-card text-card-foreground overflow-hidden">
             {/* === HEADER === */}
             <div className="p-4 md:p-6 border-b border-border bg-muted/50 flex-shrink-0">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
                     <button
                         onClick={() => router.push(`/dashboard/patients/${patientId}`)}
                         className="p-1.5 rounded-lg hover:bg-muted transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-muted-foreground truncate max-w-[40%] sm:max-w-none">
                         {plan.patient?.t_id} {plan.patient?.nome}
                     </span>
-                    <ChevronRight className="w-4 h-4 text-gray-500" />
-                    <h1 className="text-lg font-bold truncate">{plan.nome}</h1>
+                    <ChevronRight className="w-4 h-4 text-gray-500 shrink-0" />
+                    <h1 className="text-base sm:text-lg font-bold break-words min-w-0">{plan.nome}</h1>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 ml-9">
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${planState.darkBg} ${planState.darkColor}`}>
@@ -744,11 +744,11 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
 
             {/* Acções Rápidas da Fase */}
             {phase.estado !== 'concluida' && phase.estado !== 'cancelada' && (
-                <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-border">
+                <div className="mt-6 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 pt-4 border-t border-border">
                     {phase.estado === 'pendente' && (
                         <button
                             onClick={() => onStateChange(phase.id, 'em_curso')}
-                            className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors flex items-center gap-2"
+                            className="px-4 py-2.5 sm:py-2 text-sm font-medium rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors flex items-center justify-center gap-2"
                         >
                             <Clock className="w-4 h-4" />
                             Iniciar Fase
@@ -757,7 +757,7 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                     {phase.estado === 'em_curso' && (
                         <button
                             onClick={() => onStateChange(phase.id, 'concluida')}
-                            className="px-4 py-2 text-sm font-medium rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors flex items-center gap-2"
+                            className="px-4 py-2.5 sm:py-2 text-sm font-medium rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors flex items-center justify-center gap-2"
                         >
                             <CheckCircle2 className="w-4 h-4" />
                             Concluir Fase
@@ -765,7 +765,7 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                     )}
                     <button
                         onClick={() => onStateChange(phase.id, 'cancelada')}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-muted text-muted-foreground hover:bg-red-500/20 hover:text-red-400 transition-colors flex items-center gap-2 ml-auto"
+                        className="px-4 py-2.5 sm:py-2 text-sm font-medium rounded-lg bg-muted text-muted-foreground hover:bg-red-500/20 hover:text-red-400 transition-colors flex items-center justify-center gap-2 sm:ml-auto"
                     >
                         <XCircle className="w-4 h-4" />
                         Cancelar

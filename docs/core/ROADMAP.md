@@ -1,7 +1,7 @@
 # 🚀 Roadmap & Features Futuras — AsymLAB
 
 > Funcionalidades planeadas para versões futuras. Ordenadas por prioridade.
-> Última actualização: 01/03/2026 (V1.66.0)
+> Última actualização: 02/03/2026 (V1.70.1)
 > Ver decisões detalhadas: [DECISOES.md](DECISOES.md)
 
 ---
@@ -32,6 +32,9 @@
 - [x] Facturação base (invoices, receipts, NewInvoiceModal)
 - [x] Fila de Pedidos Kanban (drag & drop, filtros, hero header)
 - [x] Catálogos (5 sub-tabs: Tipos Trabalho, Materiais, Cores, Templates, Status)
+- [x] Odontograma V7 — 32 dentes com SVG anatómicos reais (FDI ISO 3950)
+- [x] Materiais por fase — UI + CRUD `phase_materials`
+- [x] Médicos associados N:N — UI multi-select + `patient_doctors`
 
 ### Módulos Auxiliares
 - [x] Módulo Clínicas (ficha, contactos, pontos de entrega, descontos)
@@ -43,10 +46,8 @@
 
 ## 🔴 Alta Prioridade (Próximas versões)
 
-### Completar MVP Pacientes (~4%)
-- [ ] Permissões granulares — médico vê só seus pacientes, staff clínica só da sua clínica
-- [ ] Médicos associados N:N — tabela `patient_doctors` existe, falta UI
-- [ ] Materiais por fase — tabela `phase_materials` existe, falta UI
+### Completar MVP Pacientes (~1%)
+- [x] Permissões granulares — `has_patient_access()` com 3 regras: admin/lab vê tudo, staff clínica vê da clínica, médico vê seus pacientes
 - [ ] Responsividade mobile/tablet completa
 
 ### Infraestrutura NAS (0%) → [PACIENTES_NAS.md](../modulos/PACIENTES_NAS.md)

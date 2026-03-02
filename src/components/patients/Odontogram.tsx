@@ -269,7 +269,8 @@ export function OdontogramModal({ open, onClose, teeth, workTypes, onChange, dis
                     <OdontogramContent teeth={teeth} workTypes={workTypes} onChange={onChange} disabled={disabled} />
                 </div>
                 <div className="px-5 py-3 border-t border-white/[0.05] flex items-center justify-between">
-                    <span className="text-[9px] text-muted-foreground/30">Click · Ctrl+Click · Shift+Click</span>
+                    <span className="text-[9px] text-muted-foreground/30 hidden sm:inline">Click · Ctrl+Click · Shift+Click</span>
+                    <span className="text-[9px] text-muted-foreground/30 sm:hidden">Toque para seleccionar</span>
                     <button onClick={onClose} className="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition-colors">Guardar e Fechar</button>
                 </div>
             </div>

@@ -360,7 +360,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                 <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-6">
                     {/* Avatar com iniciais + WhatsApp badge */}
                     <div className="relative flex-shrink-0" ref={whatsappRef}>
-                        <div className="h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28 rounded-full bg-transparent ring-[3px] ring-primary/50 flex items-center justify-center shadow-xl shadow-primary/10">
+                        <div className="h-14 w-14 sm:h-24 sm:w-24 md:h-28 md:w-28 rounded-full bg-transparent ring-[3px] ring-primary/50 flex items-center justify-center shadow-xl shadow-primary/10">
                             <span className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">
                                 {getInitials(patient.nome)}
                             </span>

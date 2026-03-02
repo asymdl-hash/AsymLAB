@@ -1,7 +1,7 @@
 # 📚 AsymLAB — Índice Central de Documentação
 
 > **Ponto de entrada único** para toda a documentação do projecto.
-> Última actualização: 01/03/2026 · Versão: V1.68.0
+> Última actualização: 02/03/2026 · Versão: V1.70.1
 
 ---
 
@@ -12,7 +12,7 @@
 | 🏗️ Infra & Auth | ✅ Produção | 100% | [DEPLOY](ops/DEPLOY.md) |
 | 🏥 Clínicas | ✅ Produção | 100% | — |
 | 👨‍⚕️ Médicos | ✅ Produção | 100% | — |
-| 🦷 Pacientes | 🔄 Em desenvolvimento | ~96% | [PACIENTES](modulos/PACIENTES.md) |
+| 🦷 Pacientes | 🔄 Em desenvolvimento | ~99% | [PACIENTES](modulos/PACIENTES.md) |
 | 📦 Fila de Pedidos | ✅ Produção | 100% | — |
 | 📂 NAS / Storage | 📐 Em design | ~30% | [PACIENTES_NAS](modulos/PACIENTES_NAS.md) |
 | 💬 Chat Interno | 📐 Em design | ~10% | [DECISOES](core/DECISOES.md#3-chat-interno) |
@@ -89,10 +89,10 @@
 
 | Documento | Última Actualização | Autor |
 |-----------|:-------------------:|-------|
-| INDEX.md | 01/03/2026 | Antigravity |
+| INDEX.md | 02/03/2026 | Antigravity |
 | DECISOES.md | 01/03/2026 | Antigravity |
 | PACIENTES_NAS.md | 01/03/2026 | Antigravity |
-| ROADMAP.md | 27/02/2026 | Antigravity |
+| ROADMAP.md | 02/03/2026 | Antigravity |
 | PACIENTES.md | 27/02/2026 | Antigravity |
 | QA_TEST_LOG.md | 21/02/2026 | Antigravity |
 | CHANGELOG.md | 27/02/2026 | Antigravity |
