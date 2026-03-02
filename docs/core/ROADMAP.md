@@ -46,9 +46,9 @@
 
 ## 🔴 Alta Prioridade (Próximas versões)
 
-### Completar MVP Pacientes (~1%)
+### Completar MVP Pacientes ✅ (100%)
 - [x] Permissões granulares — `has_patient_access()` com 3 regras: admin/lab vê tudo, staff clínica vê da clínica, médico vê seus pacientes
-- [ ] Responsividade mobile/tablet completa
+- [x] Responsividade mobile/tablet — instrução touch, avatar, botões full-width, título break-words
 
 ### Infraestrutura NAS (0%) → [PACIENTES_NAS.md](../modulos/PACIENTES_NAS.md)
 - [ ] Criação automática de subpastas ao criar paciente/plano/fase/agendamento

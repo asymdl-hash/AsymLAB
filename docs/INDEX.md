@@ -12,7 +12,7 @@
 | 🏗️ Infra & Auth | ✅ Produção | 100% | [DEPLOY](ops/DEPLOY.md) |
 | 🏥 Clínicas | ✅ Produção | 100% | — |
 | 👨‍⚕️ Médicos | ✅ Produção | 100% | — |
-| 🦷 Pacientes | 🔄 Em desenvolvimento | ~99% | [PACIENTES](modulos/PACIENTES.md) |
+| 🦷 Pacientes | ✅ Produção | 100% | [PACIENTES](modulos/PACIENTES.md) |
 | 📦 Fila de Pedidos | ✅ Produção | 100% | — |
 | 📂 NAS / Storage | 📐 Em design | ~30% | [PACIENTES_NAS](modulos/PACIENTES_NAS.md) |
 | 💬 Chat Interno | 📐 Em design | ~10% | [DECISOES](core/DECISOES.md#3-chat-interno) |
