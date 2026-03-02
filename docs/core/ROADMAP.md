@@ -67,9 +67,12 @@
 
 ### Widgets (~50%) → [DECISOES.md](DECISOES.md#6-widgets)
 - [x] Widget Fresagem — selecção material, 3 estados, check NAS (V1.74.0)
-- [x] Widget Dentes — odontograma toggle, múltiplos registos, versionamento (V1.75.0)
+- [x] Widget Dentes — odontograma assign materiais, múltiplos registos, versionamento (V1.75.0-V1.76.0)
+- [x] Catálogo materiais unificado — flags `widget_dentes`, `widget_fresagem`, `widget_componentes` (V1.76.0)
+- [ ] Widget Dentes: botões acção por registo — 📂 abrir pasta, 📱 WhatsApp / 📧 Email (conforme config clínica)
 - [ ] Widget Componentes — registar componentes
 - [ ] Banner avisos no topo da ficha do paciente
+- [ ] Config clínica: `canal_comunicacao` (whatsapp | email) para controlar botões partilha
 
 ### Chat Interno (0%) → [DECISOES.md](DECISOES.md#3-chat-interno)
 - [ ] Mensagens + anexos com thumbnails

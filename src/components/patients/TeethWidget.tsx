@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp, FolderOpen } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
 import { OdontogramContent } from './Odontogram';
 
@@ -33,9 +33,18 @@ interface Material {
     activo?: boolean;
 }
 
+interface NasHierarchy {
+    t_id: string;
+    plan_order: number;
+    phase_order: number;
+    phase_name: string;
+    appt_order: number;
+}
+
 export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProps) {
     const [records, setRecords] = useState<TeethRecord[]>([]);
     const [materials, setMaterials] = useState<Material[]>([]);
+    const [hierarchy, setHierarchy] = useState<NasHierarchy | null>(null);
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -49,12 +58,14 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
     // Carregar dados
     const loadData = useCallback(async () => {
         try {
-            const [recs, mats] = await Promise.all([
+            const [recs, mats, hier] = await Promise.all([
                 patientsService.getTeethRecords(appointmentId),
                 patientsService.getMillingMaterials('widget_dentes'),
+                patientsService.getAppointmentHierarchy(appointmentId),
             ]);
             setRecords(recs);
             setMaterials(mats);
+            setHierarchy(hier);
         } catch (err) {
             console.error('[TeethWidget] Erro ao carregar:', err);
         } finally {
@@ -88,6 +99,28 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
         setEditingId(null);
         setEditTeeth([]);
         setEditNotes('');
+    };
+
+    // Abrir pasta Dentes no Explorer
+    const handleOpenFolder = async () => {
+        if (!hierarchy) return;
+        try {
+            await fetch('/api/patient-folder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'open_subfolder',
+                    t_id: hierarchy.t_id,
+                    plan_order: hierarchy.plan_order,
+                    phase_order: hierarchy.phase_order,
+                    phase_name: hierarchy.phase_name,
+                    appt_order: hierarchy.appt_order,
+                    subfolder: 'Dentes',
+                }),
+            });
+        } catch (err) {
+            console.error('[TeethWidget] Erro ao abrir pasta:', err);
+        }
     };
 
     // Guardar (criar ou actualizar)
@@ -182,13 +215,23 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                     </span>
                                     <span className="text-[10px] text-muted-foreground">V{rec.version_number}</span>
                                 </div>
-                                <button
-                                    onClick={() => handleStartEdit(rec)}
-                                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
-                                    title="Editar registo"
-                                >
-                                    <Edit2 className="w-3 h-3" />
-                                </button>
+                                <div className="flex items-center gap-0.5">
+                                    <button
+                                        onClick={handleOpenFolder}
+                                        disabled={!hierarchy}
+                                        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all disabled:opacity-50"
+                                        title="Abrir pasta Dentes"
+                                    >
+                                        <FolderOpen className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleStartEdit(rec)}
+                                        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                                        title="Editar registo"
+                                    >
+                                        <Edit2 className="w-3 h-3" />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
