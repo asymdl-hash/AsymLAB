@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
-import { catalogService } from '@/services/catalogService';
 import { OdontogramContent } from './Odontogram';
 
 interface TeethWidgetProps {
@@ -26,16 +25,17 @@ interface ToothEntry {
     work_type_id: string | null;
 }
 
-interface WorkType {
+interface Material {
     id: string;
     nome: string;
     cor: string | null;
+    categoria: string | null;
     activo?: boolean;
 }
 
 export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProps) {
     const [records, setRecords] = useState<TeethRecord[]>([]);
-    const [workTypes, setWorkTypes] = useState<WorkType[]>([]);
+    const [materials, setMaterials] = useState<Material[]>([]);
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -49,12 +49,12 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
     // Carregar dados
     const loadData = useCallback(async () => {
         try {
-            const [recs, wts] = await Promise.all([
+            const [recs, mats] = await Promise.all([
                 patientsService.getTeethRecords(appointmentId),
-                catalogService.getWorkTypes(),
+                patientsService.getMillingMaterials('widget_dentes'),
             ]);
             setRecords(recs);
-            setWorkTypes(wts.filter((w: WorkType) => w.activo !== false));
+            setMaterials(mats);
         } catch (err) {
             console.error('[TeethWidget] Erro ao carregar:', err);
         } finally {
@@ -136,8 +136,8 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
         <div className="mt-3">
             {/* Header compacto */}
             <div className={`p-2.5 rounded-lg border ${records.length > 0
-                    ? 'bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30'
-                    : 'bg-muted/50 border-border'
+                ? 'bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30'
+                : 'bg-muted/50 border-border'
                 }`}>
                 <div className="flex items-center justify-between">
                     <button
@@ -223,15 +223,16 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
 
                     {/* Contagem e instrução */}
                     <p className="text-[10px] text-muted-foreground mb-2">
-                        {editTeeth.length} dentes atribuídos · 1) Seleccione dentes · 2) Escolha tipo de trabalho no painel
+                        {editTeeth.length} dentes atribuídos · 1) Seleccione dentes · 2) Escolha material no painel
                     </p>
 
                     {/* Odontograma selector */}
                     <OdontogramContent
                         teeth={editTeeth}
-                        workTypes={workTypes}
+                        workTypes={materials.map(m => ({ id: m.id, nome: m.nome, cor: m.cor }))}
                         onChange={setEditTeeth}
                         disabled={false}
+                        assignLabel="Materiais"
                     />
 
                     {/* Notas */}

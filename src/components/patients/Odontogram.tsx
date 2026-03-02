@@ -14,7 +14,7 @@ import { TOOTH_CENTERS } from './tooth_centers';
 
 interface WorkType { id: string; nome: string; cor: string | null; activo?: boolean; }
 interface ToothData { tooth_number: number; work_type_id: string | null; }
-interface OdontogramProps { teeth: ToothData[]; workTypes: WorkType[]; onChange: (teeth: ToothData[]) => void; disabled?: boolean; selectionMode?: 'assign' | 'toggle'; }
+interface OdontogramProps { teeth: ToothData[]; workTypes: WorkType[]; onChange: (teeth: ToothData[]) => void; disabled?: boolean; selectionMode?: 'assign' | 'toggle'; assignLabel?: string; }
 interface OdontogramModalProps extends OdontogramProps { open: boolean; onClose: () => void; }
 
 // Ordem das arcadas
@@ -26,7 +26,7 @@ const ALL_TEETH = [...UPPER, ...LOWER];
 // Odontogram Content — SVG com paths pré-posicionados
 // ═══════════════════════════════════════════════════════════
 
-export function OdontogramContent({ teeth, workTypes, onChange, disabled = false, selectionMode = 'assign' }: OdontogramProps) {
+export function OdontogramContent({ teeth, workTypes, onChange, disabled = false, selectionMode = 'assign', assignLabel = 'Tipos de Trabalho' }: OdontogramProps) {
     const [selected, setSelected] = useState<Set<number>>(new Set());
     const [showAssign, setShowAssign] = useState(true);
     const lastRef = useRef<number | null>(null);
@@ -227,7 +227,7 @@ export function OdontogramContent({ teeth, workTypes, onChange, disabled = false
                         <p className="text-xs text-blue-300/80 mb-3 font-mono">
                             {Array.from(selected).sort((a, b) => a - b).map(n => `#${n}`).join('  ')}
                         </p>
-                        <p className="text-[9px] text-muted-foreground/50 uppercase tracking-wider font-semibold mb-1.5">Tipos de Trabalho</p>
+                        <p className="text-[9px] text-muted-foreground/50 uppercase tracking-wider font-semibold mb-1.5">{assignLabel}</p>
                         <div className="flex flex-col gap-1">
                             {workTypes.filter(wt => wt.activo !== false).map(wt => (
                                 <button key={wt.id} onClick={() => assign(wt.id)}

@@ -233,12 +233,16 @@ export const patientsService = {
     // Widget Fresagem — CRUD milling_records + materiais
     // ═══════════════════════════════════════════════════════════
 
-    async getMillingMaterials() {
-        const { data, error } = await supabase
+    async getMillingMaterials(widgetFilter?: 'widget_dentes' | 'widget_fresagem' | 'widget_componentes') {
+        let query = supabase
             .from('milling_materials')
             .select('*')
             .eq('activo', true)
             .order('ordem');
+        if (widgetFilter) {
+            query = query.eq(widgetFilter, true);
+        }
+        const { data, error } = await query;
         if (error) throw error;
         return data || [];
     },

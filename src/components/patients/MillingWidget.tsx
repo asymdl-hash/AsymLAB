@@ -56,7 +56,7 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
         try {
             const [rec, mats, hier] = await Promise.all([
                 patientsService.getMillingRecord(appointmentId),
-                patientsService.getMillingMaterials(),
+                patientsService.getMillingMaterials('widget_fresagem'),
                 patientsService.getAppointmentHierarchy(appointmentId),
             ]);
             setRecord(rec);
