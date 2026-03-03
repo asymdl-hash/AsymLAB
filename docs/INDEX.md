@@ -44,6 +44,7 @@
 | Documento | Descrição | Linhas |
 |-----------|-----------|:------:|
 | [CHANGELOG.md](ops/CHANGELOG.md) | Histórico de versões e commits | ~200 |
+| [CONTEXT_RESTART.md](ops/CONTEXT_RESTART.md) | **[KEY]** Contexto das últimas 24h para reinícios do PC | ~30 |
 | [QA_TEST_LOG.md](ops/QA_TEST_LOG.md) | Registo de testes QA (110 testes, 97 PASS) | ~589 |
 | [DEPLOY.md](ops/DEPLOY.md) | Guia de deploy Vercel | ~80 |
 | [SETUP_NOVO_PC.md](ops/SETUP_NOVO_PC.md) | Configuração de novo PC de desenvolvimento | ~500 |
