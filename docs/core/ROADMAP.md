@@ -1,7 +1,7 @@
 # 🚀 Roadmap & Features Futuras — AsymLAB
 
 > Funcionalidades planeadas para versões futuras. Ordenadas por prioridade.
-> Última actualização: 03/03/2026 (V1.86.0)
+> Última actualização: 03/03/2026 (V1.87.0)
 > Ver decisões detalhadas: [DECISOES.md](DECISOES.md)
 
 ---
@@ -82,14 +82,14 @@
 - [x] Catálogo tipos trabalho: colunas `requires_teeth_record`, `requires_component_record`, `requires_color_scale`
 - [x] Fases: `descricao` + `tipo_fase` (normal/remake)
 
-### Widgets (~50%) → [DECISOES.md](DECISOES.md#6-widgets)
+### Widgets (~80%) → [DECISOES.md](DECISOES.md#6-widgets)
 - [x] Widget Fresagem — selecção material, 3 estados, check NAS (V1.74.0)
 - [x] Widget Dentes — odontograma assign materiais, múltiplos registos, versionamento (V1.75.0-V1.76.0)
 - [x] Catálogo materiais unificado — flags `widget_dentes`, `widget_fresagem`, `widget_componentes` (V1.76.0)
-- [ ] Widget Dentes: botões acção por registo — 📂 abrir pasta, 📱 WhatsApp / 📧 Email (conforme config clínica)
+- [x] Widget Dentes/Componentes: botões acção por registo — 📋 Copiar, 📂 Pasta, 📱 WhatsApp — V1.84.0/V1.87.0
 - [x] Widget Componentes — material/qtd/refs/fornecedor, odontograma, pasta, versionamento (V1.77.0)
 - [x] Banner avisos no topo da ficha do paciente — V1.83.0
-- [ ] Config clínica: `canal_comunicacao` (whatsapp | email) para controlar botões partilha
+- [ ] Config clínica: `canal_comunicacao` (email) para controlar botões partilha — futuro
 
 ### Chat Interno (0%) → [DECISOES.md](DECISOES.md#3-chat-interno)
 - [ ] Mensagens + anexos com thumbnails
