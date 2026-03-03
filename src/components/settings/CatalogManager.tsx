@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { catalogService } from '@/services/catalogService';
 import { considerationsService } from '@/services/considerationsService';
-import { settingsService, QueueWaitThresholds } from '@/services/settingsService';
+import { settingsService, QueueWaitThresholds, BADGE_COLOR_OPTIONS, getBadgeClasses } from '@/services/settingsService';
 
 // ===== SUB-TAB CONFIG =====
 type CatalogTab = 'work_types' | 'materials' | 'tooth_colors' | 'templates' | 'statuses' | 'suppliers' | 'brands' | 'production_phases' | 'general';
@@ -2053,6 +2053,39 @@ function GeneralSettingsManager() {
                     </div>
                 </div>
 
+                {/* Selectores de cor */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    {/* Cor aviso */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">Cor do aviso (nível 1)</label>
+                        <div className="flex flex-wrap gap-1.5">
+                            {BADGE_COLOR_OPTIONS.map(c => (
+                                <button
+                                    key={c.id}
+                                    onClick={() => setThresholds({ ...thresholds, warn_color: c.id })}
+                                    className={`w-7 h-7 rounded-lg ${c.dot} border-2 transition-all ${(thresholds.warn_color || 'amber') === c.id ? 'border-white scale-110 ring-2 ring-white/30' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                    title={c.label}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Cor perigo */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">Cor de perigo (nível 2)</label>
+                        <div className="flex flex-wrap gap-1.5">
+                            {BADGE_COLOR_OPTIONS.map(c => (
+                                <button
+                                    key={c.id}
+                                    onClick={() => setThresholds({ ...thresholds, danger_color: c.id })}
+                                    className={`w-7 h-7 rounded-lg ${c.dot} border-2 transition-all ${(thresholds.danger_color || 'red') === c.id ? 'border-white scale-110 ring-2 ring-white/30' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                    title={c.label}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
                 {/* Validação */}
                 {thresholds.amber_days >= thresholds.red_days && (
                     <div className="mt-3 flex items-center gap-2 text-xs text-red-400">
@@ -2061,18 +2094,17 @@ function GeneralSettingsManager() {
                     </div>
                 )}
 
-                {/* Preview */}
                 <div className="mt-4 p-3 bg-card rounded-lg border border-border">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 font-medium">Pré-visualização</p>
                     <div className="flex items-center gap-3 flex-wrap">
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border font-medium">
                             &lt;{thresholds.amber_days}d → Cinza
                         </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-medium">
-                            {thresholds.amber_days}d – {thresholds.red_days}d → Âmbar
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${getBadgeClasses(thresholds.warn_color || 'amber')}`}>
+                            {thresholds.amber_days}d – {thresholds.red_days}d → {BADGE_COLOR_OPTIONS.find(c => c.id === (thresholds.warn_color || 'amber'))?.label || 'Aviso'}
                         </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 font-medium">
-                            &gt;{thresholds.red_days}d → Vermelho
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${getBadgeClasses(thresholds.danger_color || 'red')}`}>
+                            &gt;{thresholds.red_days}d → {BADGE_COLOR_OPTIONS.find(c => c.id === (thresholds.danger_color || 'red'))?.label || 'Perigo'}
                         </span>
                     </div>
                 </div>

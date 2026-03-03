@@ -1,7 +1,7 @@
 'use client';
 
 import { QueueItem } from '@/services/queueService';
-import { QueueWaitThresholds } from '@/services/settingsService';
+import { QueueWaitThresholds, getBadgeClasses } from '@/services/settingsService';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, Clock, GripVertical, Pause, Play, CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -35,9 +35,9 @@ export default function QueueCard({ item, onAction, thresholds }: QueueCardProps
     const daysWaiting = Math.floor((Date.now() - new Date(item.updated_at).getTime()) / 86_400_000);
     const t = thresholds || { amber_days: 1, red_days: 3 };
     const waitColor = daysWaiting >= t.red_days
-        ? 'text-red-400 bg-red-500/15 border-red-500/30'
+        ? getBadgeClasses(t.danger_color || 'red')
         : daysWaiting >= t.amber_days
-            ? 'text-amber-400 bg-amber-500/15 border-amber-500/30'
+            ? getBadgeClasses(t.warn_color || 'amber')
             : 'text-gray-500 bg-muted border-border';
 
     const handleClick = (e: React.MouseEvent) => {

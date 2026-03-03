@@ -7,6 +7,28 @@ import { supabase } from '@/lib/supabase';
 export interface QueueWaitThresholds {
     amber_days: number;
     red_days: number;
+    warn_color?: string;   // cor do nível intermédio (default: 'amber')
+    danger_color?: string; // cor do nível crítico (default: 'red')
+}
+
+// Paleta de cores disponíveis para badges
+export const BADGE_COLOR_OPTIONS = [
+    { id: 'amber', label: 'Âmbar', bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30', dot: 'bg-amber-500' },
+    { id: 'orange', label: 'Laranja', bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/30', dot: 'bg-orange-500' },
+    { id: 'red', label: 'Vermelho', bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30', dot: 'bg-red-500' },
+    { id: 'rose', label: 'Rosa', bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-rose-500/30', dot: 'bg-rose-500' },
+    { id: 'yellow', label: 'Amarelo', bg: 'bg-yellow-500/15', text: 'text-yellow-400', border: 'border-yellow-500/30', dot: 'bg-yellow-500' },
+    { id: 'blue', label: 'Azul', bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30', dot: 'bg-blue-500' },
+    { id: 'purple', label: 'Púrpura', bg: 'bg-purple-500/15', text: 'text-purple-400', border: 'border-purple-500/30', dot: 'bg-purple-500' },
+    { id: 'emerald', label: 'Esmeralda', bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30', dot: 'bg-emerald-500' },
+] as const;
+
+export type BadgeColorId = typeof BADGE_COLOR_OPTIONS[number]['id'];
+
+export function getBadgeClasses(colorId: string): string {
+    const color = BADGE_COLOR_OPTIONS.find(c => c.id === colorId);
+    if (!color) return 'text-gray-500 bg-muted border-border';
+    return `${color.text} ${color.bg} ${color.border}`;
 }
 
 // Cache em memória (evita queries repetidas na mesma sessão)
