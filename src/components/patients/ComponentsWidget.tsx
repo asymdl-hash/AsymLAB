@@ -272,44 +272,41 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
                                     >
                                         <Copy className="w-3 h-3" />
                                     </button>
-                                    {(hierarchy?.whatsapp_group_id || hierarchy?.whatsapp_group_url) && (
-                                        <button
-                                            onClick={async () => {
-                                                const teeth = rec.teeth_data?.length > 0 ? ` · Dentes: ${rec.teeth_data.map((t: ToothEntry) => t.tooth_number).sort((a: number, b: number) => a - b).join(', ')}` : '';
-                                                const msg = `📦 *AsymLAB* — ${hierarchy.t_id} ${hierarchy.patient_name}\n${rec.material_name || '—'} ×${rec.quantidade}${teeth}${rec.notas ? `\nNotas: ${rec.notas}` : ''}`;
-
-                                                if (hierarchy.whatsapp_group_id) {
-                                                    setSendingWa(rec.id);
-                                                    setWaSent(null);
-                                                    try {
-                                                        const res = await fetch('/api/whatsapp/send', {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ groupId: hierarchy.whatsapp_group_id, message: msg }),
-                                                        });
-                                                        if (res.ok) {
-                                                            setWaSent(rec.id);
-                                                            setTimeout(() => setWaSent(null), 3000);
-                                                        } else {
-                                                            console.error('[WhatsApp] Erro ao enviar');
-                                                        }
-                                                    } catch (err) {
-                                                        console.error('[WhatsApp] Erro:', err);
-                                                    } finally {
-                                                        setSendingWa(null);
-                                                    }
+                                    <button
+                                        onClick={async () => {
+                                            if (!hierarchy?.whatsapp_group_id) {
+                                                alert('⚠️ Este paciente não tem grupo WhatsApp criado. Crie o grupo na ficha do paciente.');
+                                                return;
+                                            }
+                                            const teeth = rec.teeth_data?.length > 0 ? ` · Dentes: ${rec.teeth_data.map((t: ToothEntry) => t.tooth_number).sort((a: number, b: number) => a - b).join(', ')}` : '';
+                                            const msg = `📦 *AsymLAB* — ${hierarchy.t_id} ${hierarchy.patient_name}\n${rec.material_name || '—'} ×${rec.quantidade}${teeth}${rec.notas ? `\nNotas: ${rec.notas}` : ''}`;
+                                            setSendingWa(rec.id);
+                                            setWaSent(null);
+                                            try {
+                                                const res = await fetch('/api/whatsapp/send', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ groupId: hierarchy.whatsapp_group_id, message: msg }),
+                                                });
+                                                if (res.ok) {
+                                                    setWaSent(rec.id);
+                                                    setTimeout(() => setWaSent(null), 3000);
                                                 } else {
-                                                    window.open(`${hierarchy.whatsapp_group_url}`, '_blank');
-                                                    navigator.clipboard.writeText(msg);
+                                                    alert('❌ Erro ao enviar mensagem WhatsApp.');
                                                 }
-                                            }}
-                                            disabled={sendingWa === rec.id}
-                                            className={`p-1 rounded transition-all ${waSent === rec.id ? 'text-green-400 bg-green-500/20' : sendingWa === rec.id ? 'text-yellow-400 animate-pulse' : 'hover:bg-green-500/20 text-green-500 hover:text-green-400'}`}
-                                            title={hierarchy.whatsapp_group_id ? 'Enviar via WhatsApp' : 'Abrir grupo WhatsApp (texto copiado)'}
-                                        >
-                                            {waSent === rec.id ? <Check className="w-3 h-3" /> : sendingWa === rec.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <MessageCircle className="w-3 h-3" />}
-                                        </button>
-                                    )}
+                                            } catch (err) {
+                                                console.error('[WhatsApp] Erro:', err);
+                                                alert('❌ Erro de ligação ao enviar mensagem.');
+                                            } finally {
+                                                setSendingWa(null);
+                                            }
+                                        }}
+                                        disabled={sendingWa === rec.id}
+                                        className={`p-1 rounded transition-all ${waSent === rec.id ? 'text-green-400 bg-green-500/20' : sendingWa === rec.id ? 'text-yellow-400 animate-pulse' : 'hover:bg-green-500/20 text-green-500 hover:text-green-400'}`}
+                                        title="Enviar via WhatsApp"
+                                    >
+                                        {waSent === rec.id ? <Check className="w-3 h-3" /> : sendingWa === rec.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <MessageCircle className="w-3 h-3" />}
+                                    </button>
                                     <button
                                         onClick={handleOpenFolder}
                                         disabled={!hierarchy}
