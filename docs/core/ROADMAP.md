@@ -130,10 +130,14 @@
 
 ## 🟢 Baixa Prioridade / Fases Futuras
 
-### Fase 2 — Comunicação WhatsApp (0%)
-- [ ] Integração Z-API / Evolution API
-- [ ] Grupos por clínica automatizados
-- [ ] @comandos (solicitações, aprovações, fotos)
+### Fase 2 — WhatsApp Z-API (~5%)
+> ⚠️ Rever implementação anterior (Lab Software) — problemas com ficheiros grandes e @comandos com muitos anexos
+- [x] Botões 📱 WhatsApp nos widgets (open group URL + copy) — V1.87.0
+- [ ] Integração Z-API — envio directo de mensagens ao grupo do paciente
+- [ ] Auto-resolver Group ID a partir do link de convite (`/group-invite-metadata`)
+- [ ] Criação automática de grupo WA ao criar paciente novo (se não existir)
+- [ ] Fluxo `@criarpaciente` — perguntar sobre grupo WA ao aceitar pedido
+- [ ] @comandos (solicitações, aprovações, fotos) — rever limitações de ficheiros
 - [ ] Templates de mensagens
 - [ ] Fila anti-spam (FIFO com limites)
 - [ ] Alertas de estado (ASAP, agendamento)
