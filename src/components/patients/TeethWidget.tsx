@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp, FolderOpen } from 'lucide-react';
+import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp, FolderOpen, Copy } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
 import { OdontogramContent } from './Odontogram';
 
@@ -216,6 +216,17 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                     <span className="text-[10px] text-muted-foreground">V{rec.version_number}</span>
                                 </div>
                                 <div className="flex items-center gap-0.5">
+                                    <button
+                                        onClick={() => {
+                                            const teeth = rec.teeth_data?.map((t: ToothEntry) => t.tooth_number).sort((a: number, b: number) => a - b).join(', ');
+                                            const text = `🦷 Registo Dentes #${idx + 1} (V${rec.version_number})\nDentes: ${teeth}${rec.notas ? `\nNotas: ${rec.notas}` : ''}`;
+                                            navigator.clipboard.writeText(text);
+                                        }}
+                                        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                                        title="Copiar resumo"
+                                    >
+                                        <Copy className="w-3 h-3" />
+                                    </button>
                                     <button
                                         onClick={handleOpenFolder}
                                         disabled={!hierarchy}

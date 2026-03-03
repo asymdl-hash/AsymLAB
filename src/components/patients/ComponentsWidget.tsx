@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp, FolderOpen, Package } from 'lucide-react';
+import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp, FolderOpen, Package, Copy } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
 import { OdontogramContent } from './Odontogram';
 
@@ -202,8 +202,8 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
         <div className="mt-3">
             {/* Header compacto */}
             <div className={`p-2.5 rounded-lg border ${records.length > 0
-                    ? 'bg-purple-100 dark:bg-purple-500/10 border-purple-300 dark:border-purple-500/30'
-                    : 'bg-muted/50 border-border'
+                ? 'bg-purple-100 dark:bg-purple-500/10 border-purple-300 dark:border-purple-500/30'
+                : 'bg-muted/50 border-border'
                 }`}>
                 <div className="flex items-center justify-between">
                     <button
@@ -255,6 +255,18 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
                                     <span className="text-[10px] text-muted-foreground">V{rec.version_number}</span>
                                 </div>
                                 <div className="flex items-center gap-0.5">
+                                    <button
+                                        onClick={() => {
+                                            const teeth = rec.teeth_data?.length > 0 ? `\nDentes: ${rec.teeth_data.map((t: ToothEntry) => t.tooth_number).sort((a: number, b: number) => a - b).join(', ')}` : '';
+                                            const refs = [rec.ref_fabricante && `Ref.Fab: ${rec.ref_fabricante}`, rec.ref_fornecedor && `Ref.Forn: ${rec.ref_fornecedor}`, rec.fornecedor && `Fornecedor: ${rec.fornecedor}`].filter(Boolean).join(' · ');
+                                            const text = `📦 Componente: ${rec.material_name || '—'} ×${rec.quantidade}${refs ? `\n${refs}` : ''}${teeth}${rec.notas ? `\nNotas: ${rec.notas}` : ''}`;
+                                            navigator.clipboard.writeText(text);
+                                        }}
+                                        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                                        title="Copiar resumo"
+                                    >
+                                        <Copy className="w-3 h-3" />
+                                    </button>
                                     <button
                                         onClick={handleOpenFolder}
                                         disabled={!hierarchy}
