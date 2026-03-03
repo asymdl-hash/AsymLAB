@@ -4,6 +4,16 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## V1.79.0 - 2026-03-03
+- Novos catálogos: Fornecedores (12 seed), Marcas (36 seed), Fases de Produção (17 seed)
+- Tabelas `suppliers`, `brands`, `production_phases` criadas com RLS
+- `milling_materials` expandida: marca, fornecedor, preço PVP, IVA, fator conversão, porção, desconto, reunião, notas, audit fields
+- Tabela `material_price_history` para auditoria de alterações de preço
+- Tab Fornecedores: cards ricos c/ NIF, website, telefone, morada
+- Tab Marcas: grid simples com CRUD inline
+- Tab Fases de Produção: lista ordenada com badges de cor
+- Service layer CRUD completo para todos os novos catálogos
+
 ## V1.77.0 - 2026-03-02
 - Widget Componentes: formulário com material, quantidade, ref. fabricante/fornecedor, fornecedor
 - Odontograma integrado para associar dentes a componentes

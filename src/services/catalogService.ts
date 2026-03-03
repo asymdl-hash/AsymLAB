@@ -200,4 +200,137 @@ export const catalogService = {
         if (error) throw error;
         return data;
     },
+
+    // ─── SUPPLIERS (Fornecedores) ─────────────────────────────
+
+    async getSuppliers() {
+        const { data, error } = await supabase
+            .from('suppliers')
+            .select('*')
+            .order('nome', { ascending: true });
+        if (error) throw error;
+        return data || [];
+    },
+
+    async createSupplier(item: {
+        nome: string; razao_social?: string; nif?: string; website?: string;
+        iban?: string; telefone?: string; morada?: string; codigo_postal?: string;
+        localidade?: string; google_maps_url?: string; contactos?: any[];
+        cor?: string;
+    }) {
+        const { data, error } = await supabase
+            .from('suppliers')
+            .insert({ ...item, activo: true })
+            .select('*')
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async updateSupplier(id: string, updates: Partial<{
+        nome: string; razao_social: string; nif: string; website: string;
+        iban: string; telefone: string; morada: string; codigo_postal: string;
+        localidade: string; google_maps_url: string; contactos: any[];
+        cor: string; activo: boolean;
+    }>) {
+        const { data, error } = await supabase
+            .from('suppliers')
+            .update({ ...updates, updated_at: new Date().toISOString() })
+            .eq('id', id)
+            .select('*')
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async deleteSupplier(id: string) {
+        const { error } = await supabase.from('suppliers').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    // ─── BRANDS (Marcas) ──────────────────────────────────────
+
+    async getBrands() {
+        const { data, error } = await supabase
+            .from('brands')
+            .select('*')
+            .order('nome', { ascending: true });
+        if (error) throw error;
+        return data || [];
+    },
+
+    async createBrand(nome: string) {
+        const { data, error } = await supabase
+            .from('brands')
+            .insert({ nome, activo: true })
+            .select('*')
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async updateBrand(id: string, updates: Partial<{ nome: string; activo: boolean }>) {
+        const { data, error } = await supabase
+            .from('brands')
+            .update(updates)
+            .eq('id', id)
+            .select('*')
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async deleteBrand(id: string) {
+        const { error } = await supabase.from('brands').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    // ─── PRODUCTION PHASES (Fases de Produção) ────────────────
+
+    async getProductionPhases() {
+        const { data, error } = await supabase
+            .from('production_phases')
+            .select('*')
+            .order('ordem', { ascending: true });
+        if (error) throw error;
+        return data || [];
+    },
+
+    async createProductionPhase(item: { nome: string; cor?: string }) {
+        const { data: maxOrdem } = await supabase
+            .from('production_phases')
+            .select('ordem')
+            .order('ordem', { ascending: false })
+            .limit(1)
+            .single();
+
+        const { data, error } = await supabase
+            .from('production_phases')
+            .insert({
+                nome: item.nome,
+                cor: item.cor || '#6366f1',
+                ordem: (maxOrdem?.ordem || 0) + 1,
+                activo: true,
+            })
+            .select('*')
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async updateProductionPhase(id: string, updates: Partial<{ nome: string; cor: string; ordem: number; activo: boolean }>) {
+        const { data, error } = await supabase
+            .from('production_phases')
+            .update(updates)
+            .eq('id', id)
+            .select('*')
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async deleteProductionPhase(id: string) {
+        const { error } = await supabase.from('production_phases').delete().eq('id', id);
+        if (error) throw error;
+    },
 };

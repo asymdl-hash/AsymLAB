@@ -18,12 +18,19 @@ import {
     ToggleLeft,
     ToggleRight,
     AlertCircle,
+    Building2,
+    Tag,
+    Factory,
+    Globe,
+    Phone,
+    MapPin,
+    ExternalLink,
 } from 'lucide-react';
 import { catalogService } from '@/services/catalogService';
 import { considerationsService } from '@/services/considerationsService';
 
 // ===== SUB-TAB CONFIG =====
-type CatalogTab = 'work_types' | 'materials' | 'tooth_colors' | 'templates' | 'statuses';
+type CatalogTab = 'work_types' | 'materials' | 'tooth_colors' | 'templates' | 'statuses' | 'suppliers' | 'brands' | 'production_phases';
 
 const CATALOG_TABS: { id: CatalogTab; label: string; icon: React.ElementType; description: string }[] = [
     { id: 'work_types', label: 'Tipos de Trabalho', icon: Briefcase, description: 'Prótese fixa, removível, implantes, etc.' },
@@ -31,6 +38,9 @@ const CATALOG_TABS: { id: CatalogTab; label: string; icon: React.ElementType; de
     { id: 'tooth_colors', label: 'Cores de Dentes', icon: Palette, description: 'Escala VITA, cores personalizadas' },
     { id: 'templates', label: 'Templates Considerações', icon: FileText, description: 'Templates predefinidos para considerações' },
     { id: 'statuses', label: 'Status Trabalhos', icon: Activity, description: 'Os 33 estados do fluxo de trabalho' },
+    { id: 'suppliers', label: 'Fornecedores', icon: Building2, description: 'Gestão de fornecedores com contactos, NIF e morada' },
+    { id: 'brands', label: 'Marcas', icon: Tag, description: 'Catálogo de marcas dentárias' },
+    { id: 'production_phases', label: 'Fases de Produção', icon: Factory, description: 'Fases do processo produtivo laboratorial' },
 ];
 
 // ===== MAIN COMPONENT =====
@@ -71,6 +81,9 @@ export default function CatalogManager() {
             {activeTab === 'tooth_colors' && <ToothColorsManager />}
             {activeTab === 'templates' && <TemplatesManager />}
             {activeTab === 'statuses' && <StatusesManager />}
+            {activeTab === 'suppliers' && <SuppliersManager />}
+            {activeTab === 'brands' && <BrandsManager />}
+            {activeTab === 'production_phases' && <ProductionPhasesManager />}
         </div>
     );
 }
@@ -1055,6 +1068,388 @@ function StatusesManager() {
                     ))}
                 </div>
             )}
+        </div>
+    );
+}
+
+// =====================================================
+// SUPPLIERS MANAGER (Fornecedores — cards ricos)
+// =====================================================
+function SuppliersManager() {
+    const [items, setItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showAdd, setShowAdd] = useState(false);
+    const [addForm, setAddForm] = useState({ nome: '', razao_social: '', nif: '', website: '', iban: '', telefone: '', morada: '', localidade: '', cor: '#3b82f6' });
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editForm, setEditForm] = useState<any>({});
+    const [saving, setSaving] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const load = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await catalogService.getSuppliers();
+            setItems(data);
+        } catch (e) { console.error(e); }
+        finally { setLoading(false); }
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
+
+    const handleAdd = async () => {
+        if (!addForm.nome.trim()) return;
+        try {
+            setSaving(true);
+            await catalogService.createSupplier(addForm);
+            setAddForm({ nome: '', razao_social: '', nif: '', website: '', iban: '', telefone: '', morada: '', localidade: '', cor: '#3b82f6' });
+            setShowAdd(false);
+            load();
+        } catch (e) { console.error(e); } finally { setSaving(false); }
+    };
+
+    const handleSave = async () => {
+        if (!editingId) return;
+        try {
+            setSaving(true);
+            await catalogService.updateSupplier(editingId, editForm);
+            setEditingId(null);
+            load();
+        } catch (e) { console.error(e); } finally { setSaving(false); }
+    };
+
+    const filtered = items.filter(s =>
+        s.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (s.razao_social || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (loading) return <div className="flex items-center gap-2 text-muted-foreground py-8"><Loader2 className="h-4 w-4 animate-spin" /> A carregar fornecedores...</div>;
+
+    return (
+        <div className="space-y-4">
+            {/* Toolbar */}
+            <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        placeholder="Filtrar por nome..."
+                        className="w-full pl-9 pr-3 py-2 text-sm bg-muted border border-border rounded-lg focus:ring-2 focus:ring-primary/30"
+                    />
+                </div>
+                <button onClick={() => setShowAdd(!showAdd)} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
+                    <Plus className="h-4 w-4" /> Adicionar
+                </button>
+            </div>
+
+            {/* Add Form */}
+            {showAdd && (
+                <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input value={addForm.nome} onChange={e => setAddForm({ ...addForm, nome: e.target.value })} placeholder="Nome *" className="px-3 py-2 text-sm bg-muted border border-border rounded-lg" />
+                        <input value={addForm.razao_social} onChange={e => setAddForm({ ...addForm, razao_social: e.target.value })} placeholder="Razão Social" className="px-3 py-2 text-sm bg-muted border border-border rounded-lg" />
+                        <input value={addForm.nif} onChange={e => setAddForm({ ...addForm, nif: e.target.value })} placeholder="NIF" className="px-3 py-2 text-sm bg-muted border border-border rounded-lg" />
+                        <input value={addForm.website} onChange={e => setAddForm({ ...addForm, website: e.target.value })} placeholder="Website" className="px-3 py-2 text-sm bg-muted border border-border rounded-lg" />
+                        <input value={addForm.telefone} onChange={e => setAddForm({ ...addForm, telefone: e.target.value })} placeholder="Telefone" className="px-3 py-2 text-sm bg-muted border border-border rounded-lg" />
+                        <input value={addForm.iban} onChange={e => setAddForm({ ...addForm, iban: e.target.value })} placeholder="IBAN" className="px-3 py-2 text-sm bg-muted border border-border rounded-lg" />
+                        <input value={addForm.morada} onChange={e => setAddForm({ ...addForm, morada: e.target.value })} placeholder="Morada" className="px-3 py-2 text-sm bg-muted border border-border rounded-lg" />
+                        <input value={addForm.localidade} onChange={e => setAddForm({ ...addForm, localidade: e.target.value })} placeholder="Localidade" className="px-3 py-2 text-sm bg-muted border border-border rounded-lg" />
+                    </div>
+                    <div className="flex gap-2">
+                        <button onClick={handleAdd} disabled={saving} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
+                            {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Guardar
+                        </button>
+                        <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs bg-muted text-muted-foreground rounded-lg hover:bg-muted/80">Cancelar</button>
+                    </div>
+                </div>
+            )}
+
+            {/* Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filtered.map(item => (
+                    <div key={item.id} className="bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-colors">
+                        {editingId === item.id ? (
+                            <div className="space-y-3">
+                                <input value={editForm.nome || ''} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} placeholder="Nome" className="w-full px-3 py-2 text-sm bg-muted border border-border rounded-lg font-medium" />
+                                <input value={editForm.razao_social || ''} onChange={e => setEditForm({ ...editForm, razao_social: e.target.value })} placeholder="Razão Social" className="w-full px-3 py-1.5 text-xs bg-muted border border-border rounded-lg" />
+                                <input value={editForm.nif || ''} onChange={e => setEditForm({ ...editForm, nif: e.target.value })} placeholder="NIF" className="w-full px-3 py-1.5 text-xs bg-muted border border-border rounded-lg" />
+                                <input value={editForm.website || ''} onChange={e => setEditForm({ ...editForm, website: e.target.value })} placeholder="Website" className="w-full px-3 py-1.5 text-xs bg-muted border border-border rounded-lg" />
+                                <input value={editForm.telefone || ''} onChange={e => setEditForm({ ...editForm, telefone: e.target.value })} placeholder="Telefone" className="w-full px-3 py-1.5 text-xs bg-muted border border-border rounded-lg" />
+                                <input value={editForm.iban || ''} onChange={e => setEditForm({ ...editForm, iban: e.target.value })} placeholder="IBAN" className="w-full px-3 py-1.5 text-xs bg-muted border border-border rounded-lg" />
+                                <input value={editForm.morada || ''} onChange={e => setEditForm({ ...editForm, morada: e.target.value })} placeholder="Morada" className="w-full px-3 py-1.5 text-xs bg-muted border border-border rounded-lg" />
+                                <input value={editForm.localidade || ''} onChange={e => setEditForm({ ...editForm, localidade: e.target.value })} placeholder="Localidade" className="w-full px-3 py-1.5 text-xs bg-muted border border-border rounded-lg" />
+                                <div className="flex gap-2">
+                                    <button onClick={handleSave} disabled={saving} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-lg">
+                                        {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Guardar
+                                    </button>
+                                    <button onClick={() => setEditingId(null)} className="px-3 py-1.5 text-xs bg-muted text-muted-foreground rounded-lg">Cancelar</button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex items-start justify-between mb-2">
+                                    <h3 className="font-semibold text-card-foreground">{item.nome}</h3>
+                                    <div className="flex gap-1">
+                                        <button onClick={() => { setEditingId(item.id); setEditForm(item); }} className="p-1.5 text-muted-foreground hover:text-primary rounded-lg hover:bg-muted">
+                                            <Edit3 className="h-3.5 w-3.5" />
+                                        </button>
+                                        {deleteConfirm === item.id ? (
+                                            <div className="flex gap-1">
+                                                <button onClick={async () => { await catalogService.deleteSupplier(item.id); setDeleteConfirm(null); load(); }} className="p-1.5 bg-destructive/20 text-destructive rounded text-xs">Sim</button>
+                                                <button onClick={() => setDeleteConfirm(null)} className="p-1.5 bg-muted text-muted-foreground rounded text-xs">Não</button>
+                                            </div>
+                                        ) : (
+                                            <button onClick={() => setDeleteConfirm(item.id)} className="p-1.5 text-muted-foreground hover:text-destructive rounded-lg hover:bg-muted">
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                                {item.razao_social && <p className="text-xs text-muted-foreground mb-2">{item.razao_social}</p>}
+                                <div className="space-y-1.5 text-xs text-muted-foreground">
+                                    {item.nif && <div className="flex items-center gap-2"><span className="font-medium text-card-foreground/70">NIF:</span> {item.nif}</div>}
+                                    {item.website && (
+                                        <div className="flex items-center gap-2">
+                                            <Globe className="h-3 w-3 text-primary" />
+                                            <a href={item.website.startsWith('http') ? item.website : `https://${item.website}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate">
+                                                {item.website}
+                                            </a>
+                                            <ExternalLink className="h-2.5 w-2.5 text-primary/50" />
+                                        </div>
+                                    )}
+                                    {item.telefone && (
+                                        <div className="flex items-center gap-2"><Phone className="h-3 w-3" /> {item.telefone}</div>
+                                    )}
+                                    {item.morada && (
+                                        <div className="flex items-center gap-2"><MapPin className="h-3 w-3" /> {item.morada}{item.localidade ? `, ${item.localidade}` : ''}</div>
+                                    )}
+                                    {item.iban && <div className="flex items-center gap-2"><span className="font-medium text-card-foreground/70">IBAN:</span> {item.iban.substring(0, 12)}...</div>}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            {filtered.length === 0 && !showAdd && (
+                <div className="text-center py-8 text-muted-foreground text-sm">Nenhum fornecedor encontrado</div>
+            )}
+        </div>
+    );
+}
+
+// =====================================================
+// BRANDS MANAGER (Marcas — lista simples)
+// =====================================================
+function BrandsManager() {
+    const [items, setItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [newBrand, setNewBrand] = useState('');
+    const [saving, setSaving] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editName, setEditName] = useState('');
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const load = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await catalogService.getBrands();
+            setItems(data);
+        } catch (e) { console.error(e); }
+        finally { setLoading(false); }
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
+
+    const handleAdd = async () => {
+        if (!newBrand.trim()) return;
+        try {
+            setSaving(true);
+            await catalogService.createBrand(newBrand.trim());
+            setNewBrand('');
+            load();
+        } catch (e) { console.error(e); } finally { setSaving(false); }
+    };
+
+    const handleSave = async () => {
+        if (!editingId || !editName.trim()) return;
+        try {
+            setSaving(true);
+            await catalogService.updateBrand(editingId, { nome: editName.trim() });
+            setEditingId(null);
+            load();
+        } catch (e) { console.error(e); } finally { setSaving(false); }
+    };
+
+    const filtered = items.filter(b => b.nome.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    if (loading) return <div className="flex items-center gap-2 text-muted-foreground py-8"><Loader2 className="h-4 w-4 animate-spin" /> A carregar marcas...</div>;
+
+    return (
+        <div className="space-y-4">
+            {/* Add + Search */}
+            <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        placeholder="Filtrar marcas..."
+                        className="w-full pl-9 pr-3 py-2 text-sm bg-muted border border-border rounded-lg focus:ring-2 focus:ring-primary/30"
+                    />
+                </div>
+                <input
+                    value={newBrand}
+                    onChange={e => setNewBrand(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleAdd()}
+                    placeholder="+ Nova marca"
+                    className="px-3 py-2 text-sm bg-muted border border-border rounded-lg w-48"
+                />
+                <button onClick={handleAdd} disabled={saving || !newBrand.trim()} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50">
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Adicionar
+                </button>
+            </div>
+
+            {/* Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
+                {filtered.map(item => (
+                    <div key={item.id} className="flex items-center justify-between px-3 py-2.5 bg-card border border-border rounded-lg hover:border-primary/30 transition-colors group">
+                        {editingId === item.id ? (
+                            <div className="flex items-center gap-2 w-full">
+                                <input value={editName} onChange={e => setEditName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSave()} className="flex-1 px-2 py-1 text-sm bg-muted border border-border rounded" autoFocus />
+                                <button onClick={handleSave} className="p-1 text-primary"><Save className="h-3.5 w-3.5" /></button>
+                                <button onClick={() => setEditingId(null)} className="p-1 text-muted-foreground"><X className="h-3.5 w-3.5" /></button>
+                            </div>
+                        ) : (
+                            <>
+                                <span className="text-sm text-card-foreground font-medium truncate">{item.nome}</span>
+                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => { setEditingId(item.id); setEditName(item.nome); }} className="p-1 text-muted-foreground hover:text-primary"><Edit3 className="h-3 w-3" /></button>
+                                    {deleteConfirm === item.id ? (
+                                        <div className="flex gap-1">
+                                            <button onClick={async () => { await catalogService.deleteBrand(item.id); setDeleteConfirm(null); load(); }} className="p-1 text-destructive text-xs">✓</button>
+                                            <button onClick={() => setDeleteConfirm(null)} className="p-1 text-muted-foreground text-xs">✗</button>
+                                        </div>
+                                    ) : (
+                                        <button onClick={() => setDeleteConfirm(item.id)} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            <p className="text-xs text-muted-foreground">{filtered.length} marcas</p>
+        </div>
+    );
+}
+
+// =====================================================
+// PRODUCTION PHASES MANAGER (Fases de Produção)
+// =====================================================
+function ProductionPhasesManager() {
+    const [items, setItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showAdd, setShowAdd] = useState(false);
+    const [addForm, setAddForm] = useState({ nome: '', cor: '#6366f1' });
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editForm, setEditForm] = useState({ nome: '', cor: '' });
+    const [saving, setSaving] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+    const load = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await catalogService.getProductionPhases();
+            setItems(data);
+        } catch (e) { console.error(e); }
+        finally { setLoading(false); }
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
+
+    const handleAdd = async () => {
+        if (!addForm.nome.trim()) return;
+        try {
+            setSaving(true);
+            await catalogService.createProductionPhase(addForm);
+            setAddForm({ nome: '', cor: '#6366f1' });
+            setShowAdd(false);
+            load();
+        } catch (e) { console.error(e); } finally { setSaving(false); }
+    };
+
+    const handleSave = async () => {
+        if (!editingId) return;
+        try {
+            setSaving(true);
+            await catalogService.updateProductionPhase(editingId, editForm);
+            setEditingId(null);
+            load();
+        } catch (e) { console.error(e); } finally { setSaving(false); }
+    };
+
+    if (loading) return <div className="flex items-center gap-2 text-muted-foreground py-8"><Loader2 className="h-4 w-4 animate-spin" /> A carregar fases...</div>;
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center gap-3">
+                <button onClick={() => setShowAdd(!showAdd)} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
+                    <Plus className="h-4 w-4" /> Nova Fase
+                </button>
+                <span className="text-xs text-muted-foreground">{items.length} fases de produção</span>
+            </div>
+
+            {showAdd && (
+                <div className="flex items-center gap-3 bg-card border border-border rounded-xl p-3">
+                    <input value={addForm.nome} onChange={e => setAddForm({ ...addForm, nome: e.target.value })} placeholder="Nome da fase" className="flex-1 px-3 py-2 text-sm bg-muted border border-border rounded-lg" />
+                    <input type="color" value={addForm.cor} onChange={e => setAddForm({ ...addForm, cor: e.target.value })} className="w-10 h-10 rounded-lg border border-border cursor-pointer" />
+                    <button onClick={handleAdd} disabled={saving} className="flex items-center gap-1 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-lg">
+                        {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Guardar
+                    </button>
+                    <button onClick={() => setShowAdd(false)} className="px-3 py-2 text-sm bg-muted text-muted-foreground rounded-lg">Cancelar</button>
+                </div>
+            )}
+
+            <div className="space-y-1.5">
+                {items.map((item, idx) => (
+                    <div key={item.id} className="flex items-center gap-3 px-4 py-2.5 bg-card border border-border rounded-lg hover:border-primary/30 transition-colors group">
+                        <span className="text-xs text-muted-foreground font-mono w-6">#{idx + 1}</span>
+                        <div className="w-4 h-4 rounded-full border border-border/50 flex-shrink-0" style={{ backgroundColor: item.cor }} />
+
+                        {editingId === item.id ? (
+                            <div className="flex items-center gap-2 flex-1">
+                                <input value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="flex-1 px-2 py-1 text-sm bg-muted border border-border rounded" autoFocus />
+                                <input type="color" value={editForm.cor} onChange={e => setEditForm({ ...editForm, cor: e.target.value })} className="w-8 h-8 rounded cursor-pointer" />
+                                <button onClick={handleSave} disabled={saving} className="p-1.5 text-primary"><Save className="h-3.5 w-3.5" /></button>
+                                <button onClick={() => setEditingId(null)} className="p-1.5 text-muted-foreground"><X className="h-3.5 w-3.5" /></button>
+                            </div>
+                        ) : (
+                            <>
+                                <span className="text-sm text-card-foreground font-medium flex-1">{item.nome}</span>
+                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => { setEditingId(item.id); setEditForm({ nome: item.nome, cor: item.cor || '#6366f1' }); }} className="p-1.5 text-muted-foreground hover:text-primary">
+                                        <Edit3 className="h-3.5 w-3.5" />
+                                    </button>
+                                    {deleteConfirm === item.id ? (
+                                        <div className="flex gap-1">
+                                            <button onClick={async () => { await catalogService.deleteProductionPhase(item.id); setDeleteConfirm(null); load(); }} className="p-1.5 text-destructive text-xs font-bold">Sim</button>
+                                            <button onClick={() => setDeleteConfirm(null)} className="p-1.5 text-muted-foreground text-xs">Não</button>
+                                        </div>
+                                    ) : (
+                                        <button onClick={() => setDeleteConfirm(item.id)} className="p-1.5 text-muted-foreground hover:text-destructive">
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </button>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }
