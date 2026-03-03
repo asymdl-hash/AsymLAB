@@ -42,6 +42,7 @@ import ConsiderationsTab from '@/components/patients/ConsiderationsTab';
 import FilesTab from '@/components/patients/FilesTab';
 import DocumentsTab from '@/components/patients/DocumentsTab';
 import HistoryTab from '@/components/patients/HistoryTab';
+import PatientAlerts from '@/components/patients/PatientAlerts';
 import PatientPrintSheet from '@/components/patients/PatientPrintSheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -736,7 +737,10 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         )}
                     </div>
                 </div>
-            </div >
+            </div>
+
+            {/* === BANNER DE AVISOS === */}
+            <PatientAlerts patient={patient} />
 
             {/* Timeline Horizontal */}
             <PlanTimeline
