@@ -27,6 +27,7 @@ import {
     Phone,
     MessageCircle,
     Printer,
+    Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -115,6 +116,10 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const [clinicTeam, setClinicTeam] = useState<{ user_id: string; full_name: string; phone: string | null; role: string | null }[]>([]);
     const [showWhatsApp, setShowWhatsApp] = useState(false);
     const [whatsappUrl, setWhatsappUrl] = useState(initialData.whatsapp_group_url || '');
+    const [whatsappGroupId, setWhatsappGroupId] = useState(initialData.whatsapp_group_id || '');
+    const [waMode, setWaMode] = useState<'menu' | 'paste' | 'creating'>('menu');
+    const [waLoading, setWaLoading] = useState(false);
+    const [waError, setWaError] = useState('');
     const doctorMultiRef = useRef<HTMLDivElement>(null);
     const teamRef = useRef<HTMLDivElement>(null);
     const whatsappRef = useRef<HTMLDivElement>(null);
@@ -368,53 +373,166 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         </div>
                         {/* WhatsApp badge */}
                         <button
-                            onClick={() => setShowWhatsApp(!showWhatsApp)}
+                            onClick={() => { setShowWhatsApp(!showWhatsApp); setWaMode('menu'); setWaError(''); }}
                             className={cn(
                                 "absolute -bottom-1 -right-1 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center shadow-lg border-2 border-[#1a2332] transition-colors cursor-pointer",
-                                patient.whatsapp_group_url
+                                whatsappGroupId
                                     ? "bg-green-500 hover:bg-green-400 text-white"
                                     : "bg-gray-600 hover:bg-gray-500 text-gray-300"
                             )}
-                            title={patient.whatsapp_group_url ? 'Grupo WhatsApp associado' : 'Adicionar grupo WhatsApp'}
+                            title={whatsappGroupId ? 'Grupo WhatsApp configurado ✓' : 'Configurar grupo WhatsApp'}
                         >
                             <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                         {/* WhatsApp popup */}
                         {showWhatsApp && createPortal(
-                            <div ref={el => { whatsappPopupRef.current = el; if (el && whatsappRef.current) { const r = whatsappRef.current.getBoundingClientRect(); el.style.top = `${r.bottom + 8}px`; el.style.left = `${Math.max(8, r.left - 80)}px`; } }} className="fixed bg-white rounded-xl shadow-2xl z-[9999] p-4 w-[320px] border border-gray-200">
+                            <div ref={el => { whatsappPopupRef.current = el; if (el && whatsappRef.current) { const r = whatsappRef.current.getBoundingClientRect(); el.style.top = `${r.bottom + 8}px`; el.style.left = `${Math.max(8, r.left - 80)}px`; } }} className="fixed bg-white rounded-xl shadow-2xl z-[9999] p-4 w-[340px] border border-gray-200">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <MessageCircle className={cn("h-4 w-4", patient.whatsapp_group_url ? "text-green-500" : "text-gray-400")} />
+                                    <MessageCircle className={cn("h-4 w-4", whatsappGroupId ? "text-green-500" : "text-gray-400")} />
                                     <span className="text-xs font-semibold text-gray-700">Grupo WhatsApp</span>
+                                    {whatsappGroupId && <span className="ml-auto text-[10px] text-green-600 font-medium">✓ Configurado</span>}
                                 </div>
-                                <input
-                                    type="url"
-                                    value={whatsappUrl}
-                                    onChange={(e) => setWhatsappUrl(e.target.value)}
-                                    placeholder="https://chat.whatsapp.com/..."
-                                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 text-gray-800 placeholder:text-gray-400"
-                                />
-                                <div className="flex items-center justify-between mt-3">
-                                    <span className={cn("text-[10px] font-medium", patient.whatsapp_group_url ? "text-green-600" : "text-gray-400")}>
-                                        {patient.whatsapp_group_url ? '✓ Grupo associado' : 'Sem grupo associado'}
-                                    </span>
-                                    <button
-                                        onClick={async () => {
-                                            const url = whatsappUrl || null;
-                                            setPatient(prev => ({ ...prev, whatsapp_group_url: url }));
-                                            setShowWhatsApp(false);
-                                            try {
-                                                await patientsService.updatePatient(patient.id, { whatsapp_group_url: url });
-                                                lock.setLoadedAt(new Date().toISOString());
-                                                setLastSaved(new Date());
-                                            } catch (err) {
-                                                console.error('Erro ao guardar WhatsApp URL:', err);
-                                            }
-                                        }}
-                                        className="text-xs px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium transition-colors"
-                                    >
-                                        Guardar
-                                    </button>
-                                </div>
+
+                                {/* JÁ TEM GRUPO CONFIGURADO */}
+                                {whatsappGroupId && waMode === 'menu' && (
+                                    <div className="space-y-2">
+                                        <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2 break-all">
+                                            <span className="font-medium text-gray-600">ID:</span> {whatsappGroupId}
+                                        </div>
+                                        {whatsappUrl && (
+                                            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-green-600 hover:text-green-700 underline block">Abrir grupo ↗</a>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* MENU: SEM GRUPO — 2 OPÇÕES */}
+                                {!whatsappGroupId && waMode === 'menu' && (
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-gray-500 mb-3">Este paciente não tem grupo WhatsApp.</p>
+                                        <button
+                                            onClick={() => setWaMode('paste')}
+                                            className="w-full text-left text-sm px-3 py-2.5 rounded-lg border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-colors text-gray-700"
+                                        >
+                                            📋 <span className="font-medium">Já tenho grupo</span>
+                                            <span className="block text-[10px] text-gray-400 mt-0.5">Colar link de convite existente</span>
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                setWaMode('creating');
+                                                setWaLoading(true);
+                                                setWaError('');
+                                                try {
+                                                    // Juntar telefones dos médicos associados
+                                                    const phones: string[] = [];
+                                                    for (const doc of associatedDoctors) {
+                                                        const dr = doctors.find(d => d.user_id === doc.doctor_id);
+                                                        if (dr) {
+                                                            const { data: profile } = await supabase.from('user_profiles').select('phone').eq('user_id', dr.user_id).single();
+                                                            if (profile?.phone) phones.push(profile.phone);
+                                                        }
+                                                    }
+
+                                                    const res = await fetch('/api/whatsapp/create-group', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({
+                                                            patientName: patient.nome,
+                                                            tId: patient.t_id,
+                                                            participantPhones: phones,
+                                                        }),
+                                                    });
+                                                    const data = await res.json();
+                                                    if (res.ok && data.groupId) {
+                                                        setWhatsappGroupId(data.groupId);
+                                                        setWhatsappUrl(data.groupLink || '');
+                                                        setPatient(prev => ({ ...prev, whatsapp_group_id: data.groupId, whatsapp_group_url: data.groupLink || null }));
+                                                        await patientsService.updatePatient(patient.id, { whatsapp_group_id: data.groupId, whatsapp_group_url: data.groupLink || null });
+                                                        lock.setLoadedAt(new Date().toISOString());
+                                                        setLastSaved(new Date());
+                                                        setWaMode('menu');
+                                                    } else {
+                                                        setWaError(data.error || 'Erro ao criar grupo');
+                                                        setWaMode('menu');
+                                                    }
+                                                } catch (err) {
+                                                    setWaError('Erro de ligação');
+                                                    setWaMode('menu');
+                                                } finally {
+                                                    setWaLoading(false);
+                                                }
+                                            }}
+                                            disabled={waLoading}
+                                            className="w-full text-left text-sm px-3 py-2.5 rounded-lg border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-colors text-gray-700"
+                                        >
+                                            ➕ <span className="font-medium">Criar grupo novo</span>
+                                            <span className="block text-[10px] text-gray-400 mt-0.5">Criação automática com médicos associados</span>
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* MODO: COLAR LINK */}
+                                {waMode === 'paste' && (
+                                    <div className="space-y-3">
+                                        <input
+                                            type="url"
+                                            value={whatsappUrl}
+                                            onChange={(e) => setWhatsappUrl(e.target.value)}
+                                            placeholder="https://chat.whatsapp.com/..."
+                                            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 text-gray-800 placeholder:text-gray-400"
+                                            autoFocus
+                                        />
+                                        <div className="flex gap-2">
+                                            <button onClick={() => { setWaMode('menu'); setWaError(''); }} className="text-xs px-3 py-1.5 text-gray-500 hover:text-gray-700">← Voltar</button>
+                                            <button
+                                                onClick={async () => {
+                                                    if (!whatsappUrl) return;
+                                                    setWaLoading(true);
+                                                    setWaError('');
+                                                    try {
+                                                        // 1. Resolver link → Group ID
+                                                        const resolveRes = await fetch('/api/whatsapp/resolve-group', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({ inviteUrl: whatsappUrl }),
+                                                        });
+                                                        const resolveData = await resolveRes.json();
+                                                        if (resolveRes.ok && resolveData.groupId) {
+                                                            setWhatsappGroupId(resolveData.groupId);
+                                                            setPatient(prev => ({ ...prev, whatsapp_group_id: resolveData.groupId, whatsapp_group_url: whatsappUrl }));
+                                                            await patientsService.updatePatient(patient.id, { whatsapp_group_id: resolveData.groupId, whatsapp_group_url: whatsappUrl });
+                                                            lock.setLoadedAt(new Date().toISOString());
+                                                            setLastSaved(new Date());
+                                                            setWaMode('menu');
+                                                        } else {
+                                                            setWaError(resolveData.error || 'Não foi possível resolver o link');
+                                                        }
+                                                    } catch (err) {
+                                                        setWaError('Erro de ligação');
+                                                    } finally {
+                                                        setWaLoading(false);
+                                                    }
+                                                }}
+                                                disabled={waLoading || !whatsappUrl}
+                                                className="flex-1 text-xs px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium transition-colors disabled:opacity-50"
+                                            >
+                                                {waLoading ? 'A resolver...' : 'Associar grupo'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* MODO: CRIANDO */}
+                                {waMode === 'creating' && (
+                                    <div className="text-center py-4">
+                                        <Loader2 className="h-6 w-6 animate-spin text-green-500 mx-auto mb-2" />
+                                        <p className="text-xs text-gray-500">A criar grupo WhatsApp...</p>
+                                    </div>
+                                )}
+
+                                {/* ERRO */}
+                                {waError && (
+                                    <p className="text-xs text-red-500 mt-2 bg-red-50 rounded-lg px-2 py-1">⚠️ {waError}</p>
+                                )}
                             </div>,
                             document.body
                         )}
