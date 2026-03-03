@@ -1,7 +1,7 @@
 # 🚀 Roadmap & Features Futuras — AsymLAB
 
 > Funcionalidades planeadas para versões futuras. Ordenadas por prioridade.
-> Última actualização: 03/03/2026 (V1.82.0)
+> Última actualização: 03/03/2026 (V1.86.0)
 > Ver decisões detalhadas: [DECISOES.md](DECISOES.md)
 
 ---
@@ -51,6 +51,14 @@
 - [x] Homepage configurável por utilizador
 - [x] Badge contagem sidebar com refresh 30s
 
+### Patient UX & Fila de Pedidos (V1.83–V1.86)
+- [x] Banner avisos no topo da ficha do paciente (PatientAlerts) — V1.83.0
+- [x] Botão 📋 Copiar Resumo nos Widgets (Dentes, Componentes) — V1.84.0
+- [x] Fila de Pedidos: auto-refresh 30s, médico no card, badge dias em espera, ordenação inteligente — V1.85.0
+- [x] Tabela `app_settings` + `settingsService` (configurações globais key-value) — V1.85.0
+- [x] Tab Definições Gerais no CatalogManager (thresholds configuráveis) — V1.85.0
+- [x] Cores configuráveis nos badges (paleta 8 cores, selectores visuais) — V1.86.0
+
 ---
 
 ## 🔴 Alta Prioridade (Próximas versões)
@@ -80,7 +88,7 @@
 - [x] Catálogo materiais unificado — flags `widget_dentes`, `widget_fresagem`, `widget_componentes` (V1.76.0)
 - [ ] Widget Dentes: botões acção por registo — 📂 abrir pasta, 📱 WhatsApp / 📧 Email (conforme config clínica)
 - [x] Widget Componentes — material/qtd/refs/fornecedor, odontograma, pasta, versionamento (V1.77.0)
-- [ ] Banner avisos no topo da ficha do paciente
+- [x] Banner avisos no topo da ficha do paciente — V1.83.0
 - [ ] Config clínica: `canal_comunicacao` (whatsapp | email) para controlar botões partilha
 
 ### Chat Interno (0%) → [DECISOES.md](DECISOES.md#3-chat-interno)

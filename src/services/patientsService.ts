@@ -295,7 +295,7 @@ export const patientsService = {
 
         const { data: phaseData } = await supabase
             .from('phases')
-            .select('nome, ordem, plan_id, treatment_plans!inner(id, patient_id, patients!inner(t_id))')
+            .select('nome, ordem, plan_id, treatment_plans!inner(id, patient_id, patients!inner(t_id, nome, whatsapp_group_url))')
             .eq('id', appt.phase_id)
             .single();
         if (!phaseData) return null;
@@ -324,6 +324,8 @@ export const patientsService = {
 
         return {
             t_id,
+            patient_name: planInfo?.patients?.nome || '',
+            whatsapp_group_url: planInfo?.patients?.whatsapp_group_url || null,
             plan_order: planOrder,
             phase_order: phaseData.ordem,
             phase_name: phaseData.nome,

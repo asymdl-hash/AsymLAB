@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp, FolderOpen, Package, Copy } from 'lucide-react';
+import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp, FolderOpen, Package, Copy, MessageCircle } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
 import { OdontogramContent } from './Odontogram';
 
@@ -40,6 +40,8 @@ interface Material {
 
 interface NasHierarchy {
     t_id: string;
+    patient_name: string;
+    whatsapp_group_url: string | null;
     plan_order: number;
     phase_order: number;
     phase_name: string;
@@ -267,6 +269,20 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
                                     >
                                         <Copy className="w-3 h-3" />
                                     </button>
+                                    {hierarchy?.whatsapp_group_url && (
+                                        <button
+                                            onClick={() => {
+                                                const teeth = rec.teeth_data?.length > 0 ? ` · Dentes: ${rec.teeth_data.map((t: ToothEntry) => t.tooth_number).sort((a: number, b: number) => a - b).join(', ')}` : '';
+                                                const msg = `📦 *AsymLAB* — ${hierarchy.t_id} ${hierarchy.patient_name}\n${rec.material_name || '—'} ×${rec.quantidade}${teeth}${rec.notas ? `\nNotas: ${rec.notas}` : ''}`;
+                                                window.open(`${hierarchy.whatsapp_group_url}`, '_blank');
+                                                navigator.clipboard.writeText(msg);
+                                            }}
+                                            className="p-1 rounded hover:bg-green-500/20 text-green-500 hover:text-green-400 transition-all"
+                                            title="Abrir grupo WhatsApp (texto copiado)"
+                                        >
+                                            <MessageCircle className="w-3 h-3" />
+                                        </button>
+                                    )}
                                     <button
                                         onClick={handleOpenFolder}
                                         disabled={!hierarchy}
