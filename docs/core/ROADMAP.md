@@ -1,7 +1,7 @@
 # 🚀 Roadmap & Features Futuras — AsymLAB
 
 > Funcionalidades planeadas para versões futuras. Ordenadas por prioridade.
-> Última actualização: 02/03/2026 (V1.74.0)
+> Última actualização: 03/03/2026 (V1.82.0)
 > Ver decisões detalhadas: [DECISOES.md](DECISOES.md)
 
 ---
@@ -16,7 +16,7 @@
 - [x] Sistema de backups (FULL/INCR/AUTO com Task Scheduler)
 - [x] Light/Dark mode toggle por utilizador
 
-### Módulo Pacientes (MVP ~96%)
+### Módulo Pacientes (MVP 100%)
 - [x] CRUD Pacientes com auto-save
 - [x] Anti-duplicação Levenshtein (3 estados: ok/warning/block)
 - [x] Status do paciente (rascunho/activo/inactivo/arquivado)
@@ -35,6 +35,15 @@
 - [x] Odontograma V7 — 32 dentes com SVG anatómicos reais (FDI ISO 3950)
 - [x] Materiais por fase — UI + CRUD `phase_materials`
 - [x] Médicos associados N:N — UI multi-select + `patient_doctors`
+
+### Catálogos Produção & Definições (V1.79–V1.82)
+- [x] Fornecedores — CRUD completo, cards ricos (NIF, website, telefone, morada), 12 seeds
+- [x] Marcas — Grid CRUD inline, 36 seeds
+- [x] Fases de Produção — Lista ordenada com badges de cor, 17 seeds
+- [x] Materiais expandidos — PVP, IVA, fator conversão, porção, desconto, refs fabricante/fornecedor, reunião
+- [x] Tabela de Preços Histórica — `material_price_history` para auditoria
+- [x] Custos de Produção — Tabela fases×materiais, 4 KPI Cards (Custo Material, MdO, Global, Margem)
+- [x] Auto-preenchimento material → custo/porção nos Tipos de Trabalho
 
 ### Módulos Auxiliares
 - [x] Módulo Clínicas (ficha, contactos, pontos de entrega, descontos)
