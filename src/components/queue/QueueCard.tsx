@@ -118,7 +118,7 @@ export default function QueueCard({ item, onAction, thresholds }: QueueCardProps
 
             {/* Médico */}
             {item.medico && (
-                <p className="text-[10px] text-muted-foreground truncate mb-2">Dr. {item.medico.full_name}</p>
+                <p className="text-[10px] text-muted-foreground truncate mb-2">{item.medico.full_name}</p>
             )}
 
             {/* Work Status Badges */}
