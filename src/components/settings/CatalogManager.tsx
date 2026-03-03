@@ -303,9 +303,11 @@ function MaterialsManager() {
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAdd, setShowAdd] = useState(false);
-    const [addForm, setAddForm] = useState({ nome: '', categoria: 'ceramica', cor: '#94a3b8' });
+    const [addForm, setAddForm] = useState({ nome: '', categoria: 'ceramica', cor: '#94a3b8', marca: '', fornecedor: '', preco_pvp: '', iva_percent: '23', porcao_tamanho: '1', porcao_unidade: 'un', notas: '' });
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [editForm, setEditForm] = useState({ nome: '', categoria: '', cor: '' });
+    const [editForm, setEditForm] = useState<any>({});
+    const [suppliers, setSuppliers] = useState<any[]>([]);
+    const [brands, setBrands] = useState<any[]>([]);
     const [saving, setSaving] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
     const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
@@ -318,14 +320,18 @@ function MaterialsManager() {
         try {
             setLoading(true);
             const supabase = await sb();
-            const [matsRes, catsRes] = await Promise.all([
+            const [matsRes, catsRes, suppRes, brandRes] = await Promise.all([
                 supabase.from('milling_materials').select('*').order('ordem', { ascending: true }),
                 supabase.from('material_categories').select('*').order('categoria', { ascending: true }),
+                supabase.from('suppliers').select('id,nome').eq('activo', true).order('nome'),
+                supabase.from('brands').select('id,nome').eq('activo', true).order('nome'),
             ]);
             if (matsRes.error) throw matsRes.error;
             if (catsRes.error) throw catsRes.error;
             setItems(matsRes.data || []);
             setCategories(catsRes.data || []);
+            setSuppliers(suppRes.data || []);
+            setBrands(brandRes.data || []);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
     }, []);
@@ -350,18 +356,24 @@ function MaterialsManager() {
             const { data: maxOrdem } = await supabase
                 .from('milling_materials').select('ordem').order('ordem', { ascending: false }).limit(1).single();
             const defaults = getCatDefaults(addForm.categoria);
-            const { error } = await supabase
-                .from('milling_materials')
-                .insert({
-                    nome: addForm.nome,
-                    categoria: addForm.categoria || 'ceramica',
-                    cor: addForm.cor || '#94a3b8',
-                    activo: true,
-                    ordem: (maxOrdem?.ordem || 0) + 1,
-                    ...defaults,
-                });
+            const insertData: any = {
+                nome: addForm.nome,
+                categoria: addForm.categoria || 'ceramica',
+                cor: addForm.cor || '#94a3b8',
+                activo: true,
+                ordem: (maxOrdem?.ordem || 0) + 1,
+                ...defaults,
+            };
+            if (addForm.marca) insertData.marca = addForm.marca;
+            if (addForm.fornecedor) insertData.fornecedor = addForm.fornecedor;
+            if (addForm.preco_pvp) insertData.preco_pvp = parseFloat(addForm.preco_pvp);
+            if (addForm.iva_percent) insertData.iva_percent = parseInt(addForm.iva_percent);
+            if (addForm.porcao_tamanho) insertData.porcao_tamanho = parseFloat(addForm.porcao_tamanho);
+            if (addForm.porcao_unidade) insertData.porcao_unidade = addForm.porcao_unidade;
+            if (addForm.notas) insertData.notas = addForm.notas;
+            const { error } = await supabase.from('milling_materials').insert(insertData);
             if (error) throw error;
-            setAddForm({ nome: '', categoria: 'ceramica', cor: '#94a3b8' });
+            setAddForm({ nome: '', categoria: 'ceramica', cor: '#94a3b8', marca: '', fornecedor: '', preco_pvp: '', iva_percent: '23', porcao_tamanho: '1', porcao_unidade: 'un', notas: '' });
             setShowAdd(false);
             load();
         } catch (e) { console.error(e); } finally { setSaving(false); }
@@ -480,16 +492,53 @@ function MaterialsManager() {
             )}
 
             {showAdd && (
-                <div className="p-4 bg-muted/50 border-b border-border flex items-center gap-3">
-                    <input type="text" value={addForm.nome} onChange={e => setAddForm({ ...addForm, nome: e.target.value })} placeholder="Nome do material..." className="flex-1 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2 focus:outline-none" autoFocus />
-                    <select value={addForm.categoria} onChange={e => setAddForm({ ...addForm, categoria: e.target.value })} className="text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2">
-                        {CATEGORIAS.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
-                    </select>
-                    <input type="color" value={addForm.cor} onChange={e => setAddForm({ ...addForm, cor: e.target.value })} className="w-10 h-10 rounded-lg border cursor-pointer" />
-                    <button onClick={handleAdd} disabled={saving} className="p-2 bg-green-500 text-card-foreground rounded-lg hover:bg-green-600 disabled:opacity-50">
-                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    </button>
-                    <button onClick={() => setShowAdd(false)} className="p-2 text-muted-foreground hover:text-card-foreground/80"><X className="h-4 w-4" /></button>
+                <div className="p-4 bg-muted/50 border-b border-border space-y-3">
+                    <div className="flex items-center gap-3">
+                        <input type="text" value={addForm.nome} onChange={e => setAddForm({ ...addForm, nome: e.target.value })} placeholder="Nome do material *" className="flex-1 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2 focus:outline-none" autoFocus />
+                        <select value={addForm.categoria} onChange={e => setAddForm({ ...addForm, categoria: e.target.value })} className="text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2">
+                            {CATEGORIAS.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+                        </select>
+                        <input type="color" value={addForm.cor} onChange={e => setAddForm({ ...addForm, cor: e.target.value })} className="w-10 h-10 rounded-lg border cursor-pointer" />
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <select value={addForm.marca} onChange={e => setAddForm({ ...addForm, marca: e.target.value })} className="text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2">
+                            <option value="">Marca...</option>
+                            {brands.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
+                        </select>
+                        <select value={addForm.fornecedor} onChange={e => setAddForm({ ...addForm, fornecedor: e.target.value })} className="text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2">
+                            <option value="">Fornecedor...</option>
+                            {suppliers.map(s => <option key={s.id} value={s.nome}>{s.nome}</option>)}
+                        </select>
+                        <div className="flex items-center gap-1">
+                            <input type="number" step="0.01" value={addForm.preco_pvp} onChange={e => setAddForm({ ...addForm, preco_pvp: e.target.value })} placeholder="Preço €" className="flex-1 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2 w-20" />
+                            <span className="text-xs text-muted-foreground">€</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <input type="number" value={addForm.iva_percent} onChange={e => setAddForm({ ...addForm, iva_percent: e.target.value })} className="w-16 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2" />
+                            <span className="text-xs text-muted-foreground">% IVA</span>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div className="flex items-center gap-1">
+                            <input type="number" step="0.01" value={addForm.porcao_tamanho} onChange={e => setAddForm({ ...addForm, porcao_tamanho: e.target.value })} className="w-20 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2" />
+                            <select value={addForm.porcao_unidade} onChange={e => setAddForm({ ...addForm, porcao_unidade: e.target.value })} className="text-sm border border-border rounded-lg bg-muted text-card-foreground px-2 py-2">
+                                <option value="un">un</option>
+                                <option value="ml">ml</option>
+                                <option value="g">g</option>
+                                <option value="kg">kg</option>
+                                <option value="L">L</option>
+                                <option value="mm">mm</option>
+                                <option value="disco">disco</option>
+                            </select>
+                        </div>
+                        <input type="text" value={addForm.notas} onChange={e => setAddForm({ ...addForm, notas: e.target.value })} placeholder="Notas..." className="col-span-2 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2" />
+                        <div className="flex justify-end gap-2">
+                            <button onClick={handleAdd} disabled={saving} className="flex items-center gap-1 px-4 py-2 bg-green-500 text-card-foreground rounded-lg hover:bg-green-600 disabled:opacity-50 text-sm">
+                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Guardar
+                            </button>
+                            <button onClick={() => setShowAdd(false)} className="p-2 text-muted-foreground hover:text-card-foreground/80"><X className="h-4 w-4" /></button>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -553,22 +602,84 @@ function MaterialsManager() {
                                                 <tr key={item.id} className="hover:bg-muted/30">
                                                     {editingId === item.id ? (
                                                         <>
-                                                            <td className="px-4 py-2.5 w-12"><input type="color" value={editForm.cor} onChange={e => setEditForm({ ...editForm, cor: e.target.value })} className="w-7 h-7 rounded border cursor-pointer" /></td>
-                                                            <td className="px-4 py-2.5"><input type="text" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="w-full text-sm border border-border rounded px-2 bg-muted text-card-foreground py-1" /></td>
-                                                            <td className="text-center px-2 py-2.5">—</td>
-                                                            <td className="text-center px-2 py-2.5">—</td>
-                                                            <td className="text-center px-2 py-2.5">—</td>
-                                                            <td className="px-4 py-2.5 text-right">
-                                                                <div className="flex justify-end gap-1">
-                                                                    <button onClick={handleSave} disabled={saving} className="p-1.5 bg-green-900/40 text-green-400 rounded"><Save className="h-3.5 w-3.5" /></button>
-                                                                    <button onClick={() => setEditingId(null)} className="p-1.5 bg-muted text-muted-foreground rounded"><X className="h-3.5 w-3.5" /></button>
+                                                            <td colSpan={7} className="px-4 py-3">
+                                                                <div className="bg-muted/50 border border-border rounded-xl p-4 space-y-3">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <input type="color" value={editForm.cor || '#94a3b8'} onChange={e => setEditForm({ ...editForm, cor: e.target.value })} className="w-8 h-8 rounded border cursor-pointer" />
+                                                                        <input type="text" value={editForm.nome || ''} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="flex-1 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2 font-medium" placeholder="Nome" />
+                                                                        <select value={editForm.categoria || ''} onChange={e => setEditForm({ ...editForm, categoria: e.target.value })} className="text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2">
+                                                                            {CATEGORIAS.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+                                                                        </select>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                                        <select value={editForm.marca || ''} onChange={e => setEditForm({ ...editForm, marca: e.target.value })} className="text-xs border border-border rounded-lg bg-muted text-card-foreground px-2 py-1.5">
+                                                                            <option value="">Marca...</option>
+                                                                            {brands.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
+                                                                        </select>
+                                                                        <select value={editForm.fornecedor || ''} onChange={e => setEditForm({ ...editForm, fornecedor: e.target.value })} className="text-xs border border-border rounded-lg bg-muted text-card-foreground px-2 py-1.5">
+                                                                            <option value="">Fornecedor...</option>
+                                                                            {suppliers.map(s => <option key={s.id} value={s.nome}>{s.nome}</option>)}
+                                                                        </select>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <input type="number" step="0.01" value={editForm.preco_pvp ?? ''} onChange={e => setEditForm({ ...editForm, preco_pvp: e.target.value ? parseFloat(e.target.value) : null })} placeholder="Preço" className="flex-1 text-xs border border-border rounded-lg bg-muted text-card-foreground px-2 py-1.5" />
+                                                                            <span className="text-[10px] text-muted-foreground">€</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <input type="number" value={editForm.iva_percent ?? 23} onChange={e => setEditForm({ ...editForm, iva_percent: parseInt(e.target.value) || 0 })} className="w-14 text-xs border border-border rounded-lg bg-muted text-card-foreground px-2 py-1.5" />
+                                                                            <span className="text-[10px] text-muted-foreground">% IVA</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                                        <div className="flex items-center gap-1">
+                                                                            <input type="number" step="0.01" value={editForm.porcao_tamanho ?? 1} onChange={e => setEditForm({ ...editForm, porcao_tamanho: parseFloat(e.target.value) || 1 })} className="w-16 text-xs border border-border rounded-lg bg-muted text-card-foreground px-2 py-1.5" />
+                                                                            <select value={editForm.porcao_unidade || 'un'} onChange={e => setEditForm({ ...editForm, porcao_unidade: e.target.value })} className="text-xs border border-border rounded-lg bg-muted text-card-foreground px-1 py-1.5">
+                                                                                <option value="un">un</option><option value="ml">ml</option><option value="g">g</option><option value="kg">kg</option><option value="L">L</option><option value="mm">mm</option><option value="disco">disco</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <input type="text" value={editForm.ref_fabricante || ''} onChange={e => setEditForm({ ...editForm, ref_fabricante: e.target.value })} placeholder="Ref. Fabricante" className="text-xs border border-border rounded-lg bg-muted text-card-foreground px-2 py-1.5" />
+                                                                        <input type="text" value={editForm.ref_fornecedor || ''} onChange={e => setEditForm({ ...editForm, ref_fornecedor: e.target.value })} placeholder="Ref. Fornecedor" className="text-xs border border-border rounded-lg bg-muted text-card-foreground px-2 py-1.5" />
+                                                                        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                                                                            <input type="checkbox" checked={editForm.reuniao || false} onChange={e => setEditForm({ ...editForm, reuniao: e.target.checked })} className="rounded" />
+                                                                            Reunião
+                                                                        </label>
+                                                                    </div>
+                                                                    <input type="text" value={editForm.notas || ''} onChange={e => setEditForm({ ...editForm, notas: e.target.value })} placeholder="Notas..." className="w-full text-xs border border-border rounded-lg bg-muted text-card-foreground px-3 py-1.5" />
+                                                                    {editForm.preco_pvp > 0 && (
+                                                                        <div className="flex items-center gap-4 text-[10px] text-muted-foreground bg-card rounded-lg px-3 py-2 border border-border">
+                                                                            <span>💰 PVP: <strong className="text-card-foreground">{Number(editForm.preco_pvp).toFixed(2)}€</strong></span>
+                                                                            <span>📊 IVA: <strong className="text-card-foreground">{(Number(editForm.preco_pvp) * (editForm.iva_percent || 23) / 100).toFixed(2)}€</strong></span>
+                                                                            <span>🧾 Total: <strong className="text-primary">{(Number(editForm.preco_pvp) * (1 + (editForm.iva_percent || 23) / 100)).toFixed(2)}€</strong></span>
+                                                                            {(editForm.porcao_tamanho || 1) > 1 && <span>📦 Custo/{editForm.porcao_unidade || 'un'}: <strong className="text-card-foreground">{(Number(editForm.preco_pvp) / (editForm.porcao_tamanho || 1)).toFixed(3)}€</strong></span>}
+                                                                        </div>
+                                                                    )}
+                                                                    <div className="flex justify-end gap-2 pt-1">
+                                                                        <button onClick={() => setEditingId(null)} className="px-3 py-1.5 text-xs bg-muted text-muted-foreground rounded-lg">Cancelar</button>
+                                                                        <button onClick={handleSave} disabled={saving} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                                                            {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Guardar
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
                                                             </td>
                                                         </>
                                                     ) : (
                                                         <>
                                                             <td className="px-4 py-2.5 w-12"><div className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: item.cor || '#94a3b8' }} /></td>
-                                                            <td className="px-4 py-2.5 font-medium text-card-foreground">{item.nome}</td>
+                                                            <td className="px-4 py-2.5">
+                                                                <div className="font-medium text-card-foreground">{item.nome}</div>
+                                                                {(item.marca || item.fornecedor) && (
+                                                                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                                                                        {item.marca && <span className="mr-2">🏷 {item.marca}</span>}
+                                                                        {item.fornecedor && <span>🏢 {item.fornecedor}</span>}
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-2 py-2.5 text-right text-xs">
+                                                                {item.preco_pvp > 0 ? (
+                                                                    <span className="text-card-foreground font-medium">{Number(item.preco_pvp).toFixed(2)}€</span>
+                                                                ) : (
+                                                                    <span className="text-muted-foreground/40">—</span>
+                                                                )}
+                                                            </td>
                                                             <td className="text-center px-2 py-2.5">
                                                                 <button onClick={() => toggleWidgetFlag(item.id, 'widget_dentes', item.widget_dentes)}
                                                                     className={`transition-colors ${item.widget_dentes !== dDefault ? 'ring-1 ring-amber-500/50 rounded' : ''}`}
@@ -592,7 +703,7 @@ function MaterialsManager() {
                                                             </td>
                                                             <td className="px-4 py-2.5 text-right">
                                                                 <div className="flex justify-end gap-1">
-                                                                    <button onClick={() => { setEditingId(item.id); setEditForm({ nome: item.nome, categoria: item.categoria || '', cor: item.cor || '#94a3b8' }); }} className="p-1.5 text-muted-foreground hover:text-blue-500 hover:bg-blue-900/30 rounded"><Edit3 className="h-3.5 w-3.5" /></button>
+                                                                    <button onClick={() => { setEditingId(item.id); setEditForm({ ...item }); }} className="p-1.5 text-muted-foreground hover:text-blue-500 hover:bg-blue-900/30 rounded"><Edit3 className="h-3.5 w-3.5" /></button>
                                                                     {deleteConfirm === item.id ? (
                                                                         <>
                                                                             <button onClick={async () => { const s = await sb(); await s.from('milling_materials').delete().eq('id', item.id); setDeleteConfirm(null); load(); }} className="p-1.5 bg-red-900/40 text-red-400 rounded text-xs">Sim</button>

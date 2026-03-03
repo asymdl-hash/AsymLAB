@@ -14,6 +14,13 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 - Tab Fases de Produção: lista ordenada com badges de cor
 - Service layer CRUD completo para todos os novos catálogos
 
+## V1.79.1 - 2026-03-03
+- MaterialsManager: formulário de adição expandido (marca, fornecedor, preço, IVA, porção, notas)
+- MaterialsManager: painel de edição expandido com todos os campos + cálculos dinâmicos (IVA, total, custo/porção)
+- Dropdowns Marca e Fornecedor populados dinamicamente a partir das tabelas `brands` e `suppliers`
+- Coluna preço visível inline na tabela de materiais
+- Meta-info (marca/fornecedor) visível abaixo do nome do material
+
 ## V1.77.0 - 2026-03-02
 - Widget Componentes: formulário com material, quantidade, ref. fabricante/fornecedor, fornecedor
 - Odontograma integrado para associar dentes a componentes
