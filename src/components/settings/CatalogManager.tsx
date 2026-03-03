@@ -25,6 +25,8 @@ import {
     Phone,
     MapPin,
     ExternalLink,
+    Clock,
+    Package,
 } from 'lucide-react';
 import { catalogService } from '@/services/catalogService';
 import { considerationsService } from '@/services/considerationsService';
@@ -84,27 +86,56 @@ export default function CatalogManager() {
             {activeTab === 'suppliers' && <SuppliersManager />}
             {activeTab === 'brands' && <BrandsManager />}
             {activeTab === 'production_phases' && <ProductionPhasesManager />}
+
         </div>
     );
 }
 
 // =====================================================
-// WORK TYPES MANAGER
+// WORK TYPES MANAGER (com Tabela Custos de Produção)
 // =====================================================
+const CUSTO_HORA_DEFAULT = 15; // €/h — será parametrizável nas Definições
+
+interface PhaseMaterial {
+    material_id: string;
+    tempo: number;
+    qtd_usada: number;
+    unidade_porcao: string;
+    custo_porcao: number;
+    custo_material: number;
+}
+interface PhaseEntry {
+    phase_id: string;
+    materials: PhaseMaterial[];
+}
+
 function WorkTypesManager() {
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [editForm, setEditForm] = useState({ nome: '', cor: '', categoria: '' });
     const [showAdd, setShowAdd] = useState(false);
     const [addForm, setAddForm] = useState({ nome: '', cor: '#6366f1', categoria: 'geral' });
     const [saving, setSaving] = useState(false);
     const [search, setSearch] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    // Modal ficha
+    const [selectedItem, setSelectedItem] = useState<any | null>(null);
+    const [fichaForm, setFichaForm] = useState<any>({});
+    // Dados auxiliares
+    const [allMaterials, setAllMaterials] = useState<any[]>([]);
+    const [allPhases, setAllPhases] = useState<any[]>([]);
 
     const load = useCallback(async () => {
-        try { setLoading(true); setItems(await catalogService.getWorkTypes()); }
-        catch (e) { console.error(e); }
+        try {
+            setLoading(true);
+            const [wt, mats, phases] = await Promise.all([
+                catalogService.getWorkTypes(),
+                catalogService.getMaterials(),
+                catalogService.getProductionPhases(),
+            ]);
+            setItems(wt);
+            setAllMaterials(mats);
+            setAllPhases(phases);
+        } catch (e) { console.error(e); }
         finally { setLoading(false); }
     }, []);
 
@@ -121,16 +152,6 @@ function WorkTypesManager() {
         } catch (e) { console.error(e); } finally { setSaving(false); }
     };
 
-    const handleSave = async () => {
-        if (!editingId || !editForm.nome.trim()) return;
-        try {
-            setSaving(true);
-            await catalogService.updateWorkType(editingId, editForm);
-            setEditingId(null);
-            load();
-        } catch (e) { console.error(e); } finally { setSaving(false); }
-    };
-
     const handleDelete = async (id: string) => {
         try { await catalogService.deleteWorkType(id); setDeleteConfirm(null); load(); }
         catch (e) { console.error(e); }
@@ -141,157 +162,510 @@ function WorkTypesManager() {
         load();
     };
 
-    const filtered = items.filter(i => i.nome.toLowerCase().includes(search.toLowerCase()));
+    const openFicha = (item: any) => {
+        setSelectedItem(item);
+        // Migrate old format: if fases_producao is string[] or empty, convert to PhaseEntry[]
+        let phases: PhaseEntry[] = [];
+        if (Array.isArray(item.fases_producao)) {
+            if (item.fases_producao.length > 0 && typeof item.fases_producao[0] === 'string') {
+                // Old format: convert string IDs to PhaseEntry objects
+                phases = item.fases_producao.map((pid: string) => ({ phase_id: pid, materials: [] }));
+            } else {
+                phases = item.fases_producao as PhaseEntry[];
+            }
+        }
+        setFichaForm({
+            ...item,
+            fases_producao: phases,
+        });
+    };
+
+    const saveFicha = async () => {
+        if (!selectedItem) return;
+        try {
+            setSaving(true);
+            await catalogService.updateWorkType(selectedItem.id, {
+                nome: fichaForm.nome,
+                cor: fichaForm.cor,
+                categoria: fichaForm.categoria,
+                codigo: fichaForm.codigo || null,
+                preco: parseFloat(fichaForm.preco) || 0,
+                iva_percent: parseFloat(fichaForm.iva_percent) || 0,
+                fases_producao: fichaForm.fases_producao || [],
+                tempo_estimado: totalTempoMin,
+                notas_producao: fichaForm.notas_producao || null,
+            });
+            setSelectedItem(null);
+            load();
+        } catch (e) { console.error(e); } finally { setSaving(false); }
+    };
+
+    // ---- Phase/Material management ----
+    const addPhaseToFicha = (phaseId: string) => {
+        const current: PhaseEntry[] = fichaForm.fases_producao || [];
+        if (current.some((p: PhaseEntry) => p.phase_id === phaseId)) return;
+        setFichaForm({ ...fichaForm, fases_producao: [...current, { phase_id: phaseId, materials: [] }] });
+    };
+
+    const removePhaseFromFicha = (phaseId: string) => {
+        const current: PhaseEntry[] = fichaForm.fases_producao || [];
+        setFichaForm({ ...fichaForm, fases_producao: current.filter((p: PhaseEntry) => p.phase_id !== phaseId) });
+    };
+
+    const addMaterialToPhase = (phaseId: string) => {
+        const current: PhaseEntry[] = fichaForm.fases_producao || [];
+        setFichaForm({
+            ...fichaForm,
+            fases_producao: current.map((p: PhaseEntry) =>
+                p.phase_id === phaseId
+                    ? { ...p, materials: [...p.materials, { material_id: '', tempo: 0, qtd_usada: 1, unidade_porcao: 'un', custo_porcao: 0, custo_material: 0 }] }
+                    : p
+            ),
+        });
+    };
+
+    const removeMaterialFromPhase = (phaseId: string, matIdx: number) => {
+        const current: PhaseEntry[] = fichaForm.fases_producao || [];
+        setFichaForm({
+            ...fichaForm,
+            fases_producao: current.map((p: PhaseEntry) =>
+                p.phase_id === phaseId
+                    ? { ...p, materials: p.materials.filter((_: PhaseMaterial, i: number) => i !== matIdx) }
+                    : p
+            ),
+        });
+    };
+
+    const updateMaterialInPhase = (phaseId: string, matIdx: number, field: keyof PhaseMaterial, value: any) => {
+        const current: PhaseEntry[] = fichaForm.fases_producao || [];
+        setFichaForm({
+            ...fichaForm,
+            fases_producao: current.map((p: PhaseEntry) =>
+                p.phase_id === phaseId
+                    ? {
+                        ...p,
+                        materials: p.materials.map((m: PhaseMaterial, i: number) => {
+                            if (i !== matIdx) return m;
+                            const updated = { ...m, [field]: value };
+                            // Auto-calculate custo_material = qtd_usada × custo_porcao
+                            if (field === 'qtd_usada' || field === 'custo_porcao') {
+                                updated.custo_material = (Number(updated.qtd_usada) || 0) * (Number(updated.custo_porcao) || 0);
+                            }
+                            return updated;
+                        }),
+                    }
+                    : p
+            ),
+        });
+    };
+
+    // ---- KPI Calculations ----
+    const phases: PhaseEntry[] = fichaForm.fases_producao || [];
+    const custoMateriais = phases.reduce((sum: number, p: PhaseEntry) => sum + p.materials.reduce((s: number, m: PhaseMaterial) => s + (Number(m.custo_material) || 0), 0), 0);
+    const totalTempoMin = phases.reduce((sum: number, p: PhaseEntry) => sum + p.materials.reduce((s: number, m: PhaseMaterial) => s + (Number(m.tempo) || 0), 0), 0);
+    const custoMaoDeObra = (totalTempoMin / 60) * CUSTO_HORA_DEFAULT;
+    const custoGlobal = custoMateriais + custoMaoDeObra;
+    const precoVenda = parseFloat(fichaForm.preco) || 0;
+    const margem = precoVenda - custoGlobal;
+    const margemPercent = precoVenda > 0 ? (margem / precoVenda) * 100 : 0;
+    const calcTotal = (preco: number, iva: number) => (preco * (1 + iva / 100)).toFixed(2);
+
+    const filtered = items.filter(i =>
+        i.nome.toLowerCase().includes(search.toLowerCase()) ||
+        (i.codigo && i.codigo.toLowerCase().includes(search.toLowerCase()))
+    );
 
     return (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
-            {/* Toolbar */}
-            <div className="flex items-center justify-between p-4 border-b border-border">
-                <div className="relative flex-1 max-w-xs">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Pesquisar..."
-                        className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-muted text-card-foreground focus:outline-none focus:border-primary/50"
-                    />
+        <>
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+                {/* Toolbar */}
+                <div className="flex items-center justify-between p-4 border-b border-border">
+                    <div className="relative flex-1 max-w-xs">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder="Pesquisar por nome ou código..."
+                            className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-muted text-card-foreground focus:outline-none focus:border-primary/50"
+                        />
+                    </div>
+                    <button
+                        onClick={() => setShowAdd(true)}
+                        className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Novo Tipo
+                    </button>
                 </div>
-                <button
-                    onClick={() => setShowAdd(true)}
-                    className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-card-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                    <Plus className="h-4 w-4" />
-                    Adicionar
-                </button>
+
+                {/* Add form */}
+                {showAdd && (
+                    <div className="p-4 bg-muted/50 border-b border-border flex items-center gap-3">
+                        <input
+                            type="text"
+                            value={addForm.nome}
+                            onChange={e => setAddForm({ ...addForm, nome: e.target.value })}
+                            placeholder="Nome do tipo..."
+                            className="flex-1 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2 focus:outline-none focus:border-primary/50"
+                            autoFocus
+                        />
+                        <input
+                            type="color"
+                            value={addForm.cor}
+                            onChange={e => setAddForm({ ...addForm, cor: e.target.value })}
+                            className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
+                        />
+                        <select
+                            value={addForm.categoria}
+                            onChange={e => setAddForm({ ...addForm, categoria: e.target.value })}
+                            className="text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2"
+                        >
+                            <option value="geral">Geral</option>
+                            <option value="fixa">Prótese Fixa</option>
+                            <option value="removivel">Prótese Removível</option>
+                            <option value="implante">Implante</option>
+                            <option value="ortodontia">Ortodontia</option>
+                            <option value="ceramica">Cerâmica</option>
+                        </select>
+                        <button onClick={handleAdd} disabled={saving} className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50">
+                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                        </button>
+                        <button onClick={() => setShowAdd(false)} className="p-2 text-muted-foreground hover:text-card-foreground/80">
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                )}
+
+                {/* Table */}
+                {loading ? (
+                    <div className="text-center py-12 text-muted-foreground"><Loader2 className="h-5 w-5 mx-auto animate-spin" /></div>
+                ) : filtered.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground text-sm">Sem registos</div>
+                ) : (
+                    <table className="w-full text-sm">
+                        <thead className="bg-muted/50 text-muted-foreground text-xs uppercase tracking-wider">
+                            <tr>
+                                <th className="text-left px-4 py-3 w-12">Cor</th>
+                                <th className="text-left px-4 py-3 w-24">Código</th>
+                                <th className="text-left px-4 py-3">Nome</th>
+                                <th className="text-left px-4 py-3">Categoria</th>
+                                <th className="text-right px-4 py-3">Preço</th>
+                                <th className="text-left px-4 py-3 w-16">Activo</th>
+                                <th className="text-right px-4 py-3 w-24">Acções</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/50">
+                            {filtered.map(item => (
+                                <tr key={item.id} className="hover:bg-muted/30 transition-colors group">
+                                    <td className="px-4 py-3">
+                                        <div className="w-6 h-6 rounded-full border border-border" style={{ backgroundColor: item.cor || '#6366f1' }} />
+                                    </td>
+                                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{item.codigo || '—'}</td>
+                                    <td className="px-4 py-3">
+                                        <button
+                                            onClick={() => openFicha(item)}
+                                            className="font-medium text-card-foreground hover:text-primary hover:underline underline-offset-2 transition-colors text-left"
+                                        >
+                                            {item.nome}
+                                        </button>
+                                    </td>
+                                    <td className="px-4 py-3 text-muted-foreground capitalize">{item.categoria || 'geral'}</td>
+                                    <td className="px-4 py-3 text-right text-card-foreground">
+                                        {Number(item.preco) > 0 ? `${Number(item.preco).toFixed(2)} €` : '—'}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <button onClick={() => toggleActive(item)} className="text-muted-foreground hover:text-primary transition-colors">
+                                            {item.activo ? <ToggleRight className="h-5 w-5 text-green-500" /> : <ToggleLeft className="h-5 w-5" />}
+                                        </button>
+                                    </td>
+                                    <td className="px-4 py-3 text-right">
+                                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => openFicha(item)}
+                                                className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                                                title="Abrir ficha"
+                                            >
+                                                <Edit3 className="h-3.5 w-3.5" />
+                                            </button>
+                                            {deleteConfirm === item.id ? (
+                                                <>
+                                                    <button onClick={() => handleDelete(item.id)} className="p-1.5 bg-destructive/20 text-destructive rounded text-xs">Sim</button>
+                                                    <button onClick={() => setDeleteConfirm(null)} className="p-1.5 bg-muted text-muted-foreground rounded text-xs">Não</button>
+                                                </>
+                                            ) : (
+                                                <button onClick={() => setDeleteConfirm(item.id)} className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors">
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+
+                {/* Footer */}
+                <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground">
+                    {filtered.length} registo(s) · {items.filter(i => i.activo).length} activo(s)
+                </div>
             </div>
 
-            {/* Add form */}
-            {showAdd && (
-                <div className="p-4 bg-muted/50 border-b border-border flex items-center gap-3">
-                    <input
-                        type="text"
-                        value={addForm.nome}
-                        onChange={e => setAddForm({ ...addForm, nome: e.target.value })}
-                        placeholder="Nome do tipo..."
-                        className="flex-1 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2 focus:outline-none focus:border-primary/50"
-                        autoFocus
-                    />
-                    <input
-                        type="color"
-                        value={addForm.cor}
-                        onChange={e => setAddForm({ ...addForm, cor: e.target.value })}
-                        className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
-                    />
-                    <select
-                        value={addForm.categoria}
-                        onChange={e => setAddForm({ ...addForm, categoria: e.target.value })}
-                        className="text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2"
-                    >
-                        <option value="geral">Geral</option>
-                        <option value="fixa">Prótese Fixa</option>
-                        <option value="removivel">Prótese Removível</option>
-                        <option value="implante">Implante</option>
-                        <option value="ortodontia">Ortodontia</option>
-                        <option value="ceramica">Cerâmica</option>
-                    </select>
-                    <button onClick={handleAdd} disabled={saving} className="p-2 bg-green-500 text-card-foreground rounded-lg hover:bg-green-600 disabled:opacity-50">
-                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    </button>
-                    <button onClick={() => setShowAdd(false)} className="p-2 text-muted-foreground hover:text-card-foreground/80">
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-            )}
+            {/* ===== MODAL FICHA COMPLETA ===== */}
+            {selectedItem && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setSelectedItem(null)}>
+                    <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto m-4" onClick={e => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="flex items-center gap-4 p-6 border-b border-border">
+                            <div className="w-10 h-10 rounded-full border-2 border-border flex-shrink-0" style={{ backgroundColor: fichaForm.cor || '#6366f1' }} />
+                            <div className="flex-1">
+                                <h2 className="text-xl font-bold text-card-foreground">{fichaForm.nome || 'Tipo de Trabalho'}</h2>
+                                <p className="text-sm text-muted-foreground">{fichaForm.codigo ? `${fichaForm.codigo} · ` : ''}Ficha Completa</p>
+                            </div>
+                            <button onClick={() => setSelectedItem(null)} className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg">
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
 
-            {/* Table */}
-            {loading ? (
-                <div className="text-center py-12 text-muted-foreground"><Loader2 className="h-5 w-5 mx-auto animate-spin" /></div>
-            ) : filtered.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground text-sm">Sem registos</div>
-            ) : (
-                <table className="w-full text-sm">
-                    <thead className="bg-muted/50 text-gray-500 text-xs uppercase tracking-wider">
-                        <tr>
-                            <th className="text-left px-4 py-3">Cor</th>
-                            <th className="text-left px-4 py-3">Nome</th>
-                            <th className="text-left px-4 py-3">Categoria</th>
-                            <th className="text-left px-4 py-3">Activo</th>
-                            <th className="text-right px-4 py-3">Acções</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-800">
-                        {filtered.map(item => (
-                            <tr key={item.id} className="hover:bg-muted/30 transition-colors">
-                                {editingId === item.id ? (
-                                    <>
-                                        <td className="px-4 py-3">
-                                            <input type="color" value={editForm.cor} onChange={e => setEditForm({ ...editForm, cor: e.target.value })} className="w-8 h-8 rounded border cursor-pointer" />
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <input type="text" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="w-full text-sm border border-border rounded px-2 bg-muted text-card-foreground py-1 focus:outline-none" />
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <select value={editForm.categoria} onChange={e => setEditForm({ ...editForm, categoria: e.target.value })} className="text-sm border border-border rounded px-2 bg-muted text-card-foreground py-1">
-                                                <option value="geral">Geral</option>
-                                                <option value="fixa">Prótese Fixa</option>
-                                                <option value="removivel">Prótese Removível</option>
-                                                <option value="implante">Implante</option>
-                                                <option value="ortodontia">Ortodontia</option>
-                                                <option value="ceramica">Cerâmica</option>
-                                            </select>
-                                        </td>
-                                        <td className="px-4 py-3">—</td>
-                                        <td className="px-4 py-3 text-right flex justify-end gap-1">
-                                            <button onClick={handleSave} disabled={saving} className="p-1.5 bg-green-900/40 text-green-400 rounded hover:bg-green-900/60"><Save className="h-3.5 w-3.5" /></button>
-                                            <button onClick={() => setEditingId(null)} className="p-1.5 bg-muted text-muted-foreground rounded hover:bg-muted"><X className="h-3.5 w-3.5" /></button>
-                                        </td>
-                                    </>
-                                ) : (
-                                    <>
-                                        <td className="px-4 py-3">
-                                            <div className="w-6 h-6 rounded-full border border-border" style={{ backgroundColor: item.cor || '#6366f1' }} />
-                                        </td>
-                                        <td className="px-4 py-3 font-medium text-card-foreground">{item.nome}</td>
-                                        <td className="px-4 py-3 text-gray-500 capitalize">{item.categoria || 'geral'}</td>
-                                        <td className="px-4 py-3">
-                                            <button onClick={() => toggleActive(item)} className="text-muted-foreground hover:text-primary transition-colors">
-                                                {item.activo ? <ToggleRight className="h-5 w-5 text-green-500" /> : <ToggleLeft className="h-5 w-5" />}
-                                            </button>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <div className="flex justify-end gap-1">
-                                                <button
-                                                    onClick={() => { setEditingId(item.id); setEditForm({ nome: item.nome, cor: item.cor || '#6366f1', categoria: item.categoria || 'geral' }); }}
-                                                    className="p-1.5 text-muted-foreground hover:text-blue-500 hover:bg-blue-900/30 rounded transition-colors"
-                                                >
-                                                    <Edit3 className="h-3.5 w-3.5" />
-                                                </button>
-                                                {deleteConfirm === item.id ? (
-                                                    <>
-                                                        <button onClick={() => handleDelete(item.id)} className="p-1.5 bg-red-900/40 text-red-400 rounded hover:bg-red-900/60 text-xs">Sim</button>
-                                                        <button onClick={() => setDeleteConfirm(null)} className="p-1.5 bg-muted text-muted-foreground rounded hover:bg-muted text-xs">Não</button>
-                                                    </>
-                                                ) : (
-                                                    <button onClick={() => setDeleteConfirm(item.id)} className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-900/30 rounded transition-colors">
+                        <div className="p-6 space-y-6">
+                            {/* === SECÇÃO 1: Info Básica === */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <Briefcase className="h-4 w-4" /> Informação Básica
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="text-xs text-muted-foreground mb-1 block">Código</label>
+                                        <input value={fichaForm.codigo || ''} onChange={e => setFichaForm({ ...fichaForm, codigo: e.target.value.toUpperCase() })} placeholder="Ex: ZR-001" className="w-full px-3 py-2 text-sm bg-muted border border-border rounded-lg font-mono uppercase" />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="text-xs text-muted-foreground mb-1 block">Nome</label>
+                                        <input value={fichaForm.nome || ''} onChange={e => setFichaForm({ ...fichaForm, nome: e.target.value })} className="w-full px-3 py-2 text-sm bg-muted border border-border rounded-lg" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-muted-foreground mb-1 block">Cor</label>
+                                        <div className="flex items-center gap-2">
+                                            <input type="color" value={fichaForm.cor || '#6366f1'} onChange={e => setFichaForm({ ...fichaForm, cor: e.target.value })} className="w-10 h-10 rounded-lg border border-border cursor-pointer" />
+                                            <span className="text-xs text-muted-foreground font-mono">{fichaForm.cor || '#6366f1'}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-muted-foreground mb-1 block">Categoria</label>
+                                        <select value={fichaForm.categoria || 'geral'} onChange={e => setFichaForm({ ...fichaForm, categoria: e.target.value })} className="w-full px-3 py-2 text-sm bg-muted border border-border rounded-lg">
+                                            <option value="geral">Geral</option>
+                                            <option value="fixa">Prótese Fixa</option>
+                                            <option value="removivel">Prótese Removível</option>
+                                            <option value="implante">Implante</option>
+                                            <option value="ortodontia">Ortodontia</option>
+                                            <option value="ceramica">Cerâmica</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-muted-foreground mb-1 block">Estado</label>
+                                        <button
+                                            onClick={() => setFichaForm({ ...fichaForm, activo: !fichaForm.activo })}
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm border ${fichaForm.activo ? 'bg-green-500/10 border-green-500/30 text-green-500' : 'bg-muted border-border text-muted-foreground'}`}
+                                        >
+                                            {fichaForm.activo ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
+                                            {fichaForm.activo ? 'Activo' : 'Inactivo'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* === SIMULAÇÃO DE PREÇO === */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <ChevronRight className="h-4 w-4" /> Simulação de Preço
+                                </h3>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="text-xs text-muted-foreground mb-1 block">Preço (€)</label>
+                                        <input type="number" step="0.01" value={fichaForm.preco ?? ''} onChange={e => setFichaForm({ ...fichaForm, preco: e.target.value })} placeholder="0.00" className="w-full px-3 py-2 text-sm bg-muted border border-border rounded-lg" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-muted-foreground mb-1 block">IVA (%)</label>
+                                        <input type="number" step="1" value={fichaForm.iva_percent ?? ''} onChange={e => setFichaForm({ ...fichaForm, iva_percent: e.target.value })} placeholder="0" className="w-full px-3 py-2 text-sm bg-muted border border-border rounded-lg" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-muted-foreground mb-1 block">Total</label>
+                                        <div className="px-3 py-2 text-sm bg-muted/50 border border-border rounded-lg font-bold text-card-foreground">
+                                            {calcTotal(parseFloat(fichaForm.preco) || 0, parseFloat(fichaForm.iva_percent) || 0)} €
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* === KPI CARDS === */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <div className="border border-green-500/30 bg-green-500/5 rounded-xl p-3">
+                                    <p className="text-[10px] font-semibold text-green-600 uppercase tracking-wider">Custo Materiais</p>
+                                    <p className="text-lg font-bold text-green-700">{custoMateriais.toFixed(2)} €</p>
+                                </div>
+                                <div className="border border-blue-500/30 bg-blue-500/5 rounded-xl p-3">
+                                    <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider">Custo Mão de Obra</p>
+                                    <p className="text-lg font-bold text-blue-700">{custoMaoDeObra.toFixed(2)} €</p>
+                                </div>
+                                <div className="border border-orange-500/30 bg-orange-500/5 rounded-xl p-3">
+                                    <p className="text-[10px] font-semibold text-orange-600 uppercase tracking-wider">Custo Global</p>
+                                    <p className="text-lg font-bold text-orange-700">{custoGlobal.toFixed(2)} €</p>
+                                </div>
+                                <div className={`border rounded-xl p-3 ${margem >= 0 ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
+                                    <p className={`text-[10px] font-semibold uppercase tracking-wider ${margem >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>Margem</p>
+                                    <p className={`text-lg font-bold ${margem >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                                        {margem.toFixed(2)} € <span className="text-xs font-normal">({margemPercent.toFixed(1)}%)</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* === TABELA DE FASES DE PRODUÇÃO === */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <Factory className="h-4 w-4" /> Fases de Produção
+                                </h3>
+
+                                {/* Table header */}
+                                <div className="bg-muted/50 border border-border rounded-t-xl px-4 py-2.5 grid grid-cols-12 gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                    <div className="col-span-3">Material</div>
+                                    <div className="col-span-1 text-center">Tempo</div>
+                                    <div className="col-span-1 text-center">Qtd</div>
+                                    <div className="col-span-2 text-center">Unid/Porção</div>
+                                    <div className="col-span-2 text-right">Custo/Porção</div>
+                                    <div className="col-span-2 text-right">Custo Material</div>
+                                    <div className="col-span-1"></div>
+                                </div>
+
+                                {/* Phases */}
+                                <div className="border border-t-0 border-border rounded-b-xl overflow-hidden divide-y divide-border/50">
+                                    {(fichaForm.fases_producao || []).map((pe: PhaseEntry, phaseIdx: number) => {
+                                        const phaseInfo = allPhases.find((p: any) => p.id === pe.phase_id);
+                                        if (!phaseInfo) return null;
+                                        const phaseTempo = pe.materials.reduce((s: number, m: PhaseMaterial) => s + (Number(m.tempo) || 0), 0);
+                                        const phaseCusto = pe.materials.reduce((s: number, m: PhaseMaterial) => s + (Number(m.custo_material) || 0), 0);
+                                        const tempoPercent = totalTempoMin > 0 ? ((phaseTempo / totalTempoMin) * 100).toFixed(0) : '0';
+
+                                        return (
+                                            <div key={pe.phase_id}>
+                                                {/* Phase header */}
+                                                <div className="flex items-center gap-3 px-4 py-2.5 bg-card">
+                                                    <span className="flex items-center justify-center w-7 h-7 rounded-lg text-white text-xs font-bold" style={{ backgroundColor: phaseInfo.cor || '#6366f1' }}>
+                                                        {String(phaseIdx + 1).padStart(2, '0')}
+                                                    </span>
+                                                    <span className="font-semibold text-sm text-card-foreground flex-1">{phaseInfo.nome}</span>
+                                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                                        <Clock className="h-3 w-3" /> {phaseTempo} min ({tempoPercent}%)
+                                                    </span>
+                                                    <span className="text-xs text-muted-foreground">💰 {phaseCusto.toFixed(2)} €</span>
+                                                    <button onClick={() => removePhaseFromFicha(pe.phase_id)} className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors" title="Remover fase">
                                                         <Trash2 className="h-3.5 w-3.5" />
                                                     </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </>
-                                )}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
+                                                </div>
 
-            {/* Footer count */}
-            <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground">
-                {filtered.length} registo(s) · {items.filter(i => i.activo).length} activo(s)
-            </div>
-        </div>
+                                                {/* Material rows */}
+                                                {pe.materials.map((mat: PhaseMaterial, matIdx: number) => (
+                                                    <div key={matIdx} className="grid grid-cols-12 gap-2 px-4 py-2 bg-muted/20 items-center">
+                                                        <div className="col-span-3">
+                                                            <select
+                                                                value={mat.material_id}
+                                                                onChange={e => updateMaterialInPhase(pe.phase_id, matIdx, 'material_id', e.target.value)}
+                                                                className="w-full px-2 py-1.5 text-xs bg-muted border border-border rounded-lg"
+                                                            >
+                                                                <option value="">{'{Selecionar Material}'}</option>
+                                                                {allMaterials.filter((m: any) => m.activo).map((m: any) => (
+                                                                    <option key={m.id} value={m.id}>{m.nome}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <div className="col-span-1">
+                                                            <div className="flex items-center gap-1">
+                                                                <input type="number" value={mat.tempo || ''} onChange={e => updateMaterialInPhase(pe.phase_id, matIdx, 'tempo', Number(e.target.value) || 0)} className="w-full px-1.5 py-1.5 text-xs bg-muted border border-border rounded-lg text-center" placeholder="0" />
+                                                                <span className="text-[10px] text-muted-foreground">min</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="col-span-1">
+                                                            <input type="number" value={mat.qtd_usada || ''} onChange={e => updateMaterialInPhase(pe.phase_id, matIdx, 'qtd_usada', Number(e.target.value) || 0)} className="w-full px-1.5 py-1.5 text-xs bg-muted border border-border rounded-lg text-center" placeholder="1" />
+                                                        </div>
+                                                        <div className="col-span-2">
+                                                            <input value={mat.unidade_porcao || ''} onChange={e => updateMaterialInPhase(pe.phase_id, matIdx, 'unidade_porcao', e.target.value)} className="w-full px-1.5 py-1.5 text-xs bg-muted border border-border rounded-lg text-center" placeholder="un" />
+                                                        </div>
+                                                        <div className="col-span-2">
+                                                            <input type="number" step="0.01" value={mat.custo_porcao || ''} onChange={e => updateMaterialInPhase(pe.phase_id, matIdx, 'custo_porcao', Number(e.target.value) || 0)} className="w-full px-1.5 py-1.5 text-xs bg-muted border border-border rounded-lg text-right" placeholder="0.00" />
+                                                        </div>
+                                                        <div className="col-span-2 text-right">
+                                                            <span className="text-xs font-bold text-card-foreground">{(Number(mat.custo_material) || 0).toFixed(2)} €</span>
+                                                        </div>
+                                                        <div className="col-span-1 text-right">
+                                                            <button onClick={() => removeMaterialFromPhase(pe.phase_id, matIdx)} className="p-1 text-muted-foreground hover:text-destructive" title="Remover material">
+                                                                <X className="h-3 w-3" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+
+                                                {/* Add material button */}
+                                                <div className="px-4 py-2 bg-muted/10">
+                                                    <button onClick={() => addMaterialToPhase(pe.phase_id)} className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1">
+                                                        <Plus className="h-3 w-3" /> Adicionar Material
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {/* Add Phase button */}
+                                    {(fichaForm.fases_producao || []).length === 0 && (
+                                        <div className="text-center py-8 text-muted-foreground text-sm">Nenhuma fase adicionada</div>
+                                    )}
+                                </div>
+
+                                {/* Phase selector */}
+                                <div className="mt-3 flex items-center gap-2">
+                                    <select
+                                        id="phase-selector"
+                                        className="flex-1 px-3 py-2 text-sm bg-muted border border-border rounded-lg"
+                                        defaultValue=""
+                                        onChange={e => { if (e.target.value) { addPhaseToFicha(e.target.value); e.target.value = ''; } }}
+                                    >
+                                        <option value="" disabled>+ Adicionar Fase de Produção...</option>
+                                        {allPhases
+                                            .filter((p: any) => p.activo && !(fichaForm.fases_producao || []).some((pe: PhaseEntry) => pe.phase_id === p.id))
+                                            .map((p: any) => (
+                                                <option key={p.id} value={p.id}>{p.nome}</option>
+                                            ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* === NOTAS === */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <FileText className="h-4 w-4" /> Notas de Produção
+                                </h3>
+                                <textarea
+                                    value={fichaForm.notas_producao || ''}
+                                    onChange={e => setFichaForm({ ...fichaForm, notas_producao: e.target.value })}
+                                    placeholder="Instruções especiais, observações de produção..."
+                                    rows={3}
+                                    className="w-full px-3 py-2 text-sm bg-muted border border-border rounded-lg resize-none"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
+                            <button onClick={() => setSelectedItem(null)} className="px-4 py-2 text-sm text-muted-foreground bg-muted rounded-lg hover:bg-muted/80">
+                                Cancelar
+                            </button>
+                            <button onClick={saveFicha} disabled={saving} className="flex items-center gap-2 px-6 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50">
+                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                Guardar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
 

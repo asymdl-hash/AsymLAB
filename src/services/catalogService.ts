@@ -45,7 +45,7 @@ export const catalogService = {
         return data;
     },
 
-    async updateWorkType(id: string, updates: Partial<{ nome: string; cor: string; categoria: string; activo: boolean; ordem: number }>) {
+    async updateWorkType(id: string, updates: Partial<{ nome: string; cor: string; categoria: string; activo: boolean; ordem: number; codigo: string | null; preco: number; iva_percent: number; materiais: string[]; fases_producao: string[]; tempo_estimado: number; notas_producao: string | null }>) {
         const { data, error } = await supabase
             .from('work_types')
             .update(updates)
