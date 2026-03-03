@@ -4,6 +4,17 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## V1.83.0 - 2026-03-03
+- Novo componente `PatientAlerts.tsx`: Banner de Avisos contextual na Ficha do Paciente.
+- Alerta âmbar: Paciente urgente sem plano de tratamento activo.
+- Alerta vermelho: Agendamentos atrasados (com contagem e dias de atraso).
+- Banners dismissable com animação slide-in, inseridos entre Hero Header e PlanTimeline.
+
+## V1.82.1 - 2026-03-03
+- Sincronização documental: INDEX.md, ROADMAP.md e CONTEXT_RESTART.md atualizados para V1.82.
+- Nova secção "Catálogos Produção & Definições (V1.79–V1.82)" no ROADMAP.
+- Módulo Definições (Catálogos) adicionado ao INDEX.md como 100% operacional.
+
 ## V1.82.0 - 2026-03-03
 - Catálogo de Materiais: Adicionado suporte para "Ref. Fabricante", "Ref. Fornecedor" e "Reunião" no formulário de adição (AddNew).
 - Checkbox "Reunião" auto-flag para informações incompletas, passível de entrar em próximos temas de equipa.
