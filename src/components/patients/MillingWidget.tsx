@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Droplets, FolderOpen, RefreshCw, Check, ChevronDown, Loader2 } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
+import { supabase } from '@/lib/supabase';
 
 interface MillingWidgetProps {
     appointmentId: string;
@@ -90,9 +91,13 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
     const handleOpenFolder = async () => {
         if (!hierarchy) return;
         try {
+            const { data: { session } } = await supabase.auth.getSession();
             await fetch('/api/patient-folder', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session?.access_token}`,
+                },
                 body: JSON.stringify({
                     action: 'open_subfolder',
                     t_id: hierarchy.t_id,
@@ -113,9 +118,13 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
         if (!hierarchy) return;
         setChecking(true);
         try {
+            const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch('/api/patient-folder', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session?.access_token}`,
+                },
                 body: JSON.stringify({
                     action: 'check_milling_files',
                     t_id: hierarchy.t_id,

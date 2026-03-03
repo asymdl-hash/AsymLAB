@@ -5,6 +5,7 @@ import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp, FolderOpen, Copy
 import { patientsService } from '@/services/patientsService';
 import { OdontogramContent } from './Odontogram';
 import WhatsAppSendModal from './WhatsAppSendModal';
+import { supabase } from '@/lib/supabase';
 
 interface TeethWidgetProps {
     appointmentId: string;
@@ -112,9 +113,13 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
     const handleOpenFolder = async () => {
         if (!hierarchy) return;
         try {
+            const { data: { session } } = await supabase.auth.getSession();
             await fetch('/api/patient-folder', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session?.access_token}`,
+                },
                 body: JSON.stringify({
                     action: 'open_subfolder',
                     t_id: hierarchy.t_id,
