@@ -247,10 +247,16 @@ function WorkTypesManager() {
                         materials: p.materials.map((m: PhaseMaterial, i: number) => {
                             if (i !== matIdx) return m;
                             const updated = { ...m, [field]: value };
-                            // Auto-calculate custo_material = qtd_usada × custo_porcao
-                            if (field === 'qtd_usada' || field === 'custo_porcao') {
-                                updated.custo_material = (Number(updated.qtd_usada) || 0) * (Number(updated.custo_porcao) || 0);
+                            // When selecting a material, auto-fill custo_porcao and unidade from catalog
+                            if (field === 'material_id' && value) {
+                                const mat = allMaterials.find((am: any) => am.id === value);
+                                if (mat) {
+                                    if (mat.preco_pvp) updated.custo_porcao = Number(mat.preco_pvp) || 0;
+                                    if (mat.porcao_unidade) updated.unidade_porcao = mat.porcao_unidade;
+                                }
                             }
+                            // Always recalculate custo_material
+                            updated.custo_material = (Number(updated.qtd_usada) || 0) * (Number(updated.custo_porcao) || 0);
                             return updated;
                         }),
                     }
@@ -571,9 +577,9 @@ function WorkTypesManager() {
                                                                 onChange={e => updateMaterialInPhase(pe.phase_id, matIdx, 'material_id', e.target.value)}
                                                                 className="w-full px-2 py-1.5 text-xs bg-muted border border-border rounded-lg"
                                                             >
-                                                                <option value="">{'{Selecionar Material}'}</option>
+                                                                <option value="">Selecionar Material...</option>
                                                                 {allMaterials.filter((m: any) => m.activo).map((m: any) => (
-                                                                    <option key={m.id} value={m.id}>{m.nome}</option>
+                                                                    <option key={m.id} value={m.id}>{m.nome}{m.preco_pvp ? ` — ${Number(m.preco_pvp).toFixed(2)}€` : ''}</option>
                                                                 ))}
                                                             </select>
                                                         </div>
