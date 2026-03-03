@@ -90,10 +90,10 @@
 
 | Documento | Última Actualização | Autor |
 |-----------|:-------------------:|-------|
-| INDEX.md | 02/03/2026 | Antigravity |
+| INDEX.md | 03/03/2026 | Antigravity |
 | DECISOES.md | 01/03/2026 | Antigravity |
 | PACIENTES_NAS.md | 02/03/2026 | Antigravity |
 | ROADMAP.md | 02/03/2026 | Antigravity |
 | PACIENTES.md | 27/02/2026 | Antigravity |
 | QA_TEST_LOG.md | 21/02/2026 | Antigravity |
-| CHANGELOG.md | 02/03/2026 | Antigravity |
+| CHANGELOG.md | 03/03/2026 | Antigravity |

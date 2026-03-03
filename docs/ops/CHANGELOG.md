@@ -4,6 +4,16 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## V1.82.0 - 2026-03-03
+- Catálogo de Materiais: Adicionado suporte para "Ref. Fabricante", "Ref. Fornecedor" e "Reunião" no formulário de adição (AddNew).
+- Checkbox "Reunião" auto-flag para informações incompletas, passível de entrar em próximos temas de equipa.
+- Documentação sincronizada no processo (`INDEX.md` atuando corretamente como "Capitão").
+
+## V1.81.1 - 2026-03-03
+- Tipos de Trabalho: Tabela de Custos de Produção (Mão de Obra + Custo Material) com 4 KPI Cards.
+- Catálogo de Materiais: Auto-preenchimento (PVP -> custo_porcao) ao selecionar material numa Fase de Produção.
+- Recálculo robusto no `updateMaterialInPhase` (sempre que muda qualquer campo).
+
 ## V1.79.0 - 2026-03-03
 - Novos catálogos: Fornecedores (12 seed), Marcas (36 seed), Fases de Produção (17 seed)
 - Tabelas `suppliers`, `brands`, `production_phases` criadas com RLS

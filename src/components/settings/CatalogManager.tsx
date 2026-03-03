@@ -683,7 +683,7 @@ function MaterialsManager() {
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAdd, setShowAdd] = useState(false);
-    const [addForm, setAddForm] = useState({ nome: '', categoria: 'ceramica', cor: '#94a3b8', marca: '', fornecedor: '', preco_pvp: '', iva_percent: '23', porcao_tamanho: '1', porcao_unidade: 'un', notas: '' });
+    const [addForm, setAddForm] = useState({ nome: '', categoria: 'ceramica', cor: '#94a3b8', marca: '', fornecedor: '', preco_pvp: '', iva_percent: '23', porcao_tamanho: '1', porcao_unidade: 'un', ref_fabricante: '', ref_fornecedor: '', reuniao: false, notas: '' });
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editForm, setEditForm] = useState<any>({});
     const [suppliers, setSuppliers] = useState<any[]>([]);
@@ -750,10 +750,13 @@ function MaterialsManager() {
             if (addForm.iva_percent) insertData.iva_percent = parseInt(addForm.iva_percent);
             if (addForm.porcao_tamanho) insertData.porcao_tamanho = parseFloat(addForm.porcao_tamanho);
             if (addForm.porcao_unidade) insertData.porcao_unidade = addForm.porcao_unidade;
+            if (addForm.ref_fabricante) insertData.ref_fabricante = addForm.ref_fabricante;
+            if (addForm.ref_fornecedor) insertData.ref_fornecedor = addForm.ref_fornecedor;
+            if (addForm.reuniao) insertData.reuniao = addForm.reuniao;
             if (addForm.notas) insertData.notas = addForm.notas;
             const { error } = await supabase.from('milling_materials').insert(insertData);
             if (error) throw error;
-            setAddForm({ nome: '', categoria: 'ceramica', cor: '#94a3b8', marca: '', fornecedor: '', preco_pvp: '', iva_percent: '23', porcao_tamanho: '1', porcao_unidade: 'un', notas: '' });
+            setAddForm({ nome: '', categoria: 'ceramica', cor: '#94a3b8', marca: '', fornecedor: '', preco_pvp: '', iva_percent: '23', porcao_tamanho: '1', porcao_unidade: 'un', ref_fabricante: '', ref_fornecedor: '', reuniao: false, notas: '' });
             setShowAdd(false);
             load();
         } catch (e) { console.error(e); } finally { setSaving(false); }
@@ -911,9 +914,17 @@ function MaterialsManager() {
                                 <option value="disco">disco</option>
                             </select>
                         </div>
-                        <input type="text" value={addForm.notas} onChange={e => setAddForm({ ...addForm, notas: e.target.value })} placeholder="Notas..." className="col-span-2 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2" />
-                        <div className="flex justify-end gap-2">
-                            <button onClick={handleAdd} disabled={saving} className="flex items-center gap-1 px-4 py-2 bg-green-500 text-card-foreground rounded-lg hover:bg-green-600 disabled:opacity-50 text-sm">
+                        <input type="text" value={addForm.ref_fabricante} onChange={e => setAddForm({ ...addForm, ref_fabricante: e.target.value })} placeholder="Ref. Fabricante" className="text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2" />
+                        <input type="text" value={addForm.ref_fornecedor} onChange={e => setAddForm({ ...addForm, ref_fornecedor: e.target.value })} placeholder="Ref. Fornecedor" className="text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2" />
+                        <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer border border-border rounded-lg px-3 bg-muted/30">
+                            <input type="checkbox" checked={addForm.reuniao} onChange={e => setAddForm({ ...addForm, reuniao: e.target.checked })} className="rounded" />
+                            Reunião (Falta Info)
+                        </label>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <input type="text" value={addForm.notas} onChange={e => setAddForm({ ...addForm, notas: e.target.value })} placeholder="Notas..." className="col-span-2 md:col-span-3 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2" />
+                        <div className="flex justify-end gap-2 md:col-span-1">
+                            <button onClick={handleAdd} disabled={saving} className="flex items-center gap-1 px-4 py-2 bg-green-500 text-card-foreground rounded-lg hover:bg-green-600 disabled:opacity-50 text-sm w-full justify-center md:w-auto">
                                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Guardar
                             </button>
                             <button onClick={() => setShowAdd(false)} className="p-2 text-muted-foreground hover:text-card-foreground/80"><X className="h-4 w-4" /></button>
