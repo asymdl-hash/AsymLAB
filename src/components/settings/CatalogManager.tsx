@@ -27,12 +27,14 @@ import {
     ExternalLink,
     Clock,
     Package,
+    Settings,
 } from 'lucide-react';
 import { catalogService } from '@/services/catalogService';
 import { considerationsService } from '@/services/considerationsService';
+import { settingsService, QueueWaitThresholds } from '@/services/settingsService';
 
 // ===== SUB-TAB CONFIG =====
-type CatalogTab = 'work_types' | 'materials' | 'tooth_colors' | 'templates' | 'statuses' | 'suppliers' | 'brands' | 'production_phases';
+type CatalogTab = 'work_types' | 'materials' | 'tooth_colors' | 'templates' | 'statuses' | 'suppliers' | 'brands' | 'production_phases' | 'general';
 
 const CATALOG_TABS: { id: CatalogTab; label: string; icon: React.ElementType; description: string }[] = [
     { id: 'work_types', label: 'Tipos de Trabalho', icon: Briefcase, description: 'Prótese fixa, removível, implantes, etc.' },
@@ -43,6 +45,7 @@ const CATALOG_TABS: { id: CatalogTab; label: string; icon: React.ElementType; de
     { id: 'suppliers', label: 'Fornecedores', icon: Building2, description: 'Gestão de fornecedores com contactos, NIF e morada' },
     { id: 'brands', label: 'Marcas', icon: Tag, description: 'Catálogo de marcas dentárias' },
     { id: 'production_phases', label: 'Fases de Produção', icon: Factory, description: 'Fases do processo produtivo laboratorial' },
+    { id: 'general', label: 'Definições Gerais', icon: Settings, description: 'Parâmetros globais da aplicação (thresholds, limites, etc.)' },
 ];
 
 // ===== MAIN COMPONENT =====
@@ -86,6 +89,7 @@ export default function CatalogManager() {
             {activeTab === 'suppliers' && <SuppliersManager />}
             {activeTab === 'brands' && <BrandsManager />}
             {activeTab === 'production_phases' && <ProductionPhasesManager />}
+            {activeTab === 'general' && <GeneralSettingsManager />}
 
         </div>
     );
@@ -1951,6 +1955,144 @@ function ProductionPhasesManager() {
                         )}
                     </div>
                 ))}
+            </div>
+        </div>
+    );
+}
+
+
+// =====================================================
+// GENERAL SETTINGS MANAGER (Definições Gerais)
+// =====================================================
+
+function GeneralSettingsManager() {
+    const [thresholds, setThresholds] = useState<QueueWaitThresholds>({ amber_days: 1, red_days: 3 });
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+
+    useEffect(() => {
+        settingsService.getQueueThresholds()
+            .then(setThresholds)
+            .catch(err => console.error('Erro ao carregar thresholds:', err))
+            .finally(() => setLoading(false));
+    }, []);
+
+    const handleSave = async () => {
+        if (thresholds.amber_days >= thresholds.red_days) return;
+        setSaving(true);
+        setSaved(false);
+        try {
+            await settingsService.setQueueThresholds(thresholds);
+            setSaved(true);
+            setTimeout(() => setSaved(false), 3000);
+        } catch (err) {
+            console.error('Erro ao guardar thresholds:', err);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center gap-2 py-8 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">A carregar definições...</span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* Secção: Fila de Pedidos */}
+            <div className="bg-muted/50 border border-border rounded-xl p-5">
+                <h3 className="text-base font-semibold text-card-foreground flex items-center gap-2 mb-1">
+                    <Clock className="h-4 w-4 text-amber-500" />
+                    Badge &quot;Dias em Espera&quot; — Fila de Pedidos
+                </h3>
+                <p className="text-xs text-muted-foreground mb-5">
+                    Controla quando o badge de tempo muda de cor nos cards da Fila de Pedidos.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Âmbar threshold */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                            <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500" />
+                            Âmbar após (dias)
+                        </label>
+                        <input
+                            type="number"
+                            min={0}
+                            max={thresholds.red_days - 1}
+                            value={thresholds.amber_days}
+                            onChange={e => setThresholds({ ...thresholds, amber_days: Math.max(0, parseInt(e.target.value) || 0) })}
+                            className="w-full h-10 px-3 rounded-lg border border-border bg-muted text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400"
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            Card fica âmbar após {thresholds.amber_days} dia{thresholds.amber_days !== 1 ? 's' : ''} de espera
+                        </p>
+                    </div>
+
+                    {/* Vermelho threshold */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                            <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" />
+                            Vermelho após (dias)
+                        </label>
+                        <input
+                            type="number"
+                            min={thresholds.amber_days + 1}
+                            value={thresholds.red_days}
+                            onChange={e => setThresholds({ ...thresholds, red_days: Math.max(thresholds.amber_days + 1, parseInt(e.target.value) || thresholds.amber_days + 1) })}
+                            className="w-full h-10 px-3 rounded-lg border border-border bg-muted text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400"
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            Card fica vermelho após {thresholds.red_days} dia{thresholds.red_days !== 1 ? 's' : ''} de espera
+                        </p>
+                    </div>
+                </div>
+
+                {/* Validação */}
+                {thresholds.amber_days >= thresholds.red_days && (
+                    <div className="mt-3 flex items-center gap-2 text-xs text-red-400">
+                        <AlertCircle className="h-3.5 w-3.5" />
+                        O valor âmbar deve ser inferior ao vermelho
+                    </div>
+                )}
+
+                {/* Preview */}
+                <div className="mt-4 p-3 bg-card rounded-lg border border-border">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 font-medium">Pré-visualização</p>
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border font-medium">
+                            &lt;{thresholds.amber_days}d → Cinza
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-medium">
+                            {thresholds.amber_days}d – {thresholds.red_days}d → Âmbar
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 font-medium">
+                            &gt;{thresholds.red_days}d → Vermelho
+                        </span>
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="mt-4 flex items-center gap-3">
+                    <button
+                        onClick={handleSave}
+                        disabled={saving || thresholds.amber_days >= thresholds.red_days}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    >
+                        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                        Guardar
+                    </button>
+                    {saved && (
+                        <span className="text-xs text-emerald-400 flex items-center gap-1 animate-in fade-in">
+                            ✅ Guardado com sucesso
+                        </span>
+                    )}
+                </div>
             </div>
         </div>
     );

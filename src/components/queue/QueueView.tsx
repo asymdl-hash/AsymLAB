@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { settingsService, QueueWaitThresholds } from '@/services/settingsService';
 import {
     queueService,
     QueueItem,
@@ -37,6 +38,9 @@ export default function QueueView() {
     const [showFilters, setShowFilters] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const { user } = useAuth();
+
+    // Thresholds configuráveis
+    const [thresholds, setThresholds] = useState<QueueWaitThresholds>({ amber_days: 1, red_days: 3 });
 
     // Opções para dropdowns
     const [clinics, setClinics] = useState<{ id: string; name: string }[]>([]);
@@ -91,7 +95,18 @@ export default function QueueView() {
 
     useEffect(() => {
         loadData();
+        settingsService.getQueueThresholds().then(setThresholds).catch(console.error);
     }, [loadData]);
+
+    // Auto-refresh a cada 30 segundos
+    useEffect(() => {
+        const interval = setInterval(() => {
+            queueService.getQueueItems()
+                .then(setItems)
+                .catch(err => console.error('Auto-refresh erro:', err));
+        }, 30_000);
+        return () => clearInterval(interval);
+    }, []);
 
     // Refresh manual
     const handleRefresh = () => {
@@ -401,6 +416,7 @@ export default function QueueView() {
                                     items={grouped[col.key] || []}
                                     onDrop={handleDrop}
                                     onAction={(planId, newEstado) => handleDrop(planId, col.key, newEstado)}
+                                    thresholds={thresholds}
                                 />
                             ))}
                         </div>

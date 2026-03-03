@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { QueueItem } from '@/services/queueService';
+import { QueueWaitThresholds } from '@/services/settingsService';
 import QueueCard from './QueueCard';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +14,7 @@ interface QueueColumnProps {
     items: QueueItem[];
     onDrop: (planId: string, fromEstado: string, toEstado: string) => void;
     onAction?: (planId: string, newEstado: string) => void;
+    thresholds?: QueueWaitThresholds;
 }
 
 const COLOR_MAP: Record<string, { header: string; border: string; dot: string; count: string; dropHighlight: string }> = {
@@ -46,7 +48,7 @@ const COLOR_MAP: Record<string, { header: string; border: string; dot: string; c
     },
 };
 
-export default function QueueColumn({ title, color, icon, columnKey, items, onDrop, onAction }: QueueColumnProps) {
+export default function QueueColumn({ title, color, icon, columnKey, items, onDrop, onAction, thresholds }: QueueColumnProps) {
     const colors = COLOR_MAP[color] || COLOR_MAP.gray;
     const [isDragOver, setIsDragOver] = useState(false);
 
@@ -135,7 +137,7 @@ export default function QueueColumn({ title, color, icon, columnKey, items, onDr
                     </div>
                 ) : (
                     items.map(item => (
-                        <QueueCard key={item.id} item={item} onAction={onAction} />
+                        <QueueCard key={item.id} item={item} onAction={onAction} thresholds={thresholds} />
                     ))
                 )}
             </div>

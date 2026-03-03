@@ -158,6 +158,7 @@ export const queueService = {
     },
 
     // Agrupar por estado para as colunas do Kanban
+    // Ordenação: urgentes primeiro, depois por data mais antiga (mais tempo à espera no topo)
     groupByEstado(items: QueueItem[]): Record<string, QueueItem[]> {
         const groups: Record<string, QueueItem[]> = {};
         for (const col of QUEUE_COLUMNS) {
@@ -167,6 +168,15 @@ export const queueService = {
             if (groups[item.estado]) {
                 groups[item.estado].push(item);
             }
+        }
+        // Ordenar cada coluna
+        for (const key of Object.keys(groups)) {
+            groups[key].sort((a, b) => {
+                // Urgentes primeiro
+                if (a.urgente !== b.urgente) return a.urgente ? -1 : 1;
+                // Depois por updated_at ascendente (mais antigo primeiro = mais tempo à espera)
+                return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+            });
         }
         return groups;
     },

@@ -1,6 +1,7 @@
 'use client';
 
 import { QueueItem } from '@/services/queueService';
+import { QueueWaitThresholds } from '@/services/settingsService';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, Clock, GripVertical, Pause, Play, CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -10,6 +11,7 @@ import WorkBadges from '@/components/patients/WorkBadges';
 interface QueueCardProps {
     item: QueueItem;
     onAction?: (planId: string, newEstado: string) => void;
+    thresholds?: QueueWaitThresholds;
 }
 
 function timeAgo(dateStr: string): string {
@@ -26,8 +28,17 @@ function timeAgo(dateStr: string): string {
     return `${months}mês`;
 }
 
-export default function QueueCard({ item, onAction }: QueueCardProps) {
+export default function QueueCard({ item, onAction, thresholds }: QueueCardProps) {
     const router = useRouter();
+
+    // Calcular dias em espera
+    const daysWaiting = Math.floor((Date.now() - new Date(item.updated_at).getTime()) / 86_400_000);
+    const t = thresholds || { amber_days: 1, red_days: 3 };
+    const waitColor = daysWaiting >= t.red_days
+        ? 'text-red-400 bg-red-500/15 border-red-500/30'
+        : daysWaiting >= t.amber_days
+            ? 'text-amber-400 bg-amber-500/15 border-amber-500/30'
+            : 'text-gray-500 bg-muted border-border';
 
     const handleClick = (e: React.MouseEvent) => {
         // Não navegar se está a arrastar
@@ -105,6 +116,11 @@ export default function QueueCard({ item, onAction }: QueueCardProps) {
                 )}
             </div>
 
+            {/* Médico */}
+            {item.medico && (
+                <p className="text-[10px] text-muted-foreground truncate mb-2">Dr. {item.medico.full_name}</p>
+            )}
+
             {/* Work Status Badges */}
             <div className="mb-2">
                 <WorkBadges planId={item.id} mode="compact" maxVisible={3} />
@@ -128,7 +144,9 @@ export default function QueueCard({ item, onAction }: QueueCardProps) {
                 {/* Time */}
                 <div className="flex items-center gap-0.5 text-gray-500">
                     <Clock className="h-2.5 w-2.5" />
-                    <span className="text-[10px]">{timeAgo(item.updated_at)}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${waitColor}`}>
+                        {daysWaiting}d
+                    </span>
                 </div>
             </div>
 
