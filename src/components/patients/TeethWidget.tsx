@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp, FolderOpen, Copy, MessageCircle } from 'lucide-react';
+import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp, FolderOpen, Copy, MessageCircle, Check, AlertCircle } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
 import { OdontogramContent } from './Odontogram';
 
@@ -37,6 +37,7 @@ interface NasHierarchy {
     t_id: string;
     patient_name: string;
     whatsapp_group_url: string | null;
+    whatsapp_group_id: string | null;
     plan_order: number;
     phase_order: number;
     phase_name: string;
@@ -56,6 +57,8 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
     // Estado temporário para edição
     const [editTeeth, setEditTeeth] = useState<ToothEntry[]>([]);
     const [editNotes, setEditNotes] = useState('');
+    const [sendingWa, setSendingWa] = useState<string | null>(null);
+    const [waSent, setWaSent] = useState<string | null>(null);
 
     // Carregar dados
     const loadData = useCallback(async () => {
@@ -229,18 +232,44 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                     >
                                         <Copy className="w-3 h-3" />
                                     </button>
-                                    {hierarchy?.whatsapp_group_url && (
+                                    {(hierarchy?.whatsapp_group_id || hierarchy?.whatsapp_group_url) && (
                                         <button
-                                            onClick={() => {
+                                            onClick={async () => {
                                                 const teeth = rec.teeth_data?.map((t: ToothEntry) => t.tooth_number).sort((a: number, b: number) => a - b).join(', ');
                                                 const msg = `🦷 *AsymLAB* — ${hierarchy.t_id} ${hierarchy.patient_name}\nDentes: ${teeth} (V${rec.version_number})${rec.notas ? `\nNotas: ${rec.notas}` : ''}`;
-                                                window.open(`${hierarchy.whatsapp_group_url}`, '_blank');
-                                                navigator.clipboard.writeText(msg);
+
+                                                if (hierarchy.whatsapp_group_id) {
+                                                    // Envio directo via Z-API
+                                                    setSendingWa(rec.id);
+                                                    setWaSent(null);
+                                                    try {
+                                                        const res = await fetch('/api/whatsapp/send', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({ groupId: hierarchy.whatsapp_group_id, message: msg }),
+                                                        });
+                                                        if (res.ok) {
+                                                            setWaSent(rec.id);
+                                                            setTimeout(() => setWaSent(null), 3000);
+                                                        } else {
+                                                            console.error('[WhatsApp] Erro ao enviar');
+                                                        }
+                                                    } catch (err) {
+                                                        console.error('[WhatsApp] Erro:', err);
+                                                    } finally {
+                                                        setSendingWa(null);
+                                                    }
+                                                } else {
+                                                    // Fallback: abrir grupo e copiar texto
+                                                    window.open(`${hierarchy.whatsapp_group_url}`, '_blank');
+                                                    navigator.clipboard.writeText(msg);
+                                                }
                                             }}
-                                            className="p-1 rounded hover:bg-green-500/20 text-green-500 hover:text-green-400 transition-all"
-                                            title="Abrir grupo WhatsApp (texto copiado)"
+                                            disabled={sendingWa === rec.id}
+                                            className={`p-1 rounded transition-all ${waSent === rec.id ? 'text-green-400 bg-green-500/20' : sendingWa === rec.id ? 'text-yellow-400 animate-pulse' : 'hover:bg-green-500/20 text-green-500 hover:text-green-400'}`}
+                                            title={hierarchy.whatsapp_group_id ? 'Enviar via WhatsApp' : 'Abrir grupo WhatsApp (texto copiado)'}
                                         >
-                                            <MessageCircle className="w-3 h-3" />
+                                            {waSent === rec.id ? <Check className="w-3 h-3" /> : sendingWa === rec.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <MessageCircle className="w-3 h-3" />}
                                         </button>
                                     )}
                                     <button
