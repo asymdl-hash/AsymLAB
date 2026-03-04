@@ -233,8 +233,8 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
     // Gerar label resumido
     const getSummaryLabel = () => {
         if (totalRecords === 0) return '⏳ Fresagem Pendente';
-        if (completedCount === totalRecords) return `✅ ${totalRecords} fresagem${totalRecords > 1 ? 'ns' : ''} concluída${totalRecords > 1 ? 's' : ''}`;
-        return `🔄 ${totalRecords} fresagem${totalRecords > 1 ? 'ns' : ''} · ${completedCount} concluída${completedCount !== 1 ? 's' : ''}`;
+        if (completedCount === totalRecords) return `✅ ${totalRecords} ${totalRecords > 1 ? 'fresagens' : 'fresagem'} concluída${totalRecords > 1 ? 's' : ''}`;
+        return `🔄 ${totalRecords} ${totalRecords > 1 ? 'fresagens' : 'fresagem'} · ${completedCount} concluída${completedCount !== 1 ? 's' : ''}`;
     };
 
     const getSummaryColor = () => {
