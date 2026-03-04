@@ -68,7 +68,7 @@ export const catalogService = {
 
     async getMaterials() {
         const { data, error } = await supabase
-            .from('materials')
+            .from('materials_catalog')
             .select('*')
             .order('nome', { ascending: true });
         if (error) throw error;
@@ -77,7 +77,7 @@ export const catalogService = {
 
     async createMaterial(item: { nome: string; categoria?: string; cor?: string }) {
         const { data, error } = await supabase
-            .from('materials')
+            .from('materials_catalog')
             .insert({
                 nome: item.nome,
                 categoria: item.categoria || 'geral',
@@ -92,7 +92,7 @@ export const catalogService = {
 
     async updateMaterial(id: string, updates: Partial<{ nome: string; categoria: string; cor: string; activo: boolean }>) {
         const { data, error } = await supabase
-            .from('materials')
+            .from('materials_catalog')
             .update(updates)
             .eq('id', id)
             .select('*')
@@ -103,7 +103,7 @@ export const catalogService = {
 
     async deleteMaterial(id: string) {
         const { error } = await supabase
-            .from('materials')
+            .from('materials_catalog')
             .delete()
             .eq('id', id);
         if (error) throw error;

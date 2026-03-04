@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronUp, FolderOpen, Package, Copy, MessageCircle, Check, AlertCircle } from 'lucide-react';
+import { Loader2, Plus, Save, X, Edit2, ChevronDown, ChevronRight, FolderOpen, Package, Copy, MessageCircle, Check, AlertCircle } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
 import { OdontogramContent } from './Odontogram';
 import WhatsAppSendModal from './WhatsAppSendModal';
@@ -18,6 +18,7 @@ interface ComponentRecord {
     teeth_data: ToothEntry[];
     material_id: string | null;
     material_name: string;
+    marca: string;
     quantidade: number;
     ref_fabricante: string;
     ref_fornecedor: string;
@@ -38,6 +39,10 @@ interface Material {
     nome: string;
     cor: string | null;
     categoria: string | null;
+    marca: string | null;
+    fornecedor: string | null;
+    ref_fabricante: string | null;
+    ref_fornecedor: string | null;
 }
 
 interface NasHierarchy {
@@ -49,6 +54,8 @@ interface NasHierarchy {
     phase_order: number;
     phase_name: string;
     appt_order: number;
+    appt_type: string;
+    appt_date: string;
 }
 
 export default function ComponentsWidget({ appointmentId, onReload }: ComponentsWidgetProps) {
@@ -61,18 +68,20 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
     const [creating, setCreating] = useState(false);
     const [saving, setSaving] = useState(false);
 
+    // Estado para cards colapsáveis individuais
+    const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+
     // Estado temporário para edição
     const [editTeeth, setEditTeeth] = useState<ToothEntry[]>([]);
     const [editMaterialId, setEditMaterialId] = useState<string>('');
     const [editMaterialName, setEditMaterialName] = useState('');
+    const [editMarca, setEditMarca] = useState('');
     const [editQuantidade, setEditQuantidade] = useState(1);
     const [editRefFab, setEditRefFab] = useState('');
     const [editRefForn, setEditRefForn] = useState('');
     const [editFornecedor, setEditFornecedor] = useState('');
     const [editNotes, setEditNotes] = useState('');
     const [showOdontogram, setShowOdontogram] = useState(false);
-    const [sendingWa, setSendingWa] = useState<string | null>(null);
-    const [waSent, setWaSent] = useState<string | null>(null);
     const [waModalData, setWaModalData] = useState<{ autoSummary: string; recId: string } | null>(null);
 
     // Carregar dados
@@ -95,12 +104,21 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
 
     useEffect(() => { loadData(); }, [loadData]);
 
+    const toggleCard = (id: string) => {
+        setExpandedCards(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
+
     // Iniciar novo registo
     const handleStartCreate = () => {
         setCreating(true);
         setEditTeeth([]);
         setEditMaterialId('');
         setEditMaterialName('');
+        setEditMarca('');
         setEditQuantidade(1);
         setEditRefFab('');
         setEditRefForn('');
@@ -117,6 +135,7 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
         setEditTeeth(rec.teeth_data || []);
         setEditMaterialId(rec.material_id || '');
         setEditMaterialName(rec.material_name || '');
+        setEditMarca(rec.marca || '');
         setEditQuantidade(rec.quantidade || 1);
         setEditRefFab(rec.ref_fabricante || '');
         setEditRefForn(rec.ref_fornecedor || '');
@@ -134,6 +153,26 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
         setShowOdontogram(false);
     };
 
+    // Seleccionar material do dropdown (auto-fill)
+    const handleSelectMaterial = (materialId: string) => {
+        const mat = materials.find(m => m.id === materialId);
+        if (mat) {
+            setEditMaterialId(mat.id);
+            setEditMaterialName(mat.nome);
+            setEditMarca(mat.marca || '');
+            setEditFornecedor(mat.fornecedor || '');
+            setEditRefFab(mat.ref_fabricante || '');
+            setEditRefForn(mat.ref_fornecedor || '');
+        } else {
+            setEditMaterialId('');
+            setEditMaterialName('');
+            setEditMarca('');
+            setEditFornecedor('');
+            setEditRefFab('');
+            setEditRefForn('');
+        }
+    };
+
     // Guardar
     const handleSave = async () => {
         if (!editMaterialName.trim()) return;
@@ -143,6 +182,7 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
                 teeth_data: editTeeth,
                 material_id: editMaterialId || undefined,
                 material_name: editMaterialName,
+                marca: editMarca,
                 quantidade: editQuantidade,
                 ref_fabricante: editRefFab,
                 ref_fornecedor: editRefForn,
@@ -183,18 +223,14 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
                     phase_order: hierarchy.phase_order,
                     phase_name: hierarchy.phase_name,
                     appt_order: hierarchy.appt_order,
+                    appt_type: hierarchy.appt_type,
+                    appt_date: hierarchy.appt_date,
                     subfolder: 'Componentes',
                 }),
             });
         } catch (err) {
             console.error('[ComponentsWidget] Erro ao abrir pasta:', err);
         }
-    };
-
-    // Seleccionar material do dropdown
-    const handleSelectMaterial = (mat: Material) => {
-        setEditMaterialId(mat.id);
-        setEditMaterialName(mat.nome);
     };
 
     const totalComponents = records.reduce((acc, r) => acc + r.quantidade, 0);
@@ -209,6 +245,11 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
     }
 
     const isEditing = creating || editingId !== null;
+
+    const formatDate = (d: string) => {
+        try { return new Date(d).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+        catch { return ''; }
+    };
 
     return (
         <>
@@ -232,7 +273,7 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
                                 }
                             </span>
                             {expanded
-                                ? <ChevronUp className="w-3 h-3 text-muted-foreground" />
+                                ? <ChevronDown className="w-3 h-3 text-muted-foreground rotate-180" />
                                 : <ChevronDown className="w-3 h-3 text-muted-foreground" />
                             }
                         </button>
@@ -249,70 +290,118 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
                         )}
                     </div>
 
-                    {/* Lista de registos */}
+                    {/* Lista de registos como cards colapsáveis */}
                     {expanded && records.length > 0 && !isEditing && (
                         <div className="mt-2 space-y-1.5">
-                            {records.map((rec, idx) => (
-                                <div key={rec.id} className="flex items-center justify-between bg-muted/50 rounded-md px-2.5 py-1.5">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <span className="text-[10px] font-mono text-muted-foreground">#{idx + 1}</span>
-                                        <span className="text-xs text-foreground font-medium truncate">
-                                            {rec.material_name || '—'}
-                                        </span>
-                                        <span className="text-[10px] text-muted-foreground">×{rec.quantidade}</span>
-                                        {rec.teeth_data?.length > 0 && (
-                                            <span className="text-[10px] text-muted-foreground">
-                                                · {rec.teeth_data.length} dentes
-                                            </span>
-                                        )}
-                                        <span className="text-[10px] text-muted-foreground">V{rec.version_number}</span>
-                                    </div>
-                                    <div className="flex items-center gap-0.5">
-                                        <button
-                                            onClick={() => {
-                                                const teeth = rec.teeth_data?.length > 0 ? `\nDentes: ${rec.teeth_data.map((t: ToothEntry) => t.tooth_number).sort((a: number, b: number) => a - b).join(', ')}` : '';
-                                                const refs = [rec.ref_fabricante && `Ref.Fab: ${rec.ref_fabricante}`, rec.ref_fornecedor && `Ref.Forn: ${rec.ref_fornecedor}`, rec.fornecedor && `Fornecedor: ${rec.fornecedor}`].filter(Boolean).join(' · ');
-                                                const text = `📦 Componente: ${rec.material_name || '—'} ×${rec.quantidade}${refs ? `\n${refs}` : ''}${teeth}${rec.notas ? `\nNotas: ${rec.notas}` : ''}`;
-                                                navigator.clipboard.writeText(text);
-                                            }}
-                                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
-                                            title="Copiar resumo"
-                                        >
-                                            <Copy className="w-3 h-3" />
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                if (!hierarchy?.whatsapp_group_id) {
-                                                    alert('⚠️ Este paciente não tem grupo WhatsApp criado. Crie o grupo na ficha do paciente.');
-                                                    return;
+                            {records.map((rec, idx) => {
+                                const isCardExpanded = expandedCards.has(rec.id);
+                                const teeth = rec.teeth_data?.map((t: ToothEntry) => t.tooth_number).sort((a: number, b: number) => a - b).join(', ');
+                                return (
+                                    <div key={rec.id} className="bg-muted/50 rounded-md border border-border/50 overflow-hidden">
+                                        {/* Card header — clicável para expandir */}
+                                        <div className="flex items-center justify-between px-2.5 py-1.5">
+                                            <button
+                                                onClick={() => toggleCard(rec.id)}
+                                                className="flex items-center gap-1.5 text-left flex-1 min-w-0"
+                                            >
+                                                {isCardExpanded
+                                                    ? <ChevronDown className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                                    : <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                                                 }
-                                                const teeth = rec.teeth_data?.length > 0 ? ` · Dentes: ${rec.teeth_data.map((t: ToothEntry) => t.tooth_number).sort((a: number, b: number) => a - b).join(', ')}` : '';
-                                                const summary = `📦 ${rec.material_name || '—'} ×${rec.quantidade}${teeth}${rec.notas ? `\nNotas: ${rec.notas}` : ''}`;
-                                                setWaModalData({ autoSummary: summary, recId: rec.id });
-                                            }}
-                                            className="p-1 rounded transition-all hover:bg-green-500/20 text-green-500 hover:text-green-400"
-                                            title="Enviar via WhatsApp"
-                                        >
-                                            <MessageCircle className="w-3 h-3" />
-                                        </button>
-                                        <button
-                                            onClick={handleOpenFolder}
-                                            disabled={!hierarchy}
-                                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all disabled:opacity-50"
-                                            title="Abrir pasta Componentes"
-                                        >
-                                            <FolderOpen className="w-3 h-3" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleStartEdit(rec)}
-                                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
-                                            title="Editar registo"
-                                        >
-                                            <Edit2 className="w-3 h-3" />
-                                        </button>
+                                                <span className="text-[10px] font-mono text-muted-foreground cursor-pointer hover:text-foreground">#{idx + 1}</span>
+                                                <span className="text-[10px] text-muted-foreground">{formatDate(rec.created_at)}</span>
+                                                {!isCardExpanded && (
+                                                    <span className="text-[10px] text-muted-foreground/60 truncate">· {rec.material_name || '—'} ×{rec.quantidade}</span>
+                                                )}
+                                            </button>
+                                            <div className="flex items-center gap-0.5 flex-shrink-0">
+                                                <button
+                                                    onClick={() => {
+                                                        const teethStr = rec.teeth_data?.length > 0 ? `\nDentes: ${teeth}` : '';
+                                                        const refs = [rec.ref_fabricante && `Ref.Fab: ${rec.ref_fabricante}`, rec.ref_fornecedor && `Ref.Forn: ${rec.ref_fornecedor}`, rec.fornecedor && `Fornecedor: ${rec.fornecedor}`].filter(Boolean).join(' · ');
+                                                        const text = `📦 Componente: ${rec.material_name || '—'} ×${rec.quantidade}${refs ? `\n${refs}` : ''}${teethStr}${rec.notas ? `\nNotas: ${rec.notas}` : ''}`;
+                                                        navigator.clipboard.writeText(text);
+                                                    }}
+                                                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                                                    title="Copiar resumo"
+                                                >
+                                                    <Copy className="w-3 h-3" />
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        if (!hierarchy?.whatsapp_group_id) {
+                                                            alert('⚠️ Este paciente não tem grupo WhatsApp criado.');
+                                                            return;
+                                                        }
+                                                        const teethStr = rec.teeth_data?.length > 0 ? ` · Dentes: ${teeth}` : '';
+                                                        const summary = `📦 ${rec.material_name || '—'} ×${rec.quantidade}${teethStr}${rec.notas ? `\nNotas: ${rec.notas}` : ''}`;
+                                                        setWaModalData({ autoSummary: summary, recId: rec.id });
+                                                    }}
+                                                    className="p-1 rounded transition-all hover:bg-green-500/20 text-green-500 hover:text-green-400"
+                                                    title="Enviar via WhatsApp"
+                                                >
+                                                    <MessageCircle className="w-3 h-3" />
+                                                </button>
+                                                <button
+                                                    onClick={handleOpenFolder}
+                                                    disabled={!hierarchy}
+                                                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all disabled:opacity-50"
+                                                    title="Abrir pasta Componentes"
+                                                >
+                                                    <FolderOpen className="w-3 h-3" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleStartEdit(rec)}
+                                                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                                                    title="Editar registo"
+                                                >
+                                                    <Edit2 className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Card body — expandido */}
+                                        {isCardExpanded && (
+                                            <div className="px-3 pb-2.5 pt-0.5 border-t border-border/30 space-y-1.5">
+                                                {/* Tabela de material + dentes */}
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full text-[10px]">
+                                                        <thead>
+                                                            <tr className="text-muted-foreground uppercase tracking-wider">
+                                                                <th className="text-left py-0.5 pr-2 font-medium">Dentes</th>
+                                                                <th className="text-left py-0.5 pr-2 font-medium">Produto</th>
+                                                                <th className="text-left py-0.5 pr-2 font-medium">Marca</th>
+                                                                <th className="text-left py-0.5 pr-2 font-medium">Fornecedor</th>
+                                                                <th className="text-left py-0.5 pr-2 font-medium">Ref. Fab</th>
+                                                                <th className="text-left py-0.5 pr-2 font-medium">Ref</th>
+                                                                <th className="text-left py-0.5 font-medium">Qtd</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr className="text-card-foreground">
+                                                                <td className="py-0.5 pr-2">{teeth || '-'}</td>
+                                                                <td className="py-0.5 pr-2">{rec.material_name || '-'}</td>
+                                                                <td className="py-0.5 pr-2">{rec.marca || '-'}</td>
+                                                                <td className="py-0.5 pr-2">{rec.fornecedor || '-'}</td>
+                                                                <td className="py-0.5 pr-2">{rec.ref_fabricante || '-'}</td>
+                                                                <td className="py-0.5 pr-2">{rec.ref_fornecedor || '-'}</td>
+                                                                <td className="py-0.5">{rec.quantidade}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                {/* Notas */}
+                                                {rec.notas && (
+                                                    <p className="text-[10px] text-muted-foreground italic">📝 {rec.notas}</p>
+                                                )}
+
+                                                <span className="text-[10px] text-muted-foreground">V{rec.version_number}</span>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>
@@ -343,32 +432,22 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
                             </div>
                         </div>
 
-                        {/* Material */}
+                        {/* Material selector + Quantidade */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                             <div>
                                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Material</label>
-                                {materials.length > 0 ? (
-                                    <select
-                                        value={editMaterialId}
-                                        onChange={(e) => {
-                                            const mat = materials.find(m => m.id === e.target.value);
-                                            if (mat) handleSelectMaterial(mat);
-                                        }}
-                                        className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground"
-                                    >
-                                        <option value="">Seleccionar material...</option>
-                                        {materials.map(m => (
-                                            <option key={m.id} value={m.id}>{m.nome}</option>
-                                        ))}
-                                    </select>
-                                ) : (
-                                    <input
-                                        value={editMaterialName}
-                                        onChange={(e) => setEditMaterialName(e.target.value)}
-                                        placeholder="Nome do material"
-                                        className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground"
-                                    />
-                                )}
+                                <select
+                                    value={editMaterialId}
+                                    onChange={(e) => handleSelectMaterial(e.target.value)}
+                                    className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground"
+                                >
+                                    <option value="">— Seleccionar material —</option>
+                                    {materials.map(m => (
+                                        <option key={m.id} value={m.id}>
+                                            {m.nome}{m.marca ? ` · ${m.marca}` : ''}{m.fornecedor ? ` (${m.fornecedor})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                             <div>
                                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Quantidade</label>
@@ -382,36 +461,36 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
                             </div>
                         </div>
 
-                        {/* Referências */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-                            <div>
-                                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Ref. Fabricante</label>
-                                <input
-                                    value={editRefFab}
-                                    onChange={(e) => setEditRefFab(e.target.value)}
-                                    placeholder="Ex: ABC-123"
-                                    className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground"
-                                />
+                        {/* Campos de material (editáveis após auto-fill) */}
+                        {editMaterialName && (
+                            <div className="grid grid-cols-5 gap-1.5 mb-3">
+                                <div>
+                                    <label className="text-[9px] text-muted-foreground">Produto</label>
+                                    <input value={editMaterialName} onChange={e => setEditMaterialName(e.target.value)}
+                                        className="w-full bg-background border border-border rounded px-1.5 py-1 text-[10px] text-foreground" />
+                                </div>
+                                <div>
+                                    <label className="text-[9px] text-muted-foreground">Marca</label>
+                                    <input value={editMarca} onChange={e => setEditMarca(e.target.value)}
+                                        className="w-full bg-background border border-border rounded px-1.5 py-1 text-[10px] text-foreground" />
+                                </div>
+                                <div>
+                                    <label className="text-[9px] text-muted-foreground">Fornecedor</label>
+                                    <input value={editFornecedor} onChange={e => setEditFornecedor(e.target.value)}
+                                        className="w-full bg-background border border-border rounded px-1.5 py-1 text-[10px] text-foreground" />
+                                </div>
+                                <div>
+                                    <label className="text-[9px] text-muted-foreground">Ref. Fab</label>
+                                    <input value={editRefFab} onChange={e => setEditRefFab(e.target.value)}
+                                        className="w-full bg-background border border-border rounded px-1.5 py-1 text-[10px] text-foreground" />
+                                </div>
+                                <div>
+                                    <label className="text-[9px] text-muted-foreground">Ref</label>
+                                    <input value={editRefForn} onChange={e => setEditRefForn(e.target.value)}
+                                        className="w-full bg-background border border-border rounded px-1.5 py-1 text-[10px] text-foreground" />
+                                </div>
                             </div>
-                            <div>
-                                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Ref. Fornecedor</label>
-                                <input
-                                    value={editRefForn}
-                                    onChange={(e) => setEditRefForn(e.target.value)}
-                                    placeholder="Ex: FRN-456"
-                                    className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Fornecedor</label>
-                                <input
-                                    value={editFornecedor}
-                                    onChange={(e) => setEditFornecedor(e.target.value)}
-                                    placeholder="Ex: Nobel Biocare"
-                                    className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground"
-                                />
-                            </div>
-                        </div>
+                        )}
 
                         {/* Odontograma toggle */}
                         <div className="mb-3">
@@ -419,7 +498,7 @@ export default function ComponentsWidget({ appointmentId, onReload }: Components
                                 onClick={() => setShowOdontogram(!showOdontogram)}
                                 className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
                             >
-                                {showOdontogram ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                {showOdontogram ? <ChevronDown className="w-3 h-3 rotate-180" /> : <ChevronDown className="w-3 h-3" />}
                                 Dentes associados ({editTeeth.length})
                             </button>
                             {showOdontogram && (

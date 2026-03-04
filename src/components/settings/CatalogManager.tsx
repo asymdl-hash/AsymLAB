@@ -680,7 +680,7 @@ function WorkTypesManager() {
 }
 
 // =====================================================
-// MATERIALS MANAGER (milling_materials — agrupado por categoria com defaults)
+// MATERIALS MANAGER (materials_catalog — agrupado por categoria com defaults)
 // =====================================================
 function MaterialsManager() {
     const [items, setItems] = useState<any[]>([]);
@@ -705,7 +705,7 @@ function MaterialsManager() {
             setLoading(true);
             const supabase = await sb();
             const [matsRes, catsRes, suppRes, brandRes] = await Promise.all([
-                supabase.from('milling_materials').select('*').order('ordem', { ascending: true }),
+                supabase.from('materials_catalog').select('*').order('ordem', { ascending: true }),
                 supabase.from('material_categories').select('*').order('categoria', { ascending: true }),
                 supabase.from('suppliers').select('id,nome').eq('activo', true).order('nome'),
                 supabase.from('brands').select('id,nome').eq('activo', true).order('nome'),
@@ -738,7 +738,7 @@ function MaterialsManager() {
             setSaving(true);
             const supabase = await sb();
             const { data: maxOrdem } = await supabase
-                .from('milling_materials').select('ordem').order('ordem', { ascending: false }).limit(1).single();
+                .from('materials_catalog').select('ordem').order('ordem', { ascending: false }).limit(1).single();
             const defaults = getCatDefaults(addForm.categoria);
             const insertData: any = {
                 nome: addForm.nome,
@@ -758,7 +758,7 @@ function MaterialsManager() {
             if (addForm.ref_fornecedor) insertData.ref_fornecedor = addForm.ref_fornecedor;
             if (addForm.reuniao) insertData.reuniao = addForm.reuniao;
             if (addForm.notas) insertData.notas = addForm.notas;
-            const { error } = await supabase.from('milling_materials').insert(insertData);
+            const { error } = await supabase.from('materials_catalog').insert(insertData);
             if (error) throw error;
             setAddForm({ nome: '', categoria: 'ceramica', cor: '#94a3b8', marca: '', fornecedor: '', preco_pvp: '', iva_percent: '23', porcao_tamanho: '1', porcao_unidade: 'un', ref_fabricante: '', ref_fornecedor: '', reuniao: false, notas: '' });
             setShowAdd(false);
@@ -771,7 +771,7 @@ function MaterialsManager() {
         try {
             setSaving(true);
             const supabase = await sb();
-            const { error } = await supabase.from('milling_materials').update(editForm).eq('id', editingId);
+            const { error } = await supabase.from('materials_catalog').update(editForm).eq('id', editingId);
             if (error) throw error;
             setEditingId(null);
             load();
@@ -781,7 +781,7 @@ function MaterialsManager() {
     const toggleWidgetFlag = async (id: string, field: 'widget_dentes' | 'widget_fresagem' | 'widget_componentes', current: boolean) => {
         try {
             const supabase = await sb();
-            const { error } = await supabase.from('milling_materials').update({ [field]: !current }).eq('id', id);
+            const { error } = await supabase.from('materials_catalog').update({ [field]: !current }).eq('id', id);
             if (error) throw error;
             load();
         } catch (e) { console.error(e); }
@@ -795,7 +795,7 @@ function MaterialsManager() {
             // Actualizar default da categoria
             await supabase.from('material_categories').update({ [defaultField]: !currentDefault }).eq('categoria', cat);
             // Batch update todos os materiais nessa categoria
-            await supabase.from('milling_materials').update({ [field]: !currentDefault }).eq('categoria', cat);
+            await supabase.from('materials_catalog').update({ [field]: !currentDefault }).eq('categoria', cat);
             load();
         } catch (e) { console.error(e); }
     };
@@ -1101,7 +1101,7 @@ function MaterialsManager() {
                                                                     <button onClick={() => { setEditingId(item.id); setEditForm({ ...item }); }} className="p-1.5 text-muted-foreground hover:text-blue-500 hover:bg-blue-900/30 rounded"><Edit3 className="h-3.5 w-3.5" /></button>
                                                                     {deleteConfirm === item.id ? (
                                                                         <>
-                                                                            <button onClick={async () => { const s = await sb(); await s.from('milling_materials').delete().eq('id', item.id); setDeleteConfirm(null); load(); }} className="p-1.5 bg-red-900/40 text-red-400 rounded text-xs">Sim</button>
+                                                                            <button onClick={async () => { const s = await sb(); await s.from('materials_catalog').delete().eq('id', item.id); setDeleteConfirm(null); load(); }} className="p-1.5 bg-red-900/40 text-red-400 rounded text-xs">Sim</button>
                                                                             <button onClick={() => setDeleteConfirm(null)} className="p-1.5 bg-muted text-muted-foreground rounded text-xs">Não</button>
                                                                         </>
                                                                     ) : (

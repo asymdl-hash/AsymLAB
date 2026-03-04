@@ -385,24 +385,79 @@ export async function POST(request: NextRequest) {
                     `Fase ${osFOrder} + ${osFName}`
                 );
 
+                // Tentar encontrar pasta existente do agendamento
+                let apptDirName: string | null = null;
                 if (existsSync(osPhasePath)) {
                     const entries = readdirSync(osPhasePath, { withFileTypes: true });
                     const prefix = `Ag ${osAOrder} + `;
                     const apptDir = entries.find(e => e.isDirectory() && e.name.startsWith(prefix));
-
-                    if (apptDir) {
-                        const targetPath = path.join(osPhasePath, apptDir.name, String(subfolder));
-                        if (existsSync(targetPath)) {
-                            openInExplorer(targetPath);
-                            return NextResponse.json({ success: true, path: targetPath });
-                        }
-                        // Criar se não existir
-                        mkdirSync(targetPath, { recursive: true });
-                        openInExplorer(targetPath);
-                        return NextResponse.json({ success: true, path: targetPath, created: true });
-                    }
+                    if (apptDir) apptDirName = apptDir.name;
                 }
-                return NextResponse.json({ error: 'Pasta não encontrada' }, { status: 404 });
+
+                // Se não existe, criar toda a hierarquia automaticamente
+                if (!apptDirName) {
+                    const aType = APPT_TYPE_LABELS[body.appt_type] || 'Outro';
+                    const aDate = body.appt_date
+                        ? new Date(body.appt_date).toLocaleDateString('pt-PT', {
+                            day: '2-digit', month: '2-digit', year: 'numeric',
+                        }).replace(/\//g, '-')
+                        : 'Sem Info';
+                    apptDirName = `Ag ${osAOrder} + ${aType} + ${aDate}`;
+                    const apptPath = path.join(osPhasePath, apptDirName);
+                    ensureDirs(apptPath, APPOINTMENT_SUBFOLDERS);
+                }
+
+                const targetPath = path.join(osPhasePath, apptDirName, String(subfolder));
+                if (!existsSync(targetPath)) {
+                    mkdirSync(targetPath, { recursive: true });
+                }
+                openInExplorer(targetPath);
+                return NextResponse.json({ success: true, path: targetPath, created: true });
+            }
+
+            // ─── Abrir/criar pasta CNC individual dentro de Fresagem ───
+            case 'open_cnc_folder': {
+                const cncPlOrder = body.plan_order || 1;
+                const cncFOrder = body.phase_order || 1;
+                const cncFName = sanitizeFolderName(body.phase_name || 'Sem Info');
+                const cncAOrder = body.appt_order || 1;
+                const cncSeqNum = body.sequence_number || 1;
+                const cncMaterialName = sanitizeFolderName(body.material_name || 'Sem Info');
+
+                const cncPhasePath = path.join(
+                    patientPath,
+                    `Plano ${cncPlOrder}`,
+                    `Fase ${cncFOrder} + ${cncFName}`
+                );
+
+                // Encontrar ou criar pasta do agendamento
+                let cncApptDirName: string | null = null;
+                if (existsSync(cncPhasePath)) {
+                    const entries = readdirSync(cncPhasePath, { withFileTypes: true });
+                    const prefix = `Ag ${cncAOrder} + `;
+                    const apptDir = entries.find(e => e.isDirectory() && e.name.startsWith(prefix));
+                    if (apptDir) cncApptDirName = apptDir.name;
+                }
+                if (!cncApptDirName) {
+                    const aType = APPT_TYPE_LABELS[body.appt_type] || 'Outro';
+                    const aDate = body.appt_date
+                        ? new Date(body.appt_date).toLocaleDateString('pt-PT', {
+                            day: '2-digit', month: '2-digit', year: 'numeric',
+                        }).replace(/\//g, '-')
+                        : 'Sem Info';
+                    cncApptDirName = `Ag ${cncAOrder} + ${aType} + ${aDate}`;
+                    const apptPath = path.join(cncPhasePath, cncApptDirName);
+                    ensureDirs(apptPath, APPOINTMENT_SUBFOLDERS);
+                }
+
+                // Criar pasta CNC individual: Fresagem/CNC nºX Nome_Material/Nesting/
+                const cncFolderName = `CNC nº${cncSeqNum} ${cncMaterialName}`;
+                const cncPath = path.join(cncPhasePath, cncApptDirName, 'Fresagem', cncFolderName);
+                if (!existsSync(cncPath)) {
+                    mkdirSync(cncPath, { recursive: true });
+                }
+                openInExplorer(cncPath);
+                return NextResponse.json({ success: true, path: cncPath, created: true });
             }
 
             // ─── Apenas abrir no Explorer ───

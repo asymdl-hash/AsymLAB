@@ -235,7 +235,7 @@ export const patientsService = {
 
     async getMillingMaterials(widgetFilter?: 'widget_dentes' | 'widget_fresagem' | 'widget_componentes') {
         let query = supabase
-            .from('milling_materials')
+            .from('materials_catalog')
             .select('*')
             .eq('activo', true)
             .order('ordem');
@@ -247,27 +247,32 @@ export const patientsService = {
         return data || [];
     },
 
-    async getMillingRecord(appointmentId: string) {
+    async getMillingRecords(appointmentId: string) {
         const { data, error } = await supabase
             .from('milling_records')
             .select('*')
             .eq('appointment_id', appointmentId)
-            .order('sequence_number')
-            .limit(1)
-            .maybeSingle();
+            .order('created_at', { ascending: true });
         if (error) throw error;
-        return data;
+        return data || [];
     },
 
     async createMillingRecord(appointmentId: string, materialId: string, materialName: string) {
         const { data: user } = await supabase.auth.getUser();
+        // Calcular próximo sequence_number para este agendamento
+        const { count } = await supabase
+            .from('milling_records')
+            .select('id', { count: 'exact', head: true })
+            .eq('appointment_id', appointmentId);
+        const seqNum = (count || 0) + 1;
         const { data, error } = await supabase
             .from('milling_records')
             .insert({
                 appointment_id: appointmentId,
                 material_id: materialId,
                 material_name: materialName,
-                status: 'em_curso',
+                status: 'material_escolhido',
+                sequence_number: seqNum,
                 created_by: user?.user?.id,
             })
             .select()
@@ -331,6 +336,8 @@ export const patientsService = {
             phase_order: phaseData.ordem,
             phase_name: phaseData.nome,
             appt_order: apptOrder,
+            appt_type: appt.tipo || '',
+            appt_date: appt.data_prevista || '',
         };
     },
 
@@ -348,7 +355,7 @@ export const patientsService = {
         return data || [];
     },
 
-    async createTeethRecord(appointmentId: string, teethData: unknown[], notas?: string) {
+    async createTeethRecord(appointmentId: string, teethData: unknown[], notas?: string, materialData?: { material_id?: string; material_name?: string; marca?: string; fornecedor?: string; ref_fabricante?: string; ref_fornecedor?: string }) {
         const { data: user } = await supabase.auth.getUser();
         const { data, error } = await supabase
             .from('teeth_records')
@@ -359,6 +366,7 @@ export const patientsService = {
                 notas: notas || null,
                 created_by: user?.user?.id,
                 updated_by: user?.user?.id,
+                ...(materialData || {}),
             })
             .select()
             .single();
@@ -366,7 +374,7 @@ export const patientsService = {
         return data;
     },
 
-    async updateTeethRecord(id: string, teethData: unknown[], notas?: string) {
+    async updateTeethRecord(id: string, teethData: unknown[], notas?: string, materialData?: { material_id?: string; material_name?: string; marca?: string; fornecedor?: string; ref_fabricante?: string; ref_fornecedor?: string }) {
         // Buscar versão actual
         const { data: current } = await supabase
             .from('teeth_records')
@@ -385,6 +393,7 @@ export const patientsService = {
                 notas: notas || null,
                 updated_by: user?.user?.id,
                 updated_at: new Date().toISOString(),
+                ...(materialData || {}),
             })
             .eq('id', id);
         if (error) throw error;
