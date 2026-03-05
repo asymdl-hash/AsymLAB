@@ -4,6 +4,13 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## V2.2.0 - 2026-03-05
+- **F5b Chat Interno** — Pesquisa accent/case-insensitive (D-CHAT-02), mobile bottom sheet, badge de contexto
+- Barra de pesquisa com debounce 300ms, navegação ▲▼ entre resultados, highlight com ring amber
+- Mobile (< 768px): bottom sheet 85vh, drag handle, cantos arredondados, sem botão minimizar
+- Badge contexto: mostra plano activo no header do chat
+- Extensão `unaccent` activada + função wrapper `f_unaccent()` para pesquisa
+
 ## V2.1.0 - 2026-03-05
 - **F5a Chat Interno** — ChatDrawer com posicionamento fixo (fixed right-0 z-50), backdrop clicável, minimização
 - `ChatDrawer.tsx` (550 linhas): Drawer + MessageCard + ChatGallery (full-screen imagens)
