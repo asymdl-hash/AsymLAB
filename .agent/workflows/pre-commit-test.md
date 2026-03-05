@@ -4,7 +4,15 @@ description: Testes obrigatórios antes de qualquer commit — simular utilizado
 
 # Regra de Teste Pré-Commit
 
-> **REGRA OBRIGATÓRIA:** Antes de qualquer `git commit`, o agente DEVE testar o fluxo alterado usando o browser, simulando um utilizador real a usar a aplicação. Só após confirmação visual de que tudo funciona é que o commit pode ser feito.
+> [!CAUTION]
+> **REGRA OBRIGATÓRIA — SEM EXCEPÇÕES:** Antes de qualquer `git commit`, o agente DEVE:
+> 1. Fazer `npx next build` (verifica compilação)
+> 2. **Abrir o browser** e testar visualmente como utilizador real
+> 3. **Capturar screenshot(s)** como prova de que funciona
+> 4. Só então fazer o commit
+>
+> ❌ `build OK → commit` **NÃO É ACEITE** — build apenas verifica compilação, não a UI
+> ✅ `build OK → browser test visual → screenshot → commit` **CORRECTO**
 
 ## Utilizadores de Teste Disponíveis
 
@@ -34,6 +42,8 @@ description: Testes obrigatórios antes de qualquer commit — simular utilizado
    - Exercitar o novo comportamento
    - Verificar que não há erros na UI ou na consola
    - Verificar que os dados persistem após reload da página
+   - **⚠️ Verificar sobreposições — campos/botões tapados por outros elementos** (z-index, overflow, position absolute)
+   - Verificar que todos os botões e inputs são clicáveis e visíveis
    - Se for uma nova feature, testar também o caminho de erro (ex: campos obrigatórios em falta)
 
 5. **Tirar screenshot** do resultado final como prova de teste
