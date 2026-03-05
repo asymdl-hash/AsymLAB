@@ -243,7 +243,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
 
     if (loading) {
         return (
-            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
                 <Loader2 className="w-3 h-3 animate-spin" />
                 <span>A carregar dentes...</span>
             </div>
@@ -262,8 +262,8 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
             <div className="mt-3">
                 {/* Header compacto */}
                 <div className={`p-2.5 rounded-lg border ${records.length > 0
-                    ? 'bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30'
-                    : 'bg-muted/50 border-border'
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : 'bg-gray-50 border-gray-200'
                     }`}>
                     <div className="flex items-center justify-between">
                         <button
@@ -271,7 +271,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                             className="flex items-center gap-2 text-left flex-1 min-w-0"
                         >
                             <span className="text-lg">🦷</span>
-                            <span className={`text-xs font-medium ${records.length > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
+                            <span className={`text-xs font-medium ${records.length > 0 ? 'text-emerald-600' : 'text-gray-400'
                                 }`}>
                                 {records.length > 0
                                     ? `${totalTeeth} dentes · ${records.length} registo${records.length > 1 ? 's' : ''}`
@@ -279,8 +279,8 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                 }
                             </span>
                             {expanded
-                                ? <ChevronDown className="w-3 h-3 text-muted-foreground rotate-180" />
-                                : <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                                ? <ChevronDown className="w-3 h-3 text-gray-400 rotate-180" />
+                                : <ChevronDown className="w-3 h-3 text-gray-400" />
                             }
                         </button>
 
@@ -303,7 +303,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                 const isCardExpanded = expandedCards.has(rec.id);
                                 const teeth = rec.teeth_data?.map((t: ToothEntry) => t.tooth_number).sort((a: number, b: number) => a - b).join(', ');
                                 return (
-                                    <div key={rec.id} className="bg-muted/50 rounded-md border border-border/50 overflow-hidden">
+                                    <div key={rec.id} className="bg-gray-50 rounded-md border border-gray-200/50 overflow-hidden">
                                         {/* Card header — clicável para expandir */}
                                         <div className="flex items-center justify-between px-2.5 py-1.5">
                                             <button
@@ -311,13 +311,13 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                                 className="flex items-center gap-1.5 text-left flex-1 min-w-0"
                                             >
                                                 {isCardExpanded
-                                                    ? <ChevronDown className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                                                    : <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                                    ? <ChevronDown className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                                                    : <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
                                                 }
-                                                <span className="text-[10px] font-mono text-muted-foreground cursor-pointer hover:text-foreground">#{idx + 1}</span>
-                                                <span className="text-[10px] text-muted-foreground">{formatDate(rec.created_at)}</span>
+                                                <span className="text-[10px] font-mono text-gray-400 cursor-pointer hover:text-gray-700">#{idx + 1}</span>
+                                                <span className="text-[10px] text-gray-400">{formatDate(rec.created_at)}</span>
                                                 {!isCardExpanded && (
-                                                    <span className="text-[10px] text-muted-foreground/60 truncate">· {teeth}</span>
+                                                    <span className="text-[10px] text-gray-300 truncate">· {teeth}</span>
                                                 )}
                                             </button>
                                             <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -326,7 +326,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                                         const text = `🦷 Registo Dentes #${idx + 1} (V${rec.version_number})\nDentes: ${teeth}${rec.material_name ? `\nProduto: ${rec.material_name}` : ''}${rec.notas ? `\nNotas: ${rec.notas}` : ''}`;
                                                         navigator.clipboard.writeText(text);
                                                     }}
-                                                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                                                    className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-all"
                                                     title="Copiar resumo"
                                                 >
                                                     <Copy className="w-3 h-3" />
@@ -340,7 +340,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                                         const summary = `🦷 Dentes: ${teeth} (V${rec.version_number})${rec.material_name ? `\nProduto: ${rec.material_name}` : ''}${rec.notas ? `\nNotas: ${rec.notas}` : ''}`;
                                                         setWaModalData({ autoSummary: summary, recId: rec.id });
                                                     }}
-                                                    className="p-1 rounded transition-all hover:bg-green-500/20 text-green-500 hover:text-green-400"
+                                                    className="p-1 rounded transition-all hover:bg-green-50 text-green-600 hover:text-green-500"
                                                     title="Enviar via WhatsApp"
                                                 >
                                                     <MessageCircle className="w-3 h-3" />
@@ -348,14 +348,14 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                                 <button
                                                     onClick={handleOpenFolder}
                                                     disabled={!hierarchy}
-                                                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all disabled:opacity-50"
+                                                    className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-all disabled:opacity-50"
                                                     title="Abrir pasta Dentes"
                                                 >
                                                     <FolderOpen className="w-3 h-3" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleStartEdit(rec)}
-                                                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                                                    className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-all"
                                                     title="Editar registo"
                                                 >
                                                     <Edit2 className="w-3 h-3" />
@@ -365,12 +365,12 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
 
                                         {/* Card body — expandido */}
                                         {isCardExpanded && (
-                                            <div className="px-3 pb-2.5 pt-0.5 border-t border-border/30 space-y-1.5">
+                                            <div className="px-3 pb-2.5 pt-0.5 border-t border-gray-200/30 space-y-1.5">
                                                 {/* Dentes + Versão */}
                                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                                    <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">🦷 Dentes:</span>
-                                                    <span className="text-xs text-card-foreground">{teeth}</span>
-                                                    <span className="text-[10px] text-muted-foreground ml-auto">V{rec.version_number}</span>
+                                                    <span className="text-[10px] font-medium text-emerald-600">🦷 Dentes:</span>
+                                                    <span className="text-xs text-gray-900">{teeth}</span>
+                                                    <span className="text-[10px] text-gray-400 ml-auto">V{rec.version_number}</span>
                                                 </div>
 
                                                 {/* Tabela de material */}
@@ -378,7 +378,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                                     <div className="overflow-x-auto">
                                                         <table className="w-full text-[10px]">
                                                             <thead>
-                                                                <tr className="text-muted-foreground uppercase tracking-wider">
+                                                                <tr className="text-gray-400 uppercase tracking-wider">
                                                                     <th className="text-left py-0.5 pr-2 font-medium">Produto</th>
                                                                     <th className="text-left py-0.5 pr-2 font-medium">Marca</th>
                                                                     <th className="text-left py-0.5 pr-2 font-medium">Fornecedor</th>
@@ -387,7 +387,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                <tr className="text-card-foreground">
+                                                                <tr className="text-gray-900">
                                                                     <td className="py-0.5 pr-2">{rec.material_name || '-'}</td>
                                                                     <td className="py-0.5 pr-2">{rec.marca || '-'}</td>
                                                                     <td className="py-0.5 pr-2">{rec.fornecedor || '-'}</td>
@@ -401,7 +401,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
 
                                                 {/* Notas */}
                                                 {rec.notas && (
-                                                    <p className="text-[10px] text-muted-foreground italic">📝 {rec.notas}</p>
+                                                    <p className="text-[10px] text-gray-400 italic">📝 {rec.notas}</p>
                                                 )}
                                             </div>
                                         )}
@@ -414,9 +414,9 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
 
                 {/* Odontograma editor (expandido) */}
                 {expanded && isEditing && (
-                    <div className="mt-2 p-3 bg-muted/30 rounded-lg border border-border">
+                    <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-xs font-semibold text-card-foreground">
+                            <h4 className="text-xs font-semibold text-gray-900">
                                 {creating ? '➕ Novo Registo de Dentes' : `✏️ Editar Registo (V${records.find(r => r.id === editingId)?.version_number || 1})`}
                             </h4>
                             <div className="flex items-center gap-1">
@@ -431,7 +431,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                                 </button>
                                 <button
                                     onClick={handleCancel}
-                                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                                    className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-all"
                                 >
                                     <X className="w-3.5 h-3.5" />
                                 </button>
@@ -439,7 +439,7 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                         </div>
 
                         {/* Contagem e instrução */}
-                        <p className="text-[10px] text-muted-foreground mb-2">
+                        <p className="text-[10px] text-gray-400 mb-2">
                             {editTeeth.length} dentes atribuídos · 1) Seleccione dentes · 2) Escolha material no painel
                         </p>
 
@@ -454,11 +454,11 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
 
                         {/* Selector de material do catálogo */}
                         <div className="mt-3 space-y-2">
-                            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Material</label>
+                            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Material</label>
                             <select
                                 value={editMaterialId}
                                 onChange={(e) => handleSelectMaterial(e.target.value)}
-                                className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground"
+                                className="w-full bg-white border border-gray-200 rounded px-2 py-1.5 text-xs text-gray-900"
                             >
                                 <option value="">— Seleccionar material —</option>
                                 {materials.map(m => (
@@ -472,29 +472,29 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                             {editMaterialName && (
                                 <div className="grid grid-cols-5 gap-1.5">
                                     <div>
-                                        <label className="text-[9px] text-muted-foreground">Produto</label>
+                                        <label className="text-[9px] text-gray-400">Produto</label>
                                         <input value={editMaterialName} onChange={e => setEditMaterialName(e.target.value)}
-                                            className="w-full bg-background border border-border rounded px-1.5 py-1 text-[10px] text-foreground" />
+                                            className="w-full bg-white border border-gray-200 rounded px-1.5 py-1 text-[10px] text-gray-900" />
                                     </div>
                                     <div>
-                                        <label className="text-[9px] text-muted-foreground">Marca</label>
+                                        <label className="text-[9px] text-gray-400">Marca</label>
                                         <input value={editMarca} onChange={e => setEditMarca(e.target.value)}
-                                            className="w-full bg-background border border-border rounded px-1.5 py-1 text-[10px] text-foreground" />
+                                            className="w-full bg-white border border-gray-200 rounded px-1.5 py-1 text-[10px] text-gray-900" />
                                     </div>
                                     <div>
-                                        <label className="text-[9px] text-muted-foreground">Fornecedor</label>
+                                        <label className="text-[9px] text-gray-400">Fornecedor</label>
                                         <input value={editFornecedor} onChange={e => setEditFornecedor(e.target.value)}
-                                            className="w-full bg-background border border-border rounded px-1.5 py-1 text-[10px] text-foreground" />
+                                            className="w-full bg-white border border-gray-200 rounded px-1.5 py-1 text-[10px] text-gray-900" />
                                     </div>
                                     <div>
-                                        <label className="text-[9px] text-muted-foreground">Ref. Fab</label>
+                                        <label className="text-[9px] text-gray-400">Ref. Fab</label>
                                         <input value={editRefFab} onChange={e => setEditRefFab(e.target.value)}
-                                            className="w-full bg-background border border-border rounded px-1.5 py-1 text-[10px] text-foreground" />
+                                            className="w-full bg-white border border-gray-200 rounded px-1.5 py-1 text-[10px] text-gray-900" />
                                     </div>
                                     <div>
-                                        <label className="text-[9px] text-muted-foreground">Ref</label>
+                                        <label className="text-[9px] text-gray-400">Ref</label>
                                         <input value={editRefForn} onChange={e => setEditRefForn(e.target.value)}
-                                            className="w-full bg-background border border-border rounded px-1.5 py-1 text-[10px] text-foreground" />
+                                            className="w-full bg-white border border-gray-200 rounded px-1.5 py-1 text-[10px] text-gray-900" />
                                     </div>
                                 </div>
                             )}
@@ -506,8 +506,8 @@ export default function TeethWidget({ appointmentId, onReload }: TeethWidgetProp
                             onChange={(e) => setEditNotes(e.target.value)}
                             rows={2}
                             placeholder="Notas do registo..."
-                            className="w-full mt-2 bg-background border border-border rounded px-2 py-1 text-xs text-foreground 
-                                   placeholder:text-muted-foreground resize-none"
+                            className="w-full mt-2 bg-white border border-gray-200 rounded px-2 py-1 text-xs text-gray-900 
+                                   placeholder:text-gray-400 resize-none"
                         />
                     </div>
                 )}

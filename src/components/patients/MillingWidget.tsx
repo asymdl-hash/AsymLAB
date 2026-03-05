@@ -48,10 +48,10 @@ interface NasHierarchy {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-    pendente: { label: 'Pendente', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-500/15 border-amber-300 dark:border-amber-500/30', icon: '⏳' },
-    material_escolhido: { label: 'Material Escolhido', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-500/15 border-blue-300 dark:border-blue-500/30', icon: '🔵' },
-    em_fresagem: { label: 'Em Fresagem', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-500/15 border-purple-300 dark:border-purple-500/30', icon: '🔄' },
-    concluido: { label: 'Concluído', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-500/15 border-emerald-300 dark:border-emerald-500/30', icon: '✅' },
+    pendente: { label: 'Pendente', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200', icon: '⏳' },
+    material_escolhido: { label: 'Material Escolhido', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200', icon: '🔵' },
+    em_fresagem: { label: 'Em Fresagem', color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200', icon: '🔄' },
+    concluido: { label: 'Concluído', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200', icon: '✅' },
 };
 
 export default function MillingWidget({ appointmentId, onReload }: MillingWidgetProps) {
@@ -219,7 +219,7 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
 
     if (loading) {
         return (
-            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
                 <Loader2 className="w-3 h-3 animate-spin" />
                 <span>A carregar fresagem...</span>
             </div>
@@ -238,9 +238,9 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
     };
 
     const getSummaryColor = () => {
-        if (totalRecords === 0) return 'text-amber-400';
-        if (completedCount === totalRecords) return 'text-emerald-400';
-        return 'text-blue-400';
+        if (totalRecords === 0) return 'text-amber-600';
+        if (completedCount === totalRecords) return 'text-emerald-600';
+        return 'text-blue-600';
     };
 
     const getSummaryBg = () => {
@@ -252,10 +252,10 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
     // ─── Dropdown de materiais ───
     const renderDropdown = () => (
         showDropdown && (
-            <div className="absolute right-0 mt-1 w-64 bg-card border border-border rounded-lg shadow-xl z-50 
+            <div className="absolute right-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 
                             max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-200">
                 {materials.length === 0 ? (
-                    <p className="px-3 py-2 text-xs text-muted-foreground">Sem materiais configurados</p>
+                    <p className="px-3 py-2 text-xs text-gray-400">Sem materiais configurados</p>
                 ) : (
                     <>
                         {Object.entries(
@@ -267,21 +267,21 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
                             }, {} as Record<string, MillingMaterial[]>)
                         ).map(([cat, mats]) => (
                             <div key={cat}>
-                                <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/50">
+                                <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-50">
                                     {cat}
                                 </div>
                                 {mats.map(m => (
                                     <button
                                         key={m.id}
                                         onClick={() => handleSelectMaterial(m)}
-                                        className="w-full text-left px-3 py-2 text-sm hover:bg-muted 
-                                                   text-card-foreground transition-colors flex items-center gap-2"
+                                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 
+                                                   text-gray-900 transition-colors flex items-center gap-2"
                                     >
                                         <Droplets className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
                                         <div className="min-w-0">
                                             <span className="text-xs">{m.nome}</span>
-                                            {m.marca && <span className="text-[10px] text-muted-foreground ml-1">· {m.marca}</span>}
-                                            {m.fornecedor && <span className="text-[10px] text-muted-foreground ml-1">({m.fornecedor})</span>}
+                                            {m.marca && <span className="text-[10px] text-gray-400 ml-1">· {m.marca}</span>}
+                                            {m.fornecedor && <span className="text-[10px] text-gray-400 ml-1">({m.fornecedor})</span>}
                                         </div>
                                     </button>
                                 ))}
@@ -307,16 +307,16 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
                         className="flex items-center gap-1.5 text-left flex-1 min-w-0"
                     >
                         {expanded
-                            ? <ChevronDown className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                            : <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                            ? <ChevronDown className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                            : <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
                         }
                         <Droplets className={`w-3.5 h-3.5 flex-shrink-0 ${cfg.color}`} />
                         <span className={`text-xs font-medium ${cfg.color}`}>
                             {cfg.icon} {cfg.label}
                         </span>
-                        <span className="text-[10px] text-muted-foreground">{formatDate(rec.created_at)}</span>
+                        <span className="text-[10px] text-gray-400">{formatDate(rec.created_at)}</span>
                         {!expanded && (
-                            <span className="text-xs text-muted-foreground/60 truncate">— {rec.material_name}</span>
+                            <span className="text-xs text-gray-300 truncate">— {rec.material_name}</span>
                         )}
                     </button>
                     <div className="flex items-center gap-1 flex-shrink-0">
@@ -324,8 +324,8 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
                             onClick={() => handleOpenCncFolder(rec)}
                             disabled={!hierarchy}
                             title={`Abrir pasta CNC nº${rec.sequence_number} ${rec.material_name}`}
-                            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground 
-                                       hover:text-card-foreground transition-all disabled:opacity-50"
+                            className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 
+                                       hover:text-gray-700 transition-all disabled:opacity-50"
                         >
                             <FolderOpen className="w-3.5 h-3.5" />
                         </button>
@@ -334,12 +334,12 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
 
                 {/* Card body — expandido */}
                 {expanded && (
-                    <div className="px-3 pb-2.5 pt-0.5 border-t border-border/30 space-y-1.5">
+                    <div className="px-3 pb-2.5 pt-0.5 border-t border-gray-200/30 space-y-1.5">
                         {/* Tabela de material */}
                         <div className="overflow-x-auto">
                             <table className="w-full text-[10px]">
                                 <thead>
-                                    <tr className="text-muted-foreground uppercase tracking-wider">
+                                    <tr className="text-gray-400 uppercase tracking-wider">
                                         <th className="text-left py-0.5 pr-2 font-medium">Produto</th>
                                         <th className="text-left py-0.5 pr-2 font-medium">Marca</th>
                                         <th className="text-left py-0.5 pr-2 font-medium">Fornecedor</th>
@@ -348,7 +348,7 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr className="text-card-foreground">
+                                    <tr className="text-gray-900">
                                         <td className="py-0.5 pr-2">{rec.material_name || '-'}</td>
                                         <td className="py-0.5 pr-2">{rec.marca || '-'}</td>
                                         <td className="py-0.5 pr-2">{rec.fornecedor || '-'}</td>
@@ -361,7 +361,7 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
 
                         {/* Notas */}
                         {rec.notas && (
-                            <p className="text-[10px] text-muted-foreground italic">📝 {rec.notas}</p>
+                            <p className="text-[10px] text-gray-400 italic">📝 {rec.notas}</p>
                         )}
                     </div>
                 )}
@@ -385,8 +385,8 @@ export default function MillingWidget({ appointmentId, onReload }: MillingWidget
                             onClick={handleOpenFolder}
                             disabled={!hierarchy}
                             title="Abrir pasta Fresagem"
-                            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground 
-                                       hover:text-card-foreground transition-all disabled:opacity-50"
+                            className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 
+                                       hover:text-gray-700 transition-all disabled:opacity-50"
                         >
                             <FolderOpen className="w-3.5 h-3.5" />
                         </button>
