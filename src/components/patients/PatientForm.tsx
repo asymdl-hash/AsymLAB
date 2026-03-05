@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ import {
     MessageCircle,
     Printer,
     Loader2,
+    Archive,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +37,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { patientsService, PatientFullDetails } from '@/services/patientsService';
 import PlanTimeline from '@/components/patients/PlanTimeline';
+import AppointmentExpandedCard from '@/components/patients/AppointmentExpandedCard';
 import { useOptimisticLock } from '@/hooks/useOptimisticLock';
 import NewPlanModal from '@/components/patients/NewPlanModal';
 import DeleteConfirmModal from '@/components/patients/DeleteConfirmModal';
@@ -47,6 +50,15 @@ import PatientAlerts from '@/components/patients/PatientAlerts';
 import PatientPrintSheet from '@/components/patients/PatientPrintSheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+
+// Lazy load PlanDetail para performance (1262 linhas)
+const PlanDetail = dynamic(() => import('@/components/patients/PlanDetail'), {
+    loading: () => (
+        <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
+        </div>
+    ),
+});
 
 // Status do paciente
 const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
@@ -84,6 +96,9 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const [showNewPlan, setShowNewPlan] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showPrint, setShowPrint] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [selectedApt, setSelectedApt] = useState<{ appointment: any; phase: any } | null>(null);
+    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
     const [clinics, setClinics] = useState<{ id: string; commercial_name: string }[]>([]);
     const [doctors, setDoctors] = useState<{ user_id: string; full_name: string }[]>([]);
     const router = useRouter();
@@ -863,6 +878,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
             {/* Timeline Horizontal */}
             <PlanTimeline
                 plans={patient.treatment_plans || []}
+                selectedAppointmentId={selectedApt?.appointment?.id || null}
                 onPhaseClick={(planId, phaseId) => {
                     // Scroll para a fase correspondente na tab Planos
                     const el = document.getElementById(`phase-${phaseId}`);
@@ -872,11 +888,51 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         setTimeout(() => el.classList.remove('ring-2', 'ring-primary/50'), 2000);
                     }
                 }}
+                onAppointmentClick={(appointment, phase) => {
+                    if (selectedApt?.appointment?.id === appointment.id) {
+                        setSelectedApt(null); // toggle off
+                    } else {
+                        setSelectedApt({ appointment, phase });
+                    }
+                }}
             />
+
+            {/* Card Agendamento Expandido (abaixo da timeline) */}
+            {selectedApt && (
+                <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-1 mb-2 z-20 relative">
+                    <AppointmentExpandedCard
+                        appointment={selectedApt.appointment}
+                        phaseName={selectedApt.phase.nome}
+                        onClose={() => setSelectedApt(null)}
+                        onStateChange={async (appointmentId, newState) => {
+                            try {
+                                await patientsService.updateRecord('appointments', appointmentId, { estado: newState });
+                                const updated = await patientsService.getPatientDetails(patient.id);
+                                if (updated) setPatient(updated);
+                                setSelectedApt(null);
+                                window.dispatchEvent(new Event('patient-updated'));
+                            } catch (err) {
+                                console.error('Erro ao actualizar agendamento:', err);
+                            }
+                        }}
+                        onDelete={async (appointmentId) => {
+                            try {
+                                await patientsService.deleteRecord('appointments', appointmentId);
+                                const updated = await patientsService.getPatientDetails(patient.id);
+                                if (updated) setPatient(updated);
+                                setSelectedApt(null);
+                                window.dispatchEvent(new Event('patient-updated'));
+                            } catch (err) {
+                                console.error('Erro ao eliminar agendamento:', err);
+                            }
+                        }}
+                    />
+                </div>
+            )}
 
             {/* Content Card com overlap negativo */}
             < div className="max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 relative z-20 flex-1 flex flex-col pb-4 overflow-hidden" >
-                <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden flex-1 flex flex-col">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col">
                     {/* Anti-duplicação warning */}
                     <DuplicateWarning
                         status={dupResult.status}
@@ -887,26 +943,25 @@ export default function PatientForm({ initialData }: PatientFormProps) {
 
 
                     {/* Tabs */}
-                    <Tabs defaultValue="planos" className="flex-1 flex flex-col overflow-hidden">
-                        <TabsList className="w-full justify-start px-4 sm:px-6 pt-2 bg-card border-b border-border/50 rounded-none h-auto overflow-x-auto flex-nowrap gap-1 scrollbar-hide">
-                            <TabsTrigger value="planos" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
-                                <ClipboardList className="h-3.5 w-3.5" />
-                                <span>Planos</span>
-                                <Badge variant="secondary" className="text-[10px] h-4 px-1.5 ml-1">
-                                    {patient.treatment_plans?.length || 0}
-                                </Badge>
-                            </TabsTrigger>
-                            <TabsTrigger value="ficheiros" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
-                                <FolderOpen className="h-3.5 w-3.5" />
-                                <span>Ficheiros</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="consideracoes" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
-                                <MessageSquare className="h-3.5 w-3.5" />
-                                <span>Considerações</span>
+                    <Tabs defaultValue="ficha-clinica" className="flex-1 flex flex-col overflow-hidden">
+                        <TabsList className="w-full justify-start px-4 sm:px-6 pt-2 bg-white border-b border-gray-200 rounded-none h-auto overflow-x-auto flex-nowrap gap-1 scrollbar-hide">
+                            <TabsTrigger value="ficha-clinica" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
+                                <Stethoscope className="h-3.5 w-3.5" />
+                                <span>Ficha Clínica</span>
                             </TabsTrigger>
                             <TabsTrigger value="documentacao" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
                                 <FileText className="h-3.5 w-3.5" />
                                 <span>Documentação</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="planos-fechados" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
+                                <Archive className="h-3.5 w-3.5" />
+                                <span>Planos Fechados</span>
+                                {(() => {
+                                    const closed = patient.treatment_plans?.filter(p => p.estado === 'concluido' || p.estado === 'cancelado') || [];
+                                    return closed.length > 0 ? (
+                                        <Badge variant="secondary" className="text-[10px] h-4 px-1.5 ml-1">{closed.length}</Badge>
+                                    ) : null;
+                                })()}
                             </TabsTrigger>
                             <TabsTrigger value="historico" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
                                 <History className="h-3.5 w-3.5" />
@@ -915,7 +970,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         </TabsList>
 
                         {/* === Tab: Planos de Tratamento === */}
-                        <TabsContent value="planos" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
+                        <TabsContent value="ficha-clinica" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
                             {/* Notas do lab */}
                             <div className="mb-6">
                                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Notas do Laboratório</label>
@@ -923,21 +978,21 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                     value={patient.notas_lab || ''}
                                     onChange={(e) => handleFieldChange('notas_lab', e.target.value)}
                                     placeholder="Notas internas sobre o paciente..."
-                                    className="mt-1 w-full text-sm border border-border rounded-lg p-3 bg-muted/50 text-card-foreground/80 placeholder:text-muted-foreground focus:bg-muted focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/30 resize-none min-h-[60px]"
+                                    className="mt-1 w-full text-sm border border-gray-200 rounded-lg p-3 bg-gray-50 text-gray-700 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/30 resize-none min-h-[60px]"
                                     rows={2}
                                     disabled={readOnly}
                                 />
                             </div>
 
-                            {/* Lista de planos */}
+                            {/* Planos Ativos */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-semibold text-card-foreground/80">Planos de Tratamento</h3>
+                                    <h3 className="text-sm font-semibold text-gray-800">Planos de Tratamento Ativos</h3>
                                     {!readOnly && (
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            className="h-7 text-xs gap-1.5 border-border text-card-foreground/80 hover:bg-muted hover:text-amber-400 hover:border-amber-500/30"
+                                            className="h-7 text-xs gap-1.5 border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-amber-600 hover:border-amber-300"
                                             onClick={() => setShowNewPlan(true)}
                                         >
                                             <Plus className="h-3 w-3" />
@@ -946,79 +1001,89 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                     )}
                                 </div>
 
-                                {(!patient.treatment_plans || patient.treatment_plans.length === 0) ? (
-                                    <div className="text-center py-12 text-muted-foreground">
-                                        <ClipboardList className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                                        <p className="text-sm">Sem planos de tratamento</p>
-                                        <p className="text-xs mt-1">Crie o primeiro plano para começar</p>
-                                    </div>
-                                ) : (
-                                    patient.treatment_plans.map((plan) => {
-                                        const stateConfig = PLAN_STATE_CONFIG[plan.estado] || PLAN_STATE_CONFIG.rascunho;
-                                        const totalPhases = plan.phases?.length || 0;
+                                {(() => {
+                                    const activePlans = (patient.treatment_plans || []).filter(
+                                        p => p.estado !== 'concluido' && p.estado !== 'cancelado'
+                                    );
+                                    if (activePlans.length === 0) {
+                                        return (
+                                            <div className="text-center py-12 text-gray-400">
+                                                <ClipboardList className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                                                <p className="text-sm">Sem planos ativos</p>
+                                                <p className="text-xs mt-1">Crie o primeiro plano para começar</p>
+                                            </div>
+                                        );
+                                    }
+                                    return activePlans.map((plan) => {
+                                        const planColor = plan.work_type?.cor || '#6b7280';
+                                        const planStateConfig = PLAN_STATE_CONFIG[plan.estado] || PLAN_STATE_CONFIG.ativo;
                                         const completedPhases = plan.phases?.filter(p => p.estado === 'concluida').length || 0;
+                                        const totalPhases = plan.phases?.length || 0;
+                                        const progressPct = totalPhases > 0 ? (completedPhases / totalPhases) * 100 : 0;
 
                                         return (
                                             <div
                                                 key={plan.id}
-                                                className="border border-border/50 rounded-xl p-4 hover:border-muted-foreground transition-all bg-muted/50 cursor-pointer hover:bg-muted"
-                                                onClick={() => router.push(`/dashboard/patients/${patient.id}/plans/${plan.id}`)}
+                                                className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-all bg-gray-50 cursor-pointer hover:bg-gray-100 hover:shadow-sm"
+                                                onClick={() => setSelectedPlanId(plan.id)}
                                             >
                                                 {/* Cabeçalho do plano */}
-                                                <div className="flex items-start justify-between gap-3">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: planColor + '20' }}>
+                                                        <ClipboardList className="h-4 w-4" style={{ color: planColor }} />
+                                                    </div>
                                                     <div className="min-w-0 flex-1">
                                                         <div className="flex items-center gap-2 flex-wrap">
-                                                            <h4 className="font-medium text-sm text-card-foreground truncate">
+                                                            <h4 className="font-medium text-sm text-gray-900 truncate">
                                                                 {plan.nome}
                                                             </h4>
                                                             <span className={cn(
-                                                                "text-[10px] font-medium px-2 py-0.5 rounded-full",
-                                                                stateConfig.bg,
-                                                                stateConfig.color
+                                                                "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
+                                                                planStateConfig.bg, planStateConfig.color
                                                             )}>
-                                                                {stateConfig.label}
+                                                                {planStateConfig.label}
                                                             </span>
-                                                            {plan.urgente && (
-                                                                <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                                                            )}
                                                         </div>
-                                                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                                                            {plan.work_type && (
-                                                                <span className="flex items-center gap-1">
-                                                                    {plan.work_type.cor && (
-                                                                        <span
-                                                                            className="h-2 w-2 rounded-full inline-block"
-                                                                            style={{ backgroundColor: plan.work_type.cor }}
-                                                                        />
-                                                                    )}
-                                                                    {plan.work_type.nome}
+                                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                                                            {plan.work_type?.nome && (
+                                                                <span className="text-xs text-gray-500">{plan.work_type.nome}</span>
+                                                            )}
+                                                            {plan.medico?.full_name && (
+                                                                <span className="text-xs text-gray-500 flex items-center gap-1">
+                                                                    <Stethoscope className="h-3 w-3" />
+                                                                    {plan.medico.full_name}
                                                                 </span>
                                                             )}
-                                                            {plan.medico && (
-                                                                <span>Dr. {plan.medico.full_name}</span>
+                                                            {plan.clinica?.commercial_name && (
+                                                                <span className="text-xs text-gray-500">{plan.clinica.commercial_name}</span>
                                                             )}
                                                         </div>
                                                     </div>
-
-                                                    {/* Progress */}
-                                                    {totalPhases > 0 && (
-                                                        <div className="text-right shrink-0">
-                                                            <span className="text-xs text-gray-500">
-                                                                {completedPhases}/{totalPhases}
-                                                            </span>
-                                                            <div className="w-16 h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
-                                                                <div
-                                                                    className="h-full bg-primary rounded-full transition-all"
-                                                                    style={{ width: `${(completedPhases / totalPhases) * 100}%` }}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    )}
                                                 </div>
+
+                                                {/* Barra de progresso */}
+                                                {totalPhases > 0 && (
+                                                    <div className="mt-3">
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <span className="text-[10px] text-gray-500">
+                                                                {completedPhases}/{totalPhases} fases
+                                                            </span>
+                                                            <span className="text-[10px] font-medium" style={{ color: planColor }}>
+                                                                {Math.round(progressPct)}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                                            <div
+                                                                className="h-full rounded-full transition-all duration-500"
+                                                                style={{ width: `${progressPct}%`, backgroundColor: planColor }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
 
                                                 {/* Fases (collapsed) */}
                                                 {plan.phases && plan.phases.length > 0 && (
-                                                    <div className="mt-3 pt-3 border-t border-border/50 space-y-1.5">
+                                                    <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
                                                         {plan.phases
                                                             .sort((a, b) => a.ordem - b.ordem)
                                                             .map((phase) => {
@@ -1028,16 +1093,15 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                                                 return (
                                                                     <div
                                                                         key={phase.id}
-                                                                        className="flex items-center gap-2 text-xs text-muted-foreground py-1 px-2 rounded hover:bg-muted/50"
+                                                                        className="flex items-center gap-2 text-xs text-gray-500 py-1 px-2 rounded hover:bg-gray-100"
                                                                     >
                                                                         <Circle className={cn("h-2.5 w-2.5 fill-current", phaseConfig.dot)} />
                                                                         <span className="flex-1 truncate">{phase.nome}</span>
                                                                         {appointmentCount > 0 && (
-                                                                            <span className="text-gray-500 text-[10px]">
-                                                                                {appointmentCount} agend.
+                                                                            <span className="text-[10px] text-gray-400">
+                                                                                {appointmentCount} apt{appointmentCount > 1 ? 's' : ''}
                                                                             </span>
                                                                         )}
-                                                                        <ChevronRight className="h-3 w-3 text-muted-foreground" />
                                                                     </div>
                                                                 );
                                                             })}
@@ -1045,31 +1109,124 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                                 )}
 
                                                 {/* Ver detalhes link */}
-                                                <div className="mt-3 pt-2 border-t border-border/50 text-right">
-                                                    <span className="text-xs text-primary font-medium hover:underline">
+                                                <div className="mt-3 pt-2 border-t border-gray-200 text-right">
+                                                    <span className="text-xs text-amber-600 font-medium hover:underline">
                                                         Ver detalhes →
                                                     </span>
                                                 </div>
                                             </div>
                                         );
-                                    })
-                                )}
+                                    });
+                                })()}
                             </div>
-                        </TabsContent>
 
-                        {/* === Tab: Ficheiros === */}
-                        <TabsContent value="ficheiros" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
-                            <FilesTab patientId={patient.id} plans={patient.treatment_plans || []} />
-                        </TabsContent>
+                            {/* PlanDetail inline (F1c) */}
+                            {selectedPlanId && (() => {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                const selectedPlan = (patient.treatment_plans || []).find((p: any) => p.id === selectedPlanId);
+                                if (!selectedPlan) return null;
+                                return (
+                                    <div className="mt-6 border border-gray-200 rounded-xl overflow-hidden">
+                                        <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border-b border-gray-200">
+                                            <button
+                                                onClick={() => setSelectedPlanId(null)}
+                                                className="p-1 rounded-lg hover:bg-gray-200 transition-colors text-gray-500"
+                                            >
+                                                <ArrowLeft className="w-4 h-4" />
+                                            </button>
+                                            <span className="text-sm font-medium text-gray-700">Voltar à lista</span>
+                                        </div>
+                                        <PlanDetail
+                                            plan={selectedPlan}
+                                            patientId={patient.id}
+                                            onReload={async () => {
+                                                try {
+                                                    const updated = await patientsService.getPatientDetails(patient.id);
+                                                    if (updated) setPatient(updated);
+                                                } catch (err) {
+                                                    console.error('Erro ao recarregar:', err);
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                );
+                            })()}
 
-                        {/* === Tab: Considerações === */}
-                        <TabsContent value="consideracoes" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
-                            <ConsiderationsTab patientId={patient.id} plans={patient.treatment_plans || []} />
+                            {/* Considerações (integradas na ficha clínica) */}
+                            <div className="mt-6">
+                                <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                    <MessageSquare className="h-4 w-4 text-gray-400" />
+                                    Considerações
+                                </h3>
+                                <ConsiderationsTab patientId={patient.id} plans={patient.treatment_plans || []} />
+                            </div>
                         </TabsContent>
 
                         {/* === Tab: Documentação === */}
                         <TabsContent value="documentacao" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
                             <DocumentsTab patientId={patient.id} />
+                        </TabsContent>
+
+                        {/* === Tab: Planos Fechados === */}
+                        <TabsContent value="planos-fechados" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
+                            {(() => {
+                                const closedPlans = (patient.treatment_plans || []).filter(
+                                    p => p.estado === 'concluido' || p.estado === 'cancelado'
+                                );
+                                if (closedPlans.length === 0) {
+                                    return (
+                                        <div className="text-center py-12 text-gray-400">
+                                            <Archive className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                                            <p className="text-sm">Sem planos fechados</p>
+                                            <p className="text-xs mt-1">Planos concluídos ou cancelados aparecem aqui</p>
+                                        </div>
+                                    );
+                                }
+                                return (
+                                    <div className="space-y-3">
+                                        {closedPlans.map(plan => {
+                                            const planColor = plan.work_type?.cor || '#6b7280';
+                                            const isConcluido = plan.estado === 'concluido';
+                                            return (
+                                                <div
+                                                    key={plan.id}
+                                                    className={cn(
+                                                        "border rounded-xl p-4 cursor-pointer transition-all hover:shadow-sm",
+                                                        isConcluido
+                                                            ? "border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50"
+                                                            : "border-red-200 bg-red-50/50 hover:bg-red-50"
+                                                    )}
+                                                    onClick={() => router.push(`/dashboard/patients/${patient.id}/plans/${plan.id}`)}
+                                                >
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: planColor + '20' }}>
+                                                            {isConcluido ? (
+                                                                <Check className="h-4 w-4 text-emerald-600" />
+                                                            ) : (
+                                                                <X className="h-4 w-4 text-red-500" />
+                                                            )}
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <h4 className="font-medium text-sm text-gray-900">{plan.nome}</h4>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <span className={cn(
+                                                                    "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
+                                                                    isConcluido ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                                                                )}>
+                                                                    {isConcluido ? 'Concluído' : 'Cancelado'}
+                                                                </span>
+                                                                {plan.work_type?.nome && (
+                                                                    <span className="text-xs text-gray-500">{plan.work_type.nome}</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })()}
                         </TabsContent>
 
                         {/* === Tab: Histórico === */}

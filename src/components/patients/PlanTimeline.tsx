@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Check, X, Package, ChevronDown } from 'lucide-react';
+import { Check, X, ChevronDown, ChevronLeft, ChevronRight, Plus, Package } from 'lucide-react';
 import { Tables } from '@/types/database.types';
 
 // ──── Tipos ────
@@ -20,21 +20,42 @@ type Plan = Tables<'treatment_plans'> & {
 interface PlanTimelineProps {
     plans: Plan[];
     onPhaseClick?: (planId: string, phaseId: string) => void;
+    onAppointmentClick?: (appointment: Tables<'appointments'>, phase: Phase) => void;
+    selectedAppointmentId?: string | null;
 }
 
-// ──── Cores dos estados de appointment ────
-const APT_STATE_COLOR: Record<string, string> = {
-    concluido: 'bg-emerald-400',
-    em_curso: 'bg-blue-400',
-    pendente: 'bg-gray-300 dark:bg-gray-600',
-    cancelado: 'bg-red-400',
-    reagendado: 'bg-amber-400',
+// ──── Estados das fases (Mockup V5 §3.2) ────
+type PhaseVisualState = 'criada' | 'em_andamento' | 'por_fechar' | 'fechada' | 'cancelada';
+
+function getPhaseVisualState(phase: Phase): PhaseVisualState {
+    if (phase.estado === 'cancelada') return 'cancelada';
+    if (phase.estado === 'concluida') {
+        // "Por Fechar": concluída mas nº recibos ≠ nº faturas (simplificado: verificar flag)
+        // Por agora, todas as concluídas são "fechadas" — lógica de faturas será adicionada em F4
+        return 'fechada';
+    }
+    if (phase.estado === 'em_curso') return 'em_andamento';
+    return 'criada'; // pendente
+}
+
+// ──── Cores dos estados de agendamento (enum: appointment_state_type) ────
+const APT_STATE_STYLES: Record<string, { bg: string; ring: string }> = {
+    concluido: { bg: 'bg-emerald-500', ring: 'ring-emerald-300' },
+    agendado: { bg: 'bg-blue-500', ring: 'ring-blue-300' },
+    prova_entregue: { bg: 'bg-indigo-400', ring: 'ring-indigo-200' },
+    colocacao_entregue: { bg: 'bg-purple-400', ring: 'ring-purple-200' },
+    recolhido: { bg: 'bg-teal-400', ring: 'ring-teal-200' },
+    cancelado: { bg: 'bg-red-400', ring: 'ring-red-200' },
+    remarcado: { bg: 'bg-amber-400', ring: 'ring-amber-200' },
 };
 
 // ──── Componente ────
-export default function PlanTimeline({ plans, onPhaseClick }: PlanTimelineProps) {
+export default function PlanTimeline({ plans, onPhaseClick, onAppointmentClick, selectedAppointmentId }: PlanTimelineProps) {
     const [selectedPlanIdx, setSelectedPlanIdx] = useState(0);
     const [showPlanDropdown, setShowPlanDropdown] = useState(false);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
 
     if (!plans || plans.length === 0) return null;
 
@@ -46,28 +67,66 @@ export default function PlanTimeline({ plans, onPhaseClick }: PlanTimelineProps)
     // Progresso global
     const totalPhases = phases.length;
     const completedPhases = phases.filter(p => p.estado === 'concluida').length;
-    const activeIdx = phases.findIndex(p => p.estado === 'em_curso');
     const hasRecolhaPronta = phases.some(p =>
         p.appointments?.some(a => a.recolha_pronta && a.estado !== 'concluido')
     );
 
-    // Barra de progresso — percentagem
-    const progressPct = totalPhases > 1
-        ? ((activeIdx >= 0 ? activeIdx : completedPhases) / (totalPhases - 1)) * 100
-        : completedPhases > 0 ? 100 : 0;
+    // Encontrar próximo agendamento (primeiro agendado/não concluído)
+    const findNextAppointment = useCallback((): string | null => {
+        for (const phase of phases) {
+            const apts = [...(phase.appointments || [])].sort((a, b) => a.ordem - b.ordem);
+            for (const apt of apts) {
+                if (apt.estado === 'agendado') return apt.id;
+            }
+        }
+        return null;
+    }, [phases]);
+
+    const nextAptId = findNextAppointment();
+
+    // ── Scroll detection ──
+    const checkScroll = useCallback(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        setCanScrollLeft(el.scrollLeft > 4);
+        setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+    }, []);
+
+    useEffect(() => {
+        checkScroll();
+        const el = scrollRef.current;
+        if (el) {
+            el.addEventListener('scroll', checkScroll, { passive: true });
+            const ro = new ResizeObserver(checkScroll);
+            ro.observe(el);
+            return () => {
+                el.removeEventListener('scroll', checkScroll);
+                ro.disconnect();
+            };
+        }
+    }, [checkScroll, phases]);
+
+    const scroll = (dir: 'left' | 'right') => {
+        scrollRef.current?.scrollBy({ left: dir === 'left' ? -160 : 160, behavior: 'smooth' });
+    };
 
     return (
         <div className="relative max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-4 mb-2 z-20">
-            <div className="bg-card/95 dark:bg-[#111827]/95 backdrop-blur-xl rounded-xl border border-border/50 shadow-lg px-5 pt-3 pb-5">
-                {/* Título + selector de plano + progresso */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-5 pt-3 pb-4">
+
+                {/* ── Header: Label + Selector + Progresso ── */}
                 <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/60 mr-3 shrink-0">Timeline</span>
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2.5">
+                        <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400 shrink-0">
+                            Timeline Plano Tratamento
+                        </span>
+
+                        {/* Plan selector */}
                         {plans.length > 1 ? (
                             <div className="relative">
                                 <button
                                     onClick={() => setShowPlanDropdown(!showPlanDropdown)}
-                                    className="flex items-center gap-1.5 text-xs font-semibold text-foreground/80 hover:text-foreground transition-colors"
+                                    className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 hover:text-gray-900 transition-colors"
                                 >
                                     <div
                                         className="h-2.5 w-2.5 rounded-full shrink-0"
@@ -76,17 +135,17 @@ export default function PlanTimeline({ plans, onPhaseClick }: PlanTimelineProps)
                                     <span className="truncate max-w-[180px]">
                                         {plan.work_type?.nome || `Plano ${selectedPlanIdx + 1}`}
                                     </span>
-                                    <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform shrink-0", showPlanDropdown && "rotate-180")} />
+                                    <ChevronDown className={cn("h-3 w-3 text-gray-400 transition-transform shrink-0", showPlanDropdown && "rotate-180")} />
                                 </button>
                                 {showPlanDropdown && (
-                                    <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-xl z-50 min-w-[200px] py-1">
+                                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[200px] py-1">
                                         {plans.map((p, i) => (
                                             <button
                                                 key={p.id}
                                                 onClick={() => { setSelectedPlanIdx(i); setShowPlanDropdown(false); }}
                                                 className={cn(
-                                                    "w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors flex items-center gap-2",
-                                                    i === selectedPlanIdx ? "text-primary font-semibold bg-accent/50" : "text-foreground/70"
+                                                    "w-full text-left px-3 py-2 text-xs hover:bg-gray-50 transition-colors flex items-center gap-2",
+                                                    i === selectedPlanIdx ? "text-amber-600 font-semibold bg-amber-50" : "text-gray-600"
                                                 )}
                                             >
                                                 <div
@@ -105,115 +164,165 @@ export default function PlanTimeline({ plans, onPhaseClick }: PlanTimelineProps)
                                     className="h-2.5 w-2.5 rounded-full shrink-0"
                                     style={{ backgroundColor: plan.work_type?.cor || '#6b7280' }}
                                 />
-                                <span className="text-xs font-semibold text-foreground/80 truncate max-w-[180px]">
+                                <span className="text-xs font-semibold text-gray-700 truncate max-w-[180px]">
                                     {plan.work_type?.nome || 'Plano de Tratamento'}
                                 </span>
                             </div>
                         )}
 
                         {hasRecolhaPronta && (
-                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 animate-pulse">
+                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 animate-pulse">
                                 <Package className="h-3 w-3" />
                                 Recolha
                             </span>
                         )}
                     </div>
 
-                    <span className="text-[10px] font-medium text-muted-foreground shrink-0 tabular-nums bg-muted/50 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-medium text-gray-500 shrink-0 tabular-nums bg-gray-100 px-2 py-0.5 rounded-full">
                         {completedPhases}/{totalPhases} fases
                     </span>
                 </div>
 
-                {/* Timeline horizontal */}
-                <div className="relative">
-                    {/* Linha de fundo */}
-                    <div className="absolute top-[14px] left-[14px] right-[14px] h-[2px] bg-border rounded-full" />
+                {/* ── Timeline Horizontal com Scroll ── */}
+                <div className="relative group/timeline">
+                    {/* Seta esquerda */}
+                    {canScrollLeft && (
+                        <button
+                            onClick={() => scroll('left')}
+                            className="absolute -left-1 top-1/2 -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-all opacity-0 group-hover/timeline:opacity-100"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </button>
+                    )}
 
-                    {/* Linha de progresso animada */}
+                    {/* Seta direita */}
+                    {canScrollRight && (
+                        <button
+                            onClick={() => scroll('right')}
+                            className="absolute -right-1 top-1/2 -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-all opacity-0 group-hover/timeline:opacity-100"
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </button>
+                    )}
+
+                    {/* Scrollable container */}
                     <div
-                        className="absolute top-[14px] left-[14px] h-[2px] rounded-full transition-all duration-700 ease-out"
-                        style={{
-                            width: `calc(${progressPct}% * (100% - 28px) / 100%)`,
-                            background: 'linear-gradient(90deg, #10b981, #3b82f6)',
-                        }}
-                    />
+                        ref={scrollRef}
+                        className="overflow-x-auto scrollbar-hide scroll-smooth"
+                    >
+                        <div className="flex items-center gap-0 min-w-max py-2 px-1">
+                            {phases.map((phase, phaseIdx) => {
+                                const visualState = getPhaseVisualState(phase);
+                                const apts = [...(phase.appointments || [])].sort((a, b) => a.ordem - b.ordem);
+                                const isLastPhase = phaseIdx === phases.length - 1;
 
-                    {/* Fases */}
-                    <div className="relative flex items-start justify-between">
-                        {phases.map((phase) => {
-                            const isCompleted = phase.estado === 'concluida';
-                            const isActive = phase.estado === 'em_curso';
-                            const isCancelled = phase.estado === 'cancelada';
-                            const apts = [...(phase.appointments || [])].sort((a, b) => a.ordem - b.ordem);
-                            const completedApts = apts.filter(a => a.estado === 'concluido').length;
+                                return (
+                                    <div key={phase.id} className="flex items-center">
+                                        {/* ── Fase (nódulo numerado) ── */}
+                                        <button
+                                            onClick={() => onPhaseClick?.(plan.id, phase.id)}
+                                            className="flex flex-col items-center gap-1 group cursor-pointer relative"
+                                            title={`${phase.nome} · ${phase.estado}`}
+                                        >
+                                            <div className="relative">
+                                                <div className={cn(
+                                                    "h-8 w-8 rounded-full flex items-center justify-center transition-all duration-300 text-xs font-bold",
+                                                    // Fechada: sólido preenchido
+                                                    visualState === 'fechada' && "bg-emerald-500 text-white shadow-md shadow-emerald-200",
+                                                    // Em Andamento: anel/contorno
+                                                    visualState === 'em_andamento' && "bg-blue-50 border-2 border-blue-500 text-blue-600",
+                                                    // Por Fechar: contorno dourado
+                                                    visualState === 'por_fechar' && "bg-amber-50 border-2 border-amber-500 text-amber-600",
+                                                    // Criada: pontilhado
+                                                    visualState === 'criada' && "bg-white border-2 border-dashed border-gray-300 text-gray-400",
+                                                    // Cancelada
+                                                    visualState === 'cancelada' && "bg-red-50 border-2 border-red-300 text-red-400",
+                                                    "group-hover:scale-110"
+                                                )}>
+                                                    {visualState === 'fechada' ? (
+                                                        <Check className="h-4 w-4" strokeWidth={3} />
+                                                    ) : visualState === 'cancelada' ? (
+                                                        <X className="h-3.5 w-3.5" />
+                                                    ) : (
+                                                        <span>{phaseIdx + 1}</span>
+                                                    )}
+                                                </div>
 
-                            return (
-                                <button
-                                    key={phase.id}
-                                    onClick={() => onPhaseClick?.(plan.id, phase.id)}
-                                    className="flex flex-col items-center gap-1.5 group cursor-pointer flex-1 min-w-0"
-                                >
-                                    {/* Nódulo */}
-                                    <div className="relative">
-                                        <div className={cn(
-                                            "h-7 w-7 rounded-full flex items-center justify-center transition-all duration-300 border-2",
-                                            isCompleted && "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/25",
-                                            isActive && "bg-blue-500/15 border-blue-500 text-blue-500 dark:bg-blue-500/20",
-                                            isCancelled && "bg-red-500/15 border-red-500/50 text-red-400",
-                                            !isCompleted && !isActive && !isCancelled && "bg-card dark:bg-gray-800 border-border text-muted-foreground",
-                                            "group-hover:scale-110"
-                                        )}>
-                                            {isCompleted && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-                                            {isActive && <div className="h-2.5 w-2.5 rounded-full bg-blue-500" />}
-                                            {isCancelled && <X className="h-3 w-3" />}
-                                            {!isCompleted && !isActive && !isCancelled && (
-                                                <div className="h-2 w-2 rounded-full bg-muted-foreground/30" />
-                                            )}
-                                        </div>
+                                                {/* Anel pulse para fase ativa */}
+                                                {visualState === 'em_andamento' && (
+                                                    <div className="absolute -inset-[4px] rounded-full border-2 border-blue-400/40 animate-[pulse_2.5s_ease-in-out_infinite]" />
+                                                )}
+                                            </div>
 
-                                        {/* Anel suave para fase activa — SEM spinner/rotação */}
-                                        {isActive && (
-                                            <div className="absolute -inset-[5px] rounded-full border-2 border-amber-500/40 animate-[pulse_2.5s_ease-in-out_infinite]" />
+                                            {/* Nome da fase */}
+                                            <span className={cn(
+                                                "text-[9px] leading-tight text-center max-w-[64px] truncate transition-colors font-medium",
+                                                visualState === 'em_andamento' ? "text-blue-600 font-semibold" :
+                                                    visualState === 'fechada' ? "text-emerald-600" :
+                                                        "text-gray-500",
+                                                "group-hover:text-gray-800"
+                                            )}>
+                                                {phase.nome}
+                                            </span>
+                                        </button>
+
+                                        {/* ── Agendamentos (pontos entre fases) ── */}
+                                        {apts.length > 0 && (
+                                            <div className="flex items-center mx-1">
+                                                {/* Linha conectora antes dos pontos */}
+                                                <div className="w-3 h-[2px] bg-gray-200" />
+
+                                                {apts.map((apt, aptIdx) => {
+                                                    const aptStyle = APT_STATE_STYLES[apt.estado] || APT_STATE_STYLES.pendente;
+                                                    const isNext = apt.id === nextAptId;
+                                                    const isSelected = apt.id === selectedAppointmentId;
+
+                                                    return (
+                                                        <div key={apt.id} className="flex items-center">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    onAppointmentClick?.(apt, phase);
+                                                                }}
+                                                                className={cn(
+                                                                    "relative transition-all duration-200 rounded-full cursor-pointer",
+                                                                    isSelected
+                                                                        ? "h-3.5 w-3.5 ring-2 ring-offset-1 ring-offset-white " + aptStyle.ring
+                                                                        : isNext
+                                                                            ? "h-3 w-3"
+                                                                            : "h-2.5 w-2.5 hover:scale-125",
+                                                                    aptStyle.bg
+                                                                )}
+                                                                title={`${apt.tipo || 'Agendamento'} · ${apt.estado}${apt.data_prevista ? ' · ' + new Date(apt.data_prevista).toLocaleDateString('pt-PT') : ''}`}
+                                                            >
+                                                                {/* Amber pulse para próximo agendamento */}
+                                                                {isNext && !isSelected && (
+                                                                    <span className="absolute -inset-[3px] rounded-full border-2 border-amber-400/60 animate-[pulse_2s_ease-in-out_infinite]" />
+                                                                )}
+                                                            </button>
+                                                            {/* Linha entre pontos */}
+                                                            {aptIdx < apts.length - 1 && (
+                                                                <div className="w-2 h-[2px] bg-gray-200" />
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+
+                                                {/* Linha conectora depois dos pontos */}
+                                                {!isLastPhase && (
+                                                    <div className="w-3 h-[2px] bg-gray-200" />
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Se não tem agendamentos, linha directa entre fases */}
+                                        {apts.length === 0 && !isLastPhase && (
+                                            <div className="w-8 h-[2px] bg-gray-200 mx-1" />
                                         )}
                                     </div>
-
-                                    {/* Nome */}
-                                    <span className={cn(
-                                        "text-[10px] leading-tight text-center max-w-[72px] sm:max-w-[100px] truncate transition-colors",
-                                        isActive ? "text-foreground font-semibold" : "text-muted-foreground font-medium",
-                                        "group-hover:text-foreground"
-                                    )}>
-                                        {phase.nome}
-                                    </span>
-
-                                    {/* Dots de agendamentos */}
-                                    {apts.length > 0 && (
-                                        <div className="flex items-center gap-[3px]">
-                                            {apts.slice(0, 5).map((apt) => (
-                                                <div
-                                                    key={apt.id}
-                                                    className={cn(
-                                                        "h-[5px] w-[5px] rounded-full",
-                                                        APT_STATE_COLOR[apt.estado] || APT_STATE_COLOR.pendente
-                                                    )}
-                                                    title={`${apt.tipo} · ${apt.estado}`}
-                                                />
-                                            ))}
-                                            {apts.length > 5 && (
-                                                <span className="text-[8px] text-muted-foreground ml-0.5">+{apts.length - 5}</span>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* Fracção */}
-                                    {apts.length > 0 && (
-                                        <span className="text-[9px] text-muted-foreground/70 tabular-nums">
-                                            {completedApts}/{apts.length}
-                                        </span>
-                                    )}
-                                </button>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>
