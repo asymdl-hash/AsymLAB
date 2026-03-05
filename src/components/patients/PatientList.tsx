@@ -12,10 +12,10 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
-    rascunho: { label: 'Rascunho', color: 'text-muted-foreground', bg: 'bg-muted/50', dot: 'bg-gray-500' },
-    activo: { label: 'Activo', color: 'text-emerald-400', bg: 'bg-emerald-900/30', dot: 'bg-emerald-500' },
-    inactivo: { label: 'Inactivo', color: 'text-amber-400', bg: 'bg-amber-900/30', dot: 'bg-amber-500' },
-    arquivado: { label: 'Arquivado', color: 'text-red-400', bg: 'bg-red-900/30', dot: 'bg-red-500' },
+    rascunho: { label: 'Rascunho', color: 'text-gray-400', bg: 'bg-gray-50', dot: 'bg-gray-500' },
+    activo: { label: 'Activo', color: 'text-emerald-700', bg: 'bg-emerald-100', dot: 'bg-emerald-500' },
+    inactivo: { label: 'Inactivo', color: 'text-amber-700', bg: 'bg-amber-100', dot: 'bg-amber-500' },
+    arquivado: { label: 'Arquivado', color: 'text-red-700', bg: 'bg-red-100', dot: 'bg-red-500' },
 };
 
 /** Gera iniciais a partir do nome (primeira e última palavra) */
@@ -126,18 +126,18 @@ export default function PatientList() {
     };
 
     return (
-        <div className="w-full md:w-80 border-r border-border bg-card flex flex-col h-full">
+        <div className="w-full md:w-80 border-r border-gray-200 bg-white flex flex-col h-full">
             {/* Header */}
-            <div className="p-4 border-b border-border space-y-3">
+            <div className="p-4 border-b border-gray-200 space-y-3">
                 <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-card-foreground">Pacientes</h2>
+                    <h2 className="font-semibold text-gray-900">Pacientes</h2>
                     <div className="flex items-center gap-1">
                         <Button
                             size="icon"
                             variant="ghost"
                             className={cn(
                                 "h-8 w-8 transition-colors",
-                                showFilters ? "text-amber-400 bg-amber-900/20" : "text-gray-500 hover:text-card-foreground/80"
+                                showFilters ? "text-amber-500 bg-amber-50" : "text-gray-500 hover:text-gray-700"
                             )}
                             title="Filtros"
                             onClick={() => setShowFilters(!showFilters)}
@@ -160,10 +160,10 @@ export default function PatientList() {
 
                 {/* Pesquisa */}
                 <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
                     <Input
                         placeholder="Pesquisar por nome ou T-ID..."
-                        className="pl-9 bg-muted border-border text-card-foreground placeholder:text-gray-500 focus:bg-muted focus:border-amber-500/30 transition-all text-sm"
+                        className="pl-9 bg-white border-gray-200 text-gray-900 placeholder:text-gray-500 focus:bg-white focus:border-amber-500/30 transition-all text-sm"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -173,7 +173,7 @@ export default function PatientList() {
                 {showFilters && (
                     <div className="space-y-2 pt-1">
                         <select
-                            className="w-full text-sm border border-border rounded-md px-3 py-2 bg-muted text-card-foreground/80 focus:bg-muted focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 bg-white text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                             value={clinicFilter || ''}
                             onChange={(e) => setClinicFilter(e.target.value || null)}
                         >
@@ -183,7 +183,7 @@ export default function PatientList() {
                             ))}
                         </select>
                         <select
-                            className="w-full text-sm border border-border rounded-md px-3 py-2 bg-muted text-card-foreground/80 focus:bg-muted focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 bg-white text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                             value={doctorFilter || ''}
                             onChange={(e) => setDoctorFilter(e.target.value || null)}
                         >
@@ -193,7 +193,7 @@ export default function PatientList() {
                             ))}
                         </select>
                         <select
-                            className="w-full text-sm border border-border rounded-md px-3 py-2 bg-muted text-card-foreground/80 focus:bg-muted focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 bg-white text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                             value={statusFilter || ''}
                             onChange={(e) => setStatusFilter(e.target.value || null)}
                         >
@@ -233,7 +233,7 @@ export default function PatientList() {
                                 key={patient.id}
                                 href={`/dashboard/patients/${patient.id}`}
                                 className={cn(
-                                    "flex items-center gap-3 p-3 rounded-lg transition-all group hover:bg-muted",
+                                    "flex items-center gap-3 p-3 rounded-lg transition-all group hover:bg-gray-50",
                                     isActive ? "bg-amber-500/10 border border-amber-500/20 shadow-sm" : "border border-transparent",
                                     patient.urgente && "ring-1 ring-amber-500/30"
                                 )}
@@ -243,7 +243,7 @@ export default function PatientList() {
                                     "h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold transition-colors relative",
                                     patient.urgente
                                         ? "bg-amber-900/30 text-amber-400"
-                                        : "bg-gradient-to-br from-gray-700 to-gray-800 text-muted-foreground"
+                                        : "bg-gradient-to-br from-gray-100 to-gray-200 text-gray-400"
                                 )}>
                                     {initials}
                                     {patient.urgente && (
@@ -256,7 +256,7 @@ export default function PatientList() {
                                     <div className="flex items-center gap-2">
                                         <span className={cn(
                                             "text-[10px] font-bold px-1.5 py-0.5 rounded",
-                                            "bg-muted text-gray-400 group-hover:bg-amber-500/10 group-hover:text-amber-400"
+                                            "bg-gray-100 text-gray-500 group-hover:bg-amber-50 group-hover:text-amber-500"
                                         )}>
                                             {patient.t_id}
                                         </span>
@@ -273,7 +273,7 @@ export default function PatientList() {
                                     </div>
                                     <h3 className={cn(
                                         "font-semibold text-sm mt-0.5 leading-tight",
-                                        "text-card-foreground/90"
+                                        "text-gray-900"
                                     )}>
                                         {patient.nome}
                                     </h3>
@@ -297,7 +297,7 @@ export default function PatientList() {
             </div>
 
             {/* Footer */}
-            <div className="p-3 border-t border-border text-xs text-center text-gray-500 bg-card">
+            <div className="p-3 border-t border-gray-200 text-xs text-center text-gray-500 bg-white">
                 {filteredPatients.length} {filteredPatients.length === 1 ? 'Paciente' : 'Pacientes'}
                 {(clinicFilter || doctorFilter || statusFilter) && ' (filtrado)'}
             </div>
