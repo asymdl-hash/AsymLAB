@@ -897,10 +897,31 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                 </div>
             </div>
 
-            {/* === CONTEÚDO — Em construção === */}
-            <div className="flex-1 flex items-center justify-center bg-gray-50">
-                <div className="text-center text-gray-400">
-                    <p className="text-sm">Área de conteúdo</p>
+            {/* ============ CONTENT CARD (sobrepõe o hero) ============ */}
+            <div className="flex-1 -mt-8 px-4 sm:px-6 pb-6 relative z-10">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 min-h-full">
+                    <Tabs defaultValue="closed-plans" className="w-full">
+                        <TabsList className="flex w-full max-w-full overflow-x-auto">
+                            <TabsTrigger value="closed-plans" className="flex-shrink-0 gap-1.5">
+                                <Archive className="h-3.5 w-3.5" />
+                                Planos Fechados
+                            </TabsTrigger>
+                            <TabsTrigger value="history" className="flex-shrink-0 gap-1.5">
+                                <History className="h-3.5 w-3.5" />
+                                Histórico
+                            </TabsTrigger>
+                        </TabsList>
+
+                        <div className="mt-6">
+                            <TabsContent value="closed-plans">
+                                <ClosedPlansTab patient={patient} />
+                            </TabsContent>
+
+                            <TabsContent value="history">
+                                <HistoryTab patient={patient} />
+                            </TabsContent>
+                        </div>
+                    </Tabs>
                 </div>
             </div>
 
