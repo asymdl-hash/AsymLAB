@@ -897,276 +897,46 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                 </div>
             </div>
 
-            {/* === BANNER DE AVISOS === */}
-            <PatientAlerts patient={patient} />
-
-            {/* Timeline Horizontal */}
-            <PlanTimeline
-                plans={patient.treatment_plans || []}
-                selectedAppointmentId={selectedApt?.appointment?.id || null}
-                selectedPhaseId={selectedPhaseId}
-                onPhaseSelect={(planId, phaseId, phase) => {
-                    // F1.6 — Selecção de fase muda conteúdo abaixo
-                    setSelectedPhaseId(prev => prev === phaseId ? null : phaseId);
-                    setSelectedPlanId(planId);
-                }}
-                onAppointmentClick={(appointment, phase) => {
-                    if (selectedApt?.appointment?.id === appointment.id) {
-                        setSelectedApt(null); // toggle off
-                    } else {
-                        setSelectedApt({ appointment, phase });
-                    }
-                }}
-            />
-
-            {/* Card Agendamento Expandido (abaixo da timeline) */}
-            {selectedApt && (
-                <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-1 mb-2 z-20 relative">
-                    <AppointmentExpandedCard
-                        appointment={selectedApt.appointment}
-                        phaseName={selectedApt.phase.nome}
-                        onClose={() => setSelectedApt(null)}
-                        onStateChange={async (appointmentId, newState) => {
-                            try {
-                                await patientsService.updateRecord('appointments', appointmentId, { estado: newState });
-                                const updated = await patientsService.getPatientDetails(patient.id);
-                                if (updated) setPatient(updated);
-                                setSelectedApt(null);
-                                window.dispatchEvent(new Event('patient-updated'));
-                            } catch (err) {
-                                console.error('Erro ao actualizar agendamento:', err);
-                            }
-                        }}
-                        onDelete={async (appointmentId) => {
-                            try {
-                                await patientsService.deleteRecord('appointments', appointmentId);
-                                const updated = await patientsService.getPatientDetails(patient.id);
-                                if (updated) setPatient(updated);
-                                setSelectedApt(null);
-                                window.dispatchEvent(new Event('patient-updated'));
-                            } catch (err) {
-                                console.error('Erro ao eliminar agendamento:', err);
-                            }
-                        }}
-                    />
-                </div>
-            )}
-
-            {/* ── F3: Bloco Informação Técnica (fixo, abaixo timeline, acima tabs) ── */}
-            {(() => {
-                const activePlan = selectedPlanId
-                    ? (patient.treatment_plans || []).find((p: any) => p.id === selectedPlanId)
-                    : (patient.treatment_plans || []).find((p: any) => p.estado === 'activo' || p.estado === 'rascunho');
-                const activePhase = selectedPhaseId && activePlan
-                    ? activePlan.phases?.find((ph: any) => ph.id === selectedPhaseId)
-                    : null;
-                return (
-                    <InfoTecnicaBlock
-                        plan={activePlan || null}
-                        phase={activePhase || null}
-                    />
-                );
-            })()}
-
-            {/* Content Card com overlap negativo */}
-            < div className="max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 relative z-20 flex-1 flex flex-col pb-4 overflow-hidden" >
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col">
-                    {/* Anti-duplicação warning */}
-                    <DuplicateWarning
-                        status={dupResult.status}
-                        message={dupResult.message}
-                        matches={dupResult.matches}
-                        onDismiss={() => setDupResult({ status: 'ok', message: '', matches: [] })}
-                    />
-
-
-                    {/* Tabs */}
-                    <Tabs defaultValue="ficha-clinica" className="flex-1 flex flex-col overflow-hidden">
-                        <TabsList className="w-full justify-start px-4 sm:px-6 pt-2 bg-white border-b border-gray-200 rounded-none h-auto overflow-x-auto flex-nowrap gap-1 scrollbar-hide">
-                            <TabsTrigger value="ficha-clinica" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
-                                <Stethoscope className="h-3.5 w-3.5" />
-                                <span>Ficha Clínica</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="documentacao" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
-                                <FileText className="h-3.5 w-3.5" />
-                                <span>Documentação</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="planos-fechados" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
-                                <Archive className="h-3.5 w-3.5" />
-                                <span>Planos Fechados</span>
-                                {(() => {
-                                    const closed = patient.treatment_plans?.filter(p => p.estado === 'concluido' || p.estado === 'cancelado') || [];
-                                    return closed.length > 0 ? (
-                                        <Badge variant="secondary" className="text-[10px] h-4 px-1.5 ml-1">{closed.length}</Badge>
-                                    ) : null;
-                                })()}
-                            </TabsTrigger>
-                            <TabsTrigger value="historico" className="gap-1.5 text-xs sm:text-sm data-[state=active]:shadow-none">
-                                <History className="h-3.5 w-3.5" />
-                                <span>Histórico</span>
-                            </TabsTrigger>
-                        </TabsList>
-
-                        {/* === Tab: Ficha Clínica (F2 - Produção & Logística + Considerações por fase) === */}
-                        <TabsContent value="ficha-clinica" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
-                            {/* Indicador de fase seleccionada */}
-                            {(() => {
-                                const activePlan = selectedPlanId
-                                    ? (patient.treatment_plans || []).find((p: any) => p.id === selectedPlanId)
-                                    : (patient.treatment_plans || []).find((p: any) => p.estado === 'activo' || p.estado === 'rascunho');
-                                const activePhase = selectedPhaseId && activePlan
-                                    ? activePlan.phases?.find((ph: any) => ph.id === selectedPhaseId)
-                                    : activePlan?.phases?.find((ph: any) => ph.estado === 'em_curso') || activePlan?.phases?.[0];
-
-                                if (!activePlan) {
-                                    return (
-                                        <div className="text-center py-16 text-gray-400">
-                                            <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                                            <p className="text-sm font-medium">Não tem Casos Activos</p>
-                                            <p className="text-xs mt-1">Crie um plano de tratamento para começar</p>
-                                            {!readOnly && (
-                                                <Button
-                                                    size="sm"
-                                                    className="mt-4 text-xs gap-1.5 bg-amber-500 hover:bg-amber-600 text-white"
-                                                    onClick={() => setShowNewPlan(true)}
-                                                >
-                                                    <Plus className="h-3 w-3" />
-                                                    Criar Plano de Tratamento
-                                                </Button>
-                                            )}
-                                        </div>
-                                    );
-                                }
-
-                                return (
-                                    <>
-                                        {/* Header da fase com nome + estado */}
-                                        {activePhase && (
-                                            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
-                                                <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold text-white"
-                                                    style={{ background: activePlan.work_type?.cor || '#6b7280' }}
-                                                >
-                                                    {activePhase.ordem}
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-sm font-semibold text-gray-800">
-                                                        Fase {activePhase.ordem}: {activePhase.nome}
-                                                    </h3>
-                                                    <span className="text-[10px] text-gray-400">
-                                                        {activePlan.work_type?.nome || activePlan.nome}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* ── Bloco Produção & Logística ── */}
-                                        <div className="mb-6">
-                                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                                                <Package className="h-3.5 w-3.5" />
-                                                Produção & Logística
-                                            </h4>
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                                {/* Widget Fresagem */}
-                                                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <div className="h-6 w-6 rounded-md bg-blue-100 flex items-center justify-center">
-                                                            <Box className="h-3.5 w-3.5 text-blue-600" />
-                                                        </div>
-                                                        <span className="text-xs font-semibold text-gray-700">Fresagem</span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-400 italic">Sem registos nesta fase</p>
-                                                </div>
-
-                                                {/* Widget Dentes */}
-                                                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <div className="h-6 w-6 rounded-md bg-emerald-100 flex items-center justify-center">
-                                                            <ClipboardList className="h-3.5 w-3.5 text-emerald-600" />
-                                                        </div>
-                                                        <span className="text-xs font-semibold text-gray-700">Dentes</span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-400 italic">Sem registos nesta fase</p>
-                                                </div>
-
-                                                {/* Widget Componentes */}
-                                                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <div className="h-6 w-6 rounded-md bg-purple-100 flex items-center justify-center">
-                                                            <Layers className="h-3.5 w-3.5 text-purple-600" />
-                                                        </div>
-                                                        <span className="text-xs font-semibold text-gray-700">Componentes</span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-400 italic">Sem registos nesta fase</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* ── Bloco Considerações (filtradas por fase) ── */}
-                                        <div>
-                                            <ConsiderationsTab
-                                                patientId={patient.id}
-                                                plans={patient.treatment_plans || []}
-                                                selectedPhaseId={activePhase?.id || null}
-                                            />
-                                        </div>
-                                    </>
-                                );
-                            })()}
-                        </TabsContent>
-
-                        {/* === Tab: Documentação === */}
-                        <TabsContent value="documentacao" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
-                            <DocumentsTab patientId={patient.id} />
-                        </TabsContent>
-
-                        {/* === Tab: Planos Fechados === */}
-                        <TabsContent value="planos-fechados" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
-                            <ClosedPlansTab patient={patient} />
-                        </TabsContent>
-
-                        {/* === Tab: Histórico === */}
-                        <TabsContent value="historico" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
-                            <HistoryTab patient={patient} />
-                        </TabsContent>
-                    </Tabs>
-
-                    {/* Modal Novo Plano */}
-                    {showNewPlan && (
-                        <NewPlanModal
-                            patientId={patient.id}
-                            patientClinicaId={patient.clinica_id}
-                            patientMedicoId={patient.medico_principal_id}
-                            onClose={() => setShowNewPlan(false)}
-                            onCreated={async () => {
-                                setShowNewPlan(false);
-                                try {
-                                    const updated = await patientsService.getPatientDetails(patient.id);
-                                    if (updated) setPatient(updated);
-                                } catch (err) {
-                                    console.error('Erro ao recarregar:', err);
-                                }
-                            }}
-                        />
-                    )}
-
-                    {/* Modal Confirmar Eliminação */}
-                    {showDeleteModal && (
-                        <DeleteConfirmModal
-                            patientName={patient.nome}
-                            onConfirm={handleDeleteConfirm}
-                            onCancel={() => setShowDeleteModal(false)}
-                        />
-                    )}
-
-                    {/* Modal Impressão Ficha Clínica */}
-                    {showPrint && (
-                        <PatientPrintSheet
-                            patient={patient}
-                            onClose={() => setShowPrint(false)}
-                        />
-                    )}
+            {/* === CONTEÚDO — Em construção === */}
+            <div className="flex-1 flex items-center justify-center bg-gray-50">
+                <div className="text-center text-gray-400">
+                    <p className="text-sm">Área de conteúdo</p>
                 </div>
             </div>
+
+            {/* Modais essenciais */}
+            {showNewPlan && (
+                <NewPlanModal
+                    patientId={patient.id}
+                    patientName={patient.nome}
+                    onClose={() => setShowNewPlan(false)}
+                    onCreated={async () => {
+                        setShowNewPlan(false);
+                        try {
+                            const updated = await patientsService.getPatientDetails(patient.id);
+                            if (updated) setPatient(updated);
+                            window.dispatchEvent(new Event('patient-updated'));
+                        } catch (err) {
+                            console.error('Erro ao recarregar:', err);
+                        }
+                    }}
+                />
+            )}
+
+            {showDeleteModal && (
+                <DeleteConfirmModal
+                    patientName={patient.nome}
+                    onConfirm={handleDeleteConfirm}
+                    onCancel={() => setShowDeleteModal(false)}
+                />
+            )}
+
+            {showPrint && (
+                <PatientPrintSheet
+                    patient={patient}
+                    onClose={() => setShowPrint(false)}
+                />
+            )}
 
             {/* Chat Drawer — F5 */}
             {isLabStaff && isChatOpen && (
