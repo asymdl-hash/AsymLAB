@@ -1,7 +1,7 @@
 # 🚀 Roadmap & Features Futuras — AsymLAB
 
 > Funcionalidades planeadas para versões futuras. Ordenadas por prioridade.
-> Última actualização: 03/03/2026 (V1.87.0)
+> Última actualização: 05/03/2026 (V1.92.1)
 > Ver decisões detalhadas: [DECISOES.md](DECISOES.md)
 
 ---
@@ -24,13 +24,13 @@
 - [x] Fases — lifecycle 4 estados + sequencial + reordenação
 - [x] Agendamentos — 6 tipos, 7 estados, edição inline
 - [x] Considerações V2 — templates, versioning, share links, lab inside, anexos
-- [x] Tab Ficheiros — upload Supabase Storage, galeria, drag-and-drop
+- [x] Tab Ficheiros — upload Supabase Storage, galeria, drag-and-drop *(nota: substituída por campos integrados no bloco Info Técnica — Mockup V5)*
 - [x] Tab Histórico — timeline de eventos
 - [x] Tab Documentação — facturas, recibos, documentos
 - [x] Multi-Badge (33 status em 6 categorias)
 - [x] Guias de Transporte e Recepção (cards, confirmação, estados)
 - [x] Facturação base (invoices, receipts, NewInvoiceModal)
-- [x] Fila de Pedidos Kanban (drag & drop, filtros, hero header)
+- [x] Fila de Pedidos Kanban (drag & drop, filtros, hero header) *(nota: mantém implementação Kanban — drawer descartado)*
 - [x] Catálogos (5 sub-tabs: Tipos Trabalho, Materiais, Cores, Templates, Status)
 - [x] Odontograma V7 — 32 dentes com SVG anatómicos reais (FDI ISO 3950)
 - [x] Materiais por fase — UI + CRUD `phase_materials`
@@ -83,6 +83,7 @@
 - [x] Fases: `descricao` + `tipo_fase` (normal/remake)
 
 ### Widgets (~80%) → [DECISOES.md](DECISOES.md#6-widgets)
+> ℹ️ Progresso actualizado de ~50% para ~80% com base na implementação de Fresagem, Dentes e Componentes.
 - [x] Widget Fresagem — selecção material, 3 estados, check NAS (V1.74.0)
 - [x] Widget Dentes — odontograma assign materiais, múltiplos registos, versionamento (V1.75.0-V1.76.0)
 - [x] Catálogo materiais unificado — flags `widget_dentes`, `widget_fresagem`, `widget_componentes` (V1.76.0)

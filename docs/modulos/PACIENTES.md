@@ -3120,6 +3120,27 @@ audit_logs (auditoria)
 > Contexto: A app já existe com sidebar dark mode, primary amber (#f59e0b), background `#111827`.
 > Rota base: `/dashboard/patients`
 
+> [!IMPORTANT]
+> ### 🔄 Remodelação UI — Mockup V5 (Março 2026)
+> A interface da Ficha do Paciente está a ser **remodelada** com base no **Mockup V5**.
+> O layout, tabs, timeline e estrutura de informação descritos nas subsecções abaixo (6.1–6.17)
+> referem-se à **versão original** e estão a ser substituídos pelas decisões do Mockup V5.
+>
+> **Documento de referência actualizado:**
+> - Análise completa do Mockup V5 (15 decisões de design)
+> - Guia Mestre de Implementação (F0–F7) com fases, tarefas e verificações
+>
+> **Principais mudanças face ao original:**
+> - 5 tabs → **4 tabs** (Ficha Clínica, Documentação, Planos Fechados, Histórico)
+> - Tab Ficheiros **eliminada** (ficheiros integrados nos campos de Info Técnica)
+> - Timeline vertical → **Timeline horizontal** com fases como segmentos
+> - Chat inline → **Drawer lateral** minimizável (~350px)
+> - Rotas separadas por plano/fase → **Vista unificada** (tudo inline)
+> - Bloco fixo de **Informação Técnica** entre timeline e tabs
+>
+> As subsecções 6.1–6.17 abaixo mantêm-se como referência histórica.
+> Para a implementação actual, consultar o Guia Mestre.
+
 ---
 
 ### 6.1 — Mapa de Navegação
