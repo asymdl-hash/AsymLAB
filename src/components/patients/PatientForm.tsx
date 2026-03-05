@@ -62,27 +62,27 @@ const PlanDetail = dynamic(() => import('@/components/patients/PlanDetail'), {
 
 // Status do paciente
 const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-    rascunho: { label: 'Rascunho', color: 'text-muted-foreground', bg: 'bg-muted/50', border: 'border-gray-600' },
-    activo: { label: 'Activo', color: 'text-emerald-400', bg: 'bg-emerald-900/30', border: 'border-emerald-700/50' },
-    inactivo: { label: 'Inactivo', color: 'text-amber-400', bg: 'bg-amber-900/30', border: 'border-amber-700/50' },
-    arquivado: { label: 'Arquivado', color: 'text-red-400', bg: 'bg-red-900/30', border: 'border-red-700/50' },
+    rascunho: { label: 'Rascunho', color: 'text-gray-500', bg: 'bg-gray-100', border: 'border-gray-300' },
+    activo: { label: 'Activo', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-300' },
+    inactivo: { label: 'Inactivo', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-300' },
+    arquivado: { label: 'Arquivado', color: 'text-red-700', bg: 'bg-red-100', border: 'border-red-300' },
 };
 
 // Labels e cores para estados dos planos
 const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    rascunho: { label: 'Rascunho', color: 'text-muted-foreground', bg: 'bg-muted/50' },
-    activo: { label: 'Activo', color: 'text-blue-400', bg: 'bg-blue-900/30' },
-    pausado: { label: 'Pausado', color: 'text-amber-400', bg: 'bg-amber-900/30' },
-    concluido: { label: 'Concluído', color: 'text-green-400', bg: 'bg-green-900/30' },
-    cancelado: { label: 'Cancelado', color: 'text-red-400', bg: 'bg-red-900/30' },
-    reaberto: { label: 'Reaberto', color: 'text-purple-400', bg: 'bg-purple-900/30' },
+    rascunho: { label: 'Rascunho', color: 'text-gray-500', bg: 'bg-gray-100' },
+    activo: { label: 'Activo', color: 'text-blue-700', bg: 'bg-blue-100' },
+    pausado: { label: 'Pausado', color: 'text-amber-700', bg: 'bg-amber-100' },
+    concluido: { label: 'Concluído', color: 'text-green-700', bg: 'bg-green-100' },
+    cancelado: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-100' },
+    reaberto: { label: 'Reaberto', color: 'text-purple-700', bg: 'bg-purple-100' },
 };
 
 const PHASE_STATE_CONFIG: Record<string, { label: string; dot: string }> = {
-    pendente: { label: 'Pendente', dot: 'text-gray-500' },
-    em_curso: { label: 'Em Curso', dot: 'text-blue-400' },
-    concluida: { label: 'Concluída', dot: 'text-green-400' },
-    cancelada: { label: 'Cancelada', dot: 'text-red-400' },
+    pendente: { label: 'Pendente', dot: 'text-gray-400' },
+    em_curso: { label: 'Em Curso', dot: 'text-blue-500' },
+    concluida: { label: 'Concluída', dot: 'text-green-500' },
+    cancelada: { label: 'Cancelada', dot: 'text-red-500' },
 };
 
 interface PatientFormProps {

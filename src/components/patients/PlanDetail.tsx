@@ -22,6 +22,7 @@ import {
     Pencil,
     Check,
     Package,
+    FolderOpen,
 } from 'lucide-react';
 import { patientsService } from '@/services/patientsService';
 import { billingService } from '@/services/billingService';
@@ -660,11 +661,11 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
             {/* === Materiais da Fase === */}
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                         <Package className="w-3.5 h-3.5" />
                         Materiais
                         {materials.length > 0 && (
-                            <span className="text-[10px] font-normal bg-muted px-1.5 py-0.5 rounded-full">{materials.length}</span>
+                            <span className="text-[10px] font-normal bg-gray-100 px-1.5 py-0.5 rounded-full">{materials.length}</span>
                         )}
                     </h3>
                     <button onClick={() => setShowAddMaterial(!showAddMaterial)}
@@ -735,6 +736,38 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                         ))}
                     </div>
                 )}
+            </div>
+
+            {/* === Info Técnica do Plano === */}
+            <div className="mb-6">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 mb-3">
+                    <FolderOpen className="w-3.5 h-3.5" />
+                    Informação Técnica
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                        { key: 'intra-orais', label: 'Intra-Orais', emoji: '📸', color: 'bg-sky-50 border-sky-200 text-sky-700' },
+                        { key: 'face', label: 'Face', emoji: '😊', color: 'bg-amber-50 border-amber-200 text-amber-700' },
+                        { key: 'escala-cor', label: 'Escala de Cor', emoji: '🎨', color: 'bg-pink-50 border-pink-200 text-pink-700' },
+                        { key: 'cbct', label: 'CBCT', emoji: '🦷', color: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
+                        { key: 'stls', label: "STL's", emoji: '📐', color: 'bg-violet-50 border-violet-200 text-violet-700' },
+                        { key: 'orto-periapical', label: 'Orto-Periapical', emoji: '📊', color: 'bg-teal-50 border-teal-200 text-teal-700' },
+                        { key: 'outras-fotos', label: 'Outras Fotos', emoji: '📷', color: 'bg-gray-50 border-gray-200 text-gray-600' },
+                        { key: 'relatorio', label: 'Relatório', emoji: '📄', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+                    ].map((item) => (
+                        <button
+                            key={item.key}
+                            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-left text-xs font-medium transition-all hover:shadow-sm hover:scale-[1.02] ${item.color}`}
+                            onClick={() => {
+                                // TODO: Abrir pasta NAS via API /api/patient-folder
+                                console.log('Open NAS folder:', item.key);
+                            }}
+                        >
+                            <span className="text-base">{item.emoji}</span>
+                            <span className="text-xs leading-tight">{item.label}</span>
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* Notas da Fase */}
