@@ -32,6 +32,7 @@ import ShareLinkModal from './ShareLinkModal';
 interface ConsiderationsTabProps {
     patientId: string;
     plans: any[];
+    selectedPhaseId?: string | null;
 }
 
 const LADO_CONFIG = {
@@ -45,7 +46,7 @@ type LadoFilter = 'todos' | 'medico' | 'lab' | 'lab_inside';
 type CreateStep = 'idle' | 'template' | 'compose';
 
 // ===== MAIN COMPONENT =====
-export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTabProps) {
+export default function ConsiderationsTab({ patientId, plans, selectedPhaseId }: ConsiderationsTabProps) {
     const [considerations, setConsiderations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeFilter, setActiveFilter] = useState<LadoFilter>('todos');
@@ -76,6 +77,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
             setLoading(true);
             const data = await considerationsService.getConsiderations(patientId, {
                 lado: activeFilter === 'todos' ? undefined : activeFilter,
+                phaseId: selectedPhaseId || undefined,
             });
             setConsiderations(data);
         } catch (err) {
@@ -83,7 +85,7 @@ export default function ConsiderationsTab({ patientId, plans }: ConsiderationsTa
         } finally {
             setLoading(false);
         }
-    }, [patientId, activeFilter]);
+    }, [patientId, activeFilter, selectedPhaseId]);
 
     useEffect(() => { loadConsiderations(); }, [loadConsiderations]);
 

@@ -30,6 +30,9 @@ import {
     Printer,
     Loader2,
     Archive,
+    Package,
+    Box,
+    Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +41,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { patientsService, PatientFullDetails } from '@/services/patientsService';
 import PlanTimeline from '@/components/patients/PlanTimeline';
 import AppointmentExpandedCard from '@/components/patients/AppointmentExpandedCard';
+import InfoTecnicaBlock from '@/components/patients/InfoTecnicaBlock';
 import { useOptimisticLock } from '@/hooks/useOptimisticLock';
 import NewPlanModal from '@/components/patients/NewPlanModal';
 import DeleteConfirmModal from '@/components/patients/DeleteConfirmModal';
@@ -106,6 +110,8 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [selectedApt, setSelectedApt] = useState<{ appointment: any; phase: any } | null>(null);
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+    // F1.6 — Selecção de fase na timeline muda conteúdo abaixo
+    const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
     const [clinics, setClinics] = useState<{ id: string; commercial_name: string }[]>([]);
     const [doctors, setDoctors] = useState<{ user_id: string; full_name: string }[]>([]);
     const router = useRouter();
@@ -898,14 +904,11 @@ export default function PatientForm({ initialData }: PatientFormProps) {
             <PlanTimeline
                 plans={patient.treatment_plans || []}
                 selectedAppointmentId={selectedApt?.appointment?.id || null}
-                onPhaseClick={(planId, phaseId) => {
-                    // Scroll para a fase correspondente na tab Planos
-                    const el = document.getElementById(`phase-${phaseId}`);
-                    if (el) {
-                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        el.classList.add('ring-2', 'ring-primary/50');
-                        setTimeout(() => el.classList.remove('ring-2', 'ring-primary/50'), 2000);
-                    }
+                selectedPhaseId={selectedPhaseId}
+                onPhaseSelect={(planId, phaseId, phase) => {
+                    // F1.6 — Selecção de fase muda conteúdo abaixo
+                    setSelectedPhaseId(prev => prev === phaseId ? null : phaseId);
+                    setSelectedPlanId(planId);
                 }}
                 onAppointmentClick={(appointment, phase) => {
                     if (selectedApt?.appointment?.id === appointment.id) {
@@ -949,6 +952,22 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                 </div>
             )}
 
+            {/* ── F3: Bloco Informação Técnica (fixo, abaixo timeline, acima tabs) ── */}
+            {(() => {
+                const activePlan = selectedPlanId
+                    ? (patient.treatment_plans || []).find((p: any) => p.id === selectedPlanId)
+                    : (patient.treatment_plans || []).find((p: any) => p.estado === 'activo' || p.estado === 'rascunho');
+                const activePhase = selectedPhaseId && activePlan
+                    ? activePlan.phases?.find((ph: any) => ph.id === selectedPhaseId)
+                    : null;
+                return (
+                    <InfoTecnicaBlock
+                        plan={activePlan || null}
+                        phase={activePhase || null}
+                    />
+                );
+            })()}
+
             {/* Content Card com overlap negativo */}
             < div className="max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 relative z-20 flex-1 flex flex-col pb-4 overflow-hidden" >
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col">
@@ -988,193 +1007,111 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                             </TabsTrigger>
                         </TabsList>
 
-                        {/* === Tab: Planos de Tratamento === */}
+                        {/* === Tab: Ficha Clínica (F2 - Produção & Logística + Considerações por fase) === */}
                         <TabsContent value="ficha-clinica" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
-                            {/* Notas do lab */}
-                            <div className="mb-6">
-                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Notas do Laboratório</label>
-                                <textarea
-                                    value={patient.notas_lab || ''}
-                                    onChange={(e) => handleFieldChange('notas_lab', e.target.value)}
-                                    placeholder="Notas internas sobre o paciente..."
-                                    className="mt-1 w-full text-sm border border-gray-200 rounded-lg p-3 bg-gray-50 text-gray-700 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/30 resize-none min-h-[60px]"
-                                    rows={2}
-                                    disabled={readOnly}
-                                />
-                            </div>
+                            {/* Indicador de fase seleccionada */}
+                            {(() => {
+                                const activePlan = selectedPlanId
+                                    ? (patient.treatment_plans || []).find((p: any) => p.id === selectedPlanId)
+                                    : (patient.treatment_plans || []).find((p: any) => p.estado === 'activo' || p.estado === 'rascunho');
+                                const activePhase = selectedPhaseId && activePlan
+                                    ? activePlan.phases?.find((ph: any) => ph.id === selectedPhaseId)
+                                    : activePlan?.phases?.find((ph: any) => ph.estado === 'em_curso') || activePlan?.phases?.[0];
 
-                            {/* Planos Ativos */}
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-semibold text-gray-800">Planos de Tratamento Ativos</h3>
-                                    {!readOnly && (
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="h-7 text-xs gap-1.5 border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-amber-600 hover:border-amber-300"
-                                            onClick={() => setShowNewPlan(true)}
-                                        >
-                                            <Plus className="h-3 w-3" />
-                                            Novo Plano
-                                        </Button>
-                                    )}
-                                </div>
-
-                                {(() => {
-                                    const activePlans = (patient.treatment_plans || []).filter(
-                                        p => p.estado !== 'concluido' && p.estado !== 'cancelado'
+                                if (!activePlan) {
+                                    return (
+                                        <div className="text-center py-16 text-gray-400">
+                                            <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                                            <p className="text-sm font-medium">Não tem Casos Activos</p>
+                                            <p className="text-xs mt-1">Crie um plano de tratamento para começar</p>
+                                            {!readOnly && (
+                                                <Button
+                                                    size="sm"
+                                                    className="mt-4 text-xs gap-1.5 bg-amber-500 hover:bg-amber-600 text-white"
+                                                    onClick={() => setShowNewPlan(true)}
+                                                >
+                                                    <Plus className="h-3 w-3" />
+                                                    Criar Plano de Tratamento
+                                                </Button>
+                                            )}
+                                        </div>
                                     );
-                                    if (activePlans.length === 0) {
-                                        return (
-                                            <div className="text-center py-12 text-gray-400">
-                                                <ClipboardList className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                                                <p className="text-sm">Sem planos ativos</p>
-                                                <p className="text-xs mt-1">Crie o primeiro plano para começar</p>
-                                            </div>
-                                        );
-                                    }
-                                    return activePlans.map((plan) => {
-                                        const planColor = plan.work_type?.cor || '#6b7280';
-                                        const planStateConfig = PLAN_STATE_CONFIG[plan.estado] || PLAN_STATE_CONFIG.ativo;
-                                        const completedPhases = plan.phases?.filter(p => p.estado === 'concluida').length || 0;
-                                        const totalPhases = plan.phases?.length || 0;
-                                        const progressPct = totalPhases > 0 ? (completedPhases / totalPhases) * 100 : 0;
+                                }
 
-                                        return (
-                                            <div
-                                                key={plan.id}
-                                                className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-all bg-gray-50 cursor-pointer hover:bg-gray-100 hover:shadow-sm"
-                                                onClick={() => setSelectedPlanId(plan.id)}
-                                            >
-                                                {/* Cabeçalho do plano */}
-                                                <div className="flex items-start gap-3">
-                                                    <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: planColor + '20' }}>
-                                                        <ClipboardList className="h-4 w-4" style={{ color: planColor }} />
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="flex items-center gap-2 flex-wrap">
-                                                            <h4 className="font-medium text-sm text-gray-900 truncate">
-                                                                {plan.nome}
-                                                            </h4>
-                                                            <span className={cn(
-                                                                "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
-                                                                planStateConfig.bg, planStateConfig.color
-                                                            )}>
-                                                                {planStateConfig.label}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-                                                            {plan.work_type?.nome && (
-                                                                <span className="text-xs text-gray-500">{plan.work_type.nome}</span>
-                                                            )}
-                                                            {plan.medico?.full_name && (
-                                                                <span className="text-xs text-gray-500 flex items-center gap-1">
-                                                                    <Stethoscope className="h-3 w-3" />
-                                                                    {plan.medico.full_name}
-                                                                </span>
-                                                            )}
-                                                            {plan.clinica?.commercial_name && (
-                                                                <span className="text-xs text-gray-500">{plan.clinica.commercial_name}</span>
-                                                            )}
-                                                        </div>
-                                                    </div>
+                                return (
+                                    <>
+                                        {/* Header da fase com nome + estado */}
+                                        {activePhase && (
+                                            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
+                                                <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold text-white"
+                                                    style={{ background: activePlan.work_type?.cor || '#6b7280' }}
+                                                >
+                                                    {activePhase.ordem}
                                                 </div>
-
-                                                {/* Barra de progresso */}
-                                                {totalPhases > 0 && (
-                                                    <div className="mt-3">
-                                                        <div className="flex items-center justify-between mb-1">
-                                                            <span className="text-[10px] text-gray-500">
-                                                                {completedPhases}/{totalPhases} fases
-                                                            </span>
-                                                            <span className="text-[10px] font-medium" style={{ color: planColor }}>
-                                                                {Math.round(progressPct)}%
-                                                            </span>
-                                                        </div>
-                                                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                                                            <div
-                                                                className="h-full rounded-full transition-all duration-500"
-                                                                style={{ width: `${progressPct}%`, backgroundColor: planColor }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Fases (collapsed) */}
-                                                {plan.phases && plan.phases.length > 0 && (
-                                                    <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
-                                                        {plan.phases
-                                                            .sort((a, b) => a.ordem - b.ordem)
-                                                            .map((phase) => {
-                                                                const phaseConfig = PHASE_STATE_CONFIG[phase.estado] || PHASE_STATE_CONFIG.pendente;
-                                                                const appointmentCount = phase.appointments?.length || 0;
-
-                                                                return (
-                                                                    <div
-                                                                        key={phase.id}
-                                                                        className="flex items-center gap-2 text-xs text-gray-500 py-1 px-2 rounded hover:bg-gray-100"
-                                                                    >
-                                                                        <Circle className={cn("h-2.5 w-2.5 fill-current", phaseConfig.dot)} />
-                                                                        <span className="flex-1 truncate">{phase.nome}</span>
-                                                                        {appointmentCount > 0 && (
-                                                                            <span className="text-[10px] text-gray-400">
-                                                                                {appointmentCount} apt{appointmentCount > 1 ? 's' : ''}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                    </div>
-                                                )}
-
-                                                {/* Ver detalhes link */}
-                                                <div className="mt-3 pt-2 border-t border-gray-200 text-right">
-                                                    <span className="text-xs text-amber-600 font-medium hover:underline">
-                                                        Ver detalhes →
+                                                <div>
+                                                    <h3 className="text-sm font-semibold text-gray-800">
+                                                        Fase {activePhase.ordem}: {activePhase.nome}
+                                                    </h3>
+                                                    <span className="text-[10px] text-gray-400">
+                                                        {activePlan.work_type?.nome || activePlan.nome}
                                                     </span>
                                                 </div>
                                             </div>
-                                        );
-                                    });
-                                })()}
-                            </div>
+                                        )}
 
-                            {/* PlanDetail inline (F1c) */}
-                            {selectedPlanId && (() => {
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                const selectedPlan = (patient.treatment_plans || []).find((p: any) => p.id === selectedPlanId);
-                                if (!selectedPlan) return null;
-                                return (
-                                    <div className="mt-6 border border-gray-200 rounded-xl overflow-hidden">
-                                        <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border-b border-gray-200">
-                                            <button
-                                                onClick={() => setSelectedPlanId(null)}
-                                                className="p-1 rounded-lg hover:bg-gray-200 transition-colors text-gray-500"
-                                            >
-                                                <ArrowLeft className="w-4 h-4" />
-                                            </button>
-                                            <span className="text-sm font-medium text-gray-700">Voltar à lista</span>
+                                        {/* ── Bloco Produção & Logística ── */}
+                                        <div className="mb-6">
+                                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                                <Package className="h-3.5 w-3.5" />
+                                                Produção & Logística
+                                            </h4>
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                {/* Widget Fresagem */}
+                                                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className="h-6 w-6 rounded-md bg-blue-100 flex items-center justify-center">
+                                                            <Box className="h-3.5 w-3.5 text-blue-600" />
+                                                        </div>
+                                                        <span className="text-xs font-semibold text-gray-700">Fresagem</span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-400 italic">Sem registos nesta fase</p>
+                                                </div>
+
+                                                {/* Widget Dentes */}
+                                                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className="h-6 w-6 rounded-md bg-emerald-100 flex items-center justify-center">
+                                                            <ClipboardList className="h-3.5 w-3.5 text-emerald-600" />
+                                                        </div>
+                                                        <span className="text-xs font-semibold text-gray-700">Dentes</span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-400 italic">Sem registos nesta fase</p>
+                                                </div>
+
+                                                {/* Widget Componentes */}
+                                                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className="h-6 w-6 rounded-md bg-purple-100 flex items-center justify-center">
+                                                            <Layers className="h-3.5 w-3.5 text-purple-600" />
+                                                        </div>
+                                                        <span className="text-xs font-semibold text-gray-700">Componentes</span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-400 italic">Sem registos nesta fase</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <PlanDetail
-                                            plan={selectedPlan}
-                                            patientId={patient.id}
-                                            onReload={async () => {
-                                                try {
-                                                    const updated = await patientsService.getPatientDetails(patient.id);
-                                                    if (updated) setPatient(updated);
-                                                } catch (err) {
-                                                    console.error('Erro ao recarregar:', err);
-                                                }
-                                            }}
-                                        />
-                                    </div>
+
+                                        {/* ── Bloco Considerações (filtradas por fase) ── */}
+                                        <div>
+                                            <ConsiderationsTab
+                                                patientId={patient.id}
+                                                plans={patient.treatment_plans || []}
+                                                selectedPhaseId={activePhase?.id || null}
+                                            />
+                                        </div>
+                                    </>
                                 );
                             })()}
-
-                            {/* Considerações (integradas na ficha clínica) */}
-                            <div className="mt-6">
-                                <ConsiderationsTab patientId={patient.id} plans={patient.treatment_plans || []} />
-                            </div>
                         </TabsContent>
 
                         {/* === Tab: Documentação === */}

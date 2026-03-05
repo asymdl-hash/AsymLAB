@@ -20,6 +20,8 @@ type Plan = Tables<'treatment_plans'> & {
 interface PlanTimelineProps {
     plans: Plan[];
     onPhaseClick?: (planId: string, phaseId: string) => void;
+    onPhaseSelect?: (planId: string, phaseId: string, phase: Phase) => void;
+    selectedPhaseId?: string | null;
     onAppointmentClick?: (appointment: Tables<'appointments'>, phase: Phase) => void;
     selectedAppointmentId?: string | null;
 }
@@ -54,7 +56,7 @@ const PHASE_LEGEND = [
 ];
 
 // ──── Componente ────
-export default function PlanTimeline({ plans, onPhaseClick, onAppointmentClick, selectedAppointmentId }: PlanTimelineProps) {
+export default function PlanTimeline({ plans, onPhaseClick, onPhaseSelect, selectedPhaseId, onAppointmentClick, selectedAppointmentId }: PlanTimelineProps) {
     const [selectedPlanIdx, setSelectedPlanIdx] = useState(0);
     const [showPlanDropdown, setShowPlanDropdown] = useState(false);
     const [hoveredPhase, setHoveredPhase] = useState<string | null>(null);
@@ -250,6 +252,7 @@ export default function PlanTimeline({ plans, onPhaseClick, onAppointmentClick, 
                                     const apts = [...(phase.appointments || [])].sort((a, b) => a.ordem - b.ordem);
                                     const isLastPhase = phaseIdx === phases.length - 1;
                                     const isHovered = hoveredPhase === phase.id;
+                                    const isSelected = selectedPhaseId === phase.id;
 
                                     return (
                                         <div
@@ -264,8 +267,14 @@ export default function PlanTimeline({ plans, onPhaseClick, onAppointmentClick, 
                                                 onMouseLeave={() => setHoveredPhase(null)}
                                             >
                                                 <button
-                                                    onClick={() => onPhaseClick?.(plan.id, phase.id)}
-                                                    className="flex flex-col items-center gap-1.5 group cursor-pointer relative"
+                                                    onClick={() => {
+                                                        onPhaseSelect?.(plan.id, phase.id, phase);
+                                                        onPhaseClick?.(plan.id, phase.id);
+                                                    }}
+                                                    className={cn(
+                                                        "flex flex-col items-center gap-1.5 group cursor-pointer relative rounded-xl px-1 py-1 transition-all duration-200",
+                                                        isSelected && "bg-amber-50 ring-2 ring-amber-400/50"
+                                                    )}
                                                     title={`${phase.nome} · ${phase.estado}`}
                                                 >
                                                     <div className="relative">
