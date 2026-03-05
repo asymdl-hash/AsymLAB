@@ -60,6 +60,11 @@ const PlanDetail = dynamic(() => import('@/components/patients/PlanDetail'), {
     ),
 });
 
+// Lazy load ChatDrawer — F5
+const ChatDrawer = dynamic(() => import('@/components/patients/ChatDrawer'), {
+    loading: () => null,
+});
+
 // Status do paciente
 const PATIENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
     rascunho: { label: 'Rascunho', color: 'text-gray-500', bg: 'bg-gray-100', border: 'border-gray-300' },
@@ -96,6 +101,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const [showNewPlan, setShowNewPlan] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showPrint, setShowPrint] = useState(false);
+    const [isChatOpen, setIsChatOpen] = useState(false);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [selectedApt, setSelectedApt] = useState<{ appointment: any; phase: any } | null>(null);
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
@@ -584,6 +590,18 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                     title="Abrir pasta do paciente"
                                 >
                                     <FolderOpen className="h-4 w-4" />
+                                </button>
+                            )}
+                            {isLabStaff && (
+                                <button
+                                    onClick={() => setIsChatOpen(!isChatOpen)}
+                                    className={`h-7 w-7 rounded-md flex items-center justify-center transition-colors shrink-0 ${isChatOpen
+                                        ? 'text-blue-600 bg-blue-100'
+                                        : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+                                        }`}
+                                    title={isChatOpen ? 'Fechar Chat Interno' : 'Abrir Chat Interno'}
+                                >
+                                    <MessageSquare className="h-4 w-4" />
                                 </button>
                             )}
                             {patient.created_at && (
@@ -1267,8 +1285,17 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         />
                     )}
                 </div>
-            </div >
-        </div >
+            </div>
+
+            {/* Chat Drawer — F5 */}
+            {isLabStaff && isChatOpen && (
+                <ChatDrawer
+                    patientId={patient.id}
+                    patientName={patient.nome}
+                    isOpen={isChatOpen}
+                    onClose={() => setIsChatOpen(false)}
+                />
+            )}
+        </div>
     );
 }
-
