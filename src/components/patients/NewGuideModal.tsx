@@ -110,11 +110,11 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-            <div className="bg-muted border border-border rounded-2xl w-full max-w-lg mx-4 shadow-2xl">
+            <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-lg mx-4 shadow-2xl">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-border">
-                    <h3 className="text-base font-semibold text-card-foreground">{label}</h3>
-                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-card-foreground">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                    <h3 className="text-base font-semibold text-gray-900">{label}</h3>
+                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600">
                         <X className="h-4 w-4" />
                     </button>
                 </div>
@@ -123,11 +123,11 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
                 <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
                     {/* Plano */}
                     <div>
-                        <label className="text-xs text-muted-foreground font-medium mb-1 block">Plano Associado</label>
+                        <label className="text-xs text-gray-500 font-medium mb-1 block">Plano Associado</label>
                         <select
                             value={selectedPlanId}
                             onChange={(e) => setSelectedPlanId(e.target.value)}
-                            className="w-full rounded-lg bg-muted border border-gray-600 text-sm text-card-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
+                            className="w-full rounded-lg bg-white border border-gray-200 text-sm text-gray-900 px-3 py-2 focus:border-amber-500 focus:outline-none"
                         >
                             <option value="">Sem plano</option>
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -140,7 +140,7 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
                     {/* Estado recepção (só para recepção) */}
                     {tipo === 'recepcao' && (
                         <div>
-                            <label className="text-xs text-muted-foreground font-medium mb-1 block">Estado da Recepção</label>
+                            <label className="text-xs text-gray-500 font-medium mb-1 block">Estado da Recepção</label>
                             <div className="flex gap-2">
                                 {Object.entries(RECEPTION_STATE_CONFIG).map(([key, config]) => (
                                     <button
@@ -148,7 +148,7 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
                                         onClick={() => setEstadoRecepcao(key)}
                                         className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${estadoRecepcao === key
                                             ? `${config.color} border-current bg-white/5`
-                                            : 'text-gray-500 border-border hover:border-muted-foreground'
+                                            : 'text-gray-500 border-gray-200 hover:border-gray-300'
                                             }`}
                                     >
                                         {config.emoji} {config.label}
@@ -161,15 +161,15 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
                     {/* Sugestões de itens */}
                     {suggestions.length > 0 && (
                         <div>
-                            <label className="text-xs text-muted-foreground font-medium mb-1 block">💡 Sugestões (baseado no histórico)</label>
+                            <label className="text-xs text-gray-500 font-medium mb-1 block">💡 Sugestões (baseado no histórico)</label>
                             <div className="flex flex-wrap gap-1">
                                 {suggestions.slice(0, 8).map(s => (
                                     <button
                                         key={s.id}
                                         onClick={() => addSuggestion(s)}
-                                        className="text-[10px] px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 transition-colors"
+                                        className="text-[10px] px-2 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 transition-colors"
                                     >
-                                        + {s.nome} <span className="text-muted-foreground ml-0.5">({s.uso_count}×)</span>
+                                        + {s.nome} <span className="text-gray-400 ml-0.5">({s.uso_count}×)</span>
                                     </button>
                                 ))}
                             </div>
@@ -178,7 +178,7 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
 
                     {/* Itens */}
                     <div>
-                        <label className="text-xs text-muted-foreground font-medium mb-2 block">📦 Itens</label>
+                        <label className="text-xs text-gray-500 font-medium mb-2 block">📦 Itens</label>
                         <div className="space-y-2">
                             {items.map((item, i) => (
                                 <div key={i} className="flex items-center gap-2">
@@ -187,19 +187,19 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
                                         value={item.nome}
                                         onChange={(e) => updateItem(i, 'nome', e.target.value)}
                                         placeholder="Nome do item..."
-                                        className="flex-1 rounded-lg bg-muted border border-gray-600 text-xs text-card-foreground px-3 py-2 focus:border-amber-500 focus:outline-none"
+                                        className="flex-1 rounded-lg bg-white border border-gray-200 text-xs text-gray-900 px-3 py-2 focus:border-amber-500 focus:outline-none"
                                     />
                                     <input
                                         type="number"
                                         min="1"
                                         value={item.quantidade}
                                         onChange={(e) => updateItem(i, 'quantidade', parseInt(e.target.value) || 1)}
-                                        className="w-14 rounded-lg bg-muted border border-gray-600 text-xs text-card-foreground px-2 py-2 text-center focus:border-amber-500 focus:outline-none"
+                                        className="w-14 rounded-lg bg-white border border-gray-200 text-xs text-gray-900 px-2 py-2 text-center focus:border-amber-500 focus:outline-none"
                                     />
                                     {items.length > 1 && (
                                         <button
                                             onClick={() => removeItem(i)}
-                                            className="p-1.5 rounded-lg hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors"
+                                            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
                                         >
                                             <Trash2 className="h-3 w-3" />
                                         </button>
@@ -217,35 +217,35 @@ export default function NewGuideModal({ patientId, tipo, onClose, onCreated }: N
 
                     {/* Notas */}
                     <div>
-                        <label className="text-xs text-muted-foreground font-medium mb-1 block">Notas</label>
+                        <label className="text-xs text-gray-500 font-medium mb-1 block">Notas</label>
                         <textarea
                             value={notas}
                             onChange={(e) => setNotas(e.target.value)}
                             rows={2}
                             placeholder="Observações..."
-                            className="w-full rounded-lg bg-muted border border-gray-600 text-sm text-card-foreground px-3 py-2 focus:border-amber-500 focus:outline-none resize-none"
+                            className="w-full rounded-lg bg-white border border-gray-200 text-sm text-gray-900 px-3 py-2 focus:border-amber-500 focus:outline-none resize-none"
                         />
                     </div>
 
                     {/* Error */}
                     {error && (
-                        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">{error}</p>
+                        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
                     )}
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end gap-2 p-4 border-t border-border">
+                <div className="flex items-center justify-end gap-2 p-4 border-t border-gray-200">
                     <button
                         onClick={onClose}
                         disabled={saving}
-                        className="px-4 py-2 text-sm text-muted-foreground hover:text-card-foreground transition-colors"
+                        className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={saving}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-600 hover:bg-amber-500 text-card-foreground transition-colors disabled:opacity-50 flex items-center gap-2"
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
                         {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Package className="h-3.5 w-3.5" />}
                         {saving ? 'A criar...' : 'Criar Guia'}

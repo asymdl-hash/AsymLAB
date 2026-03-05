@@ -52,20 +52,20 @@ export default function NewAppointmentModal({ phaseId, onClose, onCreated }: New
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-            <div className="bg-muted border border-border rounded-xl shadow-2xl w-full max-w-md">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-2xl w-full max-w-md">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-border">
-                    <h2 className="text-lg font-bold text-card-foreground">Novo Agendamento</h2>
-                    <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted transition-colors">
-                        <X className="w-5 h-5 text-muted-foreground" />
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                    <h2 className="text-lg font-bold text-gray-900">Novo Agendamento</h2>
+                    <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 transition-colors">
+                        <X className="w-5 h-5 text-gray-400" />
                     </button>
                 </div>
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-4 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-card-foreground/80 mb-1">
-                            Tipo <span className="text-red-400">*</span>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                            Tipo <span className="text-red-500">*</span>
                         </label>
                         <div className="grid grid-cols-2 gap-2">
                             {APPOINTMENT_TYPES.map((t) => (
@@ -73,8 +73,8 @@ export default function NewAppointmentModal({ phaseId, onClose, onCreated }: New
                                     onClick={() => setTipo(t.value)}
                                     className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors
                                         ${tipo === t.value
-                                            ? 'border-amber-500 bg-amber-500/10 text-amber-400'
-                                            : 'border-gray-600 bg-muted text-card-foreground/80 hover:border-gray-500'
+                                            ? 'border-amber-500 bg-amber-50 text-amber-700'
+                                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                                         }`}>
                                     <span>{t.emoji}</span>
                                     <span>{t.label}</span>
@@ -84,35 +84,35 @@ export default function NewAppointmentModal({ phaseId, onClose, onCreated }: New
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-card-foreground/80 mb-1">Data Prevista (opcional)</label>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Data Prevista (opcional)</label>
                         <div className="flex gap-2">
                             <input type="date" value={dataPrevista} onChange={(e) => setDataPrevista(e.target.value)}
-                                className="flex-1 bg-muted border border-gray-600 rounded-lg px-3 py-2 text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-amber-500/50 [color-scheme:dark]" />
+                                className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50" />
                             <input type="time" value={horaPrevista} onChange={(e) => setHoraPrevista(e.target.value)}
                                 placeholder="Hora"
-                                className="w-28 bg-muted border border-gray-600 rounded-lg px-3 py-2 text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-amber-500/50 [color-scheme:dark]" />
+                                className="w-28 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50" />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-card-foreground/80 mb-1">Notas (opcional)</label>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Notas (opcional)</label>
                         <textarea value={notas} onChange={(e) => setNotas(e.target.value)}
                             placeholder="Observações sobre o agendamento..."
                             rows={3}
-                            className="w-full bg-muted border border-gray-600 rounded-lg px-3 py-2 text-sm text-card-foreground placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none" />
+                            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none" />
                     </div>
 
                     {error && (
-                        <p className="text-sm text-red-400 bg-red-900/20 rounded-lg p-2">{error}</p>
+                        <p className="text-sm text-red-600 bg-red-50 rounded-lg p-2">{error}</p>
                     )}
 
                     <div className="flex gap-3 pt-2">
                         <button type="button" onClick={onClose}
-                            className="flex-1 px-4 py-2 rounded-lg border border-gray-600 text-card-foreground/80 hover:bg-muted transition-colors text-sm">
+                            className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors text-sm">
                             Cancelar
                         </button>
                         <button type="submit" disabled={submitting}
-                            className="flex-1 px-4 py-2 rounded-lg bg-amber-500 text-black font-semibold hover:bg-amber-400 disabled:opacity-50 transition-colors text-sm flex items-center justify-center gap-2">
+                            className="flex-1 px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-400 disabled:opacity-50 transition-colors text-sm flex items-center justify-center gap-2">
                             {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                             Criar Agendamento
                         </button>
