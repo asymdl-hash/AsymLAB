@@ -2,7 +2,7 @@
 
 > Registo de todas as decisões de design validadas.
 > Cada decisão tem data, contexto e status.
-> Última actualização: 01/03/2026
+> Última actualização: 05/03/2026
 
 ---
 
@@ -67,6 +67,9 @@ Todos os eventos da ficha do paciente registados no Histórico, com filtros por 
 ---
 
 ## 3. Chat Interno
+
+> **Estado**: F5a implementado (V2.1.0, 05/03/2026) — Drawer + Messages + Gallery + Service + Migration
+> **Pendente**: F5b — Pesquisa, Navegação Contexto, NAS, Mobile
 
 ### D-CHAT-01. Galeria (01/03/2026)
 Thumbnails no chat, click abre full-screen. Navegação setas/swipe. Botão "Ir para pasta" + "Ir para mensagem" em cada foto.

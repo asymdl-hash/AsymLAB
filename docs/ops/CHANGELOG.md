@@ -4,6 +4,16 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## V2.1.0 - 2026-03-05
+- **F5a Chat Interno** — ChatDrawer com posicionamento fixo (fixed right-0 z-50), backdrop clicável, minimização
+- `ChatDrawer.tsx` (550 linhas): Drawer + MessageCard + ChatGallery (full-screen imagens)
+- `chatService.ts`: CRUD mensagens, upload anexos, realtime subscription
+- Migration Supabase: tabela `internal_chat_messages` + RLS + Storage bucket `chat-attachments`
+- `PatientForm.tsx`: botão toggle chat no header (apenas lab staff)
+
+## V2.0.1 - 2026-03-05
+- Regras obrigatórias: servidor único porta 3000, browser test com verificação de sobreposições
+
 ## V1.83.0 - 2026-03-03
 - Novo componente `PatientAlerts.tsx`: Banner de Avisos contextual na Ficha do Paciente.
 - Alerta âmbar: Paciente urgente sem plano de tratamento activo.
