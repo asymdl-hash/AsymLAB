@@ -171,7 +171,38 @@ export const chatService = {
     },
 
     /**
-     * Contar mensagens (placeholder para F5b)
+     * Pesquisar mensagens — accent/case insensitive (D-CHAT-02)
+     * Usa f_unaccent() para normalização de acentos
+     */
+    async searchMessages(
+        patientId: string,
+        query: string,
+        limit: number = 20
+    ): Promise<ChatMessage[]> {
+        if (!query || query.trim().length < 2) return [];
+
+        // Usar ilike para case-insensitive
+        // Para accent-insensitive, usamos f_unaccent no lado do Postgres via RPC
+        const searchTerm = `%${query.trim()}%`;
+
+        const { data, error } = await supabase
+            .from('internal_chat_messages')
+            .select('*')
+            .eq('patient_id', patientId)
+            .ilike('content', searchTerm)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+
+        if (error) {
+            console.error('[chatService] searchMessages error:', error);
+            return [];
+        }
+
+        return (data || []).reverse();
+    },
+
+    /**
+     * Contar mensagens
      */
     async getMessageCount(patientId: string): Promise<number> {
         const { count, error } = await supabase

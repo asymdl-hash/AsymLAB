@@ -1294,6 +1294,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     patientName={patient.nome}
                     isOpen={isChatOpen}
                     onClose={() => setIsChatOpen(false)}
+                    activePlanName={selectedPlanId ? (patient.treatment_plans || []).find((p: any) => p.id === selectedPlanId)?.nome : undefined}
                 />
             )}
         </div>

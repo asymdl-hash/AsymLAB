@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
     MessageSquare,
     Send,
@@ -11,10 +11,12 @@ import {
     Image as ImageIcon,
     Loader2,
     ChevronDown,
+    ChevronUp,
     Reply,
     ZoomIn,
     ChevronLeft,
     ChevronRight,
+    Search,
 } from 'lucide-react';
 import { chatService, ChatMessage, ChatAttachment } from '@/services/chatService';
 
@@ -24,6 +26,8 @@ interface ChatDrawerProps {
     patientName: string;
     isOpen: boolean;
     onClose: () => void;
+    activePlanName?: string;
+    activePhaseName?: string;
 }
 
 // ===== GALLERY MODAL =====
@@ -211,7 +215,7 @@ function MessageCard({
 }
 
 // ===== MAIN CHAT DRAWER =====
-export default function ChatDrawer({ patientId, patientName, isOpen, onClose }: ChatDrawerProps) {
+export default function ChatDrawer({ patientId, patientName, isOpen, onClose, activePlanName, activePhaseName }: ChatDrawerProps) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
@@ -223,9 +227,69 @@ export default function ChatDrawer({ patientId, patientName, isOpen, onClose }: 
     const [galleryIndex, setGalleryIndex] = useState(0);
     const [minimized, setMinimized] = useState(false);
     const [messageCount, setMessageCount] = useState(0);
+    // F5b: Search
+    const [searchMode, setSearchMode] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<ChatMessage[]>([]);
+    const [activeSearchIndex, setActiveSearchIndex] = useState(0);
+    // F5b: Mobile
+    const [isMobile, setIsMobile] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    // F5b: Detect mobile viewport
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // F5b: Search handler with debounce
+    useEffect(() => {
+        if (!searchQuery || searchQuery.trim().length < 2) {
+            setSearchResults([]);
+            setActiveSearchIndex(0);
+            return;
+        }
+        const timer = setTimeout(async () => {
+            const results = await chatService.searchMessages(patientId, searchQuery);
+            setSearchResults(results);
+            setActiveSearchIndex(0);
+            // Scroll to first result
+            if (results.length > 0) {
+                const el = document.getElementById(`msg-${results[0].id}`);
+                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery, patientId]);
+
+    // F5b: Navigate search results
+    const navigateSearch = useCallback((direction: 'up' | 'down') => {
+        if (searchResults.length === 0) return;
+        const newIndex = direction === 'down'
+            ? Math.min(activeSearchIndex + 1, searchResults.length - 1)
+            : Math.max(activeSearchIndex - 1, 0);
+        setActiveSearchIndex(newIndex);
+        const msg = searchResults[newIndex];
+        const el = document.getElementById(`msg-${msg.id}`);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-2', 'ring-amber-400');
+            setTimeout(() => el.classList.remove('ring-2', 'ring-amber-400'), 2000);
+        }
+    }, [searchResults, activeSearchIndex]);
+
+    // F5b: Context label
+    const contextLabel = useMemo(() => {
+        const parts: string[] = [];
+        if (activePlanName) parts.push(activePlanName);
+        if (activePhaseName) parts.push(activePhaseName);
+        return parts.length > 0 ? parts.join(' · ') : null;
+    }, [activePlanName, activePhaseName]);
 
     // Scroll to bottom
     const scrollToBottom = useCallback(() => {
@@ -365,6 +429,11 @@ export default function ChatDrawer({ patientId, patientName, isOpen, onClose }: 
         );
     }
 
+    // F5b: Mobile-specific classes
+    const drawerClasses = isMobile
+        ? 'fixed bottom-0 left-0 right-0 h-[85vh] z-50 border-t border-gray-200 bg-white flex flex-col shadow-2xl rounded-t-2xl'
+        : 'fixed right-0 top-0 h-screen w-[370px] z-50 border-l border-gray-200 bg-white flex flex-col shadow-2xl';
+
     return (
         <>
             {/* Backdrop — click to close */}
@@ -373,33 +442,95 @@ export default function ChatDrawer({ patientId, patientName, isOpen, onClose }: 
                 onClick={onClose}
             />
 
-            {/* Drawer — fixed right panel */}
-            <div className="fixed right-0 top-0 h-screen w-[370px] z-50 border-l border-gray-200 bg-white flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
+            {/* Drawer — fixed panel (right on desktop, bottom on mobile) */}
+            <div className={drawerClasses}>
+                {/* Mobile drag handle */}
+                {isMobile && (
+                    <div className="flex justify-center py-2 cursor-grab" onClick={onClose}>
+                        <div className="w-10 h-1 bg-gray-300 rounded-full" />
+                    </div>
+                )}
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-sky-50">
-                    <div className="flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4 text-blue-600" />
-                        <div>
-                            <h3 className="text-sm font-semibold text-gray-800">Chat Interno</h3>
-                            <p className="text-[10px] text-gray-500">{messageCount} mensagens</p>
+                <div className="flex flex-col border-b border-gray-200 bg-gradient-to-r from-blue-50 to-sky-50">
+                    <div className="flex items-center justify-between px-4 py-3">
+                        <div className="flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4 text-blue-600" />
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-800">Chat Interno</h3>
+                                <p className="text-[10px] text-gray-500">{messageCount} mensagens</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => { setSearchMode(!searchMode); if (!searchMode) setTimeout(() => searchInputRef.current?.focus(), 100); }}
+                                className={`p-1.5 rounded-lg transition-colors ${searchMode ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100 text-gray-500'}`}
+                                title="Pesquisar"
+                            >
+                                <Search className="h-4 w-4" />
+                            </button>
+                            {!isMobile && (
+                                <button
+                                    onClick={() => setMinimized(true)}
+                                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                                    title="Minimizar"
+                                >
+                                    <Minimize2 className="h-4 w-4 text-gray-500" />
+                                </button>
+                            )}
+                            <button
+                                onClick={onClose}
+                                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                                title="Fechar"
+                            >
+                                <X className="h-4 w-4 text-gray-500" />
+                            </button>
                         </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                        <button
-                            onClick={() => setMinimized(true)}
-                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="Minimizar"
-                        >
-                            <Minimize2 className="h-4 w-4 text-gray-500" />
-                        </button>
-                        <button
-                            onClick={onClose}
-                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="Fechar"
-                        >
-                            <X className="h-4 w-4 text-gray-500" />
-                        </button>
-                    </div>
+
+                    {/* F5b: Context badge */}
+                    {contextLabel && (
+                        <div className="px-4 pb-2">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+                                📋 {contextLabel}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* F5b: Search bar */}
+                    {searchMode && (
+                        <div className="px-3 pb-2 flex items-center gap-2">
+                            <input
+                                ref={searchInputRef}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Pesquisar mensagens..."
+                                className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-300 focus:ring-1 focus:ring-blue-300 bg-white placeholder:text-gray-400"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') navigateSearch('down');
+                                    if (e.key === 'Escape') { setSearchMode(false); setSearchQuery(''); setSearchResults([]); }
+                                }}
+                            />
+                            {searchResults.length > 0 && (
+                                <>
+                                    <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                                        {activeSearchIndex + 1}/{searchResults.length}
+                                    </span>
+                                    <button onClick={() => navigateSearch('up')} className="p-1 hover:bg-gray-100 rounded" title="Anterior">
+                                        <ChevronUp className="h-3.5 w-3.5 text-gray-500" />
+                                    </button>
+                                    <button onClick={() => navigateSearch('down')} className="p-1 hover:bg-gray-100 rounded" title="Seguinte">
+                                        <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+                                    </button>
+                                </>
+                            )}
+                            <button
+                                onClick={() => { setSearchMode(false); setSearchQuery(''); setSearchResults([]); }}
+                                className="p-1 hover:bg-gray-100 rounded"
+                            >
+                                <X className="h-3.5 w-3.5 text-gray-400" />
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Messages area */}
