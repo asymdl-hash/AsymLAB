@@ -1,7 +1,7 @@
 # 🚀 Roadmap & Features Futuras — AsymLAB
 
 > Funcionalidades planeadas para versões futuras. Ordenadas por prioridade.
-> Última actualização: 05/03/2026 (V2.3.0)
+> Última actualização: 05/03/2026 (V2.4.0)
 > Ver decisões detalhadas: [DECISOES.md](DECISOES.md)
 > Ver guia de remodelação: [Guia Mestre](../../.gemini/antigravity/brain/0e2562be-7122-4ca4-a42c-999f362a6dc5/guia_mestre.md)
 
@@ -47,7 +47,7 @@
 - [x] F5b: Chat — pesquisa accent-insensitive, mobile bottom sheet, contexto plano (V2.2.0)
 - [x] F6: Planos Fechados + Histórico — ClosedPlansTab expandível, HistoryTab reescrito (V2.3.0)
 - [ ] F5c: Chat — NAS integration (pastas Chat Interno/Galeria + Metadata)
-- [ ] F7: Polish, PWA + Testes Finais
+- [x] F7: Polish + PWA — Timeline premium (gradients, tooltips, legenda), SW cache v2.3.0 (V2.4.0)
 
 ### Catálogos Produção & Definições (V1.79–V1.82)
 - [x] Fornecedores — CRUD completo, cards ricos (NIF, website, telefone, morada), 12 seeds
