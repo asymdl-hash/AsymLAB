@@ -46,7 +46,7 @@ const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: stri
 };
 
 const PHASE_STATE_CONFIG: Record<string, { label: string; icon: typeof CheckCircle2; color: string }> = {
-    pendente: { label: 'Pendente', icon: Circle, color: 'text-muted-foreground' },
+    pendente: { label: 'Pendente', icon: Circle, color: 'text-gray-400' },
     em_curso: { label: 'Em Curso', icon: Clock, color: 'text-amber-500' },
     concluida: { label: 'Concluída', icon: CheckCircle2, color: 'text-green-500' },
     cancelada: { label: 'Cancelada', icon: XCircle, color: 'text-red-400' },
@@ -270,7 +270,7 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                                             className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-blue-400 flex items-center gap-2">
                                             <CheckCircle2 className="w-4 h-4" /> Concluir Plano
                                         </button>
-                                        <div className="border-t border-border my-1" />
+                                        <div className="border-t border-gray-200 my-1" />
                                         <button onClick={() => { setReasonModal({ action: 'cancelar', planId: plan.id }); setShowActionsMenu(false); }} disabled={changingState}
                                             className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-400 flex items-center gap-2">
                                             <XCircle className="w-4 h-4" /> Cancelar Plano
@@ -283,7 +283,7 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                                             className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-green-400 flex items-center gap-2">
                                             <CheckCircle2 className="w-4 h-4" /> Retomar Plano
                                         </button>
-                                        <div className="border-t border-border my-1" />
+                                        <div className="border-t border-gray-200 my-1" />
                                         <button onClick={() => { setReasonModal({ action: 'cancelar', planId: plan.id }); setShowActionsMenu(false); }} disabled={changingState}
                                             className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-400 flex items-center gap-2">
                                             <XCircle className="w-4 h-4" /> Cancelar Plano
@@ -416,7 +416,7 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                         />
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                            <Calendar className="w-12 h-12 mb-3 text-muted-foreground" />
+                            <Calendar className="w-12 h-12 mb-3 text-gray-400" />
                             <p className="text-lg font-medium">Nenhuma fase seleccionada</p>
                             <p className="text-sm mt-1">Crie a primeira fase para começar.</p>
                             <button onClick={() => setShowPhaseModal(true)}
@@ -558,7 +558,7 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                         <PhaseIcon className={`w-5 h-5 ${phaseState.color}`} />
                         <h2 className="text-xl font-bold">F{phase.ordem} · {phase.nome}</h2>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${phase.estado === 'concluida' ? 'bg-green-100 text-green-700' :
                             phase.estado === 'em_curso' ? 'bg-amber-100 text-amber-700' :
                                 phase.estado === 'cancelada' ? 'bg-red-100 text-red-700' :
@@ -934,11 +934,11 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, 
                             {/* Editar */}
                             <div className="border-t border-gray-200 my-1" />
                             <button onClick={() => { setEditingDate(true); setShowMenu(false); }}
-                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-card-foreground/80 flex items-center gap-2">
+                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2">
                                 <Pencil className="w-3.5 h-3.5" /> Editar Data
                             </button>
                             <button onClick={() => { setEditingNotes(true); setShowMenu(false); }}
-                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-card-foreground/80 flex items-center gap-2">
+                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2">
                                 <Pencil className="w-3.5 h-3.5" /> Editar Notas
                             </button>
                             {/* Apagar */}
@@ -956,13 +956,13 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, 
             {editingDate && (
                 <div className="mt-2 flex items-center gap-2">
                     <input type="date" value={dateValue} onChange={(e) => setDateValue(e.target.value)}
-                        className="flex-1 bg-muted border border-gray-600 rounded px-2 py-1 text-xs text-card-foreground [color-scheme:dark]" />
+                        className="flex-1 bg-white border border-gray-200 rounded px-2 py-1 text-xs text-gray-900" />
                     <input type="time" value={timeValue} onChange={(e) => setTimeValue(e.target.value)}
-                        className="w-24 bg-muted border border-gray-600 rounded px-2 py-1 text-xs text-card-foreground [color-scheme:dark]" />
-                    <button onClick={handleSaveDate} className="p-1 rounded bg-green-600 hover:bg-green-500 text-card-foreground">
+                        className="w-24 bg-white border border-gray-200 rounded px-2 py-1 text-xs text-gray-900" />
+                    <button onClick={handleSaveDate} className="p-1 rounded bg-green-600 hover:bg-green-500 text-white">
                         <Check className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => setEditingDate(false)} className="p-1 rounded bg-gray-600 hover:bg-gray-500 text-card-foreground">
+                    <button onClick={() => setEditingDate(false)} className="p-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700">
                         <X className="w-3.5 h-3.5" />
                     </button>
                 </div>
@@ -973,18 +973,18 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, 
                 <div className="mt-2">
                     <textarea value={notesValue} onChange={(e) => setNotesValue(e.target.value)}
                         rows={2} placeholder="Notas do agendamento..."
-                        className="w-full bg-muted border border-gray-600 rounded px-2 py-1 text-xs text-card-foreground placeholder:text-gray-500 resize-none" />
+                        className="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs text-gray-900 placeholder:text-gray-400 resize-none" />
                     <div className="flex gap-1 mt-1">
-                        <button onClick={handleSaveNotes} className="px-2 py-0.5 rounded bg-green-600 hover:bg-green-500 text-card-foreground text-[10px]">
+                        <button onClick={handleSaveNotes} className="px-2 py-0.5 rounded bg-green-600 hover:bg-green-500 text-white text-[10px]">
                             Guardar
                         </button>
-                        <button onClick={() => setEditingNotes(false)} className="px-2 py-0.5 rounded bg-gray-600 hover:bg-gray-500 text-card-foreground text-[10px]">
+                        <button onClick={() => setEditingNotes(false)} className="px-2 py-0.5 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 text-[10px]">
                             Cancelar
                         </button>
                     </div>
                 </div>
             ) : appointment.notas && (
-                <p className="mt-2 text-xs text-muted-foreground italic cursor-pointer hover:text-card-foreground/80" onClick={() => setEditingNotes(true)}>
+                <p className="mt-2 text-xs text-gray-400 italic cursor-pointer hover:text-gray-700" onClick={() => setEditingNotes(true)}>
                     {appointment.notas}
                 </p>
             )}
@@ -1004,11 +1004,11 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, 
                     <p className="text-xs text-red-300">Tem a certeza que quer apagar este agendamento?</p>
                     <div className="flex gap-2 mt-2">
                         <button onClick={() => onDelete(appointment.id)}
-                            className="px-3 py-1 rounded bg-red-600 hover:bg-red-500 text-card-foreground text-xs font-medium">
+                            className="px-3 py-1 rounded bg-red-600 hover:bg-red-500 text-white text-xs font-medium">
                             Sim, apagar
                         </button>
                         <button onClick={() => setConfirmDelete(false)}
-                            className="px-3 py-1 rounded bg-muted hover:bg-muted text-card-foreground/80 text-xs">
+                            className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs">
                             Cancelar
                         </button>
                     </div>
@@ -1065,24 +1065,24 @@ function ReasonModal({ action, onSubmit, onClose }: {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-muted rounded-2xl border border-border w-full max-w-md shadow-2xl">
-                <div className="flex items-center justify-between p-5 border-b border-border">
-                    <h3 className="text-lg font-bold text-card-foreground">{config.title}</h3>
-                    <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted text-muted-foreground">
+            <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md shadow-2xl">
+                <div className="flex items-center justify-between p-5 border-b border-gray-200">
+                    <h3 className="text-lg font-bold text-gray-900">{config.title}</h3>
+                    <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
                 <div className="p-5 space-y-4">
                     {action === 'reabrir' && (
                         <div>
-                            <label className="block text-sm font-medium text-card-foreground/80 mb-2">Tipo de reabertura</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de reabertura</label>
                             <div className="flex gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setReopenType('correcao')}
                                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${reopenType === 'correcao'
                                         ? 'bg-purple-900/40 border-purple-500 text-purple-300'
-                                        : 'bg-muted/50 border-gray-600 text-muted-foreground hover:border-gray-500'
+                                        : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'
                                         }`}
                                 >
                                     🔧 Correcção
@@ -1092,7 +1092,7 @@ function ReasonModal({ action, onSubmit, onClose }: {
                                     onClick={() => setReopenType('remake')}
                                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${reopenType === 'remake'
                                         ? 'bg-purple-900/40 border-purple-500 text-purple-300'
-                                        : 'bg-muted/50 border-gray-600 text-muted-foreground hover:border-gray-500'
+                                        : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'
                                         }`}
                                 >
                                     🔄 Remake
@@ -1101,25 +1101,25 @@ function ReasonModal({ action, onSubmit, onClose }: {
                         </div>
                     )}
                     <div>
-                        <label className="block text-sm font-medium text-card-foreground/80 mb-2">{config.label}</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{config.label}</label>
                         <textarea
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
                             placeholder={config.placeholder}
                             rows={3}
-                            className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-gray-600 text-card-foreground placeholder-muted-foreground focus:border-amber-500 focus:ring-1 focus:ring-amber-500 resize-none text-sm"
+                            className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 resize-none text-sm"
                             autoFocus
                         />
                     </div>
                 </div>
-                <div className="flex justify-end gap-3 p-5 border-t border-border">
-                    <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors">
+                <div className="flex justify-end gap-3 p-5 border-t border-gray-200">
+                    <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 transition-colors">
                         Cancelar
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={submitting || (config.required && !reason.trim())}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium text-card-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${config.color}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${config.color}`}
                     >
                         {submitting ? 'A processar...' : 'Confirmar'}
                     </button>
@@ -1183,10 +1183,10 @@ function InvoicePhaseModal({ phaseId, phaseName, patientId, planId, onClose, onC
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md">
-                <div className="p-5 border-b border-border">
-                    <h3 className="text-lg font-semibold text-card-foreground">Concluir Fase: {phaseName}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Deseja gerar uma factura para esta fase?</p>
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl w-full max-w-md">
+                <div className="p-5 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">Concluir Fase: {phaseName}</h3>
+                    <p className="text-xs text-gray-500 mt-1">Deseja gerar uma factura para esta fase?</p>
                 </div>
 
                 <div className="p-5">
@@ -1200,20 +1200,20 @@ function InvoicePhaseModal({ phaseId, phaseName, patientId, planId, onClose, onC
                                     <CheckCircle2 className="h-5 w-5 text-green-400" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-card-foreground">Gerar Factura</p>
-                                    <p className="text-xs text-muted-foreground">Criar factura associada a esta fase</p>
+                                    <p className="text-sm font-medium text-gray-900">Gerar Factura</p>
+                                    <p className="text-xs text-gray-500">Criar factura associada a esta fase</p>
                                 </div>
                             </button>
                             <button
                                 onClick={() => setMode('skip')}
-                                className="flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 transition-colors text-left"
+                                className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
                             >
-                                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                                    <XCircle className="h-5 w-5 text-muted-foreground" />
+                                <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                                    <XCircle className="h-5 w-5 text-gray-400" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-card-foreground">Sem Factura</p>
-                                    <p className="text-xs text-muted-foreground">Concluir sem gerar factura</p>
+                                    <p className="text-sm font-medium text-gray-900">Sem Factura</p>
+                                    <p className="text-xs text-gray-500">Concluir sem gerar factura</p>
                                 </div>
                             </button>
                         </div>
@@ -1222,7 +1222,7 @@ function InvoicePhaseModal({ phaseId, phaseName, patientId, planId, onClose, onC
                     {mode === 'invoice' && (
                         <div className="space-y-3">
                             <div>
-                                <label className="text-xs text-muted-foreground mb-1 block">Valor (€) *</label>
+                                <label className="text-xs text-gray-500 mb-1 block">Valor (€) *</label>
                                 <input
                                     type="number"
                                     value={valor}
@@ -1230,17 +1230,17 @@ function InvoicePhaseModal({ phaseId, phaseName, patientId, planId, onClose, onC
                                     placeholder="0.00"
                                     step="0.01"
                                     min="0"
-                                    className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-card-foreground"
+                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900"
                                     autoFocus
                                 />
                             </div>
                             <div>
-                                <label className="text-xs text-muted-foreground mb-1 block">Descrição</label>
+                                <label className="text-xs text-gray-500 mb-1 block">Descrição</label>
                                 <input
                                     value={descricao}
                                     onChange={e => setDescricao(e.target.value)}
                                     placeholder={`Fase: ${phaseName}`}
-                                    className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-card-foreground"
+                                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900"
                                 />
                             </div>
                         </div>
@@ -1248,23 +1248,23 @@ function InvoicePhaseModal({ phaseId, phaseName, patientId, planId, onClose, onC
 
                     {mode === 'skip' && (
                         <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">Motivo (opcional)</label>
+                            <label className="text-xs text-gray-500 mb-1 block">Motivo (opcional)</label>
                             <textarea
                                 value={motivo}
                                 onChange={e => setMotivo(e.target.value)}
                                 placeholder="Porque não será gerada factura..."
                                 rows={2}
-                                className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-card-foreground resize-none"
+                                className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 resize-none"
                                 autoFocus
                             />
                         </div>
                     )}
                 </div>
 
-                <div className="flex justify-end gap-3 p-5 border-t border-border">
+                <div className="flex justify-end gap-3 p-5 border-t border-gray-200">
                     <button
                         onClick={() => { if (mode === 'choose') onClose(); else setMode('choose'); }}
-                        className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
+                        className="px-4 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 transition-colors"
                     >
                         {mode === 'choose' ? 'Cancelar' : 'Voltar'}
                     </button>
