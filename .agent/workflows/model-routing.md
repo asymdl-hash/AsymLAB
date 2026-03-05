@@ -4,7 +4,12 @@ description: Protocolo de seleção de modelos — escolher o agente certo para 
 
 # Protocolo de Model Routing
 
-> **Objetivo:** Antes de cada execução, o agente DEVE sugerir o modelo de IA mais adequado. O utilizador troca manualmente e diz "avança". Plano Ultra — priorizar máxima eficiência e zero erros.
+> [!CAUTION]
+> ### REGRA OBRIGATÓRIA — Sugestão de Modelo
+> O agente DEVE sugerir o modelo de IA mais adequado ANTES de iniciar qualquer tarefa significativa.
+> Se a meio de uma tarefa detectar que outra tarefa requer um modelo diferente, DEVE **parar e informar o utilizador**.
+> O utilizador troca manualmente o modelo no Antigravity e diz "avança".
+> **NUNCA** avançar com um modelo sub-óptimo quando um superior é claramente mais adequado.
 
 ## 1. Protocolo Obrigatório — Sugestão Antes de Executar
 
@@ -58,4 +63,23 @@ O utilizador troca o modelo no Antigravity e responde "avança" para iniciar a e
 | **Browser = Sonnet** | Testes de browser e E2E → sempre Sonnet |
 | **Planear antes** | Apresentar possíveis erros e soluções ANTES de executar |
 | **Indicações extras** | Mostrar alternativas e riscos antes de decisões irreversíveis |
-| **Escalar se necessário** | Se detectar complexidade acima do esperado → parar e sugerir modelo superior |
+| **Escalar se necessário** | Se detectar complexidade acima do esperado → **parar e sugerir modelo superior** |
+
+## 4. Quando PARAR e Pedir Mudança
+
+O agente DEVE parar e sugerir mudança de modelo quando:
+
+| Situação | Acção |
+|----------|-------|
+| Tarefa de UI/design depois de lógica de negócio | Parar → sugerir modelo com melhor visão visual |
+| Migração SQL após frontend | Parar → sugerir Opus para segurança DB |
+| Browser test após implementação | Parar → sugerir Sonnet para E2E |
+| Refactoração arquitectural inesperada | Parar → sugerir Opus |
+| Tarefa simples/mecânica | Parar → sugerir Gemini Pro para velocidade |
+
+**Formato da sugestão:**
+```
+🤖 MODELO SUGERIDO: [Nome]
+📋 MOTIVO: [Porquê]
+💡 ALTERNATIVA: [Outra opção]
+```

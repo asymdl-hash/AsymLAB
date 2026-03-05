@@ -1,7 +1,7 @@
 # 📚 AsymLAB — Índice Central de Documentação
 
 > **Ponto de entrada único** para toda a documentação do projecto.
-> Última actualização: 05/03/2026 · Versão: V2.1.0
+> Versão actual: **V2.3.0** | Data: 05/03/2026 · Versão: V2.2.0
 
 ---
 
@@ -17,7 +17,7 @@
 | ⚙️ Definições (Catálogos) | ✅ Produção | 100% | [DECISOES](core/DECISOES.md) |
 | 📂 NAS / Storage | 🔧 Em curso | ~75% | [PACIENTES_NAS](modulos/PACIENTES_NAS.md) |
 | 🔧 Widgets | 🔧 Em curso | ~80% | [DECISOES](core/DECISOES.md#6-widgets) |
-| 💬 Chat Interno | 🔧 Em curso | ~40% | [DECISOES](core/DECISOES.md#3-chat-interno) |
+| 💬 Chat Interno | 🔧 Em curso | ~60% | [DECISOES](core/DECISOES.md#3-chat-interno) |
 | 📅 Calendário | 📋 Planeado | 0% | [DECISOES](core/DECISOES.md#4-calendário) |
 | 💰 Faturação | 📋 Planeado | 0% | [DECISOES](core/DECISOES.md#5-faturação--toconline) |
 | 📊 Analytics | 📋 Planeado | 0% | — |
@@ -94,8 +94,8 @@
 |-----------|:-------------------:|-------|
 | INDEX.md | 05/03/2026 | Antigravity |
 | DECISOES.md | 05/03/2026 | Antigravity |
+| ROADMAP.md | 05/03/2026 | Antigravity |
+| CHANGELOG.md | 05/03/2026 | Antigravity |
 | PACIENTES_NAS.md | 02/03/2026 | Antigravity |
-| ROADMAP.md | 03/03/2026 | Antigravity |
 | PACIENTES.md | 27/02/2026 | Antigravity |
 | QA_TEST_LOG.md | 21/02/2026 | Antigravity |
-| CHANGELOG.md | 03/03/2026 | Antigravity |

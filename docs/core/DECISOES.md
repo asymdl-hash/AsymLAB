@@ -2,7 +2,7 @@
 
 > Registo de todas as decisões de design validadas.
 > Cada decisão tem data, contexto e status.
-> Última actualização: 05/03/2026
+> Última actualização: 05/03/2026 (V2.2.0)
 
 ---
 
@@ -19,6 +19,9 @@ O sistema nunca emite facturas, recibos ou acções irreversíveis automaticamen
 
 ### P4. Versioning Automático (01/03/2026)
 Todos os relatórios (fase, plano, fresagem, dentes, considerações) são versionados automaticamente. Versões anteriores mantêm-se na NAS.
+
+### P5. Fidelidade Visual — Mockup → Código (05/03/2026)
+Toda alteração de UI significativa DEVE ser precedida de mockup visual. A implementação DEVE reproduzir fielmente o mockup aprovado, com iterações de comparação (screenshot vs mockup) até correspondência visual. Ver workflow `/mockup-fidelity`.
 
 ---
 
@@ -68,8 +71,10 @@ Todos os eventos da ficha do paciente registados no Histórico, com filtros por 
 
 ## 3. Chat Interno
 
-> **Estado**: F5a implementado (V2.1.0, 05/03/2026) — Drawer + Messages + Gallery + Service + Migration
-> **Pendente**: F5b — Pesquisa, Navegação Contexto, NAS, Mobile
+> **Estado**: F5a+F5b implementados (V2.2.0, 05/03/2026)
+> **F5a** (V2.1.0): Drawer + Messages + Gallery + Service + Migration
+> **F5b** (V2.2.0): Pesquisa accent-insensitive, Mobile bottom sheet, Contexto plano
+> **Pendente**: F5c — NAS integration (pastas Chat/Galeria/Metadata)
 
 ### D-CHAT-01. Galeria (01/03/2026)
 Thumbnails no chat, click abre full-screen. Navegação setas/swipe. Botão "Ir para pasta" + "Ir para mensagem" em cada foto.

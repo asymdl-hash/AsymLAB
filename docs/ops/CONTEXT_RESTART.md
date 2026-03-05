@@ -1,1 +1,58 @@
-# Contexto de Reinício (Session Context)\r\n\r\n> **Regra:** Este documento deve ser lido pelo agente no início de cada sessão (após reinício do PC ou nova interação) para carregar o contexto das últimas 24h. Deve ser atualizado antes de terminar a sessão para garantir passagens de turno sem quebras.\r\n\r\n## Estado Atual (Últimas 24h) - Versão Atual: V1.82.1\r\n- **Foco Principal:** Auditoria completa do projeto; sincronização da documentação desatualizada (INDEX, ROADMAP) para V1.82.\r\n- **Módulos Concluídos/Atualizados:**\r\n  - **Catálogos (Definições):** 8 sub-tabs operacionais — Tipos Trabalho (com Custos de Produção, 4 KPI Cards), Materiais (expandidos com PVP, IVA, marca, fornecedor, refs, reunião), Cores Dentes, Templates, Status, Fornecedores (12 seed), Marcas (36 seed), Fases de Produção (17 seed).\r\n  - **Widget Dentes (Paciente):** Odontograma 32 dentes inline, seleção shift+click, múltiplos registos por agendamento, versionamento automático.\r\n  - **Widget Componentes (Paciente):** Formulário completo (material, qtd, ref. fabricante/fornecedor, fornecedor). Integra dados do catálogo `milling_materials`.\r\n  - **Widget Fresagem (Paciente):** 3 estados (pendente→em_curso→concluido), dropdown materiais agrupados, check NAS.\r\n  - **Custos de Produção (Tipos Trabalho):** Tabela fases×materiais em tempo real, auto-preenchimento custo/porção do PVP, cálculos Margem operacionais e persistentes.\r\n- **Base de Dados & Infra:** \r\n  - Todo o código está com commit (`V1.82.1`) e efetuado o `push` para a origin `main`.\r\n  - 11 migrações SQL aplicadas. Tabelas recentes: `suppliers`, `brands`, `production_phases`, `material_price_history`.\r\n  - `milling_materials` expandida com 15 novos campos (PVP, IVA, refs, reunião, audit).\r\n  - `work_types` integra preços e `fases_producao` (JSONB) diretamente (tabela `price_table` eliminada).\r\n\r\n## Ponto de Situação e Próximos Passos\r\n**Onde parámos?** Auditoria profissional concluída. Documentação (INDEX, ROADMAP, CONTEXT_RESTART) sincronizada para V1.82.1. Catálogos 100% operacionais com rastreabilidade completa do material até ao paciente.\r\n**Next Actions (A decidir):** \r\n1. Continuar a desenvolver funcionalidades focadas no fluxo da clínica (Fila de Pedidos interativa).\r\n2. Concluir a integração 100% cloud das pastas do NAS na UI dos ficheiros dos pacientes.\r\n3. Iniciar módulos de calendário ou chat caso a gestão do trabalho do laboratório seja considerada \"Done\" pelo administrador.\r\n\r\n*(Este ficheiro está sincronizado e pode ser lido ao reiniciar a máquina para continuar exatamente de onde ficámos).*\r\n
+# Contexto de Reinício (Session Context)
+
+> **Regra:** Este documento deve ser lido pelo agente no início de cada sessão (após reinício do PC ou nova interação) para carregar o contexto das últimas 24h. Deve ser atualizado antes de terminar a sessão para garantir passagens de turno sem quebras.
+
+---
+
+## Estado Atual — Versão: V2.2.0 (05/03/2026)
+
+### Foco Principal
+Remodelação completa da Ficha do Paciente (F0–F7). Actualmente na **F5b concluída** — Chat Interno com pesquisa, mobile e contexto. Próximo: F6 (Planos Fechados + Histórico).
+
+### Remodelação Ficha Paciente (Progresso Global)
+
+| Fase | Descrição | Status | Versão |
+|:----:|-----------|:------:|:------:|
+| F0 | Preparação docs + cleanup | ✅ | V1.93.0 |
+| F1 | Layout Base + Timeline Horizontal + Tabs | ✅ | V1.94.0 |
+| F2 | PlanDetail + Considerações + Documentação Light Mode | ✅ | V1.95.0 |
+| F3 | Info Técnica grid 8 cards NAS + configs | ✅ | V1.96.0 |
+| F4 | Light Mode Deep Clean (19 ficheiros, 280+ tokens) | ✅ | V1.97.0→V2.0.0 |
+| F5a | Chat Interno: drawer, mensagens, galeria, realtime | ✅ | V2.1.0 |
+| F5b | Chat: pesquisa, mobile bottom sheet, contexto | ✅ | V2.2.0 |
+| F5c | Chat: NAS integration | ⏳ | — |
+| F6 | Planos Fechados + Histórico | ⏳ | — |
+| F7 | Polish, PWA + Testes Finais | ⏳ | — |
+
+### Implementações Recentes (F5a + F5b)
+- **ChatDrawer.tsx** (650+ linhas): drawer lateral 370px, minimizável, backdrop, pesquisa, mobile bottom sheet
+- **chatService.ts**: CRUD mensagens, upload anexos, realtime subscription, searchMessages (ilike + unaccent)
+- **Migration Supabase**: tabela `internal_chat_messages` + RLS + Storage bucket `chat-attachments` + extensão `unaccent` + função `f_unaccent()`
+- **PatientForm.tsx**: botão toggle chat no header (apenas lab staff), passa `activePlanName` ao ChatDrawer
+
+### Bugs Conhecidos
+- **PGRST200** na tabela `considerations` (FK em falta) — pré-existente, não bloqueia implementação actual
+
+### Regras Activas (Workflows)
+| Workflow | Descrição |
+|----------|-----------|
+| `/mockup-fidelity` | **NOVO** — Mockup antes de UI, comparação iterativa obrigatória |
+| `/model-routing` | Sugerir modelo ideal antes de cada tarefa |
+| `/pre-commit-test` | Browser test visual obrigatório antes de commit |
+| `/local-server` | Servidor único porta 3000, reiniciar no início |
+| `/light-mode` | Desenvolver sempre em Light Mode |
+| `/doc-sync` | Sincronizar docs após cada implementação |
+
+## Guia Mestre
+O plano completo de remodelação está em:
+`C:\Users\asyml\.gemini\antigravity\brain\0e2562be-7122-4ca4-a42c-999f362a6dc5\guia_mestre.md`
+
+Usar como referência principal para continuar de onde parámos.
+
+## Próximos Passos
+1. **F6** — Planos Fechados + Histórico (tabs 3 e 4)
+2. **F5c** — NAS integration para chat (quando NAS disponível)
+3. **F7** — Polish, PWA + Testes Finais
+4. **PGRST200** — Corrigir FK considerations quando oportuno
+
+*(Ficheiro sincronizado em 05/03/2026. Ler ao reiniciar para continuar de onde ficámos.)*

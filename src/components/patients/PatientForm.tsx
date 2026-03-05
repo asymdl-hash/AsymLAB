@@ -46,6 +46,7 @@ import ConsiderationsTab from '@/components/patients/ConsiderationsTab';
 import FilesTab from '@/components/patients/FilesTab';
 import DocumentsTab from '@/components/patients/DocumentsTab';
 import HistoryTab from '@/components/patients/HistoryTab';
+import ClosedPlansTab from '@/components/patients/ClosedPlansTab';
 import PatientAlerts from '@/components/patients/PatientAlerts';
 import PatientPrintSheet from '@/components/patients/PatientPrintSheet';
 import { useAuth } from '@/contexts/AuthContext';
@@ -1183,64 +1184,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
 
                         {/* === Tab: Planos Fechados === */}
                         <TabsContent value="planos-fechados" className="flex-1 overflow-y-auto m-0 p-4 sm:p-6">
-                            {(() => {
-                                const closedPlans = (patient.treatment_plans || []).filter(
-                                    p => p.estado === 'concluido' || p.estado === 'cancelado'
-                                );
-                                if (closedPlans.length === 0) {
-                                    return (
-                                        <div className="text-center py-12 text-gray-400">
-                                            <Archive className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                                            <p className="text-sm">Sem planos fechados</p>
-                                            <p className="text-xs mt-1">Planos concluídos ou cancelados aparecem aqui</p>
-                                        </div>
-                                    );
-                                }
-                                return (
-                                    <div className="space-y-3">
-                                        {closedPlans.map(plan => {
-                                            const planColor = plan.work_type?.cor || '#6b7280';
-                                            const isConcluido = plan.estado === 'concluido';
-                                            return (
-                                                <div
-                                                    key={plan.id}
-                                                    className={cn(
-                                                        "border rounded-xl p-4 cursor-pointer transition-all hover:shadow-sm",
-                                                        isConcluido
-                                                            ? "border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50"
-                                                            : "border-red-200 bg-red-50/50 hover:bg-red-50"
-                                                    )}
-                                                    onClick={() => router.push(`/dashboard/patients/${patient.id}/plans/${plan.id}`)}
-                                                >
-                                                    <div className="flex items-start gap-3">
-                                                        <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: planColor + '20' }}>
-                                                            {isConcluido ? (
-                                                                <Check className="h-4 w-4 text-emerald-600" />
-                                                            ) : (
-                                                                <X className="h-4 w-4 text-red-500" />
-                                                            )}
-                                                        </div>
-                                                        <div className="min-w-0 flex-1">
-                                                            <h4 className="font-medium text-sm text-gray-900">{plan.nome}</h4>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <span className={cn(
-                                                                    "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
-                                                                    isConcluido ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-                                                                )}>
-                                                                    {isConcluido ? 'Concluído' : 'Cancelado'}
-                                                                </span>
-                                                                {plan.work_type?.nome && (
-                                                                    <span className="text-xs text-gray-500">{plan.work_type.nome}</span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                );
-                            })()}
+                            <ClosedPlansTab patient={patient} />
                         </TabsContent>
 
                         {/* === Tab: Histórico === */}
