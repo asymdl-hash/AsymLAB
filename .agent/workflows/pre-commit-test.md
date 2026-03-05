@@ -38,7 +38,13 @@ description: Testes obrigatórios antes de qualquer commit — simular utilizado
 
 5. **Tirar screenshot** do resultado final como prova de teste
 
-6. **Só então** fazer o commit com a versão semântica correcta
+6. **Se houver problemas:** corrigir → rebuild → **repetir browser test** (voltar ao passo 2). Este loop repete-se até que o teste visual passe a 100%.
+
+7. **Só então** fazer o commit com a versão semântica correcta
+
+> [!CAUTION]
+> **NUNCA** fazer commit sem browser test visual aprovado. A sequência obrigatória é:
+> `build OK → browser test → fix (se necessário) → browser retest → commit`
 
 ## Exemplo de Commit Correcto
 

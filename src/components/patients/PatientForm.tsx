@@ -1154,10 +1154,6 @@ export default function PatientForm({ initialData }: PatientFormProps) {
 
                             {/* Considerações (integradas na ficha clínica) */}
                             <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                    <MessageSquare className="h-4 w-4 text-gray-400" />
-                                    Considerações
-                                </h3>
                                 <ConsiderationsTab patientId={patient.id} plans={patient.treatment_plans || []} />
                             </div>
                         </TabsContent>

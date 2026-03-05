@@ -35,13 +35,13 @@ import TeethWidget from './TeethWidget';
 import ComponentsWidget from './ComponentsWidget';
 
 // === Config de estados ===
-const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: string; darkColor: string; darkBg: string }> = {
-    rascunho: { label: 'Rascunho', color: 'text-yellow-700', bg: 'bg-yellow-100', darkColor: 'text-yellow-400', darkBg: 'bg-yellow-900/30' },
-    activo: { label: 'Activo', color: 'text-green-700', bg: 'bg-green-100', darkColor: 'text-green-400', darkBg: 'bg-green-900/30' },
-    pausado: { label: 'Pausado', color: 'text-orange-700', bg: 'bg-orange-100', darkColor: 'text-orange-400', darkBg: 'bg-orange-900/30' },
-    concluido: { label: 'Concluído', color: 'text-blue-700', bg: 'bg-blue-100', darkColor: 'text-blue-400', darkBg: 'bg-blue-900/30' },
-    cancelado: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-100', darkColor: 'text-red-400', darkBg: 'bg-red-900/30' },
-    reaberto: { label: 'Reaberto', color: 'text-purple-700', bg: 'bg-purple-100', darkColor: 'text-purple-400', darkBg: 'bg-purple-900/30' },
+const PLAN_STATE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+    rascunho: { label: 'Rascunho', color: 'text-yellow-700', bg: 'bg-yellow-100' },
+    activo: { label: 'Activo', color: 'text-green-700', bg: 'bg-green-100' },
+    pausado: { label: 'Pausado', color: 'text-orange-700', bg: 'bg-orange-100' },
+    concluido: { label: 'Concluído', color: 'text-blue-700', bg: 'bg-blue-100' },
+    cancelado: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-100' },
+    reaberto: { label: 'Reaberto', color: 'text-purple-700', bg: 'bg-purple-100' },
 };
 
 const PHASE_STATE_CONFIG: Record<string, { label: string; icon: typeof CheckCircle2; color: string }> = {
@@ -61,13 +61,13 @@ const APPOINTMENT_TYPE_CONFIG: Record<string, { label: string; emoji: string }> 
 };
 
 const APPOINTMENT_STATE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    agendado: { label: 'Agendado', color: 'text-blue-300', bg: 'bg-blue-900/40' },
-    prova_entregue: { label: 'Prova Entregue', color: 'text-indigo-300', bg: 'bg-indigo-900/40' },
-    colocacao_entregue: { label: 'Colocação Entregue', color: 'text-purple-300', bg: 'bg-purple-900/40' },
-    recolhido: { label: 'Recolhido', color: 'text-teal-300', bg: 'bg-teal-900/40' },
-    concluido: { label: 'Concluído', color: 'text-green-300', bg: 'bg-green-900/40' },
-    cancelado: { label: 'Cancelado', color: 'text-red-300', bg: 'bg-red-900/40' },
-    remarcado: { label: 'Remarcado', color: 'text-orange-300', bg: 'bg-orange-900/40' },
+    agendado: { label: 'Agendado', color: 'text-blue-700', bg: 'bg-blue-100' },
+    prova_entregue: { label: 'Prova Entregue', color: 'text-indigo-700', bg: 'bg-indigo-100' },
+    colocacao_entregue: { label: 'Colocação Entregue', color: 'text-purple-700', bg: 'bg-purple-100' },
+    recolhido: { label: 'Recolhido', color: 'text-teal-700', bg: 'bg-teal-100' },
+    concluido: { label: 'Concluído', color: 'text-green-700', bg: 'bg-green-100' },
+    cancelado: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-100' },
+    remarcado: { label: 'Remarcado', color: 'text-orange-700', bg: 'bg-orange-100' },
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -209,28 +209,28 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
     const totalPhases = sortedPhases.length;
 
     return (
-        <div className="h-full flex flex-col bg-card text-card-foreground overflow-hidden">
+        <div className="h-full flex flex-col bg-white text-gray-900 overflow-hidden">
             {/* === HEADER === */}
-            <div className="p-4 md:p-6 border-b border-border bg-muted/50 flex-shrink-0">
+            <div className="p-4 md:p-6 border-b border-gray-200 bg-gray-50 flex-shrink-0">
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
                     <button
                         onClick={() => router.push(`/dashboard/patients/${patientId}`)}
-                        className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <span className="text-sm text-muted-foreground truncate max-w-[40%] sm:max-w-none">
+                    <span className="text-sm text-gray-500 truncate max-w-[40%] sm:max-w-none">
                         {plan.patient?.t_id} {plan.patient?.nome}
                     </span>
                     <ChevronRight className="w-4 h-4 text-gray-500 shrink-0" />
                     <h1 className="text-base sm:text-lg font-bold break-words min-w-0">{plan.nome}</h1>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 ml-9">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${planState.darkBg} ${planState.darkColor}`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${planState.bg} ${planState.color}`}>
                         {planState.label}
                     </span>
                     {plan.work_type && (
-                        <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                        <span className="text-sm text-gray-500 flex items-center gap-1.5">
                             {plan.work_type.cor && (
                                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: plan.work_type.cor }} />
                             )}
@@ -238,40 +238,40 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                         </span>
                     )}
                     {plan.medico && (
-                        <span className="text-sm text-muted-foreground">· {plan.medico.full_name}</span>
+                        <span className="text-sm text-gray-500">· {plan.medico.full_name}</span>
                     )}
                     {totalPhases > 0 && (
-                        <span className="text-sm text-muted-foreground">· {completedPhases}/{totalPhases} fases</span>
+                        <span className="text-sm text-gray-500">· {completedPhases}/{totalPhases} fases</span>
                     )}
                     {/* Actions menu */}
                     <div className="relative ml-auto">
                         <button
                             onClick={() => setShowActionsMenu(!showActionsMenu)}
-                            className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors"
                         >
                             <MoreVertical className="w-5 h-5" />
                         </button>
                         {showActionsMenu && (
-                            <div className="absolute right-0 top-full mt-1 w-52 bg-muted border border-border rounded-lg shadow-xl z-50 py-1">
+                            <div className="absolute right-0 top-full mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1">
                                 {plan.estado === 'rascunho' && (
                                     <button onClick={() => handleStateChange('activo')} disabled={changingState}
-                                        className="w-full text-left px-4 py-2 text-sm hover:bg-muted text-green-400 flex items-center gap-2">
+                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-green-400 flex items-center gap-2">
                                         <CheckCircle2 className="w-4 h-4" /> Activar Plano
                                     </button>
                                 )}
                                 {(plan.estado === 'activo' || plan.estado === 'reaberto') && (
                                     <>
                                         <button onClick={() => { setReasonModal({ action: 'pausar', planId: plan.id }); setShowActionsMenu(false); }} disabled={changingState}
-                                            className="w-full text-left px-4 py-2 text-sm hover:bg-muted text-orange-400 flex items-center gap-2">
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-orange-400 flex items-center gap-2">
                                             <Pause className="w-4 h-4" /> Pausar Plano
                                         </button>
                                         <button onClick={() => handleStateChange('concluido')} disabled={changingState}
-                                            className="w-full text-left px-4 py-2 text-sm hover:bg-muted text-blue-400 flex items-center gap-2">
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-blue-400 flex items-center gap-2">
                                             <CheckCircle2 className="w-4 h-4" /> Concluir Plano
                                         </button>
                                         <div className="border-t border-border my-1" />
                                         <button onClick={() => { setReasonModal({ action: 'cancelar', planId: plan.id }); setShowActionsMenu(false); }} disabled={changingState}
-                                            className="w-full text-left px-4 py-2 text-sm hover:bg-muted text-red-400 flex items-center gap-2">
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-400 flex items-center gap-2">
                                             <XCircle className="w-4 h-4" /> Cancelar Plano
                                         </button>
                                     </>
@@ -279,19 +279,19 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                                 {plan.estado === 'pausado' && (
                                     <>
                                         <button onClick={() => handleStateChange('activo', { motivo_pausa: null })} disabled={changingState}
-                                            className="w-full text-left px-4 py-2 text-sm hover:bg-muted text-green-400 flex items-center gap-2">
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-green-400 flex items-center gap-2">
                                             <CheckCircle2 className="w-4 h-4" /> Retomar Plano
                                         </button>
                                         <div className="border-t border-border my-1" />
                                         <button onClick={() => { setReasonModal({ action: 'cancelar', planId: plan.id }); setShowActionsMenu(false); }} disabled={changingState}
-                                            className="w-full text-left px-4 py-2 text-sm hover:bg-muted text-red-400 flex items-center gap-2">
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-400 flex items-center gap-2">
                                             <XCircle className="w-4 h-4" /> Cancelar Plano
                                         </button>
                                     </>
                                 )}
                                 {(plan.estado === 'concluido' || plan.estado === 'cancelado') && (
                                     <button onClick={() => { setReasonModal({ action: 'reabrir', planId: plan.id }); setShowActionsMenu(false); }} disabled={changingState}
-                                        className="w-full text-left px-4 py-2 text-sm hover:bg-muted text-purple-400 flex items-center gap-2">
+                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-purple-400 flex items-center gap-2">
                                         <RotateCcw className="w-4 h-4" /> Reabrir Plano
                                     </button>
                                 )}
@@ -302,14 +302,14 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
             </div>
 
             {/* === WORK BADGES === */}
-            <div className="px-4 md:px-6 py-2 border-b border-border/50 bg-gray-800/20 flex-shrink-0">
+            <div className="px-4 md:px-6 py-2 border-b border-gray-200 bg-gray-100/50 flex-shrink-0">
                 <WorkBadges planId={plan.id} mode="full" />
             </div>
 
             {/* === BODY: Timeline + Detail === */}
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* LEFT: Timeline de fases */}
-                <div className="md:w-[280px] lg:w-[320px] border-r border-border overflow-y-auto flex-shrink-0 bg-muted/30">
+                <div className="md:w-[280px] lg:w-[320px] border-r border-gray-200 overflow-y-auto flex-shrink-0 bg-gray-50/50">
                     {/* Mobile: horizontal chips */}
                     <div className="md:hidden flex gap-2 p-3 overflow-x-auto">
                         {sortedPhases.map((phase: { id: string; nome: string; estado: string }) => {
@@ -319,14 +319,14 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                                 <button key={phase.id}
                                     onClick={() => setSelectedPhaseId(phase.id)}
                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors
-                                        ${selectedPhaseId === phase.id ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500' : 'bg-muted text-card-foreground/80'}`}>
+                                        ${selectedPhaseId === phase.id ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-400' : 'bg-gray-100 text-gray-700'}`}>
                                     <Icon className={`w-3.5 h-3.5 ${s.color}`} />
                                     {phase.nome}
                                 </button>
                             );
                         })}
                         <button onClick={() => setShowPhaseModal(true)}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm whitespace-nowrap bg-muted text-muted-foreground hover:text-amber-400 transition-colors">
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm whitespace-nowrap bg-gray-100 text-gray-500 hover:text-amber-600 transition-colors">
                             <Plus className="w-3.5 h-3.5" /> Fase
                         </button>
                     </div>
@@ -334,16 +334,16 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                     {/* Desktop: vertical timeline */}
                     <div className="hidden md:block p-4">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Fases</h2>
+                            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Fases</h2>
                             <button onClick={() => setShowPhaseModal(true)}
-                                className="p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-amber-400 transition-colors">
+                                className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-amber-600 transition-colors">
                                 <Plus className="w-4 h-4" />
                             </button>
                         </div>
                         <div className="relative">
                             {/* Vertical line */}
                             {sortedPhases.length > 1 && (
-                                <div className="absolute left-[15px] top-[20px] bottom-[20px] w-0.5 bg-muted" />
+                                <div className="absolute left-[15px] top-[20px] bottom-[20px] w-0.5 bg-gray-200" />
                             )}
                             <div className="space-y-1">
                                 {sortedPhases.map((phase: { id: string; nome: string; estado: string; ordem: number }, idx: number) => {
@@ -355,12 +355,12 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                                             <button
                                                 onClick={() => setSelectedPhaseId(phase.id)}
                                                 className={`flex-1 flex items-center gap-3 p-3 rounded-lg transition-colors text-left relative
-                                                    ${isSelected ? 'bg-muted/70 ring-1 ring-amber-500/40' : 'hover:bg-muted/40'}`}>
+                                                    ${isSelected ? 'bg-gray-100 ring-1 ring-amber-400/40' : 'hover:bg-gray-100/60'}`}>
                                                 <div className="relative z-10 flex-shrink-0">
                                                     <Icon className={`w-[30px] h-[30px] ${s.color}`} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className={`text-sm font-medium truncate ${isSelected ? 'text-card-foreground' : 'text-card-foreground/80'}`}>
+                                                    <p className={`text-sm font-medium truncate ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>
                                                         F{phase.ordem} · {phase.nome}
                                                     </p>
                                                     <p className="text-xs text-gray-500">{s.label}</p>
@@ -375,7 +375,7 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                                                     <button
                                                         onClick={() => handleSwapPhase(idx, 'up')}
                                                         disabled={idx === 0 || reordering}
-                                                        className="p-0.5 rounded hover:bg-muted text-gray-500 hover:text-amber-400 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-gray-500 transition-colors"
+                                                        className="p-0.5 rounded hover:bg-gray-100 text-gray-500 hover:text-amber-600 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-gray-500 transition-colors"
                                                         title="Mover para cima"
                                                     >
                                                         <ChevronUp className="w-3.5 h-3.5" />
@@ -383,7 +383,7 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                                                     <button
                                                         onClick={() => handleSwapPhase(idx, 'down')}
                                                         disabled={idx === sortedPhases.length - 1 || reordering}
-                                                        className="p-0.5 rounded hover:bg-muted text-gray-500 hover:text-amber-400 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-gray-500 transition-colors"
+                                                        className="p-0.5 rounded hover:bg-gray-100 text-gray-500 hover:text-amber-600 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-gray-500 transition-colors"
                                                         title="Mover para baixo"
                                                     >
                                                         <ChevronDown className="w-3.5 h-3.5" />
@@ -419,7 +419,7 @@ export default function PlanDetail({ plan, patientId, onReload }: PlanDetailProp
                             <p className="text-lg font-medium">Nenhuma fase seleccionada</p>
                             <p className="text-sm mt-1">Crie a primeira fase para começar.</p>
                             <button onClick={() => setShowPhaseModal(true)}
-                                className="mt-4 px-4 py-2 rounded-lg bg-amber-500 text-black font-medium hover:bg-amber-400 transition-colors flex items-center gap-2">
+                                className="mt-4 px-4 py-2 rounded-lg bg-amber-500 text-white font-medium hover:bg-amber-400 transition-colors flex items-center gap-2">
                                 <Plus className="w-4 h-4" /> Nova Fase
                             </button>
                         </div>
@@ -558,41 +558,41 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                         <h2 className="text-xl font-bold">F{phase.ordem} · {phase.nome}</h2>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${phase.estado === 'concluida' ? 'bg-green-900/40 text-green-400' :
-                            phase.estado === 'em_curso' ? 'bg-amber-900/40 text-amber-400' :
-                                phase.estado === 'cancelada' ? 'bg-red-900/40 text-red-400' :
-                                    'bg-muted text-muted-foreground'
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${phase.estado === 'concluida' ? 'bg-green-100 text-green-700' :
+                            phase.estado === 'em_curso' ? 'bg-amber-100 text-amber-700' :
+                                phase.estado === 'cancelada' ? 'bg-red-100 text-red-700' :
+                                    'bg-gray-100 text-gray-500'
                             }`}>
                             {phaseState.label}
                         </span>
                         <span>· {appointments.length} agendamento{appointments.length !== 1 ? 's' : ''}</span>
                     </div>
                     {phase.notas && (
-                        <p className="mt-2 text-sm text-muted-foreground italic">{phase.notas}</p>
+                        <p className="mt-2 text-sm text-gray-500 italic">{phase.notas}</p>
                     )}
                 </div>
                 <div className="relative">
                     <button onClick={() => setShowPhaseMenu(!showPhaseMenu)}
-                        className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                        <MoreVertical className="w-4 h-4 text-gray-500" />
                     </button>
                     {showPhaseMenu && (
-                        <div className="absolute right-0 top-full mt-1 w-44 bg-muted border border-border rounded-lg shadow-xl z-50 py-1">
+                        <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1">
                             {phase.estado !== 'em_curso' && (
                                 <button onClick={() => { onStateChange(phase.id, 'em_curso'); setShowPhaseMenu(false); }}
-                                    className="w-full text-left px-4 py-2 text-sm hover:bg-muted text-amber-400">
+                                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-amber-400">
                                     🔄 Em Curso
                                 </button>
                             )}
                             {phase.estado !== 'concluida' && (
                                 <button onClick={() => { onStateChange(phase.id, 'concluida'); setShowPhaseMenu(false); }}
-                                    className="w-full text-left px-4 py-2 text-sm hover:bg-muted text-green-400">
+                                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-green-400">
                                     ✅ Concluída
                                 </button>
                             )}
                             {phase.estado !== 'cancelada' && (
                                 <button onClick={() => { onStateChange(phase.id, 'cancelada'); setShowPhaseMenu(false); }}
-                                    className="w-full text-left px-4 py-2 text-sm hover:bg-muted text-red-400">
+                                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-400">
                                     ❌ Cancelada
                                 </button>
                             )}
@@ -623,16 +623,16 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
             {/* Agendamentos */}
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Agendamentos</h3>
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Agendamentos</h3>
                     <button onClick={onAddAppointment}
-                        className="text-sm text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1">
+                        className="text-sm text-amber-600 hover:text-amber-500 transition-colors flex items-center gap-1">
                         <Plus className="w-3.5 h-3.5" /> Novo
                     </button>
                 </div>
 
                 {appointments.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 border border-dashed border-border rounded-lg">
-                        <Calendar className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                    <div className="text-center py-8 text-gray-400 border border-dashed border-gray-200 rounded-lg">
+                        <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                         <p className="text-sm">Nenhum agendamento</p>
                     </div>
                 ) : (
@@ -668,19 +668,19 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                         )}
                     </h3>
                     <button onClick={() => setShowAddMaterial(!showAddMaterial)}
-                        className="text-sm text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1">
+                        className="text-sm text-amber-600 hover:text-amber-500 transition-colors flex items-center gap-1">
                         <Plus className="w-3.5 h-3.5" /> Adicionar
                     </button>
                 </div>
 
                 {/* Inline add form */}
                 {showAddMaterial && (
-                    <div className="flex flex-wrap items-center gap-2 mb-3 p-2 border border-dashed border-border rounded-lg bg-muted/30">
+                    <div className="flex flex-wrap items-center gap-2 mb-3 p-2 border border-dashed border-gray-200 rounded-lg bg-gray-50">
                         <input
                             value={newMatNome}
                             onChange={(e) => setNewMatNome(e.target.value)}
                             placeholder="Nome do material..."
-                            className="flex-1 min-w-[120px] bg-muted border border-border rounded px-2 py-1.5 text-xs text-card-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-none"
+                            className="flex-1 min-w-[120px] bg-white border border-gray-200 rounded px-2 py-1.5 text-xs text-gray-700 placeholder:text-gray-400 focus:border-amber-500 focus:outline-none"
                             autoFocus
                             onKeyDown={(e) => e.key === 'Enter' && handleAddMaterial()}
                         />
@@ -689,12 +689,12 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                             value={newMatQty}
                             onChange={(e) => setNewMatQty(e.target.value)}
                             min="1"
-                            className="w-14 bg-muted border border-border rounded px-2 py-1.5 text-xs text-card-foreground text-center"
+                            className="w-14 bg-white border border-gray-200 rounded px-2 py-1.5 text-xs text-gray-700 text-center"
                         />
                         <select
                             value={newMatUnit}
                             onChange={(e) => setNewMatUnit(e.target.value)}
-                            className="bg-muted border border-border rounded px-2 py-1.5 text-xs text-card-foreground"
+                            className="bg-white border border-gray-200 rounded px-2 py-1.5 text-xs text-gray-700"
                         >
                             <option value="un">un</option>
                             <option value="g">g</option>
@@ -707,27 +707,27 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                             <Check className="w-3.5 h-3.5" />
                         </button>
                         <button onClick={() => setShowAddMaterial(false)}
-                            className="p-1.5 rounded bg-muted hover:bg-muted text-muted-foreground">
+                            className="p-1.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-500">
                             <X className="w-3.5 h-3.5" />
                         </button>
                     </div>
                 )}
 
                 {materials.length === 0 && !showAddMaterial ? (
-                    <div className="text-center py-4 text-muted-foreground border border-dashed border-border rounded-lg">
+                    <div className="text-center py-4 text-gray-400 border border-dashed border-gray-200 rounded-lg">
                         <Package className="w-6 h-6 mx-auto mb-1 opacity-40" />
                         <p className="text-xs">Sem materiais associados</p>
                     </div>
                 ) : materials.length > 0 && (
                     <div className="space-y-1">
                         {materials.map((mat) => (
-                            <div key={mat.id} className="flex items-center gap-2 px-3 py-2 bg-muted/30 border border-border/50 rounded-lg group hover:border-border">
-                                <Package className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                                <span className="flex-1 text-sm text-card-foreground">{mat.nome}</span>
-                                <span className="text-xs text-muted-foreground font-mono">{mat.quantidade} {mat.unidade || 'un'}</span>
+                            <div key={mat.id} className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg group hover:border-gray-300">
+                                <Package className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                <span className="flex-1 text-sm text-gray-900">{mat.nome}</span>
+                                <span className="text-xs text-gray-500 font-mono">{mat.quantidade} {mat.unidade || 'un'}</span>
                                 <button
                                     onClick={() => handleRemoveMaterial(mat.id)}
-                                    className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-400 text-muted-foreground transition-all"
+                                    className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 text-gray-400 transition-all"
                                 >
                                     <Trash2 className="w-3 h-3" />
                                 </button>
@@ -739,19 +739,19 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
 
             {/* Notas da Fase */}
             {phase.notas && (
-                <div className="border border-border rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Notas da Fase</h3>
-                    <p className="text-sm text-card-foreground/80">{phase.notas}</p>
+                <div className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Notas da Fase</h3>
+                    <p className="text-sm text-gray-700">{phase.notas}</p>
                 </div>
             )}
 
             {/* Acções Rápidas da Fase */}
             {phase.estado !== 'concluida' && phase.estado !== 'cancelada' && (
-                <div className="mt-6 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 pt-4 border-t border-border">
+                <div className="mt-6 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 pt-4 border-t border-gray-200">
                     {phase.estado === 'pendente' && (
                         <button
                             onClick={() => onStateChange(phase.id, 'em_curso')}
-                            className="px-4 py-2.5 sm:py-2 text-sm font-medium rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors flex items-center justify-center gap-2"
+                            className="px-4 py-2.5 sm:py-2 text-sm font-medium rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors flex items-center justify-center gap-2"
                         >
                             <Clock className="w-4 h-4" />
                             Iniciar Fase
@@ -760,7 +760,7 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                     {phase.estado === 'em_curso' && (
                         <button
                             onClick={() => onStateChange(phase.id, 'concluida')}
-                            className="px-4 py-2.5 sm:py-2 text-sm font-medium rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors flex items-center justify-center gap-2"
+                            className="px-4 py-2.5 sm:py-2 text-sm font-medium rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors flex items-center justify-center gap-2"
                         >
                             <CheckCircle2 className="w-4 h-4" />
                             Concluir Fase
@@ -768,7 +768,7 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                     )}
                     <button
                         onClick={() => onStateChange(phase.id, 'cancelada')}
-                        className="px-4 py-2.5 sm:py-2 text-sm font-medium rounded-lg bg-muted text-muted-foreground hover:bg-red-500/20 hover:text-red-400 transition-colors flex items-center justify-center gap-2 sm:ml-auto"
+                        className="px-4 py-2.5 sm:py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center justify-center gap-2 sm:ml-auto"
                     >
                         <XCircle className="w-4 h-4" />
                         Cancelar
@@ -776,10 +776,10 @@ function PhaseDetail({ phase, onReload, onAddAppointment, onStateChange, onAppoi
                 </div>
             )}
             {(phase.estado === 'concluida' || phase.estado === 'cancelada') && (
-                <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-border">
+                <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-gray-200">
                     <button
                         onClick={() => onStateChange(phase.id, 'pendente')}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-muted text-card-foreground/80 hover:bg-muted transition-colors flex items-center gap-2"
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors flex items-center gap-2"
                     >
                         <Circle className="w-4 h-4" />
                         Reabrir como Pendente
@@ -824,7 +824,7 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, 
     };
 
     return (
-        <div className="bg-gray-800/60 border border-border rounded-lg p-3 hover:border-muted-foreground transition-colors">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:border-gray-300 transition-colors">
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
                     <span className="text-lg">{typeConfig.emoji}</span>
@@ -836,7 +836,7 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, 
                             </span>
                             {!editingDate && appointment.data_prevista && (
                                 <button onClick={() => setEditingDate(true)}
-                                    className="text-xs text-muted-foreground flex items-center gap-1 hover:text-amber-400 transition-colors">
+                                    className="text-xs text-gray-500 flex items-center gap-1 hover:text-amber-600 transition-colors">
                                     <Calendar className="w-3 h-3" />
                                     {new Date(appointment.data_prevista).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
                                     {appointment.hora_prevista && (
@@ -856,62 +856,62 @@ function AppointmentCard({ appointment, typeConfig, stateConfig, onStateChange, 
                 </div>
                 <div className="relative">
                     <button onClick={() => setShowMenu(!showMenu)}
-                        className="p-1 rounded hover:bg-muted transition-colors">
+                        className="p-1 rounded hover:bg-gray-100 transition-colors">
                         <MoreVertical className="w-3.5 h-3.5 text-gray-500" />
                     </button>
                     {showMenu && (
-                        <div className="absolute right-0 top-full mt-1 w-48 bg-muted border border-border rounded-lg shadow-xl z-50 py-1">
+                        <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1">
                             {/* Transições de estado */}
                             {(appointment.tipo === 'para_prova' || appointment.tipo === 'moldagem') && appointment.estado === 'agendado' && (
                                 <button onClick={() => { onStateChange(appointment.id, 'prova_entregue'); setShowMenu(false); }}
-                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-indigo-400">
+                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-indigo-400">
                                     📦 Prova Entregue
                                 </button>
                             )}
                             {appointment.tipo === 'para_colocacao' && appointment.estado === 'agendado' && (
                                 <button onClick={() => { onStateChange(appointment.id, 'colocacao_entregue'); setShowMenu(false); }}
-                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-purple-400">
+                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-purple-400">
                                     📦 Col. Entregue
                                 </button>
                             )}
                             {(appointment.estado === 'prova_entregue' || appointment.estado === 'colocacao_entregue') && (
                                 <button onClick={() => { onStateChange(appointment.id, 'recolhido'); setShowMenu(false); }}
-                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-teal-400">
+                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-teal-400">
                                     ✅ Recolhido
                                 </button>
                             )}
                             {appointment.estado !== 'concluido' && (
                                 <button onClick={() => { onStateChange(appointment.id, 'concluido'); setShowMenu(false); }}
-                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-green-400">
+                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-green-400">
                                     ✅ Concluído
                                 </button>
                             )}
                             {appointment.estado !== 'remarcado' && appointment.estado !== 'concluido' && (
                                 <button onClick={() => { onStateChange(appointment.id, 'remarcado'); setShowMenu(false); }}
-                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-orange-400">
+                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-orange-400">
                                     🔄 Remarcado
                                 </button>
                             )}
                             {appointment.estado !== 'cancelado' && appointment.estado !== 'concluido' && (
                                 <button onClick={() => { onStateChange(appointment.id, 'cancelado'); setShowMenu(false); }}
-                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-red-400">
+                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-red-400">
                                     ❌ Cancelado
                                 </button>
                             )}
                             {/* Editar */}
-                            <div className="border-t border-border my-1" />
+                            <div className="border-t border-gray-200 my-1" />
                             <button onClick={() => { setEditingDate(true); setShowMenu(false); }}
-                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-card-foreground/80 flex items-center gap-2">
+                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-card-foreground/80 flex items-center gap-2">
                                 <Pencil className="w-3.5 h-3.5" /> Editar Data
                             </button>
                             <button onClick={() => { setEditingNotes(true); setShowMenu(false); }}
-                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-card-foreground/80 flex items-center gap-2">
+                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-card-foreground/80 flex items-center gap-2">
                                 <Pencil className="w-3.5 h-3.5" /> Editar Notas
                             </button>
                             {/* Apagar */}
-                            <div className="border-t border-border my-1" />
+                            <div className="border-t border-gray-200 my-1" />
                             <button onClick={() => { setConfirmDelete(true); setShowMenu(false); }}
-                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted text-red-400 flex items-center gap-2">
+                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 text-red-400 flex items-center gap-2">
                                 <Trash2 className="w-3.5 h-3.5" /> Apagar
                             </button>
                         </div>
