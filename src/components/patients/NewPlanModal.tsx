@@ -60,10 +60,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                     setTipoTrabalhoId(wt[0].id);
                 }
 
-                // Calcular próximo número de plano (contínuo global)
+                // Calcular próximo número de plano (por paciente)
                 const { count } = await supabase
                     .from('treatment_plans')
-                    .select('id', { count: 'exact', head: true });
+                    .select('id', { count: 'exact', head: true })
+                    .eq('patient_id', patientId);
                 setNextPlanNumber((count || 0) + 1);
             } catch (err) {
                 console.error('Erro ao carregar dropdowns:', err);
@@ -182,27 +183,6 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                     autoFocus
                                 />
                             </div>
-                        </div>
-
-                        {/* Tipo de Trabalho */}
-                        <div>
-                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Trabalho *</label>
-                            <select
-                                value={tipoTrabalhoId}
-                                onChange={(e) => setTipoTrabalhoId(e.target.value)}
-                                className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                            >
-                                <option value="">Selecione...</option>
-                                {Object.entries(groupedWorkTypes).map(([cat, types]) => (
-                                    <optgroup key={cat} label={cat}>
-                                        {types.map(wt => (
-                                            <option key={wt.id} value={wt.id}>
-                                                {wt.nome}
-                                            </option>
-                                        ))}
-                                    </optgroup>
-                                ))}
-                            </select>
                         </div>
 
                         {/* Clínica + Médicos + Equipa em linha */}
@@ -374,6 +354,27 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Tipo de Trabalho */}
+                        <div>
+                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Trabalho *</label>
+                            <select
+                                value={tipoTrabalhoId}
+                                onChange={(e) => setTipoTrabalhoId(e.target.value)}
+                                className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                            >
+                                <option value="">Selecione...</option>
+                                {Object.entries(groupedWorkTypes).map(([cat, types]) => (
+                                    <optgroup key={cat} label={cat}>
+                                        {types.map(wt => (
+                                            <option key={wt.id} value={wt.id}>
+                                                {wt.nome}
+                                            </option>
+                                        ))}
+                                    </optgroup>
+                                ))}
+                            </select>
                         </div>
 
                         {/* Team chips preview */}
