@@ -244,6 +244,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                             return (
                                                 <div
                                                     key={doc.user_id}
+                                                    onClick={() => {
+                                                        if (isInTeam && !isPrincipal) {
+                                                            setTeam(prev => prev.filter(t => t.doctor_id !== doc.user_id));
+                                                        } else if (!isInTeam) {
+                                                            setTeam(prev => [...prev, { doctor_id: doc.user_id, full_name: doc.full_name }]);
+                                                            if (!medicoId) setMedicoId(doc.user_id);
+                                                        }
+                                                    }}
                                                     className={cn(
                                                         "flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors group",
                                                         isInTeam ? "bg-primary/5" : "hover:bg-gray-50"
@@ -251,15 +259,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 >
                                                     <button
                                                         type="button"
-                                                        onClick={() => {
-                                                            if (isInTeam && !isPrincipal) {
-                                                                setTeam(prev => prev.filter(t => t.doctor_id !== doc.user_id));
-                                                            } else if (!isInTeam) {
-                                                                setTeam(prev => [...prev, { doctor_id: doc.user_id, full_name: doc.full_name }]);
-                                                                // Se é o primeiro médico, tornar principal
-                                                                if (!medicoId) setMedicoId(doc.user_id);
-                                                            }
-                                                        }}
+                                                        onClick={(e) => e.stopPropagation()}
                                                         className={cn(
                                                             "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
                                                             isInTeam ? "bg-primary border-primary text-white" : "border-gray-300 hover:border-primary/50",
@@ -321,16 +321,18 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                                 {showTeamPicker && (
                                     <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 z-10 py-1 max-h-48 overflow-y-auto">
+                                        <div className="px-3 py-1.5 border-b border-gray-100">
+                                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Equipa do Caso</span>
+                                        </div>
                                         {doctors.map(doc => {
                                             const isInTeam = team.some(t => t.doctor_id === doc.user_id);
                                             const isPrincipal = doc.user_id === medicoId;
                                             return (
-                                                <button
+                                                <div
                                                     key={doc.user_id}
-                                                    type="button"
                                                     onClick={() => toggleTeamMember(doc.user_id)}
                                                     className={cn(
-                                                        "w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors",
+                                                        "flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors group",
                                                         isInTeam ? "bg-primary/5" : "hover:bg-gray-50"
                                                     )}
                                                 >
@@ -345,10 +347,21 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     <span className={cn("text-xs flex-1 truncate", isInTeam ? "text-gray-900 font-medium" : "text-gray-600")}>
                                                         {doc.full_name}
                                                     </span>
-                                                    {isPrincipal && (
-                                                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold shrink-0">Principal</span>
-                                                    )}
-                                                </button>
+                                                    {isPrincipal ? (
+                                                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold shrink-0">Principal</span>
+                                                    ) : isInTeam ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setMedicoId(doc.user_id);
+                                                            }}
+                                                            className="text-[9px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 hover:bg-primary/10 hover:text-primary font-medium opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                                                        >
+                                                            ★ Tornar principal
+                                                        </button>
+                                                    ) : null}
+                                                </div>
                                             );
                                         })}
                                     </div>

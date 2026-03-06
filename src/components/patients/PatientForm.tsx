@@ -701,7 +701,13 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                             const isSelected = associatedDoctors.some(ad => ad.doctor_id === d.user_id);
                                             const isPrincipal = d.user_id === patient.medico_principal_id;
                                             return (
-                                                <div key={d.user_id} className={cn(
+                                                <div key={d.user_id} onClick={() => {
+                                                    if (isSelected && !isPrincipal) {
+                                                        handleRemoveDoctor(d.user_id);
+                                                    } else if (!isSelected) {
+                                                        handleAddDoctor(d.user_id);
+                                                    }
+                                                }} className={cn(
                                                     "flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors group",
                                                     isSelected ? "bg-primary/5" : "hover:bg-gray-50"
                                                 )}>
