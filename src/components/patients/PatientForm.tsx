@@ -900,8 +900,12 @@ export default function PatientForm({ initialData }: PatientFormProps) {
             {/* ============ CONTENT CARD (sobrepõe o hero) ============ */}
             <div className="flex-1 -mt-8 px-4 sm:px-6 pb-6 relative z-10">
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 min-h-full">
-                    <Tabs defaultValue="closed-plans" className="w-full">
+                    <Tabs defaultValue="active-plan" className="w-full">
                         <TabsList className="flex w-full max-w-full overflow-x-auto">
+                            <TabsTrigger value="active-plan" className="flex-shrink-0 gap-1.5">
+                                <ClipboardList className="h-3.5 w-3.5" />
+                                Plano Activo
+                            </TabsTrigger>
                             <TabsTrigger value="closed-plans" className="flex-shrink-0 gap-1.5">
                                 <Archive className="h-3.5 w-3.5" />
                                 Planos Fechados
@@ -913,6 +917,10 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         </TabsList>
 
                         <div className="mt-6">
+                            <TabsContent value="active-plan">
+                                {/* Conteúdo do Plano Activo — a implementar */}
+                            </TabsContent>
+
                             <TabsContent value="closed-plans">
                                 <ClosedPlansTab patient={patient} />
                             </TabsContent>
