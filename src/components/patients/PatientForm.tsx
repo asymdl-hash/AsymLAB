@@ -858,6 +858,17 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                 Guardado
                             </span>
                         )}
+                        {!readOnly && (
+                            <Button
+                                size="sm"
+                                className="h-8 gap-1.5 text-xs bg-primary hover:bg-primary/90 text-white"
+                                onClick={() => setShowNewPlan(true)}
+                            >
+                                <Plus className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">Criar Plano de Tratamento</span>
+                                <span className="sm:hidden">Novo Plano</span>
+                            </Button>
+                        )}
                         <Button
                             variant="ghost"
                             size="sm"
