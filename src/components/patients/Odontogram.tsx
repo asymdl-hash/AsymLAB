@@ -14,7 +14,8 @@ import { TOOTH_CENTERS } from './tooth_centers';
 
 interface WorkType { id: string; nome: string; cor: string | null; activo?: boolean; }
 interface ToothData { tooth_number: number; work_type_id: string | null; }
-interface OdontogramProps { teeth: ToothData[]; workTypes: WorkType[]; onChange: (teeth: ToothData[]) => void; disabled?: boolean; selectionMode?: 'assign' | 'toggle'; assignLabel?: string; }
+interface PendingAssignment { work_type_id: string; total: number; assigned: number; }
+interface OdontogramProps { teeth: ToothData[]; workTypes: WorkType[]; onChange: (teeth: ToothData[]) => void; disabled?: boolean; selectionMode?: 'assign' | 'toggle'; assignLabel?: string; pendingAssignments?: PendingAssignment[]; }
 interface OdontogramModalProps extends OdontogramProps { open: boolean; onClose: () => void; }
 
 // Ordem das arcadas
@@ -26,7 +27,7 @@ const ALL_TEETH = [...UPPER, ...LOWER];
 // Odontogram Content — SVG com paths pré-posicionados
 // ═══════════════════════════════════════════════════════════
 
-export function OdontogramContent({ teeth, workTypes, onChange, disabled = false, selectionMode = 'assign', assignLabel = 'Tipos de Trabalho' }: OdontogramProps) {
+export function OdontogramContent({ teeth, workTypes, onChange, disabled = false, selectionMode = 'assign', assignLabel = 'Tipos de Trabalho', pendingAssignments }: OdontogramProps) {
     const [selected, setSelected] = useState<Set<number>>(new Set());
     const [showAssign, setShowAssign] = useState(true);
     const lastRef = useRef<number | null>(null);
@@ -129,6 +130,14 @@ export function OdontogramContent({ teeth, workTypes, onChange, disabled = false
         g.forEach((v, k) => g.set(k, v.sort((a, b) => a - b)));
         return g;
     }, [teeth]);
+
+    // Tipos de trabalho com dentes pendentes
+    const pendingItems = useMemo(() => {
+        if (!pendingAssignments) return [];
+        return pendingAssignments
+            .map(pa => ({ ...pa, remaining: pa.total - pa.assigned }))
+            .filter(pa => pa.remaining > 0);
+    }, [pendingAssignments]);
 
     return (
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
@@ -252,6 +261,32 @@ export function OdontogramContent({ teeth, workTypes, onChange, disabled = false
                     </div>
                 )}
 
+                {/* ── Secção: Por Atribuir ── */}
+                {pendingItems.length > 0 && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                        <div className="flex items-center gap-1.5 mb-2">
+                            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Por Atribuir</span>
+                            <span className="text-[9px] bg-amber-200 text-amber-700 px-1.5 rounded-full font-bold ml-auto">
+                                {pendingItems.reduce((a, p) => a + p.remaining, 0)}
+                            </span>
+                        </div>
+                        <div className="space-y-1.5">
+                            {pendingItems.map(pa => {
+                                const wt = wtMap.get(pa.work_type_id);
+                                return (
+                                    <div key={pa.work_type_id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/70 border border-amber-100">
+                                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: wt?.cor || '#6b7280' }} />
+                                        <span className="text-[11px] font-medium text-gray-700 truncate flex-1">{wt?.nome || '—'}</span>
+                                        <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full shrink-0">
+                                            {pa.remaining}×
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {grouped.size > 0 && (
                     <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
                         <button onClick={() => setShowAssign(!showAssign)} className="flex items-center gap-1.5 w-full mb-2">
@@ -278,7 +313,7 @@ export function OdontogramContent({ teeth, workTypes, onChange, disabled = false
                     </div>
                 )}
 
-                {grouped.size === 0 && selected.size === 0 && (
+                {grouped.size === 0 && selected.size === 0 && pendingItems.length === 0 && (
                     <div className="text-center py-8 text-gray-400">
                         <p className="text-xs">Seleccione dentes</p>
                         <p className="text-[10px] mt-0.5">para atribuir trabalhos</p>
@@ -293,8 +328,9 @@ export function OdontogramContent({ teeth, workTypes, onChange, disabled = false
 // Modal & Trigger
 // ═══════════════════════════════════════════════════════════
 
-export function OdontogramModal({ open, onClose, teeth, workTypes, onChange, disabled }: OdontogramModalProps) {
+export function OdontogramModal({ open, onClose, teeth, workTypes, onChange, disabled, pendingAssignments }: OdontogramModalProps) {
     if (!open) return null;
+    const totalPending = pendingAssignments ? pendingAssignments.reduce((a, p) => a + Math.max(0, p.total - p.assigned), 0) : 0;
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -304,13 +340,18 @@ export function OdontogramModal({ open, onClose, teeth, workTypes, onChange, dis
                         <span className="text-lg">🦷</span>
                         <div>
                             <h2 className="text-sm font-bold text-gray-900">Odontograma</h2>
-                            <p className="text-[10px] text-gray-400">{teeth.length} dente{teeth.length !== 1 ? 's' : ''} · FDI ISO 3950</p>
+                            <p className="text-[10px] text-gray-400">
+                                {teeth.length} dente{teeth.length !== 1 ? 's' : ''} · FDI ISO 3950
+                                {totalPending > 0 && (
+                                    <span className="text-amber-500 font-semibold"> · {totalPending}× por atribuir</span>
+                                )}
+                            </p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><X className="w-4 h-4" /></button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-5">
-                    <OdontogramContent teeth={teeth} workTypes={workTypes} onChange={onChange} disabled={disabled} />
+                    <OdontogramContent teeth={teeth} workTypes={workTypes} onChange={onChange} disabled={disabled} pendingAssignments={pendingAssignments} />
                 </div>
                 <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
                     <span className="text-[9px] text-gray-400 hidden sm:inline">Click · Ctrl+Click · Shift+Click</span>

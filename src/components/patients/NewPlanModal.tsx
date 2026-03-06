@@ -138,6 +138,15 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     // Total de dentes atribuídos
     const totalAssignedTeeth = odontogramTeeth.length;
 
+    // Pendentes por tipo de trabalho — para o Odontograma
+    const pendingAssignments = useMemo(() =>
+        workTypeSelections.map(sel => ({
+            work_type_id: sel.work_type_id,
+            total: sel.quantity,
+            assigned: sel.assigned_teeth.length,
+        })),
+        [workTypeSelections]);
+
     // ── Sync: Odontogram → WorkTypeSelections ──
     const handleOdontogramChange = useCallback((newTeeth: { tooth_number: number; work_type_id: string | null }[]) => {
         setWorkTypeSelections(prev => {
@@ -702,6 +711,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 teeth={odontogramTeeth}
                 workTypes={workTypes.map(wt => ({ id: wt.id, nome: wt.nome, cor: wt.cor }))}
                 onChange={handleOdontogramChange}
+                pendingAssignments={pendingAssignments}
             />
         </>
     );
