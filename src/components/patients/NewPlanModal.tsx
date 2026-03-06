@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Plus, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Plus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { patientsService } from '@/services/patientsService';
+import { cn } from '@/lib/utils';
 
 interface NewPlanModalProps {
     patientId: string;
     patientClinicaId: string | null;
     patientMedicoId: string | null;
+    associatedDoctors: { doctor_id: string; full_name: string }[];
     onClose: () => void;
     onCreated: () => void;
 }
@@ -18,11 +20,12 @@ type WorkTypeItem = { id: string; nome: string; cor: string | null; categoria: s
 type DoctorItem = { user_id: string; full_name: string };
 type ClinicItem = { id: string; commercial_name: string };
 
-export default function NewPlanModal({ patientId, patientClinicaId, patientMedicoId, onClose, onCreated }: NewPlanModalProps) {
+export default function NewPlanModal({ patientId, patientClinicaId, patientMedicoId, associatedDoctors: initialTeam, onClose, onCreated }: NewPlanModalProps) {
     const [nome, setNome] = useState('');
     const [tipoTrabalhoId, setTipoTrabalhoId] = useState('');
     const [medicoId, setMedicoId] = useState(patientMedicoId || '');
     const [clinicaId, setClinicaId] = useState(patientClinicaId || '');
+    const [team, setTeam] = useState<{ doctor_id: string; full_name: string }[]>(initialTeam);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
@@ -31,6 +34,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [doctors, setDoctors] = useState<DoctorItem[]>([]);
     const [clinics, setClinics] = useState<ClinicItem[]>([]);
     const [loadingDropdowns, setLoadingDropdowns] = useState(true);
+
+    // Team picker
+    const [showTeamPicker, setShowTeamPicker] = useState(false);
+    const teamPickerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         async function loadDropdowns() {
@@ -56,6 +63,17 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         }
         loadDropdowns();
     }, []);
+
+    // Click outside to close team picker
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (showTeamPicker && teamPickerRef.current && !teamPickerRef.current.contains(e.target as Node)) {
+                setShowTeamPicker(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showTeamPicker]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -85,6 +103,18 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         }
     };
 
+    const toggleTeamMember = (doctorId: string) => {
+        const doc = doctors.find(d => d.user_id === doctorId);
+        if (!doc) return;
+        if (team.some(t => t.doctor_id === doctorId)) {
+            // Não remover o médico principal
+            if (doctorId === medicoId) return;
+            setTeam(prev => prev.filter(t => t.doctor_id !== doctorId));
+        } else {
+            setTeam(prev => [...prev, { doctor_id: doctorId, full_name: doc.full_name }]);
+        }
+    };
+
     // Agrupar work types por categoria
     const groupedWorkTypes = workTypes.reduce<Record<string, typeof workTypes>>((acc, wt) => {
         const cat = wt.categoria || 'Outros';
@@ -99,7 +129,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-gray-100">
                     <div>
@@ -151,39 +181,148 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                             </select>
                         </div>
 
-                        {/* Médico */}
-                        <div>
-                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Médico *</label>
-                            <select
-                                value={medicoId}
-                                onChange={(e) => setMedicoId(e.target.value)}
-                                className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                            >
-                                <option value="">Selecione...</option>
-                                {doctors.map(doc => (
-                                    <option key={doc.user_id} value={doc.user_id}>
-                                        Dr. {doc.full_name}
-                                    </option>
-                                ))}
-                            </select>
+                        {/* Clínica + Médico em linha */}
+                        <div className="grid grid-cols-2 gap-3">
+                            {/* Clínica */}
+                            <div>
+                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                    <Building2 className="h-3 w-3" />
+                                    Clínica *
+                                </label>
+                                <select
+                                    value={clinicaId}
+                                    onChange={(e) => setClinicaId(e.target.value)}
+                                    className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                >
+                                    <option value="">Selecione...</option>
+                                    {clinics.map(cl => (
+                                        <option key={cl.id} value={cl.id}>
+                                            {cl.commercial_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Médico */}
+                            <div>
+                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                    <Stethoscope className="h-3 w-3" />
+                                    Médico *
+                                </label>
+                                <select
+                                    value={medicoId}
+                                    onChange={(e) => {
+                                        const newId = e.target.value;
+                                        setMedicoId(newId);
+                                        // Adicionar à equipa se não estiver
+                                        if (newId && !team.some(t => t.doctor_id === newId)) {
+                                            const doc = doctors.find(d => d.user_id === newId);
+                                            if (doc) setTeam(prev => [...prev, { doctor_id: doc.user_id, full_name: doc.full_name }]);
+                                        }
+                                    }}
+                                    className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                >
+                                    <option value="">Selecione...</option>
+                                    {doctors.map(doc => (
+                                        <option key={doc.user_id} value={doc.user_id}>
+                                            {doc.full_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
-                        {/* Clínica */}
-                        <div>
-                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Clínica *</label>
-                            <select
-                                value={clinicaId}
-                                onChange={(e) => setClinicaId(e.target.value)}
-                                className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        {/* Equipa */}
+                        <div className="relative" ref={teamPickerRef}>
+                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                <Users className="h-3 w-3" />
+                                Equipa
+                            </label>
+                            <button
+                                type="button"
+                                onClick={() => setShowTeamPicker(!showTeamPicker)}
+                                className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                             >
-                                <option value="">Selecione...</option>
-                                {clinics.map(cl => (
-                                    <option key={cl.id} value={cl.id}>
-                                        {cl.commercial_name}
-                                    </option>
-                                ))}
-                            </select>
+                                <span className="flex items-center gap-2 text-gray-700 truncate">
+                                    {team.length > 0 ? (
+                                        <>
+                                            <span>{team.length} {team.length === 1 ? 'membro' : 'membros'}</span>
+                                            <span className="text-gray-400">·</span>
+                                            <span className="text-gray-500 truncate text-xs">{team.map(t => t.full_name.split(' ')[0]).join(', ')}</span>
+                                        </>
+                                    ) : (
+                                        <span className="text-gray-400">Selecionar membros...</span>
+                                    )}
+                                </span>
+                                <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform", showTeamPicker && "rotate-180")} />
+                            </button>
+
+                            {/* Team Picker Dropdown */}
+                            {showTeamPicker && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 z-10 py-1 max-h-48 overflow-y-auto">
+                                    {doctors.map(doc => {
+                                        const isInTeam = team.some(t => t.doctor_id === doc.user_id);
+                                        const isPrincipal = doc.user_id === medicoId;
+                                        return (
+                                            <button
+                                                key={doc.user_id}
+                                                type="button"
+                                                onClick={() => toggleTeamMember(doc.user_id)}
+                                                className={cn(
+                                                    "w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors",
+                                                    isInTeam ? "bg-primary/5" : "hover:bg-gray-50"
+                                                )}
+                                            >
+                                                <div className={cn(
+                                                    "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                                                    isInTeam ? "bg-primary border-primary text-white" : "border-gray-300",
+                                                    isPrincipal && "cursor-default"
+                                                )}>
+                                                    {isInTeam && <Check className="h-2.5 w-2.5" />}
+                                                </div>
+                                                <Stethoscope className={cn("h-3 w-3 shrink-0", isInTeam ? "text-primary" : "text-gray-400")} />
+                                                <span className={cn("text-xs flex-1 truncate", isInTeam ? "text-gray-900 font-medium" : "text-gray-600")}>
+                                                    {doc.full_name}
+                                                </span>
+                                                {isPrincipal && (
+                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold shrink-0">Principal</span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
+
+                        {/* Team chips preview */}
+                        {team.length > 0 && !showTeamPicker && (
+                            <div className="flex flex-wrap gap-1.5">
+                                {team.map(member => (
+                                    <span
+                                        key={member.doctor_id}
+                                        className={cn(
+                                            "inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full",
+                                            member.doctor_id === medicoId
+                                                ? "bg-primary/10 text-primary font-medium"
+                                                : "bg-gray-100 text-gray-600"
+                                        )}
+                                    >
+                                        <Stethoscope className="h-2.5 w-2.5" />
+                                        {member.full_name.split(' ')[0]}
+                                        {member.doctor_id === medicoId && <span className="text-[8px]">★</span>}
+                                        {member.doctor_id !== medicoId && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setTeam(prev => prev.filter(t => t.doctor_id !== member.doctor_id))}
+                                                className="ml-0.5 text-gray-400 hover:text-red-500 transition-colors"
+                                            >
+                                                <X className="h-2.5 w-2.5" />
+                                            </button>
+                                        )}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Error */}
                         {error && (

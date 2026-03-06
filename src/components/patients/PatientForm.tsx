@@ -948,7 +948,9 @@ export default function PatientForm({ initialData }: PatientFormProps) {
             {showNewPlan && (
                 <NewPlanModal
                     patientId={patient.id}
-                    patientName={patient.nome}
+                    patientClinicaId={patient.clinica_id || null}
+                    patientMedicoId={patient.medico_principal_id || null}
+                    associatedDoctors={associatedDoctors}
                     onClose={() => setShowNewPlan(false)}
                     onCreated={async () => {
                         setShowNewPlan(false);
