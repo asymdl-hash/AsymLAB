@@ -774,88 +774,109 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform shrink-0 ml-1", showColorDropdown && "rotate-180")} />
                                                     </button>
 
-                                                    {showColorDropdown && (
-                                                        <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                                                            {!activeColorGroup ? (
-                                                                /* Nível 1: Cards de escalas */
-                                                                <div className="p-2 space-y-1 max-h-48 overflow-y-auto">
-                                                                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1 pb-1">Escolha a escala</p>
-                                                                    {Object.keys(
-                                                                        toothColors.reduce<Record<string, ToothColorItem[]>>((acc, tc) => {
-                                                                            const g = tc.grupo || 'Outros';
-                                                                            if (!acc[g]) acc[g] = [];
-                                                                            acc[g].push(tc);
-                                                                            return acc;
-                                                                        }, {})
-                                                                    ).map(grupo => {
-                                                                        const groupColors = toothColors.filter(tc => (tc.grupo || 'Outros') === grupo);
-                                                                        const selectedCount = groupColors.filter(tc => selectedColorIds.includes(tc.id)).length;
-                                                                        return (
-                                                                            <button
-                                                                                key={grupo}
-                                                                                type="button"
-                                                                                onClick={() => setActiveColorGroup(grupo)}
-                                                                                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-amber-50 transition-colors text-left"
-                                                                            >
-                                                                                <Palette className="h-4 w-4 text-amber-400 shrink-0" />
-                                                                                <div className="flex-1 min-w-0">
-                                                                                    <span className="text-xs font-semibold text-gray-700 block">{grupo}</span>
-                                                                                    <span className="text-[10px] text-gray-400">{groupColors.length} tonalidades</span>
-                                                                                </div>
-                                                                                {selectedCount > 0 && (
-                                                                                    <span className="text-[9px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-bold">{selectedCount}</span>
-                                                                                )}
-                                                                                <ChevronDown className="h-3 w-3 text-gray-300 -rotate-90" />
-                                                                            </button>
-                                                                        );
-                                                                    })}
-                                                                    {toothColors.length === 0 && (
-                                                                        <p className="text-[10px] text-gray-400 text-center py-3">Sem cores no catálogo</p>
-                                                                    )}
-                                                                </div>
-                                                            ) : (
-                                                                /* Nível 2: Tonalidades dentro da escala */
-                                                                <div>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setActiveColorGroup(null)}
-                                                                        className="w-full flex items-center gap-2 px-3 py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                                                                    >
-                                                                        <ChevronDown className="h-3 w-3 text-gray-400 rotate-90" />
-                                                                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{activeColorGroup}</span>
-                                                                    </button>
-                                                                    <div className="max-h-44 overflow-y-auto py-1">
-                                                                        {toothColors.filter(tc => (tc.grupo || 'Outros') === activeColorGroup).map(tc => {
-                                                                            const isSelected = selectedColorIds.includes(tc.id);
+                                                    {showColorDropdown && (() => {
+                                                        /* Mapeamento grupo DB → escala real */
+                                                        const SCALE_MAP: Record<string, string> = {
+                                                            'A': 'VITA Classical', 'B': 'VITA Classical', 'C': 'VITA Classical', 'D': 'VITA Classical',
+                                                            '3D-Master': 'VITA 3D-Master', 'Bleach': 'VITA 3D-Master',
+                                                            'Chromascop': 'Chromascop',
+                                                        };
+                                                        const scales = toothColors.reduce<Record<string, { grupos: Record<string, ToothColorItem[]>; total: number }>>((acc, tc) => {
+                                                            const g = tc.grupo || 'Outros';
+                                                            const scale = SCALE_MAP[g] || g;
+                                                            if (!acc[scale]) acc[scale] = { grupos: {}, total: 0 };
+                                                            if (!acc[scale].grupos[g]) acc[scale].grupos[g] = [];
+                                                            acc[scale].grupos[g].push(tc);
+                                                            acc[scale].total++;
+                                                            return acc;
+                                                        }, {});
+
+                                                        return (
+                                                            <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                                                                {!activeColorGroup ? (
+                                                                    /* Nível 1: 3 Escalas reais */
+                                                                    <div className="p-2 space-y-1 max-h-48 overflow-y-auto">
+                                                                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1 pb-1">Escolha a escala</p>
+                                                                        {Object.entries(scales).map(([scaleName, scaleData]) => {
+                                                                            const allColors = Object.values(scaleData.grupos).flat();
+                                                                            const selectedCount = allColors.filter(tc => selectedColorIds.includes(tc.id)).length;
                                                                             return (
-                                                                                <div
-                                                                                    key={tc.id}
-                                                                                    onClick={() => {
-                                                                                        setSelectedColorIds(prev =>
-                                                                                            isSelected ? prev.filter(id => id !== tc.id) : [...prev, tc.id]
-                                                                                        );
-                                                                                    }}
-                                                                                    className={cn(
-                                                                                        "flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-amber-50 transition-colors text-xs",
-                                                                                        isSelected && "bg-amber-50"
-                                                                                    )}
+                                                                                <button
+                                                                                    key={scaleName}
+                                                                                    type="button"
+                                                                                    onClick={() => setActiveColorGroup(scaleName)}
+                                                                                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-amber-50 transition-colors text-left"
                                                                                 >
-                                                                                    <div className={cn(
-                                                                                        "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
-                                                                                        isSelected ? "border-amber-500 bg-amber-500" : "border-gray-300"
-                                                                                    )}>
-                                                                                        {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                                                                                    <Palette className="h-4 w-4 text-amber-400 shrink-0" />
+                                                                                    <div className="flex-1 min-w-0">
+                                                                                        <span className="text-xs font-semibold text-gray-700 block">{scaleName}</span>
+                                                                                        <span className="text-[10px] text-gray-400">{scaleData.total} tonalidades</span>
                                                                                     </div>
-                                                                                    <span className="font-mono text-gray-500 w-8">{tc.codigo}</span>
-                                                                                    <span className="text-gray-700">{tc.nome}</span>
-                                                                                </div>
+                                                                                    {selectedCount > 0 && (
+                                                                                        <span className="text-[9px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-bold">{selectedCount}</span>
+                                                                                    )}
+                                                                                    <ChevronDown className="h-3 w-3 text-gray-300 -rotate-90" />
+                                                                                </button>
                                                                             );
                                                                         })}
+                                                                        {toothColors.length === 0 && (
+                                                                            <p className="text-[10px] text-gray-400 text-center py-3">Sem cores no catálogo</p>
+                                                                        )}
                                                                     </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                                ) : (
+                                                                    /* Nível 2: Tonalidades dentro da escala seleccionada */
+                                                                    <div>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => setActiveColorGroup(null)}
+                                                                            className="w-full flex items-center gap-2 px-3 py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                                                                        >
+                                                                            <ChevronDown className="h-3 w-3 text-gray-400 rotate-90" />
+                                                                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{activeColorGroup}</span>
+                                                                        </button>
+                                                                        <div className="max-h-52 overflow-y-auto py-1">
+                                                                            {scales[activeColorGroup] && Object.entries(scales[activeColorGroup].grupos).map(([subGrupo, colors]) => (
+                                                                                <div key={subGrupo}>
+                                                                                    {/* Sub-grupo header (ex: A, B, C, D dentro de VITA Classical) */}
+                                                                                    {Object.keys(scales[activeColorGroup].grupos).length > 1 && (
+                                                                                        <div className="px-3 py-1 border-b border-gray-50">
+                                                                                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{subGrupo}</span>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {colors.map(tc => {
+                                                                                        const isSelected = selectedColorIds.includes(tc.id);
+                                                                                        return (
+                                                                                            <div
+                                                                                                key={tc.id}
+                                                                                                onClick={() => {
+                                                                                                    setSelectedColorIds(prev =>
+                                                                                                        isSelected ? prev.filter(id => id !== tc.id) : [...prev, tc.id]
+                                                                                                    );
+                                                                                                }}
+                                                                                                className={cn(
+                                                                                                    "flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-amber-50 transition-colors text-xs",
+                                                                                                    isSelected && "bg-amber-50"
+                                                                                                )}
+                                                                                            >
+                                                                                                <div className={cn(
+                                                                                                    "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                                                                                                    isSelected ? "border-amber-500 bg-amber-500" : "border-gray-300"
+                                                                                                )}>
+                                                                                                    {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                                                                                                </div>
+                                                                                                <span className="font-mono text-gray-500 w-8">{tc.codigo}</span>
+                                                                                                <span className="text-gray-700">{tc.nome}</span>
+                                                                                            </div>
+                                                                                        );
+                                                                                    })}
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </div>
 
                                                 {/* Upload fotos escala de cor — cards compactos */}
@@ -863,10 +884,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         Fotos
                                                     </label>
-                                                    <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+                                                    <div className="mt-1.5 grid grid-cols-4 gap-1">
                                                         {colorScalePreviews.map((url, i) => (
-                                                            <div key={i} className="rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm group">
-                                                                <div className="relative aspect-square bg-gray-100">
+                                                            <div key={i} className="rounded border border-gray-200 bg-white overflow-hidden shadow-sm group">
+                                                                <div className="relative aspect-square bg-gray-100 max-h-[48px]">
                                                                     <img src={url} alt={colorScalePhotos[i]?.name || `Cor ${i + 1}`} className="w-full h-full object-cover" />
                                                                     <button
                                                                         type="button"
@@ -876,13 +897,13 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                             setColorScalePreviews(prev => prev.filter((_, idx) => idx !== i));
                                                                             setPhotoNotes(prev => { const n = { ...prev }; delete n[i]; return n; });
                                                                         }}
-                                                                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                        className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                                                     >
-                                                                        <X className="h-2.5 w-2.5 text-white" />
+                                                                        <X className="h-2 w-2 text-white" />
                                                                     </button>
                                                                 </div>
-                                                                <div className="px-1.5 py-1">
-                                                                    <span className="text-[8px] text-gray-400 truncate block leading-tight">
+                                                                <div className="px-1 py-0.5">
+                                                                    <span className="text-[7px] text-gray-400 truncate block leading-tight">
                                                                         {colorScalePhotos[i]?.name || `Foto ${i + 1}`}
                                                                     </span>
                                                                     {editingNoteIdx === i ? (
@@ -893,12 +914,12 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                             onBlur={() => setEditingNoteIdx(null)}
                                                                             onKeyDown={e => e.key === 'Enter' && setEditingNoteIdx(null)}
                                                                             placeholder="Nota..."
-                                                                            className="mt-0.5 w-full text-[10px] px-1 py-0.5 border border-amber-200 rounded bg-amber-50/50 outline-none focus:ring-1 focus:ring-amber-300"
+                                                                            className="mt-0.5 w-full text-[9px] px-1 py-0.5 border border-amber-200 rounded bg-amber-50/50 outline-none focus:ring-1 focus:ring-amber-300"
                                                                         />
                                                                     ) : photoNotes[i] ? (
                                                                         <p
                                                                             onClick={() => setEditingNoteIdx(i)}
-                                                                            className="mt-0.5 text-[10px] font-semibold text-amber-700 cursor-pointer hover:text-amber-800 truncate leading-tight"
+                                                                            className="mt-0.5 text-[9px] font-semibold text-amber-700 cursor-pointer hover:text-amber-800 truncate leading-tight"
                                                                         >
                                                                             📝 {photoNotes[i]}
                                                                         </p>
@@ -906,10 +927,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => setEditingNoteIdx(i)}
-                                                                            className="mt-0.5 flex items-center gap-0.5 text-[9px] text-amber-500 hover:text-amber-600 font-semibold transition-colors"
+                                                                            className="mt-0.5 flex items-center gap-0.5 text-[8px] text-amber-500 hover:text-amber-600 font-semibold transition-colors"
                                                                         >
-                                                                            <MessageSquarePlus className="h-2.5 w-2.5" />
-                                                                            + Notas
+                                                                            <MessageSquarePlus className="h-2 w-2" />
+                                                                            Notas
                                                                         </button>
                                                                     )}
                                                                 </div>
@@ -918,10 +939,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         <button
                                                             type="button"
                                                             onClick={() => colorFileRef.current?.click()}
-                                                            className="rounded-lg border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors aspect-square"
+                                                            className="rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors aspect-square max-h-[48px]"
                                                         >
-                                                            <ImagePlus className="h-4 w-4" />
-                                                            <span className="text-[8px] mt-0.5 font-medium">Foto</span>
+                                                            <ImagePlus className="h-3.5 w-3.5" />
+                                                            <span className="text-[7px] mt-0.5 font-medium">Foto</span>
                                                         </button>
                                                         <input
                                                             ref={colorFileRef}
