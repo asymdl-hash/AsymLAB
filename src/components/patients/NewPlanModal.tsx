@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, Plus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash } from 'lucide-react';
+import { X, Plus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { patientsService } from '@/services/patientsService';
@@ -43,6 +43,9 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const doctorPickerRef = useRef<HTMLDivElement>(null);
     const teamPickerRef = useRef<HTMLDivElement>(null);
 
+    // Colaboradores da clínica
+    const [clinicTeam, setClinicTeam] = useState<{ user_id: string; full_name: string; phone: string | null; role: string | null }[]>([]);
+
     useEffect(() => {
         async function loadDropdowns() {
             try {
@@ -74,6 +77,28 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         }
         loadDropdowns();
     }, []);
+
+    // Carregar colaboradores quando a clínica muda
+    useEffect(() => {
+        async function loadClinicTeam() {
+            if (!clinicaId) { setClinicTeam([]); return; }
+            try {
+                const { data, error } = await supabase
+                    .from('user_clinic_access')
+                    .select('user_id, user_profiles!inner(full_name, phone, app_role)')
+                    .eq('clinic_id', clinicaId);
+                if (!error && data) {
+                    setClinicTeam(data.map((d: any) => ({
+                        user_id: d.user_id,
+                        full_name: d.user_profiles.full_name,
+                        phone: d.user_profiles.phone,
+                        role: d.user_profiles.app_role,
+                    })).filter((d: any) => d.role !== 'doctor'));
+                }
+            } catch { /* ignore */ }
+        }
+        loadClinicTeam();
+    }, [clinicaId]);
 
     // Click outside to close pickers
     useEffect(() => {
@@ -117,17 +142,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         }
     };
 
-    const toggleTeamMember = (doctorId: string) => {
-        const doc = doctors.find(d => d.user_id === doctorId);
-        if (!doc) return;
-        if (team.some(t => t.doctor_id === doctorId)) {
-            // Não remover o médico principal
-            if (doctorId === medicoId) return;
-            setTeam(prev => prev.filter(t => t.doctor_id !== doctorId));
-        } else {
-            setTeam(prev => [...prev, { doctor_id: doctorId, full_name: doc.full_name }]);
-        }
-    };
+
 
     // Agrupar work types por categoria
     const groupedWorkTypes = workTypes.reduce<Record<string, typeof workTypes>>((acc, wt) => {
@@ -294,7 +309,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                 )}
                             </div>
 
-                            {/* Equipa — Multi-select */}
+                            {/* Equipa — Informativa (como Hero Header) */}
                             <div className="relative" ref={teamPickerRef}>
                                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
                                     <Users className="h-3 w-3" />
@@ -306,64 +321,98 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                     className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                                 >
                                     <span className="flex items-center gap-2 text-gray-700 truncate">
-                                        {team.length > 0 ? (
+                                        {(team.length + clinicTeam.length) > 0 ? (
                                             <>
-                                                <span>{team.length} {team.length === 1 ? 'membro' : 'membros'}</span>
-                                                <span className="text-gray-400">·</span>
-                                                <span className="text-gray-500 truncate text-xs">{team.map(t => t.full_name.split(' ')[0]).join(', ')}</span>
+                                                <span>{team.length + clinicTeam.length} {(team.length + clinicTeam.length) === 1 ? 'membro' : 'membros'}</span>
                                             </>
                                         ) : (
-                                            <span className="text-gray-400">Selecionar membros...</span>
+                                            <span className="text-gray-400">Nenhum membro</span>
                                         )}
                                     </span>
                                     <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform", showTeamPicker && "rotate-180")} />
                                 </button>
 
                                 {showTeamPicker && (
-                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 z-10 py-1 max-h-48 overflow-y-auto">
-                                        <div className="px-3 py-1.5 border-b border-gray-100">
-                                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Equipa do Caso</span>
-                                        </div>
-                                        {doctors.map(doc => {
-                                            const isInTeam = team.some(t => t.doctor_id === doc.user_id);
-                                            const isPrincipal = doc.user_id === medicoId;
-                                            return (
-                                                <div
-                                                    key={doc.user_id}
-                                                    onClick={() => toggleTeamMember(doc.user_id)}
-                                                    className={cn(
-                                                        "flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors group",
-                                                        isInTeam ? "bg-primary/5" : "hover:bg-gray-50"
-                                                    )}
-                                                >
-                                                    <div className={cn(
-                                                        "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
-                                                        isInTeam ? "bg-primary border-primary text-white" : "border-gray-300",
-                                                        isPrincipal && "cursor-default"
-                                                    )}>
-                                                        {isInTeam && <Check className="h-2.5 w-2.5" />}
-                                                    </div>
-                                                    <Stethoscope className={cn("h-3 w-3 shrink-0", isInTeam ? "text-primary" : "text-gray-400")} />
-                                                    <span className={cn("text-xs flex-1 truncate", isInTeam ? "text-gray-900 font-medium" : "text-gray-600")}>
-                                                        {doc.full_name}
-                                                    </span>
-                                                    {isPrincipal ? (
-                                                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold shrink-0">Principal</span>
-                                                    ) : isInTeam ? (
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setMedicoId(doc.user_id);
-                                                            }}
-                                                            className="text-[9px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 hover:bg-primary/10 hover:text-primary font-medium opacity-0 group-hover:opacity-100 transition-all shrink-0"
-                                                        >
-                                                            ★ Tornar principal
-                                                        </button>
-                                                    ) : null}
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl border border-gray-200 z-10 p-3 max-h-64 overflow-y-auto min-w-[280px]">
+                                        {/* Médicos */}
+                                        {team.length > 0 && (
+                                            <>
+                                                <div className="px-1 pb-1.5 mb-1.5 border-b border-gray-100">
+                                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Médicos</span>
                                                 </div>
-                                            );
-                                        })}
+                                                <div className="space-y-1 mb-3">
+                                                    {team.map(doc => {
+                                                        const isPrincipal = doc.doctor_id === medicoId;
+                                                        const docProfile = doctors.find(d => d.user_id === doc.doctor_id);
+                                                        return (
+                                                            <div key={doc.doctor_id} className={cn(
+                                                                "flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs",
+                                                                isPrincipal ? "bg-primary/5" : "hover:bg-gray-50"
+                                                            )}>
+                                                                <Stethoscope className={cn("h-3 w-3 shrink-0", isPrincipal ? "text-primary" : "text-gray-400")} />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <span className={cn("font-medium block truncate text-[11px]", isPrincipal ? "text-primary" : "text-gray-800")}>
+                                                                        {doc.full_name}
+                                                                    </span>
+                                                                    {(docProfile as any)?.phone && (
+                                                                        <div className="flex items-center gap-1 mt-0.5">
+                                                                            <Phone className="h-2.5 w-2.5 text-gray-400" />
+                                                                            <span className="text-[10px] text-gray-500 font-mono">{(docProfile as any).phone}</span>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => navigator.clipboard.writeText((docProfile as any).phone)}
+                                                                                className="p-0.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+                                                                                title="Copiar telefone"
+                                                                            >
+                                                                                <Copy className="h-2.5 w-2.5" />
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                {isPrincipal && (
+                                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold shrink-0">Principal</span>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </>
+                                        )}
+                                        {/* Colaboradores da Clínica */}
+                                        {clinicTeam.length > 0 && (
+                                            <>
+                                                <div className="px-1 pb-1.5 mb-1.5 border-b border-gray-100">
+                                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Colaboradores</span>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    {clinicTeam.map(member => (
+                                                        <div key={member.user_id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs hover:bg-gray-50">
+                                                            <Users className="h-3 w-3 shrink-0 text-gray-400" />
+                                                            <div className="flex-1 min-w-0">
+                                                                <span className="font-medium block truncate text-[11px] text-gray-800">{member.full_name}</span>
+                                                                {member.phone && (
+                                                                    <div className="flex items-center gap-1 mt-0.5">
+                                                                        <Phone className="h-2.5 w-2.5 text-gray-400" />
+                                                                        <span className="text-[10px] text-gray-500 font-mono">{member.phone}</span>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => navigator.clipboard.writeText(member.phone!)}
+                                                                            className="p-0.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+                                                                            title="Copiar telefone"
+                                                                        >
+                                                                            <Copy className="h-2.5 w-2.5" />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                        {team.length === 0 && clinicTeam.length === 0 && (
+                                            <p className="text-[10px] text-gray-400 italic">Nenhum membro na equipa</p>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -389,36 +438,6 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                 ))}
                             </select>
                         </div>
-
-                        {/* Team chips preview */}
-                        {team.length > 0 && !showTeamPicker && !showDoctorPicker && (
-                            <div className="flex flex-wrap gap-1.5">
-                                {team.map(member => (
-                                    <span
-                                        key={member.doctor_id}
-                                        className={cn(
-                                            "inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full",
-                                            member.doctor_id === medicoId
-                                                ? "bg-primary/10 text-primary font-medium"
-                                                : "bg-gray-100 text-gray-600"
-                                        )}
-                                    >
-                                        <Stethoscope className="h-2.5 w-2.5" />
-                                        {member.full_name.split(' ')[0]}
-                                        {member.doctor_id === medicoId && <span className="text-[8px]">★</span>}
-                                        {member.doctor_id !== medicoId && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setTeam(prev => prev.filter(t => t.doctor_id !== member.doctor_id))}
-                                                className="ml-0.5 text-gray-400 hover:text-red-500 transition-colors"
-                                            >
-                                                <X className="h-2.5 w-2.5" />
-                                            </button>
-                                        )}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
 
                         {/* Error */}
                         {error && (
