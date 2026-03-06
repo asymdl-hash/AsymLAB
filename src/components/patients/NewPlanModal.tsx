@@ -454,6 +454,20 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                             ))}
                                         </select>
                                     </div>
+
+                                    {/* Odontograma */}
+                                    <div>
+                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                            🦷 Odontograma
+                                        </label>
+                                        <button
+                                            type="button"
+                                            className="mt-1.5 w-full h-9 rounded-md border border-dashed border-gray-300 bg-white px-3 text-sm text-gray-400 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all flex items-center gap-2 justify-center"
+                                            title="Disponível após criar o plano"
+                                        >
+                                            <span className="text-xs">Configurar após criar</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
