@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, Plus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy } from 'lucide-react';
+import { X, Plus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { patientsService } from '@/services/patientsService';
@@ -418,25 +418,44 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                             </div>
                         </div>
 
-                        {/* Tipo de Trabalho */}
-                        <div>
-                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Trabalho *</label>
-                            <select
-                                value={tipoTrabalhoId}
-                                onChange={(e) => setTipoTrabalhoId(e.target.value)}
-                                className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                            >
-                                <option value="">Selecione...</option>
-                                {Object.entries(groupedWorkTypes).map(([cat, types]) => (
-                                    <optgroup key={cat} label={cat}>
-                                        {types.map(wt => (
-                                            <option key={wt.id} value={wt.id}>
-                                                {wt.nome}
-                                            </option>
-                                        ))}
-                                    </optgroup>
-                                ))}
-                            </select>
+                        {/* ── Bloco Informação Técnica ── */}
+                        <div className="bg-gray-50/50 rounded-xl border border-gray-200 overflow-hidden">
+                            {/* Header do bloco */}
+                            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-200/60">
+                                <ClipboardList className="h-3.5 w-3.5 text-gray-400" />
+                                <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
+                                    Informação Técnica
+                                </span>
+                            </div>
+
+                            {/* Conteúdo */}
+                            <div className="p-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {/* Tipo de Trabalho */}
+                                    <div>
+                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                            <Layers className="h-3 w-3" />
+                                            Tipo de Trabalho *
+                                        </label>
+                                        <select
+                                            value={tipoTrabalhoId}
+                                            onChange={(e) => setTipoTrabalhoId(e.target.value)}
+                                            className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        >
+                                            <option value="">Selecione...</option>
+                                            {Object.entries(groupedWorkTypes).map(([cat, types]) => (
+                                                <optgroup key={cat} label={cat}>
+                                                    {types.map(wt => (
+                                                        <option key={wt.id} value={wt.id}>
+                                                            {wt.nome}
+                                                        </option>
+                                                    ))}
+                                                </optgroup>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Error */}
