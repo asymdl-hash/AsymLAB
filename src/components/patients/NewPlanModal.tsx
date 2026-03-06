@@ -51,10 +51,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
     // Método + Escala de Cor
     const [metodo, setMetodo] = useState('');
-    const [escalaCoreId, setEscalaCoreId] = useState('');
+    const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
     const [colorScalePhotos, setColorScalePhotos] = useState<File[]>([]);
     const [colorScalePreviews, setColorScalePreviews] = useState<string[]>([]);
     const [showColorDropdown, setShowColorDropdown] = useState(false);
+    const [activeColorGroup, setActiveColorGroup] = useState<string | null>(null);
     const [photoNotes, setPhotoNotes] = useState<Record<number, string>>({});
     const [editingNoteIdx, setEditingNoteIdx] = useState<number | null>(null);
     const colorDropdownRef = useRef<HTMLDivElement>(null);
@@ -256,7 +257,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 medico_id: medicoId,
                 clinica_id: clinicaId,
                 metodo: metodo.trim() || undefined,
-                escala_cor_id: escalaCoreId || undefined,
+                escala_cor_id: selectedColorIds.length > 0 ? selectedColorIds[0] : undefined,
             });
 
             // Guardar todos os work types na tabela plan_work_types
@@ -743,75 +744,129 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                             </div>
 
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                {/* Dropdown Escala de Cor */}
+                                                {/* Dropdown Escala de Cor — 2 níveis + multi-select */}
                                                 <div className="relative" ref={colorDropdownRef}>
                                                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         Cor
                                                     </label>
                                                     <button
                                                         type="button"
-                                                        onClick={() => setShowColorDropdown(!showColorDropdown)}
-                                                        className="mt-1 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                                                        onClick={() => { setShowColorDropdown(!showColorDropdown); if (showColorDropdown) setActiveColorGroup(null); }}
+                                                        className="mt-1 w-full min-h-[36px] rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
                                                     >
-                                                        {escalaCoreId ? (
-                                                            <span className="text-gray-700 text-xs font-medium">
-                                                                {(() => {
-                                                                    const c = toothColors.find(tc => tc.id === escalaCoreId);
-                                                                    return c ? `${c.codigo} — ${c.nome}` : 'Seleccionar...';
-                                                                })()}
-                                                            </span>
+                                                        {selectedColorIds.length > 0 ? (
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {selectedColorIds.map(cid => {
+                                                                    const c = toothColors.find(tc => tc.id === cid);
+                                                                    return c ? (
+                                                                        <span key={cid} className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
+                                                                            {c.codigo}
+                                                                            <button type="button" onClick={e => { e.stopPropagation(); setSelectedColorIds(prev => prev.filter(id => id !== cid)); }} className="hover:text-red-500">
+                                                                                <X className="h-2.5 w-2.5" />
+                                                                            </button>
+                                                                        </span>
+                                                                    ) : null;
+                                                                })}
+                                                            </div>
                                                         ) : (
                                                             <span className="text-gray-400 text-xs">Seleccionar cor...</span>
                                                         )}
-                                                        <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform", showColorDropdown && "rotate-180")} />
+                                                        <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform shrink-0 ml-1", showColorDropdown && "rotate-180")} />
                                                     </button>
 
                                                     {showColorDropdown && (
-                                                        <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 py-1 max-h-48 overflow-y-auto">
-                                                            {Object.entries(
-                                                                toothColors.reduce<Record<string, ToothColorItem[]>>((acc, tc) => {
-                                                                    const g = tc.grupo || 'Outros';
-                                                                    if (!acc[g]) acc[g] = [];
-                                                                    acc[g].push(tc);
-                                                                    return acc;
-                                                                }, {})
-                                                            ).map(([grupo, colors]) => (
-                                                                <div key={grupo}>
-                                                                    <div className="px-3 py-1.5 border-b border-gray-100">
-                                                                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{grupo}</span>
-                                                                    </div>
-                                                                    {colors.map(tc => (
-                                                                        <div
-                                                                            key={tc.id}
-                                                                            onClick={() => { setEscalaCoreId(tc.id); setShowColorDropdown(false); }}
-                                                                            className={cn(
-                                                                                "flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-amber-50 transition-colors text-xs",
-                                                                                escalaCoreId === tc.id && "bg-amber-50 font-semibold"
-                                                                            )}
-                                                                        >
-                                                                            <span className="font-mono text-gray-500 w-8">{tc.codigo}</span>
-                                                                            <span className="text-gray-700">{tc.nome}</span>
-                                                                            {escalaCoreId === tc.id && <Check className="h-3 w-3 text-amber-500 ml-auto" />}
-                                                                        </div>
-                                                                    ))}
+                                                        <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                                                            {!activeColorGroup ? (
+                                                                /* Nível 1: Cards de escalas */
+                                                                <div className="p-2 space-y-1 max-h-48 overflow-y-auto">
+                                                                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1 pb-1">Escolha a escala</p>
+                                                                    {Object.keys(
+                                                                        toothColors.reduce<Record<string, ToothColorItem[]>>((acc, tc) => {
+                                                                            const g = tc.grupo || 'Outros';
+                                                                            if (!acc[g]) acc[g] = [];
+                                                                            acc[g].push(tc);
+                                                                            return acc;
+                                                                        }, {})
+                                                                    ).map(grupo => {
+                                                                        const groupColors = toothColors.filter(tc => (tc.grupo || 'Outros') === grupo);
+                                                                        const selectedCount = groupColors.filter(tc => selectedColorIds.includes(tc.id)).length;
+                                                                        return (
+                                                                            <button
+                                                                                key={grupo}
+                                                                                type="button"
+                                                                                onClick={() => setActiveColorGroup(grupo)}
+                                                                                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-amber-50 transition-colors text-left"
+                                                                            >
+                                                                                <Palette className="h-4 w-4 text-amber-400 shrink-0" />
+                                                                                <div className="flex-1 min-w-0">
+                                                                                    <span className="text-xs font-semibold text-gray-700 block">{grupo}</span>
+                                                                                    <span className="text-[10px] text-gray-400">{groupColors.length} tonalidades</span>
+                                                                                </div>
+                                                                                {selectedCount > 0 && (
+                                                                                    <span className="text-[9px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-bold">{selectedCount}</span>
+                                                                                )}
+                                                                                <ChevronDown className="h-3 w-3 text-gray-300 -rotate-90" />
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                    {toothColors.length === 0 && (
+                                                                        <p className="text-[10px] text-gray-400 text-center py-3">Sem cores no catálogo</p>
+                                                                    )}
                                                                 </div>
-                                                            ))}
-                                                            {toothColors.length === 0 && (
-                                                                <p className="text-[10px] text-gray-400 text-center py-3">Sem cores no catálogo</p>
+                                                            ) : (
+                                                                /* Nível 2: Tonalidades dentro da escala */
+                                                                <div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setActiveColorGroup(null)}
+                                                                        className="w-full flex items-center gap-2 px-3 py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                                                                    >
+                                                                        <ChevronDown className="h-3 w-3 text-gray-400 rotate-90" />
+                                                                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{activeColorGroup}</span>
+                                                                    </button>
+                                                                    <div className="max-h-44 overflow-y-auto py-1">
+                                                                        {toothColors.filter(tc => (tc.grupo || 'Outros') === activeColorGroup).map(tc => {
+                                                                            const isSelected = selectedColorIds.includes(tc.id);
+                                                                            return (
+                                                                                <div
+                                                                                    key={tc.id}
+                                                                                    onClick={() => {
+                                                                                        setSelectedColorIds(prev =>
+                                                                                            isSelected ? prev.filter(id => id !== tc.id) : [...prev, tc.id]
+                                                                                        );
+                                                                                    }}
+                                                                                    className={cn(
+                                                                                        "flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-amber-50 transition-colors text-xs",
+                                                                                        isSelected && "bg-amber-50"
+                                                                                    )}
+                                                                                >
+                                                                                    <div className={cn(
+                                                                                        "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                                                                                        isSelected ? "border-amber-500 bg-amber-500" : "border-gray-300"
+                                                                                    )}>
+                                                                                        {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                                                                                    </div>
+                                                                                    <span className="font-mono text-gray-500 w-8">{tc.codigo}</span>
+                                                                                    <span className="text-gray-700">{tc.nome}</span>
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
                                                             )}
                                                         </div>
                                                     )}
                                                 </div>
 
-                                                {/* Upload fotos escala de cor — cards com moldura */}
+                                                {/* Upload fotos escala de cor — cards compactos */}
                                                 <div>
                                                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         Fotos
                                                     </label>
-                                                    <div className="mt-1.5 grid grid-cols-2 gap-2">
+                                                    <div className="mt-1.5 grid grid-cols-3 gap-1.5">
                                                         {colorScalePreviews.map((url, i) => (
-                                                            <div key={i} className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm group">
-                                                                <div className="relative aspect-[4/3] bg-gray-100">
+                                                            <div key={i} className="rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm group">
+                                                                <div className="relative aspect-square bg-gray-100">
                                                                     <img src={url} alt={colorScalePhotos[i]?.name || `Cor ${i + 1}`} className="w-full h-full object-cover" />
                                                                     <button
                                                                         type="button"
@@ -821,18 +876,15 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                             setColorScalePreviews(prev => prev.filter((_, idx) => idx !== i));
                                                                             setPhotoNotes(prev => { const n = { ...prev }; delete n[i]; return n; });
                                                                         }}
-                                                                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                                                     >
-                                                                        <X className="h-3 w-3 text-white" />
+                                                                        <X className="h-2.5 w-2.5 text-white" />
                                                                     </button>
                                                                 </div>
-                                                                <div className="px-2 py-1.5">
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        <ImagePlus className="h-3 w-3 text-gray-400 shrink-0" />
-                                                                        <span className="text-[10px] text-gray-600 font-medium truncate">
-                                                                            {colorScalePhotos[i]?.name || `Foto ${i + 1}`}
-                                                                        </span>
-                                                                    </div>
+                                                                <div className="px-1.5 py-1">
+                                                                    <span className="text-[8px] text-gray-400 truncate block leading-tight">
+                                                                        {colorScalePhotos[i]?.name || `Foto ${i + 1}`}
+                                                                    </span>
                                                                     {editingNoteIdx === i ? (
                                                                         <input
                                                                             autoFocus
@@ -841,23 +893,23 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                             onBlur={() => setEditingNoteIdx(null)}
                                                                             onKeyDown={e => e.key === 'Enter' && setEditingNoteIdx(null)}
                                                                             placeholder="Nota..."
-                                                                            className="mt-1 w-full text-[10px] px-1.5 py-1 border border-amber-200 rounded bg-amber-50/50 outline-none focus:ring-1 focus:ring-amber-300"
+                                                                            className="mt-0.5 w-full text-[10px] px-1 py-0.5 border border-amber-200 rounded bg-amber-50/50 outline-none focus:ring-1 focus:ring-amber-300"
                                                                         />
                                                                     ) : photoNotes[i] ? (
                                                                         <p
                                                                             onClick={() => setEditingNoteIdx(i)}
-                                                                            className="mt-0.5 text-[9px] text-gray-500 italic cursor-pointer hover:text-amber-600 truncate"
+                                                                            className="mt-0.5 text-[10px] font-semibold text-amber-700 cursor-pointer hover:text-amber-800 truncate leading-tight"
                                                                         >
-                                                                            {photoNotes[i]}
+                                                                            📝 {photoNotes[i]}
                                                                         </p>
                                                                     ) : (
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => setEditingNoteIdx(i)}
-                                                                            className="mt-0.5 flex items-center gap-1 text-[10px] text-amber-500 hover:text-amber-600 transition-colors"
+                                                                            className="mt-0.5 flex items-center gap-0.5 text-[9px] text-amber-500 hover:text-amber-600 font-semibold transition-colors"
                                                                         >
                                                                             <MessageSquarePlus className="h-2.5 w-2.5" />
-                                                                            Notas
+                                                                            + Notas
                                                                         </button>
                                                                     )}
                                                                 </div>
@@ -866,10 +918,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         <button
                                                             type="button"
                                                             onClick={() => colorFileRef.current?.click()}
-                                                            className="rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors aspect-[4/3]"
+                                                            className="rounded-lg border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors aspect-square"
                                                         >
-                                                            <ImagePlus className="h-5 w-5" />
-                                                            <span className="text-[9px] mt-1 font-medium">Adicionar Foto</span>
+                                                            <ImagePlus className="h-4 w-4" />
+                                                            <span className="text-[8px] mt-0.5 font-medium">Foto</span>
                                                         </button>
                                                         <input
                                                             ref={colorFileRef}
