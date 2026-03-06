@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { X, Plus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { X, Plus, Minus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { patientsService } from '@/services/patientsService';
@@ -22,16 +22,23 @@ type WorkTypeItem = { id: string; nome: string; cor: string | null; categoria: s
 type DoctorItem = { user_id: string; full_name: string };
 type ClinicItem = { id: string; commercial_name: string };
 
+interface WorkTypeSelection {
+    work_type_id: string;
+    quantity: number;
+    assigned_teeth: number[];
+}
+
 export default function NewPlanModal({ patientId, patientClinicaId, patientMedicoId, associatedDoctors: initialTeam, onClose, onCreated }: NewPlanModalProps) {
     const [nome, setNome] = useState('');
-    const [tipoTrabalhoId, setTipoTrabalhoId] = useState('');
+    const [workTypeSelections, setWorkTypeSelections] = useState<WorkTypeSelection[]>([]);
     const [medicoId, setMedicoId] = useState(patientMedicoId || '');
     const [clinicaId, setClinicaId] = useState(patientClinicaId || '');
     const [team, setTeam] = useState<{ doctor_id: string; full_name: string }[]>(initialTeam);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
-    const [odontogramTeeth, setOdontogramTeeth] = useState<{ tooth_number: number; work_type_id: string | null }[]>([]);
     const [showOdontogram, setShowOdontogram] = useState(false);
+    const [showWtDropdown, setShowWtDropdown] = useState(false);
+    const wtDropdownRef = useRef<HTMLDivElement>(null);
     const [nextPlanNumber, setNextPlanNumber] = useState<number | null>(null);
 
     // Dropdown data
@@ -60,11 +67,6 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 setWorkTypes(wt);
                 setDoctors(docs);
                 setClinics(cls);
-
-                // Auto-select first work type if available
-                if (wt.length > 0 && !tipoTrabalhoId) {
-                    setTipoTrabalhoId(wt[0].id);
-                }
 
                 // Calcular próximo número de plano (por paciente)
                 const { count } = await supabase
@@ -117,24 +119,119 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showDoctorPicker, showTeamPicker]);
 
+    // Close work type dropdown on outside click
+    useEffect(() => {
+        const h = (e: MouseEvent) => { if (wtDropdownRef.current && !wtDropdownRef.current.contains(e.target as Node)) setShowWtDropdown(false); };
+        if (showWtDropdown) document.addEventListener('mousedown', h);
+        return () => document.removeEventListener('mousedown', h);
+    }, [showWtDropdown]);
+
+    // ── Odontogram teeth derived from workTypeSelections ──
+    const odontogramTeeth = useMemo(() => {
+        const teeth: { tooth_number: number; work_type_id: string | null }[] = [];
+        workTypeSelections.forEach(sel => {
+            sel.assigned_teeth.forEach(t => teeth.push({ tooth_number: t, work_type_id: sel.work_type_id }));
+        });
+        return teeth;
+    }, [workTypeSelections]);
+
+    // Total de dentes atribuídos
+    const totalAssignedTeeth = odontogramTeeth.length;
+
+    // ── Sync: Odontogram → WorkTypeSelections ──
+    const handleOdontogramChange = useCallback((newTeeth: { tooth_number: number; work_type_id: string | null }[]) => {
+        setWorkTypeSelections(prev => {
+            // Agrupar novos dentes por work_type_id
+            const teethByWt = new Map<string, number[]>();
+            newTeeth.forEach(t => {
+                if (t.work_type_id) {
+                    const list = teethByWt.get(t.work_type_id) || [];
+                    list.push(t.tooth_number);
+                    teethByWt.set(t.work_type_id, list);
+                }
+            });
+
+            // Começar com cópia das selecções existentes
+            const updated = prev.map(sel => {
+                const newAssigned = teethByWt.get(sel.work_type_id) || [];
+                teethByWt.delete(sel.work_type_id);
+                return {
+                    ...sel,
+                    assigned_teeth: newAssigned,
+                    // Se mais dentes que quantidade, aumentar quantidade
+                    quantity: Math.max(sel.quantity, newAssigned.length),
+                };
+            });
+
+            // Tipos novos que vieram do odontograma (não existiam na lista)
+            teethByWt.forEach((teeth, wtId) => {
+                updated.push({
+                    work_type_id: wtId,
+                    quantity: teeth.length,
+                    assigned_teeth: teeth,
+                });
+            });
+
+            return updated;
+        });
+    }, []);
+
+    // ── Adicionar tipo via dropdown ──
+    const addWorkType = useCallback((wtId: string) => {
+        setWorkTypeSelections(prev => {
+            if (prev.some(s => s.work_type_id === wtId)) return prev;
+            return [...prev, { work_type_id: wtId, quantity: 1, assigned_teeth: [] }];
+        });
+        setShowWtDropdown(false);
+    }, []);
+
+    // ── Remover tipo ──
+    const removeWorkType = useCallback((wtId: string) => {
+        setWorkTypeSelections(prev => prev.filter(s => s.work_type_id !== wtId));
+    }, []);
+
+    // ── Ajustar quantidade ──
+    const adjustQty = useCallback((wtId: string, delta: number) => {
+        setWorkTypeSelections(prev => prev.map(sel => {
+            if (sel.work_type_id !== wtId) return sel;
+            const newQty = sel.quantity + delta;
+            // Mínimo = número de dentes atribuídos (não pode ir abaixo)
+            if (newQty < Math.max(1, sel.assigned_teeth.length)) return sel;
+            return { ...sel, quantity: newQty };
+        }));
+    }, []);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
         if (!nome.trim()) { setError('O nome é obrigatório'); return; }
-        if (!tipoTrabalhoId) { setError('Selecione um tipo de trabalho'); return; }
+        if (workTypeSelections.length === 0) { setError('Selecione pelo menos um tipo de trabalho'); return; }
         if (!medicoId) { setError('Selecione um médico'); return; }
         if (!clinicaId) { setError('Selecione uma clínica'); return; }
 
         try {
             setSubmitting(true);
-            await patientsService.createTreatmentPlan({
+            // Criar plano com primeiro tipo (compatibilidade DB)
+            const plan = await patientsService.createTreatmentPlan({
                 patient_id: patientId,
                 nome: nome.trim(),
-                tipo_trabalho_id: tipoTrabalhoId,
+                tipo_trabalho_id: workTypeSelections[0].work_type_id,
                 medico_id: medicoId,
                 clinica_id: clinicaId,
             });
+
+            // Guardar todos os work types na tabela plan_work_types
+            if (plan?.id) {
+                const rows = workTypeSelections.map(sel => ({
+                    plan_id: plan.id,
+                    work_type_id: sel.work_type_id,
+                    quantity: sel.quantity,
+                    assigned_teeth: sel.assigned_teeth,
+                }));
+                await supabase.from('plan_work_types').insert(rows);
+            }
+
             window.dispatchEvent(new Event('patient-updated'));
             onCreated();
         } catch (err) {
@@ -430,33 +527,60 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                     <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
                                         Informação Técnica
                                     </span>
+                                    {workTypeSelections.length > 0 && (
+                                        <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold ml-auto">
+                                            {workTypeSelections.reduce((a, s) => a + s.quantity, 0)} trabalho{workTypeSelections.reduce((a, s) => a + s.quantity, 0) !== 1 ? 's' : ''}
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Conteúdo */}
-                                <div className="p-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                        {/* Tipo de Trabalho */}
-                                        <div>
+                                <div className="p-4 space-y-3">
+                                    {/* Linha: Dropdown + Odontograma */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {/* Dropdown multi-select */}
+                                        <div className="relative" ref={wtDropdownRef}>
                                             <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
                                                 <Layers className="h-3 w-3" />
                                                 Tipo de Trabalho *
                                             </label>
-                                            <select
-                                                value={tipoTrabalhoId}
-                                                onChange={(e) => setTipoTrabalhoId(e.target.value)}
-                                                className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowWtDropdown(!showWtDropdown)}
+                                                className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                                             >
-                                                <option value="">Selecione...</option>
-                                                {Object.entries(groupedWorkTypes).map(([cat, types]) => (
-                                                    <optgroup key={cat} label={cat}>
-                                                        {types.map(wt => (
-                                                            <option key={wt.id} value={wt.id}>
-                                                                {wt.nome}
-                                                            </option>
-                                                        ))}
-                                                    </optgroup>
-                                                ))}
-                                            </select>
+                                                <span className="text-gray-400 text-xs">Adicionar tipo de trabalho...</span>
+                                                <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform", showWtDropdown && "rotate-180")} />
+                                            </button>
+
+                                            {showWtDropdown && (
+                                                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 z-10 py-1 max-h-48 overflow-y-auto">
+                                                    {Object.entries(groupedWorkTypes).map(([cat, types]) => {
+                                                        const available = types.filter(wt => !workTypeSelections.some(s => s.work_type_id === wt.id));
+                                                        if (available.length === 0) return null;
+                                                        return (
+                                                            <div key={cat}>
+                                                                <div className="px-3 py-1.5 border-b border-gray-100">
+                                                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{cat}</span>
+                                                                </div>
+                                                                {available.map(wt => (
+                                                                    <div
+                                                                        key={wt.id}
+                                                                        onClick={() => addWorkType(wt.id)}
+                                                                        className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                                                                    >
+                                                                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: wt.cor || '#6b7280' }} />
+                                                                        <span className="text-xs text-gray-700">{wt.nome}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    {workTypes.length > 0 && workTypes.every(wt => workTypeSelections.some(s => s.work_type_id === wt.id)) && (
+                                                        <p className="text-[10px] text-gray-400 text-center py-3">Todos os tipos já foram adicionados</p>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Odontograma */}
@@ -469,20 +593,79 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 onClick={() => setShowOdontogram(true)}
                                                 className={cn(
                                                     "mt-1.5 w-full h-9 rounded-md border px-3 text-sm transition-all flex items-center gap-2 justify-center",
-                                                    odontogramTeeth.length > 0
+                                                    totalAssignedTeeth > 0
                                                         ? "border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
                                                         : "border-dashed border-gray-300 bg-white text-gray-400 hover:border-primary/40 hover:text-primary hover:bg-primary/5"
                                                 )}
                                             >
                                                 <span className="text-xs font-medium">
-                                                    {odontogramTeeth.length > 0
-                                                        ? `${odontogramTeeth.length} dente${odontogramTeeth.length !== 1 ? 's' : ''} seleccionado${odontogramTeeth.length !== 1 ? 's' : ''}`
+                                                    {totalAssignedTeeth > 0
+                                                        ? `${totalAssignedTeeth} dente${totalAssignedTeeth !== 1 ? 's' : ''} atribuído${totalAssignedTeeth !== 1 ? 's' : ''}`
                                                         : 'Configurar dentes'
                                                     }
                                                 </span>
                                             </button>
                                         </div>
                                     </div>
+
+                                    {/* Lista de tipos seleccionados */}
+                                    {workTypeSelections.length > 0 && (
+                                        <div className="space-y-1.5">
+                                            {workTypeSelections.map(sel => {
+                                                const wt = workTypes.find(w => w.id === sel.work_type_id);
+                                                if (!wt) return null;
+                                                const unassigned = sel.quantity - sel.assigned_teeth.length;
+                                                return (
+                                                    <div key={sel.work_type_id} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white group">
+                                                        {/* Cor + Nome */}
+                                                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: wt.cor || '#6b7280' }} />
+                                                        <span className="text-xs font-medium text-gray-700 min-w-0 truncate">{wt.nome}</span>
+
+                                                        {/* Qty controls */}
+                                                        <div className="flex items-center gap-1 ml-auto shrink-0">
+                                                            <button type="button" onClick={() => adjustQty(sel.work_type_id, -1)}
+                                                                className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                                                                disabled={sel.quantity <= Math.max(1, sel.assigned_teeth.length)}
+                                                            >
+                                                                <Minus className="w-3 h-3" />
+                                                            </button>
+                                                            <span className="text-xs font-bold text-gray-700 w-5 text-center">{sel.quantity}</span>
+                                                            <button type="button" onClick={() => adjustQty(sel.work_type_id, 1)}
+                                                                className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                                                            >
+                                                                <Plus className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Separator */}
+                                                        <div className="w-px h-4 bg-gray-200 shrink-0" />
+
+                                                        {/* Dentes atribuídos */}
+                                                        <div className="flex items-center gap-1 flex-wrap min-w-0 max-w-[180px]">
+                                                            {sel.assigned_teeth.sort((a, b) => a - b).map(t => (
+                                                                <span key={t} className="text-[9px] font-mono bg-primary/10 text-primary px-1 py-0.5 rounded font-medium">#{t}</span>
+                                                            ))}
+                                                            {unassigned > 0 && (
+                                                                <span className="text-[9px] text-gray-400 italic">
+                                                                    {sel.assigned_teeth.length > 0 ? '' : ''}{unassigned}× por atribuir
+                                                                </span>
+                                                            )}
+                                                            {sel.assigned_teeth.length === 0 && unassigned === 0 && (
+                                                                <span className="text-[9px] text-gray-400 italic">por atribuir</span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Remove */}
+                                                        <button type="button" onClick={() => removeWorkType(sel.work_type_id)}
+                                                            className="w-5 h-5 rounded flex items-center justify-center text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -516,7 +699,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 onClose={() => setShowOdontogram(false)}
                 teeth={odontogramTeeth}
                 workTypes={workTypes.map(wt => ({ id: wt.id, nome: wt.nome, cor: wt.cor }))}
-                onChange={setOdontogramTeeth}
+                onChange={handleOdontogramChange}
             />
         </>
     );
