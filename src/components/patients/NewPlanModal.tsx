@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, Plus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2 } from 'lucide-react';
+import { X, Plus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { patientsService } from '@/services/patientsService';
+import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
 interface NewPlanModalProps {
@@ -28,6 +29,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [team, setTeam] = useState<{ doctor_id: string; full_name: string }[]>(initialTeam);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [nextPlanNumber, setNextPlanNumber] = useState<number | null>(null);
 
     // Dropdown data
     const [workTypes, setWorkTypes] = useState<WorkTypeItem[]>([]);
@@ -57,6 +59,12 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 if (wt.length > 0 && !tipoTrabalhoId) {
                     setTipoTrabalhoId(wt[0].id);
                 }
+
+                // Calcular próximo número de plano (contínuo global)
+                const { count } = await supabase
+                    .from('treatment_plans')
+                    .select('id', { count: 'exact', head: true });
+                setNextPlanNumber((count || 0) + 1);
             } catch (err) {
                 console.error('Erro ao carregar dropdowns:', err);
             } finally {
@@ -134,7 +142,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-gray-100">
                     <div>
@@ -152,17 +160,28 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto flex-1">
-                        {/* Nome do Plano */}
-                        <div>
-                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Plano *</label>
-                            <Input
-                                value={nome}
-                                onChange={(e) => setNome(e.target.value)}
-                                placeholder="Ex: Prótese Total Superior"
-                                className="mt-1.5"
-                                autoFocus
-                            />
+                    <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1">
+                        {/* Nº Plano + Nome do Plano */}
+                        <div className="grid grid-cols-[100px_1fr] gap-3">
+                            <div>
+                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                    <Hash className="h-3 w-3" />
+                                    Nº Plano
+                                </label>
+                                <div className="mt-1.5 h-9 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm flex items-center font-semibold text-primary">
+                                    {nextPlanNumber !== null ? `PT-${String(nextPlanNumber).padStart(4, '0')}` : '...'}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Plano *</label>
+                                <Input
+                                    value={nome}
+                                    onChange={(e) => setNome(e.target.value)}
+                                    placeholder="Ex: Prótese Total Superior"
+                                    className="mt-1.5"
+                                    autoFocus
+                                />
+                            </div>
                         </div>
 
                         {/* Tipo de Trabalho */}
@@ -186,173 +205,175 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                             </select>
                         </div>
 
-                        {/* Clínica + Médico em linha */}
-                        {/* Clínica */}
-                        <div>
-                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                                <Building2 className="h-3 w-3" />
-                                Clínica *
-                            </label>
-                            <select
-                                value={clinicaId}
-                                onChange={(e) => setClinicaId(e.target.value)}
-                                className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                            >
-                                <option value="">Selecione...</option>
-                                {clinics.map(cl => (
-                                    <option key={cl.id} value={cl.id}>
-                                        {cl.commercial_name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        {/* Clínica + Médicos + Equipa em linha */}
+                        <div className="grid grid-cols-3 gap-3">
+                            {/* Clínica */}
+                            <div>
+                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                    <Building2 className="h-3 w-3" />
+                                    Clínica *
+                                </label>
+                                <select
+                                    value={clinicaId}
+                                    onChange={(e) => setClinicaId(e.target.value)}
+                                    className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                >
+                                    <option value="">Selecione...</option>
+                                    {clinics.map(cl => (
+                                        <option key={cl.id} value={cl.id}>
+                                            {cl.commercial_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                        {/* Médicos — Multi-select com checkboxes */}
-                        <div className="relative" ref={doctorPickerRef}>
-                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                                <Stethoscope className="h-3 w-3" />
-                                Médicos *
-                            </label>
-                            <button
-                                type="button"
-                                onClick={() => { setShowDoctorPicker(!showDoctorPicker); setShowTeamPicker(false); }}
-                                className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                            >
-                                <span className="flex items-center gap-2 text-gray-700 truncate">
-                                    {medicoId ? (
-                                        <>
-                                            <span className="font-medium">{doctors.find(d => d.user_id === medicoId)?.full_name || 'Selecionar'}</span>
-                                            {team.length > 1 && (
-                                                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">+{team.length - 1}</span>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <span className="text-gray-400">Selecionar médico...</span>
-                                    )}
-                                </span>
-                                <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform", showDoctorPicker && "rotate-180")} />
-                            </button>
-
-                            {showDoctorPicker && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 z-10 py-1 max-h-48 overflow-y-auto">
-                                    <div className="px-3 py-1.5 border-b border-gray-100">
-                                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Médicos do Caso</span>
-                                    </div>
-                                    {doctors.map(doc => {
-                                        const isInTeam = team.some(t => t.doctor_id === doc.user_id);
-                                        const isPrincipal = doc.user_id === medicoId;
-                                        return (
-                                            <div
-                                                key={doc.user_id}
-                                                className={cn(
-                                                    "flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors group",
-                                                    isInTeam ? "bg-primary/5" : "hover:bg-gray-50"
+                            {/* Médicos — Multi-select com checkboxes */}
+                            <div className="relative" ref={doctorPickerRef}>
+                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                    <Stethoscope className="h-3 w-3" />
+                                    Médicos *
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => { setShowDoctorPicker(!showDoctorPicker); setShowTeamPicker(false); }}
+                                    className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                                >
+                                    <span className="flex items-center gap-2 text-gray-700 truncate">
+                                        {medicoId ? (
+                                            <>
+                                                <span className="font-medium">{doctors.find(d => d.user_id === medicoId)?.full_name || 'Selecionar'}</span>
+                                                {team.length > 1 && (
+                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">+{team.length - 1}</span>
                                                 )}
-                                            >
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        if (isInTeam && !isPrincipal) {
-                                                            setTeam(prev => prev.filter(t => t.doctor_id !== doc.user_id));
-                                                        } else if (!isInTeam) {
-                                                            setTeam(prev => [...prev, { doctor_id: doc.user_id, full_name: doc.full_name }]);
-                                                            // Se é o primeiro médico, tornar principal
-                                                            if (!medicoId) setMedicoId(doc.user_id);
-                                                        }
-                                                    }}
+                                            </>
+                                        ) : (
+                                            <span className="text-gray-400">Selecionar médico...</span>
+                                        )}
+                                    </span>
+                                    <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform", showDoctorPicker && "rotate-180")} />
+                                </button>
+
+                                {showDoctorPicker && (
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 z-10 py-1 max-h-48 overflow-y-auto">
+                                        <div className="px-3 py-1.5 border-b border-gray-100">
+                                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Médicos do Caso</span>
+                                        </div>
+                                        {doctors.map(doc => {
+                                            const isInTeam = team.some(t => t.doctor_id === doc.user_id);
+                                            const isPrincipal = doc.user_id === medicoId;
+                                            return (
+                                                <div
+                                                    key={doc.user_id}
                                                     className={cn(
-                                                        "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
-                                                        isInTeam ? "bg-primary border-primary text-white" : "border-gray-300 hover:border-primary/50",
-                                                        isPrincipal && "cursor-default"
+                                                        "flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors group",
+                                                        isInTeam ? "bg-primary/5" : "hover:bg-gray-50"
                                                     )}
-                                                    disabled={isPrincipal}
                                                 >
-                                                    {isInTeam && <Check className="h-2.5 w-2.5" />}
-                                                </button>
-                                                <Stethoscope className={cn("h-3 w-3 shrink-0", isInTeam ? "text-primary" : "text-gray-400")} />
-                                                <span className={cn("text-xs flex-1 truncate", isInTeam ? "text-gray-900 font-medium" : "text-gray-600")}>
-                                                    {doc.full_name}
-                                                </span>
-                                                {isPrincipal ? (
-                                                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold shrink-0">Principal</span>
-                                                ) : isInTeam ? (
                                                     <button
                                                         type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setMedicoId(doc.user_id);
+                                                        onClick={() => {
+                                                            if (isInTeam && !isPrincipal) {
+                                                                setTeam(prev => prev.filter(t => t.doctor_id !== doc.user_id));
+                                                            } else if (!isInTeam) {
+                                                                setTeam(prev => [...prev, { doctor_id: doc.user_id, full_name: doc.full_name }]);
+                                                                // Se é o primeiro médico, tornar principal
+                                                                if (!medicoId) setMedicoId(doc.user_id);
+                                                            }
                                                         }}
-                                                        className="text-[9px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 hover:bg-primary/10 hover:text-primary font-medium opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                                                        className={cn(
+                                                            "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                                                            isInTeam ? "bg-primary border-primary text-white" : "border-gray-300 hover:border-primary/50",
+                                                            isPrincipal && "cursor-default"
+                                                        )}
+                                                        disabled={isPrincipal}
                                                     >
-                                                        ★ Tornar principal
+                                                        {isInTeam && <Check className="h-2.5 w-2.5" />}
                                                     </button>
-                                                ) : null}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Equipa — Multi-select */}
-                        <div className="relative" ref={teamPickerRef}>
-                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                                <Users className="h-3 w-3" />
-                                Equipa
-                            </label>
-                            <button
-                                type="button"
-                                onClick={() => { setShowTeamPicker(!showTeamPicker); setShowDoctorPicker(false); }}
-                                className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                            >
-                                <span className="flex items-center gap-2 text-gray-700 truncate">
-                                    {team.length > 0 ? (
-                                        <>
-                                            <span>{team.length} {team.length === 1 ? 'membro' : 'membros'}</span>
-                                            <span className="text-gray-400">·</span>
-                                            <span className="text-gray-500 truncate text-xs">{team.map(t => t.full_name.split(' ')[0]).join(', ')}</span>
-                                        </>
-                                    ) : (
-                                        <span className="text-gray-400">Selecionar membros...</span>
-                                    )}
-                                </span>
-                                <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform", showTeamPicker && "rotate-180")} />
-                            </button>
-
-                            {showTeamPicker && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 z-10 py-1 max-h-48 overflow-y-auto">
-                                    {doctors.map(doc => {
-                                        const isInTeam = team.some(t => t.doctor_id === doc.user_id);
-                                        const isPrincipal = doc.user_id === medicoId;
-                                        return (
-                                            <button
-                                                key={doc.user_id}
-                                                type="button"
-                                                onClick={() => toggleTeamMember(doc.user_id)}
-                                                className={cn(
-                                                    "w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors",
-                                                    isInTeam ? "bg-primary/5" : "hover:bg-gray-50"
-                                                )}
-                                            >
-                                                <div className={cn(
-                                                    "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
-                                                    isInTeam ? "bg-primary border-primary text-white" : "border-gray-300",
-                                                    isPrincipal && "cursor-default"
-                                                )}>
-                                                    {isInTeam && <Check className="h-2.5 w-2.5" />}
+                                                    <Stethoscope className={cn("h-3 w-3 shrink-0", isInTeam ? "text-primary" : "text-gray-400")} />
+                                                    <span className={cn("text-xs flex-1 truncate", isInTeam ? "text-gray-900 font-medium" : "text-gray-600")}>
+                                                        {doc.full_name}
+                                                    </span>
+                                                    {isPrincipal ? (
+                                                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold shrink-0">Principal</span>
+                                                    ) : isInTeam ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setMedicoId(doc.user_id);
+                                                            }}
+                                                            className="text-[9px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 hover:bg-primary/10 hover:text-primary font-medium opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                                                        >
+                                                            ★ Tornar principal
+                                                        </button>
+                                                    ) : null}
                                                 </div>
-                                                <Stethoscope className={cn("h-3 w-3 shrink-0", isInTeam ? "text-primary" : "text-gray-400")} />
-                                                <span className={cn("text-xs flex-1 truncate", isInTeam ? "text-gray-900 font-medium" : "text-gray-600")}>
-                                                    {doc.full_name}
-                                                </span>
-                                                {isPrincipal && (
-                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold shrink-0">Principal</span>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Equipa — Multi-select */}
+                            <div className="relative" ref={teamPickerRef}>
+                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                    <Users className="h-3 w-3" />
+                                    Equipa
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => { setShowTeamPicker(!showTeamPicker); setShowDoctorPicker(false); }}
+                                    className="mt-1.5 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                                >
+                                    <span className="flex items-center gap-2 text-gray-700 truncate">
+                                        {team.length > 0 ? (
+                                            <>
+                                                <span>{team.length} {team.length === 1 ? 'membro' : 'membros'}</span>
+                                                <span className="text-gray-400">·</span>
+                                                <span className="text-gray-500 truncate text-xs">{team.map(t => t.full_name.split(' ')[0]).join(', ')}</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-gray-400">Selecionar membros...</span>
+                                        )}
+                                    </span>
+                                    <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform", showTeamPicker && "rotate-180")} />
+                                </button>
+
+                                {showTeamPicker && (
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 z-10 py-1 max-h-48 overflow-y-auto">
+                                        {doctors.map(doc => {
+                                            const isInTeam = team.some(t => t.doctor_id === doc.user_id);
+                                            const isPrincipal = doc.user_id === medicoId;
+                                            return (
+                                                <button
+                                                    key={doc.user_id}
+                                                    type="button"
+                                                    onClick={() => toggleTeamMember(doc.user_id)}
+                                                    className={cn(
+                                                        "w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors",
+                                                        isInTeam ? "bg-primary/5" : "hover:bg-gray-50"
+                                                    )}
+                                                >
+                                                    <div className={cn(
+                                                        "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                                                        isInTeam ? "bg-primary border-primary text-white" : "border-gray-300",
+                                                        isPrincipal && "cursor-default"
+                                                    )}>
+                                                        {isInTeam && <Check className="h-2.5 w-2.5" />}
+                                                    </div>
+                                                    <Stethoscope className={cn("h-3 w-3 shrink-0", isInTeam ? "text-primary" : "text-gray-400")} />
+                                                    <span className={cn("text-xs flex-1 truncate", isInTeam ? "text-gray-900 font-medium" : "text-gray-600")}>
+                                                        {doc.full_name}
+                                                    </span>
+                                                    {isPrincipal && (
+                                                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold shrink-0">Principal</span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Team chips preview */}
