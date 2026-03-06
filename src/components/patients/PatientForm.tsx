@@ -149,6 +149,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const [waLoading, setWaLoading] = useState(false);
     const [waError, setWaError] = useState('');
     const doctorMultiRef = useRef<HTMLDivElement>(null);
+    const doctorMultiPopupRef = useRef<HTMLDivElement | null>(null);
     const teamRef = useRef<HTMLDivElement>(null);
     const whatsappRef = useRef<HTMLDivElement>(null);
     const whatsappPopupRef = useRef<HTMLDivElement | null>(null);
@@ -156,7 +157,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     // Click-outside para fechar popups sem overlay
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
-            if (showDoctorMulti && doctorMultiRef.current && !doctorMultiRef.current.contains(e.target as Node)) {
+            if (showDoctorMulti && doctorMultiRef.current && !doctorMultiRef.current.contains(e.target as Node) && (!doctorMultiPopupRef.current || !doctorMultiPopupRef.current.contains(e.target as Node))) {
                 setShowDoctorMulti(false);
             }
             if (showTeam && teamRef.current && !teamRef.current.contains(e.target as Node)) {
@@ -692,7 +693,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                                     <ChevronDown className={cn("h-3 w-3 text-gray-500 transition-transform", showDoctorMulti && "rotate-180")} />
                                 </button>
                                 {showDoctorMulti && createPortal(
-                                    <div ref={el => { if (el && doctorMultiRef.current) { const r = doctorMultiRef.current.getBoundingClientRect(); el.style.top = `${r.bottom + 8}px`; el.style.left = `${r.left}px`; } }} className="fixed bg-white rounded-xl shadow-2xl z-[9999] py-2 min-w-[280px] border border-gray-200">
+                                    <div ref={el => { doctorMultiPopupRef.current = el; if (el && doctorMultiRef.current) { const r = doctorMultiRef.current.getBoundingClientRect(); el.style.top = `${r.bottom + 8}px`; el.style.left = `${r.left}px`; } }} className="fixed bg-white rounded-xl shadow-2xl z-[9999] py-2 min-w-[280px] border border-gray-200">
                                         <div className="px-3 py-1.5 border-b border-gray-100">
                                             <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Médicos do Caso</span>
                                         </div>
