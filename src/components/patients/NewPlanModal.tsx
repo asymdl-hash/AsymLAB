@@ -129,7 +129,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-gray-100">
                     <div>
@@ -147,7 +147,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="p-5 space-y-4">
+                    <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto flex-1">
                         {/* Nome do Plano */}
                         <div>
                             <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Plano *</label>
