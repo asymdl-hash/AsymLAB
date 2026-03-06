@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { X, Plus, Minus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList } from 'lucide-react';
+import { X, Plus, Minus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList, Palette, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { patientsService } from '@/services/patientsService';
@@ -21,6 +21,7 @@ interface NewPlanModalProps {
 type WorkTypeItem = { id: string; nome: string; cor: string | null; categoria: string | null };
 type DoctorItem = { user_id: string; full_name: string };
 type ClinicItem = { id: string; commercial_name: string };
+type ToothColorItem = { id: string; codigo: string; nome: string; grupo: string | null };
 
 interface WorkTypeSelection {
     work_type_id: string;
@@ -45,7 +46,17 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [workTypes, setWorkTypes] = useState<WorkTypeItem[]>([]);
     const [doctors, setDoctors] = useState<DoctorItem[]>([]);
     const [clinics, setClinics] = useState<ClinicItem[]>([]);
+    const [toothColors, setToothColors] = useState<ToothColorItem[]>([]);
     const [loadingDropdowns, setLoadingDropdowns] = useState(true);
+
+    // Método + Escala de Cor
+    const [metodo, setMetodo] = useState('');
+    const [escalaCoreId, setEscalaCoreId] = useState('');
+    const [colorScalePhotos, setColorScalePhotos] = useState<File[]>([]);
+    const [colorScalePreviews, setColorScalePreviews] = useState<string[]>([]);
+    const [showColorDropdown, setShowColorDropdown] = useState(false);
+    const colorDropdownRef = useRef<HTMLDivElement>(null);
+    const colorFileRef = useRef<HTMLInputElement>(null);
 
     // Pickers
     const [showDoctorPicker, setShowDoctorPicker] = useState(false);
@@ -59,14 +70,16 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     useEffect(() => {
         async function loadDropdowns() {
             try {
-                const [wt, docs, cls] = await Promise.all([
+                const [wt, docs, cls, tc] = await Promise.all([
                     patientsService.getWorkTypes(),
                     patientsService.getDoctors(),
                     patientsService.getClinics(),
+                    patientsService.getToothColors(),
                 ]);
                 setWorkTypes(wt);
                 setDoctors(docs);
                 setClinics(cls);
+                setToothColors(tc);
 
                 // Calcular próximo número de plano (por paciente)
                 const { count } = await supabase
@@ -125,6 +138,18 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         if (showWtDropdown) document.addEventListener('mousedown', h);
         return () => document.removeEventListener('mousedown', h);
     }, [showWtDropdown]);
+
+    // Close color dropdown on outside click
+    useEffect(() => {
+        const h = (e: MouseEvent) => { if (colorDropdownRef.current && !colorDropdownRef.current.contains(e.target as Node)) setShowColorDropdown(false); };
+        if (showColorDropdown) document.addEventListener('mousedown', h);
+        return () => document.removeEventListener('mousedown', h);
+    }, [showColorDropdown]);
+
+    // Cleanup preview URLs
+    useEffect(() => {
+        return () => { colorScalePreviews.forEach(u => URL.revokeObjectURL(u)); };
+    }, []);
 
     // ── Odontogram teeth derived from workTypeSelections ──
     const odontogramTeeth = useMemo(() => {
@@ -228,6 +253,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 tipo_trabalho_id: workTypeSelections[0].work_type_id,
                 medico_id: medicoId,
                 clinica_id: clinicaId,
+                metodo: metodo.trim() || undefined,
+                escala_cor_id: escalaCoreId || undefined,
             });
 
             // Guardar todos os work types na tabela plan_work_types
@@ -239,6 +266,19 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                     assigned_teeth: sel.assigned_teeth,
                 }));
                 await supabase.from('plan_work_types').insert(rows);
+
+                // Upload fotos de escala de cor (se houver)
+                for (const photo of colorScalePhotos) {
+                    try {
+                        await patientsService.uploadFile({
+                            file: photo,
+                            patient_id: patientId,
+                            plan_id: plan.id,
+                        });
+                    } catch (err) {
+                        console.error('Erro ao enviar foto de escala:', err);
+                    }
+                }
             }
 
             window.dispatchEvent(new Event('patient-updated'));
@@ -615,6 +655,141 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         }
                                                     </span>
                                                 </button>
+                                            </div>
+
+                                            {/* Método */}
+                                            <div>
+                                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                                    <ClipboardList className="h-3 w-3" />
+                                                    Método
+                                                </label>
+                                                <Input
+                                                    value={metodo}
+                                                    onChange={e => setMetodo(e.target.value)}
+                                                    placeholder="Ex: CAD/CAM, Prensada, Manual..."
+                                                    className="mt-1.5 h-9 text-sm"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* ── Sub-secção: Escala de Cor ── */}
+                                        <div className="rounded-lg border border-amber-200/60 bg-amber-50/30 p-3 space-y-2.5">
+                                            <div className="flex items-center gap-2">
+                                                <Palette className="h-3.5 w-3.5 text-amber-500" />
+                                                <span className="text-[10px] uppercase tracking-widest font-semibold text-amber-600">
+                                                    Escala de Cor
+                                                </span>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {/* Dropdown Escala de Cor */}
+                                                <div className="relative" ref={colorDropdownRef}>
+                                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Cor
+                                                    </label>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowColorDropdown(!showColorDropdown)}
+                                                        className="mt-1 w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                                                    >
+                                                        {escalaCoreId ? (
+                                                            <span className="text-gray-700 text-xs font-medium">
+                                                                {(() => {
+                                                                    const c = toothColors.find(tc => tc.id === escalaCoreId);
+                                                                    return c ? `${c.codigo} — ${c.nome}` : 'Seleccionar...';
+                                                                })()}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-400 text-xs">Seleccionar cor...</span>
+                                                        )}
+                                                        <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform", showColorDropdown && "rotate-180")} />
+                                                    </button>
+
+                                                    {showColorDropdown && (
+                                                        <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 py-1 max-h-48 overflow-y-auto">
+                                                            {/* Agrupar por grupo/escala */}
+                                                            {Object.entries(
+                                                                toothColors.reduce<Record<string, ToothColorItem[]>>((acc, tc) => {
+                                                                    const g = tc.grupo || 'Outros';
+                                                                    if (!acc[g]) acc[g] = [];
+                                                                    acc[g].push(tc);
+                                                                    return acc;
+                                                                }, {})
+                                                            ).map(([grupo, colors]) => (
+                                                                <div key={grupo}>
+                                                                    <div className="px-3 py-1.5 border-b border-gray-100">
+                                                                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{grupo}</span>
+                                                                    </div>
+                                                                    {colors.map(tc => (
+                                                                        <div
+                                                                            key={tc.id}
+                                                                            onClick={() => { setEscalaCoreId(tc.id); setShowColorDropdown(false); }}
+                                                                            className={cn(
+                                                                                "flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-amber-50 transition-colors text-xs",
+                                                                                escalaCoreId === tc.id && "bg-amber-50 font-semibold"
+                                                                            )}
+                                                                        >
+                                                                            <span className="font-mono text-gray-500 w-8">{tc.codigo}</span>
+                                                                            <span className="text-gray-700">{tc.nome}</span>
+                                                                            {escalaCoreId === tc.id && <Check className="h-3 w-3 text-amber-500 ml-auto" />}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            ))}
+                                                            {toothColors.length === 0 && (
+                                                                <p className="text-[10px] text-gray-400 text-center py-3">Sem cores no catálogo</p>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Upload fotos escala de cor */}
+                                                <div>
+                                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Fotos
+                                                    </label>
+                                                    <div className="mt-1 flex flex-wrap gap-2">
+                                                        {colorScalePreviews.map((url, i) => (
+                                                            <div key={i} className="relative w-14 h-14 rounded-lg overflow-hidden border border-gray-200 group">
+                                                                <img src={url} alt={`Cor ${i + 1}`} className="w-full h-full object-cover" />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        URL.revokeObjectURL(url);
+                                                                        setColorScalePhotos(prev => prev.filter((_, idx) => idx !== i));
+                                                                        setColorScalePreviews(prev => prev.filter((_, idx) => idx !== i));
+                                                                    }}
+                                                                    className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                >
+                                                                    <X className="h-3.5 w-3.5 text-white" />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => colorFileRef.current?.click()}
+                                                            className="w-14 h-14 rounded-lg border-2 border-dashed border-amber-300 bg-amber-50/50 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/50 hover:border-amber-400 transition-colors"
+                                                        >
+                                                            <ImagePlus className="h-4 w-4" />
+                                                            <span className="text-[8px] mt-0.5 font-medium">Foto</span>
+                                                        </button>
+                                                        <input
+                                                            ref={colorFileRef}
+                                                            type="file"
+                                                            accept="image/*"
+                                                            multiple
+                                                            className="hidden"
+                                                            onChange={e => {
+                                                                const files = e.target.files;
+                                                                if (!files) return;
+                                                                const newFiles = Array.from(files);
+                                                                setColorScalePhotos(prev => [...prev, ...newFiles]);
+                                                                setColorScalePreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
+                                                                e.target.value = '';
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 

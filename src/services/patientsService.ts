@@ -182,6 +182,19 @@ export const patientsService = {
         return data || [];
     },
 
+    // 9b. Buscar cores de dentes (escala VITA, etc.) para dropdown
+    async getToothColors() {
+        const { data, error } = await supabase
+            .from('tooth_colors')
+            .select('id, codigo, nome, grupo')
+            .eq('activo', true)
+            .order('grupo')
+            .order('codigo');
+
+        if (error) throw error;
+        return data || [];
+    },
+
     // 10. Criar plano de tratamento
     async createTreatmentPlan(data: {
         patient_id: string;
@@ -189,17 +202,23 @@ export const patientsService = {
         tipo_trabalho_id: string;
         medico_id: string;
         clinica_id: string;
+        metodo?: string;
+        escala_cor_id?: string;
     }) {
+        const insertData: Record<string, unknown> = {
+            patient_id: data.patient_id,
+            nome: data.nome,
+            tipo_trabalho_id: data.tipo_trabalho_id,
+            medico_id: data.medico_id,
+            clinica_id: data.clinica_id,
+            origem: 'app' as const,
+        };
+        if (data.metodo) insertData.metodo = data.metodo;
+        if (data.escala_cor_id) insertData.escala_cor_id = data.escala_cor_id;
+
         const { data: plan, error } = await supabase
             .from('treatment_plans')
-            .insert({
-                patient_id: data.patient_id,
-                nome: data.nome,
-                tipo_trabalho_id: data.tipo_trabalho_id,
-                medico_id: data.medico_id,
-                clinica_id: data.clinica_id,
-                origem: 'app' as const,
-            })
+            .insert(insertData)
             .select('*')
             .single();
 
