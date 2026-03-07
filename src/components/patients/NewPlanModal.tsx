@@ -78,6 +78,16 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [introraisPreviews, setIntroraisPreviews] = useState<string[]>([]);
     const introraisFileRef = useRef<HTMLInputElement>(null);
     const [introraisDragOver, setIntroraisDragOver] = useState(false);
+    // Registos Fotográficos — 120º
+    const [photos120, setPhotos120] = useState<File[]>([]);
+    const [previews120, setPreviews120] = useState<string[]>([]);
+    const fileRef120 = useRef<HTMLInputElement>(null);
+    const [dragOver120, setDragOver120] = useState(false);
+    // Registos Fotográficos — Outros
+    const [photosOutros, setPhotosOutros] = useState<File[]>([]);
+    const [previewsOutros, setPreviewsOutros] = useState<string[]>([]);
+    const fileRefOutros = useRef<HTMLInputElement>(null);
+    const [dragOverOutros, setDragOverOutros] = useState(false);
     const [photosCollapsed, setPhotosCollapsed] = useState(false);
 
     // Pickers
@@ -1064,7 +1074,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         Registos Fotográficos
                                                     </span>
                                                 </div>
-                                                {(faceRepouso.previews.length > 0 || faceSorrisoNatural.previews.length > 0 || faceSorrisoAlto.previews.length > 0 || colorScalePreviews.length > 0 || introraisPreviews.length > 0) && (
+                                                {(faceRepouso.previews.length > 0 || faceSorrisoNatural.previews.length > 0 || faceSorrisoAlto.previews.length > 0 || colorScalePreviews.length > 0 || introraisPreviews.length > 0 || previews120.length > 0 || previewsOutros.length > 0) && (
                                                     <button
                                                         type="button"
                                                         onClick={() => setPhotosCollapsed(prev => !prev)}
@@ -1079,8 +1089,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 )}
                                             </div>
 
-                                            <div className="grid grid-cols-1 sm:grid-cols-[3fr_1fr] gap-3">
-                                                {/* Face — 3/4 */}
+                                            <div className="space-y-3">
+                                                {/* Face — linha inteira */}
                                                 <div className="space-y-1.5">
                                                     <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Face</p>
                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -1205,117 +1215,111 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         })()}
                                                     </div>
                                                 </div>
-
-                                                <div className="space-y-1.5">
-                                                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Introrais</p>
-                                                    <div
-                                                        className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${introraisDragOver
-                                                            ? 'border-sky-400 bg-sky-100/50'
-                                                            : 'border-gray-200 bg-white'
-                                                            }`}
-                                                        onDragOver={e => { e.preventDefault(); setIntroraisDragOver(true); }}
-                                                        onDragLeave={() => setIntroraisDragOver(false)}
-                                                        onDrop={e => {
-                                                            e.preventDefault();
-                                                            setIntroraisDragOver(false);
-                                                            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-                                                            if (files.length > 0) {
-                                                                setIntroraisPhotos(prev => [...prev, ...files]);
-                                                                setIntroraisPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <span className="text-[8px] font-semibold text-gray-500 block mb-1">Introrais</span>
-                                                        <div className="grid grid-cols-1 gap-1">
-                                                            {/* Botão Ficheiro */}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => introraisFileRef.current?.click()}
-                                                                className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2"
-                                                                title="Anexar ficheiro"
-                                                            >
-                                                                <Upload className="h-3 w-3" />
-                                                                <span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                            </button>
-                                                            {/* Botão Câmara */}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    const intrasSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => {
-                                                                        if (typeof action === 'function') {
-                                                                            const virtualPrev = { files: introraisPhotos, previews: introraisPreviews };
-                                                                            const result = action(virtualPrev);
-                                                                            setIntroraisPhotos(result.files);
-                                                                            setIntroraisPreviews(result.previews);
-                                                                        }
-                                                                    };
-                                                                    setCameraTarget({ setter: intrasSetter, key: 'introrais' });
-                                                                }}
-                                                                className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2"
-                                                                title="Tirar fotografia"
-                                                            >
-                                                                <Camera className="h-3 w-3" />
-                                                                <span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                            </button>
-                                                            {/* Hidden inputs */}
-                                                            <input
-                                                                ref={introraisFileRef}
-                                                                type="file"
-                                                                accept="image/*"
-                                                                multiple
-                                                                className="hidden"
-                                                                onChange={e => {
-                                                                    const files = e.target.files;
-                                                                    if (!files) return;
-                                                                    const newFiles = Array.from(files);
-                                                                    setIntroraisPhotos(prev => [...prev, ...newFiles]);
-                                                                    setIntroraisPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
-                                                                    e.target.value = '';
-                                                                }}
-                                                            />
-                                                            {/* Input câmara nativa (opc. qualidade máxima) */}
-                                                            <input
-                                                                id="cam-native-introrais"
-                                                                type="file"
-                                                                accept="image/*"
-                                                                capture="environment"
-                                                                className="hidden"
-                                                                onChange={e => {
-                                                                    const files = e.target.files;
-                                                                    if (!files || files.length === 0) return;
-                                                                    const newFiles = Array.from(files);
-                                                                    setIntroraisPhotos(prev => [...prev, ...newFiles]);
-                                                                    setIntroraisPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
-                                                                    e.target.value = '';
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        {/* Previews — abaixo dos botões, colapsável */}
-                                                        {!photosCollapsed && introraisPreviews.length > 0 && (
-                                                            <div className="grid grid-cols-1 gap-1 mt-1">
-                                                                {introraisPreviews.map((url, i) => (
-                                                                    <div key={i} className="relative group">
-                                                                        <img src={url} alt={`Introrais ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                setIntroraisPhotos(prev => prev.filter((_, idx) => idx !== i));
-                                                                                setIntroraisPreviews(prev => prev.filter((_, idx) => idx !== i));
-                                                                            }}
-                                                                            className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                        >
-                                                                            <X className="h-2 w-2 text-white" />
-                                                                        </button>
-                                                                    </div>
-                                                                ))}
+                                                {/* Introrais + 120º + Outros — 3 colunas iguais */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                    {/* --- Introrais --- */}
+                                                    <div className="space-y-1.5">
+                                                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Introrais</p>
+                                                        <div
+                                                            className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${introraisDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                            onDragOver={e => { e.preventDefault(); setIntroraisDragOver(true); }}
+                                                            onDragLeave={() => setIntroraisDragOver(false)}
+                                                            onDrop={e => { e.preventDefault(); setIntroraisDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntroraisPhotos(prev => [...prev, ...files]); setIntroraisPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                        >
+                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">Introrais</span>
+                                                            <div className="grid grid-cols-1 gap-1">
+                                                                <button type="button" onClick={() => introraisFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                    <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                </button>
+                                                                <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: introraisPhotos, previews: introraisPreviews }); setIntroraisPhotos(r.files); setIntroraisPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'introrais' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                    <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                                </button>
+                                                                <input ref={introraisFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntroraisPhotos(p => [...p, ...nf]); setIntroraisPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                <input id="cam-native-introrais" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setIntroraisPhotos(p => [...p, ...nf]); setIntroraisPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             </div>
-                                                        )}
-                                                        {photosCollapsed && introraisPreviews.length > 0 && (
-                                                            <p className="text-[8px] text-gray-400 text-center mt-1">📷 {introraisPreviews.length} foto(s)</p>
-                                                        )}
-                                                        {introraisPreviews.length === 0 && (
-                                                            <p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>
-                                                        )}
+                                                            {!photosCollapsed && introraisPreviews.length > 0 && (
+                                                                <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                    {introraisPreviews.map((url, i) => (
+                                                                        <div key={i} className="relative group">
+                                                                            <img src={url} alt={`Introrais ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                            <button type="button" onClick={() => { setIntroraisPhotos(p => p.filter((_, idx) => idx !== i)); setIntroraisPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {photosCollapsed && introraisPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {introraisPreviews.length} foto(s)</p>)}
+                                                            {introraisPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* --- 120º --- */}
+                                                    <div className="space-y-1.5">
+                                                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">120º</p>
+                                                        <div
+                                                            className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOver120 ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                            onDragOver={e => { e.preventDefault(); setDragOver120(true); }}
+                                                            onDragLeave={() => setDragOver120(false)}
+                                                            onDrop={e => { e.preventDefault(); setDragOver120(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotos120(prev => [...prev, ...files]); setPreviews120(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                        >
+                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">120º</span>
+                                                            <div className="grid grid-cols-1 gap-1">
+                                                                <button type="button" onClick={() => fileRef120.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                    <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                </button>
+                                                                <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: photos120, previews: previews120 }); setPhotos120(r.files); setPreviews120(r.previews); } }; setCameraTarget({ setter: s, key: 'foto120' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                    <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                                </button>
+                                                                <input ref={fileRef120} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPhotos120(p => [...p, ...nf]); setPreviews120(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                <input id="cam-native-120" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPhotos120(p => [...p, ...nf]); setPreviews120(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            </div>
+                                                            {!photosCollapsed && previews120.length > 0 && (
+                                                                <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                    {previews120.map((url, i) => (
+                                                                        <div key={i} className="relative group">
+                                                                            <img src={url} alt={`120º ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                            <button type="button" onClick={() => { setPhotos120(p => p.filter((_, idx) => idx !== i)); setPreviews120(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {photosCollapsed && previews120.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previews120.length} foto(s)</p>)}
+                                                            {previews120.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* --- Outros --- */}
+                                                    <div className="space-y-1.5">
+                                                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Outros</p>
+                                                        <div
+                                                            className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOverOutros ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                            onDragOver={e => { e.preventDefault(); setDragOverOutros(true); }}
+                                                            onDragLeave={() => setDragOverOutros(false)}
+                                                            onDrop={e => { e.preventDefault(); setDragOverOutros(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotosOutros(prev => [...prev, ...files]); setPreviewsOutros(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                        >
+                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">Outros</span>
+                                                            <div className="grid grid-cols-1 gap-1">
+                                                                <button type="button" onClick={() => fileRefOutros.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                    <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                </button>
+                                                                <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: photosOutros, previews: previewsOutros }); setPhotosOutros(r.files); setPreviewsOutros(r.previews); } }; setCameraTarget({ setter: s, key: 'outros' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                    <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                                </button>
+                                                                <input ref={fileRefOutros} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                <input id="cam-native-outros" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            </div>
+                                                            {!photosCollapsed && previewsOutros.length > 0 && (
+                                                                <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                    {previewsOutros.map((url, i) => (
+                                                                        <div key={i} className="relative group">
+                                                                            <img src={url} alt={`Outros ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                            <button type="button" onClick={() => { setPhotosOutros(p => p.filter((_, idx) => idx !== i)); setPreviewsOutros(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {photosCollapsed && previewsOutros.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previewsOutros.length} foto(s)</p>)}
+                                                            {previewsOutros.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
