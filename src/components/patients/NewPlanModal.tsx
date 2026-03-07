@@ -68,10 +68,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const faceRepousoRef = useRef<HTMLInputElement>(null);
     const faceSorrisoNaturalRef = useRef<HTMLInputElement>(null);
     const faceSorrisoAltoRef = useRef<HTMLInputElement>(null);
-    const faceCamRepousoRef = useRef<HTMLInputElement>(null);
-    const faceCamSorrisoNaturalRef = useRef<HTMLInputElement>(null);
-    const faceCamSorrisoAltoRef = useRef<HTMLInputElement>(null);
     const [faceDragOver, setFaceDragOver] = useState<string | null>(null);
+    // Câmara (webcam via getUserMedia)
+    const [cameraTarget, setCameraTarget] = useState<React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> | null>(null);
+    const cameraVideoRef = useRef<HTMLVideoElement>(null);
+    const cameraStreamRef = useRef<MediaStream | null>(null);
     // Registos Fotográficos — Introrais
     const [introraisPhotos, setIntroraisPhotos] = useState<File[]>([]);
     const [introraisPreviews, setIntroraisPreviews] = useState<string[]>([]);
@@ -997,10 +998,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Face</p>
                                                     <div className="grid grid-cols-3 gap-2">
                                                         {(() => {
-                                                            const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; camRef: React.RefObject<HTMLInputElement>; key: string }[] = [
-                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, camRef: faceCamRepousoRef, key: 'repouso' },
-                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, camRef: faceCamSorrisoNaturalRef, key: 'sorrisoNatural' },
-                                                                { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, camRef: faceCamSorrisoAltoRef, key: 'sorrisoAlto' },
+                                                            const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string }[] = [
+                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso' },
+                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural' },
+                                                                { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto' },
                                                             ];
 
                                                             const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
@@ -1017,7 +1018,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 }));
                                                             };
 
-                                                            return faceFields.map(({ label, state, setter, ref, camRef, key }) => (
+                                                            return faceFields.map(({ label, state, setter, ref, key }) => (
                                                                 <div
                                                                     key={key}
                                                                     className={cn(
@@ -1070,7 +1071,23 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         {/* Camera */}
                                                                         <button
                                                                             type="button"
-                                                                            onClick={() => camRef.current?.click()}
+                                                                            onClick={() => {
+                                                                                setCameraTarget(() => setter);
+                                                                                // Start camera after next render
+                                                                                setTimeout(async () => {
+                                                                                    try {
+                                                                                        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } } });
+                                                                                        cameraStreamRef.current = stream;
+                                                                                        if (cameraVideoRef.current) {
+                                                                                            cameraVideoRef.current.srcObject = stream;
+                                                                                            cameraVideoRef.current.play();
+                                                                                        }
+                                                                                    } catch {
+                                                                                        alert('Não foi possível aceder à câmara. Verifique as permissões.');
+                                                                                        setCameraTarget(null);
+                                                                                    }
+                                                                                }, 100);
+                                                                            }}
                                                                             className="flex items-center gap-0.5 px-1.5 py-1 rounded bg-sky-50 text-sky-500 hover:bg-sky-100 transition-colors"
                                                                             title="Tirar fotografia"
                                                                         >
@@ -1089,18 +1106,6 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         type="file"
                                                                         accept="image/*"
                                                                         multiple
-                                                                        className="hidden"
-                                                                        onChange={e => {
-                                                                            const files = e.target.files;
-                                                                            if (files && files.length > 0) addFiles(setter, Array.from(files));
-                                                                            e.target.value = '';
-                                                                        }}
-                                                                    />
-                                                                    <input
-                                                                        ref={camRef}
-                                                                        type="file"
-                                                                        accept="image/*"
-                                                                        capture="environment"
                                                                         className="hidden"
                                                                         onChange={e => {
                                                                             const files = e.target.files;
@@ -1199,6 +1204,82 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 onChange={handleOdontogramChange}
                 pendingAssignments={pendingAssignments}
             />
+            {renderCameraOverlay()}
         </>
     );
+
+    // Camera overlay helper
+    function renderCameraOverlay() {
+        if (!cameraTarget) return null;
+        const stopCamera = () => {
+            if (cameraStreamRef.current) {
+                cameraStreamRef.current.getTracks().forEach(t => t.stop());
+                cameraStreamRef.current = null;
+            }
+            setCameraTarget(null);
+        };
+        const capturePhoto = () => {
+            const video = cameraVideoRef.current;
+            if (!video) return;
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            ctx.drawImage(video, 0, 0);
+            canvas.toBlob(blob => {
+                if (!blob) return;
+                const file = new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                cameraTarget(prev => ({
+                    files: [...prev.files, file],
+                    previews: [...prev.previews, URL.createObjectURL(file)],
+                }));
+            }, 'image/jpeg', 0.92);
+            // Don't stop — allow taking multiple photos
+        };
+        return (
+            <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center" onClick={stopCamera}>
+                <div
+                    className="bg-gray-900 rounded-2xl overflow-hidden shadow-2xl max-w-lg w-full mx-4"
+                    onClick={e => e.stopPropagation()}
+                >
+                    <div className="relative">
+                        <video
+                            ref={cameraVideoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className="w-full aspect-[4/3] object-cover bg-black"
+                        />
+                        {/* Close */}
+                        <button
+                            type="button"
+                            onClick={stopCamera}
+                            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                    {/* Controls */}
+                    <div className="flex items-center justify-center gap-4 p-4 bg-gray-900">
+                        <button
+                            type="button"
+                            onClick={capturePhoto}
+                            className="w-14 h-14 rounded-full bg-white border-4 border-gray-600 hover:border-sky-400 transition-colors flex items-center justify-center"
+                            title="Capturar"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-white hover:bg-gray-100 transition-colors" />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={stopCamera}
+                            className="px-4 py-2 rounded-lg bg-gray-700 text-white text-sm hover:bg-gray-600 transition-colors"
+                        >
+                            Concluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 }
