@@ -70,8 +70,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const faceSorrisoNaturalRef = useRef<HTMLInputElement>(null);
     const faceSorrisoAltoRef = useRef<HTMLInputElement>(null);
     const [faceDragOver, setFaceDragOver] = useState<string | null>(null);
-    // Câmara (overlay avançado)
+    // Câmara (overlay avançado desktop)
     const [cameraTarget, setCameraTarget] = useState<React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> | null>(null);
+    // Sessão de multi-captura mobile (loop câmara nativa)
+    const [mobileSession, setMobileSession] = useState<{
+        key: string;
+        count: number;
+        lastPreview: string | null;
+    } | null>(null);
     // Registos Fotográficos — Introrais
     const [introraisPhotos, setIntroraisPhotos] = useState<File[]>([]);
     const [introraisPreviews, setIntroraisPreviews] = useState<string[]>([]);
@@ -1075,7 +1081,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                             type="button"
                                                                             onClick={() => {
                                                                                 if (isMobile) {
-                                                                                    // Mobile: abrir câmara nativa do SO (HDR, Night Mode, AI stacking)
+                                                                                    // Mobile: abrir câmara nativa + iniciar sessão multi-captura
+                                                                                    setMobileSession({ key, count: 0, lastPreview: null });
                                                                                     const camInput = document.getElementById(`cam-native-${key}`) as HTMLInputElement;
                                                                                     if (camInput) camInput.click();
                                                                                 } else {
@@ -1117,7 +1124,16 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         className="hidden"
                                                                         onChange={e => {
                                                                             const files = e.target.files;
-                                                                            if (files && files.length > 0) addFiles(setter, Array.from(files));
+                                                                            if (files && files.length > 0) {
+                                                                                addFiles(setter, Array.from(files));
+                                                                                // Atualizar sessão multi-captura
+                                                                                const preview = URL.createObjectURL(files[0]);
+                                                                                setMobileSession(prev => prev ? {
+                                                                                    ...prev,
+                                                                                    count: prev.count + files.length,
+                                                                                    lastPreview: preview,
+                                                                                } : null);
+                                                                            }
                                                                             e.target.value = '';
                                                                         }}
                                                                     />
@@ -1222,6 +1238,63 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                     }}
                     onClose={() => setCameraTarget(null)}
                 />
+            )}
+
+            {/* Mobile multi-capture session overlay */}
+            {mobileSession && mobileSession.count > 0 && (
+                <div className="fixed inset-0 z-[90] bg-black/60 flex items-center justify-center p-6" onClick={() => setMobileSession(null)}>
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-sky-500 to-sky-600 px-5 py-4 text-white">
+                            <div className="flex items-center gap-3">
+                                <Camera className="h-6 w-6" />
+                                <div>
+                                    <p className="font-semibold text-sm">Sessão de Captura</p>
+                                    <p className="text-sky-100 text-xs">
+                                        {mobileSession.count} {mobileSession.count === 1 ? 'foto capturada' : 'fotos capturadas'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Preview */}
+                        {mobileSession.lastPreview && (
+                            <div className="px-5 py-3 flex justify-center bg-gray-50">
+                                <img
+                                    src={mobileSession.lastPreview}
+                                    alt="Última captura"
+                                    className="h-32 rounded-lg object-cover shadow border border-gray-200"
+                                />
+                            </div>
+                        )}
+
+                        {/* Buttons */}
+                        <div className="px-5 py-4 flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const camInput = document.getElementById(`cam-native-${mobileSession.key}`) as HTMLInputElement;
+                                    if (camInput) camInput.click();
+                                }}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-sky-50 text-sky-600 font-semibold text-sm hover:bg-sky-100 transition-colors border border-sky-200"
+                            >
+                                <Camera className="h-4 w-4" />
+                                Tirar Mais
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setMobileSession(null)}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-sky-500 text-white font-semibold text-sm hover:bg-sky-600 transition-colors shadow"
+                            >
+                                <Check className="h-4 w-4" />
+                                Concluir
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </>
     );
