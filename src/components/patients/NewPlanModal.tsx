@@ -954,14 +954,39 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 </div>
                                                             </div>
                                                         ))}
+                                                        {/* Botão Ficheiro */}
                                                         <button
                                                             type="button"
                                                             onClick={() => colorFileRef.current?.click()}
                                                             className="rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors aspect-square max-h-[48px]"
+                                                            title="Anexar ficheiro"
                                                         >
-                                                            <ImagePlus className="h-3.5 w-3.5" />
-                                                            <span className="text-[7px] mt-0.5 font-medium">Foto</span>
+                                                            <Upload className="h-3 w-3" />
+                                                            <span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
                                                         </button>
+                                                        {/* Botão Câmara */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                // Wrapper: adapta colorScale (File[]+string[]) ao formato {files,previews} do overlay
+                                                                const colorSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => {
+                                                                    if (typeof action === 'function') {
+                                                                        // Criar "prev" virtual
+                                                                        const virtualPrev = { files: colorScalePhotos, previews: colorScalePreviews };
+                                                                        const result = action(virtualPrev);
+                                                                        setColorScalePhotos(result.files);
+                                                                        setColorScalePreviews(result.previews);
+                                                                    }
+                                                                };
+                                                                setCameraTarget({ setter: colorSetter, key: 'escalaCor' });
+                                                            }}
+                                                            className="rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-500 hover:bg-sky-100/40 hover:border-sky-400 transition-colors aspect-square max-h-[48px]"
+                                                            title="Tirar fotografia"
+                                                        >
+                                                            <Camera className="h-3 w-3" />
+                                                            <span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                        </button>
+                                                        {/* Hidden inputs */}
                                                         <input
                                                             ref={colorFileRef}
                                                             type="file"
@@ -971,6 +996,22 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onChange={e => {
                                                                 const files = e.target.files;
                                                                 if (!files) return;
+                                                                const newFiles = Array.from(files);
+                                                                setColorScalePhotos(prev => [...prev, ...newFiles]);
+                                                                setColorScalePreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
+                                                                e.target.value = '';
+                                                            }}
+                                                        />
+                                                        {/* Input câmara nativa (opc. qualidade máxima) */}
+                                                        <input
+                                                            id="cam-native-escalaCor"
+                                                            type="file"
+                                                            accept="image/*"
+                                                            capture="environment"
+                                                            className="hidden"
+                                                            onChange={e => {
+                                                                const files = e.target.files;
+                                                                if (!files || files.length === 0) return;
                                                                 const newFiles = Array.from(files);
                                                                 setColorScalePhotos(prev => [...prev, ...newFiles]);
                                                                 setColorScalePreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
