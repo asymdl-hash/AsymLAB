@@ -76,6 +76,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [introraisPhotos, setIntroraisPhotos] = useState<File[]>([]);
     const [introraisPreviews, setIntroraisPreviews] = useState<string[]>([]);
     const introraisFileRef = useRef<HTMLInputElement>(null);
+    const [introraisDragOver, setIntroraisDragOver] = useState(false);
 
     // Pickers
     const [showDoctorPicker, setShowDoctorPicker] = useState(false);
@@ -1157,7 +1158,23 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 </div>
 
                                                 {/* Introrais — 1/4 */}
-                                                <div className="space-y-1.5">
+                                                <div
+                                                    className={`space-y-1.5 rounded-lg border-2 border-dashed p-1.5 transition-colors ${introraisDragOver
+                                                            ? 'border-sky-400 bg-sky-100/50'
+                                                            : 'border-gray-200 bg-white'
+                                                        }`}
+                                                    onDragOver={e => { e.preventDefault(); setIntroraisDragOver(true); }}
+                                                    onDragLeave={() => setIntroraisDragOver(false)}
+                                                    onDrop={e => {
+                                                        e.preventDefault();
+                                                        setIntroraisDragOver(false);
+                                                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                                                        if (files.length > 0) {
+                                                            setIntroraisPhotos(prev => [...prev, ...files]);
+                                                            setIntroraisPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+                                                        }
+                                                    }}
+                                                >
                                                     <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Introrais</p>
                                                     <div className="grid grid-cols-1 gap-1">
                                                         {introraisPreviews.map((url, i) => (
@@ -1238,6 +1255,9 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             }}
                                                         />
                                                     </div>
+                                                    {introraisPreviews.length === 0 && (
+                                                        <p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
