@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { X, Plus, Minus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList, Palette, ImagePlus, MessageSquarePlus } from 'lucide-react';
+import { X, Plus, Minus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList, Palette, ImagePlus, MessageSquarePlus, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { patientsService } from '@/services/patientsService';
@@ -60,6 +60,18 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [editingNoteIdx, setEditingNoteIdx] = useState<number | null>(null);
     const colorDropdownRef = useRef<HTMLDivElement>(null);
     const colorFileRef = useRef<HTMLInputElement>(null);
+
+    // Registos Fotográficos — Face
+    const [faceRepouso, setFaceRepouso] = useState<{ file: File | null; preview: string | null }>({ file: null, preview: null });
+    const [faceSorrisoNatural, setFaceSorrisoNatural] = useState<{ file: File | null; preview: string | null }>({ file: null, preview: null });
+    const [faceSorrisoAlto, setFaceSorrisoAlto] = useState<{ file: File | null; preview: string | null }>({ file: null, preview: null });
+    const faceRepousoRef = useRef<HTMLInputElement>(null);
+    const faceSorrisoNaturalRef = useRef<HTMLInputElement>(null);
+    const faceSorrisoAltoRef = useRef<HTMLInputElement>(null);
+    // Registos Fotográficos — Introrais
+    const [introraisPhotos, setIntroraisPhotos] = useState<File[]>([]);
+    const [introraisPreviews, setIntroraisPreviews] = useState<string[]>([]);
+    const introraisFileRef = useRef<HTMLInputElement>(null);
 
     // Pickers
     const [showDoctorPicker, setShowDoctorPicker] = useState(false);
@@ -958,6 +970,114 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 const newFiles = Array.from(files);
                                                                 setColorScalePhotos(prev => [...prev, ...newFiles]);
                                                                 setColorScalePreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
+                                                                e.target.value = '';
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* ── Sub-secção: Registos Fotográficos ── */}
+                                        <div className="rounded-lg border border-sky-200/60 bg-sky-50/30 p-3 space-y-2.5">
+                                            <div className="flex items-center gap-2">
+                                                <Camera className="h-3.5 w-3.5 text-sky-500" />
+                                                <span className="text-[10px] uppercase tracking-widest font-semibold text-sky-600">
+                                                    Registos Fotográficos
+                                                </span>
+                                            </div>
+
+                                            <div className="grid" style={{ gridTemplateColumns: '3fr 1fr', gap: '12px' }}>
+                                                {/* Face — 3/4 */}
+                                                <div className="space-y-1.5">
+                                                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Face</p>
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        {/* Repouso */}
+                                                        {(() => {
+                                                            const faceFields: { label: string; state: { file: File | null; preview: string | null }; setter: (v: { file: File | null; preview: string | null }) => void; ref: React.RefObject<HTMLInputElement> }[] = [
+                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef },
+                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef },
+                                                                { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef },
+                                                            ];
+                                                            return faceFields.map(({ label, state, setter, ref }) => (
+                                                                <div key={label} className="text-center">
+                                                                    <span className="text-[8px] font-medium text-gray-500 block mb-1">{label}</span>
+                                                                    {state.preview ? (
+                                                                        <div className="relative group">
+                                                                            <img src={state.preview} alt={label} className="w-full aspect-[3/4] object-cover rounded border border-gray-200" />
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => { setter({ file: null, preview: null }); }}
+                                                                                className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                            >
+                                                                                <X className="h-2.5 w-2.5 text-white" />
+                                                                            </button>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => ref.current?.click()}
+                                                                            className="w-full aspect-[3/4] rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors"
+                                                                        >
+                                                                            <Camera className="h-4 w-4" />
+                                                                        </button>
+                                                                    )}
+                                                                    <input
+                                                                        ref={ref}
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        className="hidden"
+                                                                        onChange={e => {
+                                                                            const f = e.target.files?.[0];
+                                                                            if (f) setter({ file: f, preview: URL.createObjectURL(f) });
+                                                                            e.target.value = '';
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            ));
+                                                        })()}
+                                                    </div>
+                                                </div>
+
+                                                {/* Introrais — 1/4 */}
+                                                <div className="space-y-1.5">
+                                                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Introrais</p>
+                                                    <div className="grid grid-cols-1 gap-1">
+                                                        {introraisPreviews.map((url, i) => (
+                                                            <div key={i} className="relative group">
+                                                                <img src={url} alt={`Introrais ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setIntroraisPhotos(prev => prev.filter((_, idx) => idx !== i));
+                                                                        setIntroraisPreviews(prev => prev.filter((_, idx) => idx !== i));
+                                                                    }}
+                                                                    className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                >
+                                                                    <X className="h-2 w-2 text-white" />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => introraisFileRef.current?.click()}
+                                                            className="w-full aspect-square rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors max-h-[48px]"
+                                                        >
+                                                            <Camera className="h-3.5 w-3.5" />
+                                                            <span className="text-[7px] mt-0.5 font-medium">Foto</span>
+                                                        </button>
+                                                        <input
+                                                            ref={introraisFileRef}
+                                                            type="file"
+                                                            accept="image/*"
+                                                            multiple
+                                                            className="hidden"
+                                                            onChange={e => {
+                                                                const files = e.target.files;
+                                                                if (!files) return;
+                                                                const newFiles = Array.from(files);
+                                                                setIntroraisPhotos(prev => [...prev, ...newFiles]);
+                                                                setIntroraisPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
                                                                 e.target.value = '';
                                                             }}
                                                         />
