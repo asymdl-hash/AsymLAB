@@ -78,7 +78,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [introraisPreviews, setIntroraisPreviews] = useState<string[]>([]);
     const introraisFileRef = useRef<HTMLInputElement>(null);
     const [introraisDragOver, setIntroraisDragOver] = useState(false);
-    // Registos Fotográficos — 120º
+    // Registos Fotográficos — 45º
     const [photos45, setphotos45] = useState<File[]>([]);
     const [previews45, setpreviews45] = useState<string[]>([]);
     const fileRef45 = useRef<HTMLInputElement>(null);
@@ -1225,7 +1225,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         })()}
                                                     </div>
                                                 </fieldset>
-                                                {/* Introrais + 120º + Outros — 3 colunas iguais */}
+                                                {/* Introrais + 45º + Outros — 3 colunas iguais */}
                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                     {/* --- Introrais --- */}
                                                     <fieldset className="border border-gray-200 rounded-lg p-2">
@@ -1263,17 +1263,17 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         </div>
                                                     </fieldset>
 
-                                                    {/* --- 120º --- */}
+                                                    {/* --- 45º --- */}
                                                     <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">120º</legend>
+                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">45º</legend>
                                                         <div
                                                             className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOver45 ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
                                                             onDragOver={e => { e.preventDefault(); setdragOver45(true); }}
                                                             onDragLeave={() => setdragOver45(false)}
                                                             onDrop={e => { e.preventDefault(); setdragOver45(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setphotos45(prev => [...prev, ...files]); setpreviews45(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
-                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">120º</span>
-                                                            <img src="/images/guides/45.png" alt="Guia 120º" className="w-full max-h-16 object-cover rounded border border-gray-100 opacity-60 mb-1" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">45º</span>
+                                                            <img src="/images/guides/45.png" alt="Guia 45º" className="w-full max-h-16 object-cover rounded border border-gray-100 opacity-60 mb-1" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="grid grid-cols-1 gap-1">
                                                                 <button type="button" onClick={() => fileRef45.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
@@ -1288,7 +1288,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 <div className="grid grid-cols-1 gap-1 mt-1">
                                                                     {previews45.map((url, i) => (
                                                                         <div key={i} className="relative group">
-                                                                            <img src={url} alt={`120º ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                            <img src={url} alt={`45º ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
                                                                             <button type="button" onClick={() => { setphotos45(p => p.filter((_, idx) => idx !== i)); setpreviews45(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
                                                                         </div>
                                                                     ))}
