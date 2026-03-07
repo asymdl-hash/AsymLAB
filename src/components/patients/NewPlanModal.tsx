@@ -1202,115 +1202,116 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     </div>
                                                 </div>
 
-                                                {/* Introrais — 1/4 */}
-                                                <div
-                                                    className={`space-y-1.5 rounded-lg border-2 border-dashed p-1.5 transition-colors ${introraisDragOver
-                                                        ? 'border-sky-400 bg-sky-100/50'
-                                                        : 'border-gray-200 bg-white'
-                                                        }`}
-                                                    onDragOver={e => { e.preventDefault(); setIntroraisDragOver(true); }}
-                                                    onDragLeave={() => setIntroraisDragOver(false)}
-                                                    onDrop={e => {
-                                                        e.preventDefault();
-                                                        setIntroraisDragOver(false);
-                                                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-                                                        if (files.length > 0) {
-                                                            setIntroraisPhotos(prev => [...prev, ...files]);
-                                                            setIntroraisPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
-                                                        }
-                                                    }}
-                                                >
+                                                <div className="space-y-1.5">
                                                     <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Introrais</p>
-                                                    <div className="grid grid-cols-1 gap-1">
-                                                        {/* Botão Ficheiro */}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => introraisFileRef.current?.click()}
-                                                            className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2"
-                                                            title="Anexar ficheiro"
-                                                        >
-                                                            <Upload className="h-3 w-3" />
-                                                            <span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                        </button>
-                                                        {/* Botão Câmara */}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const intrasSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => {
-                                                                    if (typeof action === 'function') {
-                                                                        const virtualPrev = { files: introraisPhotos, previews: introraisPreviews };
-                                                                        const result = action(virtualPrev);
-                                                                        setIntroraisPhotos(result.files);
-                                                                        setIntroraisPreviews(result.previews);
-                                                                    }
-                                                                };
-                                                                setCameraTarget({ setter: intrasSetter, key: 'introrais' });
-                                                            }}
-                                                            className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2"
-                                                            title="Tirar fotografia"
-                                                        >
-                                                            <Camera className="h-3 w-3" />
-                                                            <span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                        </button>
-                                                        {/* Hidden inputs */}
-                                                        <input
-                                                            ref={introraisFileRef}
-                                                            type="file"
-                                                            accept="image/*"
-                                                            multiple
-                                                            className="hidden"
-                                                            onChange={e => {
-                                                                const files = e.target.files;
-                                                                if (!files) return;
-                                                                const newFiles = Array.from(files);
-                                                                setIntroraisPhotos(prev => [...prev, ...newFiles]);
-                                                                setIntroraisPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
-                                                                e.target.value = '';
-                                                            }}
-                                                        />
-                                                        {/* Input câmara nativa (opc. qualidade máxima) */}
-                                                        <input
-                                                            id="cam-native-introrais"
-                                                            type="file"
-                                                            accept="image/*"
-                                                            capture="environment"
-                                                            className="hidden"
-                                                            onChange={e => {
-                                                                const files = e.target.files;
-                                                                if (!files || files.length === 0) return;
-                                                                const newFiles = Array.from(files);
-                                                                setIntroraisPhotos(prev => [...prev, ...newFiles]);
-                                                                setIntroraisPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
-                                                                e.target.value = '';
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    {/* Previews — abaixo dos botões, colapsável */}
-                                                    {!photosCollapsed && introraisPreviews.length > 0 && (
-                                                        <div className="grid grid-cols-1 gap-1 mt-1">
-                                                            {introraisPreviews.map((url, i) => (
-                                                                <div key={i} className="relative group">
-                                                                    <img src={url} alt={`Introrais ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            setIntroraisPhotos(prev => prev.filter((_, idx) => idx !== i));
-                                                                            setIntroraisPreviews(prev => prev.filter((_, idx) => idx !== i));
-                                                                        }}
-                                                                        className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                    >
-                                                                        <X className="h-2 w-2 text-white" />
-                                                                    </button>
-                                                                </div>
-                                                            ))}
+                                                    <div
+                                                        className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${introraisDragOver
+                                                            ? 'border-sky-400 bg-sky-100/50'
+                                                            : 'border-gray-200 bg-white'
+                                                            }`}
+                                                        onDragOver={e => { e.preventDefault(); setIntroraisDragOver(true); }}
+                                                        onDragLeave={() => setIntroraisDragOver(false)}
+                                                        onDrop={e => {
+                                                            e.preventDefault();
+                                                            setIntroraisDragOver(false);
+                                                            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                                                            if (files.length > 0) {
+                                                                setIntroraisPhotos(prev => [...prev, ...files]);
+                                                                setIntroraisPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <div className="grid grid-cols-1 gap-1">
+                                                            {/* Botão Ficheiro */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => introraisFileRef.current?.click()}
+                                                                className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2"
+                                                                title="Anexar ficheiro"
+                                                            >
+                                                                <Upload className="h-3 w-3" />
+                                                                <span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                            </button>
+                                                            {/* Botão Câmara */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const intrasSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => {
+                                                                        if (typeof action === 'function') {
+                                                                            const virtualPrev = { files: introraisPhotos, previews: introraisPreviews };
+                                                                            const result = action(virtualPrev);
+                                                                            setIntroraisPhotos(result.files);
+                                                                            setIntroraisPreviews(result.previews);
+                                                                        }
+                                                                    };
+                                                                    setCameraTarget({ setter: intrasSetter, key: 'introrais' });
+                                                                }}
+                                                                className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2"
+                                                                title="Tirar fotografia"
+                                                            >
+                                                                <Camera className="h-3 w-3" />
+                                                                <span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                            </button>
+                                                            {/* Hidden inputs */}
+                                                            <input
+                                                                ref={introraisFileRef}
+                                                                type="file"
+                                                                accept="image/*"
+                                                                multiple
+                                                                className="hidden"
+                                                                onChange={e => {
+                                                                    const files = e.target.files;
+                                                                    if (!files) return;
+                                                                    const newFiles = Array.from(files);
+                                                                    setIntroraisPhotos(prev => [...prev, ...newFiles]);
+                                                                    setIntroraisPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
+                                                                    e.target.value = '';
+                                                                }}
+                                                            />
+                                                            {/* Input câmara nativa (opc. qualidade máxima) */}
+                                                            <input
+                                                                id="cam-native-introrais"
+                                                                type="file"
+                                                                accept="image/*"
+                                                                capture="environment"
+                                                                className="hidden"
+                                                                onChange={e => {
+                                                                    const files = e.target.files;
+                                                                    if (!files || files.length === 0) return;
+                                                                    const newFiles = Array.from(files);
+                                                                    setIntroraisPhotos(prev => [...prev, ...newFiles]);
+                                                                    setIntroraisPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
+                                                                    e.target.value = '';
+                                                                }}
+                                                            />
                                                         </div>
-                                                    )}
-                                                    {photosCollapsed && introraisPreviews.length > 0 && (
-                                                        <p className="text-[8px] text-gray-400 text-center mt-1">📷 {introraisPreviews.length} foto(s)</p>
-                                                    )}
-                                                    {introraisPreviews.length === 0 && (
-                                                        <p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>
-                                                    )}
+                                                        {/* Previews — abaixo dos botões, colapsável */}
+                                                        {!photosCollapsed && introraisPreviews.length > 0 && (
+                                                            <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                {introraisPreviews.map((url, i) => (
+                                                                    <div key={i} className="relative group">
+                                                                        <img src={url} alt={`Introrais ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setIntroraisPhotos(prev => prev.filter((_, idx) => idx !== i));
+                                                                                setIntroraisPreviews(prev => prev.filter((_, idx) => idx !== i));
+                                                                            }}
+                                                                            className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                        >
+                                                                            <X className="h-2 w-2 text-white" />
+                                                                        </button>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {photosCollapsed && introraisPreviews.length > 0 && (
+                                                            <p className="text-[8px] text-gray-400 text-center mt-1">📷 {introraisPreviews.length} foto(s)</p>
+                                                        )}
+                                                        {introraisPreviews.length === 0 && (
+                                                            <p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
