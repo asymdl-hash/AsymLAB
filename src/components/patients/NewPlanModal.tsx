@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { X, Plus, Minus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList, Palette, ImagePlus, MessageSquarePlus, Camera, Upload } from 'lucide-react';
+import { X, Plus, Minus, Loader2, ChevronDown, ChevronUp, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList, Palette, ImagePlus, MessageSquarePlus, Camera, Upload } from 'lucide-react';
 import CameraOverlay from './CameraOverlay';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,6 +78,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [introraisPreviews, setIntroraisPreviews] = useState<string[]>([]);
     const introraisFileRef = useRef<HTMLInputElement>(null);
     const [introraisDragOver, setIntroraisDragOver] = useState(false);
+    const [photosCollapsed, setPhotosCollapsed] = useState(false);
 
     // Pickers
     const [showDoctorPicker, setShowDoctorPicker] = useState(false);
@@ -902,8 +903,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 {/* Upload fotos escala de cor — estilo Introrais */}
                                                 <div
                                                     className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${colorDragOver
-                                                            ? 'border-sky-400 bg-sky-100/50'
-                                                            : 'border-gray-200 bg-white'
+                                                        ? 'border-sky-400 bg-sky-100/50'
+                                                        : 'border-gray-200 bg-white'
                                                         }`}
                                                     onDragOver={e => { e.preventDefault(); setColorDragOver(true); }}
                                                     onDragLeave={() => setColorDragOver(false)}
@@ -920,58 +921,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         Fotos
                                                     </label>
-                                                    <div className="mt-1.5 grid grid-cols-4 gap-1">
-                                                        {colorScalePreviews.map((url, i) => (
-                                                            <div key={i} className="rounded border border-gray-200 bg-white overflow-hidden shadow-sm group">
-                                                                <div className="relative aspect-square bg-gray-100 max-h-[48px]">
-                                                                    <img src={url} alt={colorScalePhotos[i]?.name || `Cor ${i + 1}`} className="w-full h-full object-cover" />
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            URL.revokeObjectURL(url);
-                                                                            setColorScalePhotos(prev => prev.filter((_, idx) => idx !== i));
-                                                                            setColorScalePreviews(prev => prev.filter((_, idx) => idx !== i));
-                                                                            setPhotoNotes(prev => { const n = { ...prev }; delete n[i]; return n; });
-                                                                        }}
-                                                                        className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                    >
-                                                                        <X className="h-2 w-2 text-white" />
-                                                                    </button>
-                                                                </div>
-                                                                <div className="px-1 py-0.5">
-                                                                    <span className="text-[7px] text-gray-400 truncate block leading-tight">
-                                                                        {colorScalePhotos[i]?.name || `Foto ${i + 1}`}
-                                                                    </span>
-                                                                    {editingNoteIdx === i ? (
-                                                                        <input
-                                                                            autoFocus
-                                                                            value={photoNotes[i] || ''}
-                                                                            onChange={e => setPhotoNotes(prev => ({ ...prev, [i]: e.target.value }))}
-                                                                            onBlur={() => setEditingNoteIdx(null)}
-                                                                            onKeyDown={e => e.key === 'Enter' && setEditingNoteIdx(null)}
-                                                                            placeholder="Nota..."
-                                                                            className="mt-0.5 w-full text-[9px] px-1 py-0.5 border border-amber-200 rounded bg-amber-50/50 outline-none focus:ring-1 focus:ring-amber-300"
-                                                                        />
-                                                                    ) : photoNotes[i] ? (
-                                                                        <p
-                                                                            onClick={() => setEditingNoteIdx(i)}
-                                                                            className="mt-0.5 text-[9px] font-semibold text-amber-700 cursor-pointer hover:text-amber-800 truncate leading-tight"
-                                                                        >
-                                                                            📝 {photoNotes[i]}
-                                                                        </p>
-                                                                    ) : (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => setEditingNoteIdx(i)}
-                                                                            className="mt-0.5 flex items-center gap-0.5 text-[8px] text-amber-500 hover:text-amber-600 font-semibold transition-colors"
-                                                                        >
-                                                                            <MessageSquarePlus className="h-2 w-2" />
-                                                                            Notas
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        ))}
+                                                    <div className="mt-1.5 grid grid-cols-1 gap-1">
                                                         {/* Botão Ficheiro */}
                                                         <button
                                                             type="button"
@@ -1002,6 +952,65 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             <Camera className="h-3 w-3" />
                                                             <span className="text-[6px] mt-0.5 font-medium">Câmara</span>
                                                         </button>
+                                                        {/* Previews — abaixo dos botões, colapsável */}
+                                                        {!photosCollapsed && colorScalePreviews.length > 0 && (
+                                                            <div className="grid grid-cols-4 gap-1">
+                                                                {colorScalePreviews.map((url, i) => (
+                                                                    <div key={i} className="rounded border border-gray-200 bg-white overflow-hidden shadow-sm group">
+                                                                        <div className="relative aspect-square bg-gray-100 max-h-[48px]">
+                                                                            <img src={url} alt={colorScalePhotos[i]?.name || `Cor ${i + 1}`} className="w-full h-full object-cover" />
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    URL.revokeObjectURL(url);
+                                                                                    setColorScalePhotos(prev => prev.filter((_, idx) => idx !== i));
+                                                                                    setColorScalePreviews(prev => prev.filter((_, idx) => idx !== i));
+                                                                                    setPhotoNotes(prev => { const n = { ...prev }; delete n[i]; return n; });
+                                                                                }}
+                                                                                className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                            >
+                                                                                <X className="h-2 w-2 text-white" />
+                                                                            </button>
+                                                                        </div>
+                                                                        <div className="px-1 py-0.5">
+                                                                            <span className="text-[7px] text-gray-400 truncate block leading-tight">
+                                                                                {colorScalePhotos[i]?.name || `Foto ${i + 1}`}
+                                                                            </span>
+                                                                            {editingNoteIdx === i ? (
+                                                                                <input
+                                                                                    autoFocus
+                                                                                    value={photoNotes[i] || ''}
+                                                                                    onChange={e => setPhotoNotes(prev => ({ ...prev, [i]: e.target.value }))}
+                                                                                    onBlur={() => setEditingNoteIdx(null)}
+                                                                                    onKeyDown={e => e.key === 'Enter' && setEditingNoteIdx(null)}
+                                                                                    placeholder="Nota..."
+                                                                                    className="mt-0.5 w-full text-[9px] px-1 py-0.5 border border-amber-200 rounded bg-amber-50/50 outline-none focus:ring-1 focus:ring-amber-300"
+                                                                                />
+                                                                            ) : photoNotes[i] ? (
+                                                                                <p
+                                                                                    onClick={() => setEditingNoteIdx(i)}
+                                                                                    className="mt-0.5 text-[9px] font-semibold text-amber-700 cursor-pointer hover:text-amber-800 truncate leading-tight"
+                                                                                >
+                                                                                    📝 {photoNotes[i]}
+                                                                                </p>
+                                                                            ) : (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => setEditingNoteIdx(i)}
+                                                                                    className="mt-0.5 flex items-center gap-0.5 text-[8px] text-amber-500 hover:text-amber-600 font-semibold transition-colors"
+                                                                                >
+                                                                                    <MessageSquarePlus className="h-2 w-2" />
+                                                                                    Notas
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {photosCollapsed && colorScalePreviews.length > 0 && (
+                                                            <p className="text-[8px] text-gray-400 text-center">📷 {colorScalePreviews.length} foto(s)</p>
+                                                        )}
                                                         {/* Hidden inputs */}
                                                         <input
                                                             ref={colorFileRef}
@@ -1044,11 +1053,26 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                                         {/* ── Sub-secção: Registos Fotográficos ── */}
                                         <div className="rounded-lg border border-sky-200/60 bg-sky-50/30 p-3 space-y-2.5">
-                                            <div className="flex items-center gap-2">
-                                                <Camera className="h-3.5 w-3.5 text-sky-500" />
-                                                <span className="text-[10px] uppercase tracking-widest font-semibold text-sky-600">
-                                                    Registos Fotográficos
-                                                </span>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Camera className="h-3.5 w-3.5 text-sky-500" />
+                                                    <span className="text-[10px] uppercase tracking-widest font-semibold text-sky-600">
+                                                        Registos Fotográficos
+                                                    </span>
+                                                </div>
+                                                {(faceRepouso.previews.length > 0 || faceSorrisoNatural.previews.length > 0 || faceSorrisoAlto.previews.length > 0 || colorScalePreviews.length > 0 || introraisPreviews.length > 0) && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPhotosCollapsed(prev => !prev)}
+                                                        className="flex items-center gap-1 text-[9px] text-sky-500 hover:text-sky-700 font-medium transition-colors"
+                                                    >
+                                                        {photosCollapsed ? (
+                                                            <><ChevronDown className="h-3 w-3" /> Mostrar fotos</>
+                                                        ) : (
+                                                            <><ChevronUp className="h-3 w-3" /> Minimizar fotos</>
+                                                        )}
+                                                    </button>
+                                                )}
                                             </div>
 
                                             <div className="grid grid-cols-1 sm:grid-cols-[3fr_1fr] gap-3">
@@ -1097,25 +1121,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 >
                                                                     <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
 
-                                                                    {/* Preview grid */}
-                                                                    {state.previews.length > 0 && (
-                                                                        <div className="grid grid-cols-2 gap-1 mb-1">
-                                                                            {state.previews.map((url, i) => (
-                                                                                <div key={i} className="relative group">
-                                                                                    <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-[3/4] object-cover rounded border border-gray-200" />
-                                                                                    <button
-                                                                                        type="button"
-                                                                                        onClick={() => removeFile(setter, i)}
-                                                                                        className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                                    >
-                                                                                        <X className="h-2 w-2 text-white" />
-                                                                                    </button>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Action buttons — estilo Introrais (full-width stacked) */}
+                                                                    {/* Action buttons — always visible */}
                                                                     <div className="grid grid-cols-1 gap-1">
                                                                         {/* Ficheiro */}
                                                                         <button
@@ -1138,6 +1144,27 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                             <span className="text-[6px] mt-0.5 font-medium">Câmara</span>
                                                                         </button>
                                                                     </div>
+
+                                                                    {/* Preview grid — abaixo dos botões, colapsável */}
+                                                                    {!photosCollapsed && state.previews.length > 0 && (
+                                                                        <div className="grid grid-cols-2 gap-1 mt-1">
+                                                                            {state.previews.map((url, i) => (
+                                                                                <div key={i} className="relative group">
+                                                                                    <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-[3/4] object-cover rounded border border-gray-200" />
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => removeFile(setter, i)}
+                                                                                        className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                                    >
+                                                                                        <X className="h-2 w-2 text-white" />
+                                                                                    </button>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                    {photosCollapsed && state.previews.length > 0 && (
+                                                                        <p className="text-[8px] text-gray-400 text-center mt-1">📷 {state.previews.length} foto(s)</p>
+                                                                    )}
 
                                                                     {state.previews.length === 0 && (
                                                                         <p className="text-[7px] text-gray-300 mt-1">ou arraste fotos aqui</p>
@@ -1195,26 +1222,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 >
                                                     <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Introrais</p>
                                                     <div className="grid grid-cols-1 gap-1">
-                                                        {introraisPreviews.map((url, i) => (
-                                                            <div key={i} className="relative group">
-                                                                <img src={url} alt={`Introrais ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        setIntroraisPhotos(prev => prev.filter((_, idx) => idx !== i));
-                                                                        setIntroraisPreviews(prev => prev.filter((_, idx) => idx !== i));
-                                                                    }}
-                                                                    className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                >
-                                                                    <X className="h-2 w-2 text-white" />
-                                                                </button>
-                                                            </div>
-                                                        ))}
                                                         {/* Botão Ficheiro */}
                                                         <button
                                                             type="button"
                                                             onClick={() => introraisFileRef.current?.click()}
-                                                            className="w-full aspect-square rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors max-h-[48px]"
+                                                            className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2"
                                                             title="Anexar ficheiro"
                                                         >
                                                             <Upload className="h-3 w-3" />
@@ -1234,7 +1246,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 };
                                                                 setCameraTarget({ setter: intrasSetter, key: 'introrais' });
                                                             }}
-                                                            className="w-full aspect-square rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors max-h-[48px]"
+                                                            className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2"
                                                             title="Tirar fotografia"
                                                         >
                                                             <Camera className="h-3 w-3" />
@@ -1273,6 +1285,29 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             }}
                                                         />
                                                     </div>
+                                                    {/* Previews — abaixo dos botões, colapsável */}
+                                                    {!photosCollapsed && introraisPreviews.length > 0 && (
+                                                        <div className="grid grid-cols-1 gap-1 mt-1">
+                                                            {introraisPreviews.map((url, i) => (
+                                                                <div key={i} className="relative group">
+                                                                    <img src={url} alt={`Introrais ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setIntroraisPhotos(prev => prev.filter((_, idx) => idx !== i));
+                                                                            setIntroraisPreviews(prev => prev.filter((_, idx) => idx !== i));
+                                                                        }}
+                                                                        className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                    >
+                                                                        <X className="h-2 w-2 text-white" />
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    {photosCollapsed && introraisPreviews.length > 0 && (
+                                                        <p className="text-[8px] text-gray-400 text-center mt-1">📷 {introraisPreviews.length} foto(s)</p>
+                                                    )}
                                                     {introraisPreviews.length === 0 && (
                                                         <p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>
                                                     )}
