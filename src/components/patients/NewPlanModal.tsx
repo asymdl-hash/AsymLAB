@@ -590,7 +590,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                     {/* Conteúdo */}
                                     <div className="p-4 space-y-3">
                                         {/* Linha: Dropdown + Odontograma */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                             {/* Dropdown multi-select */}
                                             <div className="relative" ref={wtDropdownRef}>
                                                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
@@ -659,6 +659,20 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     </span>
                                                 </button>
                                             </div>
+
+                                            {/* Método */}
+                                            <div>
+                                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                                    <ClipboardList className="h-3 w-3" />
+                                                    Método
+                                                </label>
+                                                <Input
+                                                    value={metodo}
+                                                    onChange={e => setMetodo(e.target.value)}
+                                                    placeholder="Ex: CAD/CAM..."
+                                                    className="mt-1.5 h-9 text-sm"
+                                                />
+                                            </div>
                                         </div>
 
                                         {/* Lista de tipos seleccionados — logo após o dropdown */}
@@ -720,19 +734,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                             </div>
                                         )}
 
-                                        {/* Método */}
-                                        <div>
-                                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                                                <ClipboardList className="h-3 w-3" />
-                                                Método
-                                            </label>
-                                            <Input
-                                                value={metodo}
-                                                onChange={e => setMetodo(e.target.value)}
-                                                placeholder="Ex: CAD/CAM, Prensada, Manual..."
-                                                className="mt-1.5 h-9 text-sm"
-                                            />
-                                        </div>
+
 
                                         {/* ── Sub-secção: Escala de Cor ── */}
                                         <div className="rounded-lg border border-amber-200/60 bg-amber-50/30 p-3 space-y-2.5">
