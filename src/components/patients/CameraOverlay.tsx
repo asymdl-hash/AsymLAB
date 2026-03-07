@@ -21,12 +21,15 @@ import {
     Maximize,
     Minimize,
     Trash2,
+    Smartphone,
 } from 'lucide-react';
 
 // ---------- Types ----------
 interface CameraOverlayProps {
     onCapture: (file: File) => void;
     onClose: () => void;
+    /** ID da key do campo para aceder ao input câmara nativa (capture="environment") */
+    nativeCamKey?: string;
 }
 
 type AspectRatio = '4:3' | '16:9' | '1:1' | 'full';
@@ -48,7 +51,7 @@ const RESOLUTIONS: Record<Resolution, { label: string; w: number; h: number }> =
 const TIMER_OPTIONS = [0, 3, 5, 10];
 
 // ---------- Component ----------
-export default function CameraOverlay({ onCapture, onClose }: CameraOverlayProps) {
+export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: CameraOverlayProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const videoContainerRef = useRef<HTMLDivElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
@@ -519,6 +522,21 @@ export default function CameraOverlay({ onCapture, onClose }: CameraOverlayProps
                     <p className="text-[9px] text-gray-500 flex items-center gap-1">
                         <RotateCcw className="h-3 w-3" /> Modo Burst: manter pressionado o botão de captura
                     </p>
+
+                    {/* Native camera button (mobile) */}
+                    {nativeCamKey && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const camInput = document.getElementById(`cam-native-${nativeCamKey}`) as HTMLInputElement;
+                                if (camInput) camInput.click();
+                            }}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500/20 text-emerald-400 text-[11px] font-semibold hover:bg-emerald-500/30 transition-colors border border-emerald-500/30"
+                        >
+                            <Smartphone className="h-3.5 w-3.5" />
+                            Foto Nativa (HDR / AI do telemóvel)
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -654,8 +672,8 @@ export default function CameraOverlay({ onCapture, onClose }: CameraOverlayProps
                     onTouchEnd={stopBurst}
                     disabled={countdown !== null}
                     className={`w-20 h-20 rounded-full border-[5px] p-1 transition-all disabled:opacity-50 ${isBursting
-                            ? 'border-red-500 bg-red-500/20 scale-110'
-                            : 'border-white bg-white/10 hover:scale-105 active:scale-95'
+                        ? 'border-red-500 bg-red-500/20 scale-110'
+                        : 'border-white bg-white/10 hover:scale-105 active:scale-95'
                         }`}
                     title="Capturar foto (manter para burst)"
                 >
