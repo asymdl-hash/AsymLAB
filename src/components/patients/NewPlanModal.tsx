@@ -261,7 +261,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         e.preventDefault();
         setError('');
 
-        if (!nome.trim()) { setError('O nome é obrigatório'); return; }
+        // Auto-gerar nome a partir dos tipos de trabalho se vazio
+        const finalNome = nome.trim() || workTypeSelections
+            .map(sel => workTypes.find(wt => wt.id === sel.work_type_id)?.nome)
+            .filter(Boolean)
+            .join(' + ') || 'Plano sem nome';
         if (workTypeSelections.length === 0) { setError('Selecione pelo menos um tipo de trabalho'); return; }
         if (!medicoId) { setError('Selecione um médico'); return; }
         if (!clinicaId) { setError('Selecione uma clínica'); return; }
@@ -271,7 +275,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
             // Criar plano com primeiro tipo (compatibilidade DB)
             const plan = await patientsService.createTreatmentPlan({
                 patient_id: patientId,
-                nome: nome.trim(),
+                nome: finalNome,
                 tipo_trabalho_id: workTypeSelections[0].work_type_id,
                 medico_id: medicoId,
                 clinica_id: clinicaId,
@@ -362,7 +366,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Plano *</label>
+                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Plano</label>
                                         <Input
                                             value={nome}
                                             onChange={(e) => setNome(e.target.value)}
@@ -798,8 +802,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     {showColorDropdown && (() => {
                                                         /* Mapeamento grupo DB → escala real */
                                                         const SCALE_MAP: Record<string, string> = {
-                                                            'A': 'VITA Classical', 'B': 'VITA Classical', 'C': 'VITA Classical', 'D': 'VITA Classical',
-                                                            '3D-Master': 'VITA 3D-Master', 'Bleach': 'VITA 3D-Master',
+                                                            'A': 'VITA Classical', 'B': 'VITA Classical', 'C': 'VITA Classical', 'D': 'VITA Classical', 'Bleach': 'VITA Classical',
+                                                            '3D-Master': 'VITA 3D-Master',
                                                             'Chromascop': 'Chromascop',
                                                         };
                                                         const scales = toothColors.reduce<Record<string, { grupos: Record<string, ToothColorItem[]>; total: number }>>((acc, tc) => {
@@ -1221,6 +1225,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             }
                                                         }}
                                                     >
+                                                        <span className="text-[8px] font-semibold text-gray-500 block mb-1">Introrais</span>
                                                         <div className="grid grid-cols-1 gap-1">
                                                             {/* Botão Ficheiro */}
                                                             <button
