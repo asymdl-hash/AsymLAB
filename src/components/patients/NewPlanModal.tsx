@@ -55,6 +55,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
     const [colorScalePhotos, setColorScalePhotos] = useState<File[]>([]);
     const [colorScalePreviews, setColorScalePreviews] = useState<string[]>([]);
+    const [colorDragOver, setColorDragOver] = useState(false);
     const [showColorDropdown, setShowColorDropdown] = useState(false);
     const [activeColorGroup, setActiveColorGroup] = useState<string | null>(null);
     const [photoNotes, setPhotoNotes] = useState<Record<number, string>>({});
@@ -898,8 +899,24 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     })()}
                                                 </div>
 
-                                                {/* Upload fotos escala de cor — cards compactos */}
-                                                <div>
+                                                {/* Upload fotos escala de cor — estilo Introrais */}
+                                                <div
+                                                    className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${colorDragOver
+                                                            ? 'border-sky-400 bg-sky-100/50'
+                                                            : 'border-gray-200 bg-white'
+                                                        }`}
+                                                    onDragOver={e => { e.preventDefault(); setColorDragOver(true); }}
+                                                    onDragLeave={() => setColorDragOver(false)}
+                                                    onDrop={e => {
+                                                        e.preventDefault();
+                                                        setColorDragOver(false);
+                                                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                                                        if (files.length > 0) {
+                                                            setColorScalePhotos(prev => [...prev, ...files]);
+                                                            setColorScalePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+                                                        }
+                                                    }}
+                                                >
                                                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         Fotos
                                                     </label>
@@ -959,7 +976,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         <button
                                                             type="button"
                                                             onClick={() => colorFileRef.current?.click()}
-                                                            className="rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors aspect-square max-h-[48px]"
+                                                            className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2"
                                                             title="Anexar ficheiro"
                                                         >
                                                             <Upload className="h-3 w-3" />
@@ -969,10 +986,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         <button
                                                             type="button"
                                                             onClick={() => {
-                                                                // Wrapper: adapta colorScale (File[]+string[]) ao formato {files,previews} do overlay
                                                                 const colorSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => {
                                                                     if (typeof action === 'function') {
-                                                                        // Criar "prev" virtual
                                                                         const virtualPrev = { files: colorScalePhotos, previews: colorScalePreviews };
                                                                         const result = action(virtualPrev);
                                                                         setColorScalePhotos(result.files);
@@ -981,7 +996,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 };
                                                                 setCameraTarget({ setter: colorSetter, key: 'escalaCor' });
                                                             }}
-                                                            className="rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-500 hover:bg-sky-100/40 hover:border-sky-400 transition-colors aspect-square max-h-[48px]"
+                                                            className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2"
                                                             title="Tirar fotografia"
                                                         >
                                                             <Camera className="h-3 w-3" />
@@ -1020,6 +1035,9 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             }}
                                                         />
                                                     </div>
+                                                    {colorScalePreviews.length === 0 && (
+                                                        <p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -1097,27 +1115,27 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         </div>
                                                                     )}
 
-                                                                    {/* Action buttons */}
-                                                                    <div className="flex flex-wrap items-center justify-center gap-1">
-                                                                        {/* Browse */}
+                                                                    {/* Action buttons — estilo Introrais (full-width stacked) */}
+                                                                    <div className="grid grid-cols-1 gap-1">
+                                                                        {/* Ficheiro */}
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => ref.current?.click()}
-                                                                            className="flex items-center gap-0.5 px-1.5 py-1 rounded bg-sky-50 text-sky-500 hover:bg-sky-100 transition-colors"
-                                                                            title="Anexar ficheiros"
+                                                                            className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2"
+                                                                            title="Anexar ficheiro"
                                                                         >
                                                                             <Upload className="h-3 w-3" />
-                                                                            <span className="text-[7px] font-medium">Ficheiro</span>
+                                                                            <span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
                                                                         </button>
-                                                                        {/* Camera — abre overlay Pro (todos os dispositivos) */}
+                                                                        {/* Câmara */}
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => setCameraTarget({ setter, key })}
-                                                                            className="flex items-center gap-0.5 px-1.5 py-1 rounded bg-sky-50 text-sky-500 hover:bg-sky-100 transition-colors"
+                                                                            className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2"
                                                                             title="Tirar fotografia"
                                                                         >
                                                                             <Camera className="h-3 w-3" />
-                                                                            <span className="text-[7px] font-medium">Câmara</span>
+                                                                            <span className="text-[6px] mt-0.5 font-medium">Câmara</span>
                                                                         </button>
                                                                     </div>
 
@@ -1160,8 +1178,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 {/* Introrais — 1/4 */}
                                                 <div
                                                     className={`space-y-1.5 rounded-lg border-2 border-dashed p-1.5 transition-colors ${introraisDragOver
-                                                            ? 'border-sky-400 bg-sky-100/50'
-                                                            : 'border-gray-200 bg-white'
+                                                        ? 'border-sky-400 bg-sky-100/50'
+                                                        : 'border-gray-200 bg-white'
                                                         }`}
                                                     onDragOver={e => { e.preventDefault(); setIntroraisDragOver(true); }}
                                                     onDragLeave={() => setIntroraisDragOver(false)}
