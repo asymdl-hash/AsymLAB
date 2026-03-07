@@ -1091,8 +1091,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                                             <div className="space-y-3">
                                                 {/* Face — linha inteira */}
-                                                <div className="space-y-1.5">
-                                                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Face</p>
+                                                <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Face</legend>
                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                         {(() => {
                                                             const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string }[] = [
@@ -1214,12 +1214,12 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             ));
                                                         })()}
                                                     </div>
-                                                </div>
+                                                </fieldset>
                                                 {/* Introrais + 120º + Outros — 3 colunas iguais */}
                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                     {/* --- Introrais --- */}
-                                                    <div className="space-y-1.5">
-                                                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Introrais</p>
+                                                    <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Introrais</legend>
                                                         <div
                                                             className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${introraisDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
                                                             onDragOver={e => { e.preventDefault(); setIntroraisDragOver(true); }}
@@ -1250,11 +1250,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             {photosCollapsed && introraisPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {introraisPreviews.length} foto(s)</p>)}
                                                             {introraisPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
                                                         </div>
-                                                    </div>
+                                                    </fieldset>
 
                                                     {/* --- 120º --- */}
-                                                    <div className="space-y-1.5">
-                                                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">120º</p>
+                                                    <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">120º</legend>
                                                         <div
                                                             className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOver120 ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
                                                             onDragOver={e => { e.preventDefault(); setDragOver120(true); }}
@@ -1285,11 +1285,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             {photosCollapsed && previews120.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previews120.length} foto(s)</p>)}
                                                             {previews120.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
                                                         </div>
-                                                    </div>
+                                                    </fieldset>
 
                                                     {/* --- Outros --- */}
-                                                    <div className="space-y-1.5">
-                                                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Outros</p>
+                                                    <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Outros</legend>
                                                         <div
                                                             className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOverOutros ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
                                                             onDragOver={e => { e.preventDefault(); setDragOverOutros(true); }}
@@ -1320,7 +1320,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             {photosCollapsed && previewsOutros.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previewsOutros.length} foto(s)</p>)}
                                                             {previewsOutros.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
                                                         </div>
-                                                    </div>
+                                                    </fieldset>
                                                 </div>
                                             </div>
                                         </div>
