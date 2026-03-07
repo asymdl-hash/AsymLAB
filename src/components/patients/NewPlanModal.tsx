@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { X, Plus, Minus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList, Palette, ImagePlus, MessageSquarePlus, Camera } from 'lucide-react';
+import { X, Plus, Minus, Loader2, ChevronDown, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList, Palette, ImagePlus, MessageSquarePlus, Camera, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { patientsService } from '@/services/patientsService';
@@ -61,13 +61,17 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const colorDropdownRef = useRef<HTMLDivElement>(null);
     const colorFileRef = useRef<HTMLInputElement>(null);
 
-    // Registos Fotográficos — Face
-    const [faceRepouso, setFaceRepouso] = useState<{ file: File | null; preview: string | null }>({ file: null, preview: null });
-    const [faceSorrisoNatural, setFaceSorrisoNatural] = useState<{ file: File | null; preview: string | null }>({ file: null, preview: null });
-    const [faceSorrisoAlto, setFaceSorrisoAlto] = useState<{ file: File | null; preview: string | null }>({ file: null, preview: null });
+    // Registos Fotográficos — Face (multi-ficheiro por campo)
+    const [faceRepouso, setFaceRepouso] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
+    const [faceSorrisoNatural, setFaceSorrisoNatural] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
+    const [faceSorrisoAlto, setFaceSorrisoAlto] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
     const faceRepousoRef = useRef<HTMLInputElement>(null);
     const faceSorrisoNaturalRef = useRef<HTMLInputElement>(null);
     const faceSorrisoAltoRef = useRef<HTMLInputElement>(null);
+    const faceCamRepousoRef = useRef<HTMLInputElement>(null);
+    const faceCamSorrisoNaturalRef = useRef<HTMLInputElement>(null);
+    const faceCamSorrisoAltoRef = useRef<HTMLInputElement>(null);
+    const [faceDragOver, setFaceDragOver] = useState<string | null>(null);
     // Registos Fotográficos — Introrais
     const [introraisPhotos, setIntroraisPhotos] = useState<File[]>([]);
     const [introraisPreviews, setIntroraisPreviews] = useState<string[]>([]);
@@ -992,44 +996,115 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 <div className="space-y-1.5">
                                                     <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Face</p>
                                                     <div className="grid grid-cols-3 gap-2">
-                                                        {/* Repouso */}
                                                         {(() => {
-                                                            const faceFields: { label: string; state: { file: File | null; preview: string | null }; setter: (v: { file: File | null; preview: string | null }) => void; ref: React.RefObject<HTMLInputElement> }[] = [
-                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef },
-                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef },
-                                                                { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef },
+                                                            const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; camRef: React.RefObject<HTMLInputElement>; key: string }[] = [
+                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, camRef: faceCamRepousoRef, key: 'repouso' },
+                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, camRef: faceCamSorrisoNaturalRef, key: 'sorrisoNatural' },
+                                                                { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, camRef: faceCamSorrisoAltoRef, key: 'sorrisoAlto' },
                                                             ];
-                                                            return faceFields.map(({ label, state, setter, ref }) => (
-                                                                <div key={label} className="text-center">
-                                                                    <span className="text-[8px] font-medium text-gray-500 block mb-1">{label}</span>
-                                                                    {state.preview ? (
-                                                                        <div className="relative group">
-                                                                            <img src={state.preview} alt={label} className="w-full aspect-[3/4] object-cover rounded border border-gray-200" />
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => { setter({ file: null, preview: null }); }}
-                                                                                className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                            >
-                                                                                <X className="h-2.5 w-2.5 text-white" />
-                                                                            </button>
+
+                                                            const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
+                                                                setter(prev => ({
+                                                                    files: [...prev.files, ...newFiles],
+                                                                    previews: [...prev.previews, ...newFiles.map(f => URL.createObjectURL(f))],
+                                                                }));
+                                                            };
+
+                                                            const removeFile = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, idx: number) => {
+                                                                setter(prev => ({
+                                                                    files: prev.files.filter((_, i) => i !== idx),
+                                                                    previews: prev.previews.filter((_, i) => i !== idx),
+                                                                }));
+                                                            };
+
+                                                            return faceFields.map(({ label, state, setter, ref, camRef, key }) => (
+                                                                <div
+                                                                    key={key}
+                                                                    className={cn(
+                                                                        "text-center rounded-lg border-2 border-dashed p-1.5 transition-colors",
+                                                                        faceDragOver === key
+                                                                            ? "border-sky-400 bg-sky-100/50"
+                                                                            : "border-gray-200 bg-white"
+                                                                    )}
+                                                                    onDragOver={e => { e.preventDefault(); setFaceDragOver(key); }}
+                                                                    onDragLeave={() => setFaceDragOver(null)}
+                                                                    onDrop={e => {
+                                                                        e.preventDefault();
+                                                                        setFaceDragOver(null);
+                                                                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                                                                        if (files.length > 0) addFiles(setter, files);
+                                                                    }}
+                                                                >
+                                                                    <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
+
+                                                                    {/* Preview grid */}
+                                                                    {state.previews.length > 0 && (
+                                                                        <div className="grid grid-cols-2 gap-1 mb-1">
+                                                                            {state.previews.map((url, i) => (
+                                                                                <div key={i} className="relative group">
+                                                                                    <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-[3/4] object-cover rounded border border-gray-200" />
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => removeFile(setter, i)}
+                                                                                        className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                                    >
+                                                                                        <X className="h-2 w-2 text-white" />
+                                                                                    </button>
+                                                                                </div>
+                                                                            ))}
                                                                         </div>
-                                                                    ) : (
+                                                                    )}
+
+                                                                    {/* Action buttons */}
+                                                                    <div className="flex items-center justify-center gap-1">
+                                                                        {/* Browse */}
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => ref.current?.click()}
-                                                                            className="w-full aspect-[3/4] rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors"
+                                                                            className="flex items-center gap-0.5 px-1.5 py-1 rounded bg-sky-50 text-sky-500 hover:bg-sky-100 transition-colors"
+                                                                            title="Anexar ficheiros"
                                                                         >
-                                                                            <Camera className="h-4 w-4" />
+                                                                            <Upload className="h-3 w-3" />
+                                                                            <span className="text-[7px] font-medium">Ficheiro</span>
                                                                         </button>
+                                                                        {/* Camera */}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => camRef.current?.click()}
+                                                                            className="flex items-center gap-0.5 px-1.5 py-1 rounded bg-sky-50 text-sky-500 hover:bg-sky-100 transition-colors"
+                                                                            title="Tirar fotografia"
+                                                                        >
+                                                                            <Camera className="h-3 w-3" />
+                                                                            <span className="text-[7px] font-medium">Câmara</span>
+                                                                        </button>
+                                                                    </div>
+
+                                                                    {state.previews.length === 0 && (
+                                                                        <p className="text-[7px] text-gray-300 mt-1">ou arraste fotos aqui</p>
                                                                     )}
+
+                                                                    {/* Hidden inputs */}
                                                                     <input
                                                                         ref={ref}
                                                                         type="file"
                                                                         accept="image/*"
+                                                                        multiple
                                                                         className="hidden"
                                                                         onChange={e => {
-                                                                            const f = e.target.files?.[0];
-                                                                            if (f) setter({ file: f, preview: URL.createObjectURL(f) });
+                                                                            const files = e.target.files;
+                                                                            if (files && files.length > 0) addFiles(setter, Array.from(files));
+                                                                            e.target.value = '';
+                                                                        }}
+                                                                    />
+                                                                    <input
+                                                                        ref={camRef}
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        capture="environment"
+                                                                        className="hidden"
+                                                                        onChange={e => {
+                                                                            const files = e.target.files;
+                                                                            if (files && files.length > 0) addFiles(setter, Array.from(files));
                                                                             e.target.value = '';
                                                                         }}
                                                                     />
