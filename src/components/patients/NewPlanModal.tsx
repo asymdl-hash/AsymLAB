@@ -67,17 +67,25 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [faceRepouso, setFaceRepouso] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
     const [faceSorrisoNatural, setFaceSorrisoNatural] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
     const [faceSorrisoAlto, setFaceSorrisoAlto] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
+    const [face45Esq, setFace45Esq] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
+    const [face45Dir, setFace45Dir] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
     const faceRepousoRef = useRef<HTMLInputElement>(null);
     const faceSorrisoNaturalRef = useRef<HTMLInputElement>(null);
     const faceSorrisoAltoRef = useRef<HTMLInputElement>(null);
+    const face45EsqRef = useRef<HTMLInputElement>(null);
+    const face45DirRef = useRef<HTMLInputElement>(null);
     const [faceDragOver, setFaceDragOver] = useState<string | null>(null);
     // Registos Fotográficos — Close-up (multi-ficheiro por campo)
     const [closeupRepouso, setCloseupRepouso] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
     const [closeupSorrisoNatural, setCloseupSorrisoNatural] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
     const [closeupSorrisoAlto, setCloseupSorrisoAlto] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
+    const [closeup45Esq, setCloseup45Esq] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
+    const [closeup45Dir, setCloseup45Dir] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
     const closeupRepousoRef = useRef<HTMLInputElement>(null);
     const closeupSorrisoNaturalRef = useRef<HTMLInputElement>(null);
     const closeupSorrisoAltoRef = useRef<HTMLInputElement>(null);
+    const closeup45EsqRef = useRef<HTMLInputElement>(null);
+    const closeup45DirRef = useRef<HTMLInputElement>(null);
     const [closeupDragOver, setCloseupDragOver] = useState<string | null>(null);
     // Câmara (overlay avançado — todos os dispositivos)
     const [cameraTarget, setCameraTarget] = useState<{ setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; key: string } | null>(null);
@@ -1101,12 +1109,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 {/* Face — linha inteira */}
                                                 <fieldset className="border border-gray-200 rounded-lg p-2">
                                                     <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Face</legend>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                                                         {(() => {
                                                             const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImage?: string }[] = [
                                                                 { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso', guideImage: '/images/guides/face-repouso.png' },
                                                                 { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural', guideImage: '/images/guides/face-sorriso-natural.png' },
                                                                 { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto', guideImage: '/images/guides/face-sorriso-alto.png' },
+                                                                { label: '45º Esquerda', state: face45Esq, setter: setFace45Esq, ref: face45EsqRef, key: '45esq', guideImage: '/images/guides/face-45-esquerda.png' },
+                                                                { label: '45º Direita', state: face45Dir, setter: setFace45Dir, ref: face45DirRef, key: '45dir', guideImage: '/images/guides/face-45-direita.png' },
                                                             ];
 
                                                             const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
@@ -1236,12 +1246,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 {/* Close-up — linha inteira, clone do Face */}
                                                 <fieldset className="border border-gray-200 rounded-lg p-2">
                                                     <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Close-up</legend>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                                                         {(() => {
                                                             const closeupFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImage?: string }[] = [
                                                                 { label: 'Repouso', state: closeupRepouso, setter: setCloseupRepouso, ref: closeupRepousoRef, key: 'cu-repouso', guideImage: '/images/guides/close-up-repouso.png' },
                                                                 { label: 'Sorriso Natural', state: closeupSorrisoNatural, setter: setCloseupSorrisoNatural, ref: closeupSorrisoNaturalRef, key: 'cu-sorrisoNatural', guideImage: '/images/guides/close-up-sorriso-natural.png' },
                                                                 { label: 'Sorriso Alto', state: closeupSorrisoAlto, setter: setCloseupSorrisoAlto, ref: closeupSorrisoAltoRef, key: 'cu-sorrisoAlto', guideImage: '/images/guides/close-up-sorriso-alto.png' },
+                                                                { label: '45º Esquerda', state: closeup45Esq, setter: setCloseup45Esq, ref: closeup45EsqRef, key: 'cu-45esq', guideImage: '/images/guides/close-up-45-esquerda.png' },
+                                                                { label: '45º Direita', state: closeup45Dir, setter: setCloseup45Dir, ref: closeup45DirRef, key: 'cu-45dir', guideImage: '/images/guides/close-up-45-direita.png' },
                                                             ];
 
                                                             const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
