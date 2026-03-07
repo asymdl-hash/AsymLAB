@@ -1095,10 +1095,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Face</legend>
                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                         {(() => {
-                                                            const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string }[] = [
-                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso' },
-                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural' },
-                                                                { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto' },
+                                                            const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImage?: string }[] = [
+                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso', guideImage: '/images/guides/repouso.png' },
+                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural', guideImage: '/images/guides/sorriso-natural.png' },
+                                                                { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto', guideImage: '/images/guides/sorriso-alto.png' },
                                                             ];
 
                                                             const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
@@ -1115,7 +1115,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 }));
                                                             };
 
-                                                            return faceFields.map(({ label, state, setter, ref, key }) => (
+                                                            return faceFields.map(({ label, state, setter, ref, key, guideImage }) => (
                                                                 <div
                                                                     key={key}
                                                                     className={cn(
@@ -1134,6 +1134,16 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     }}
                                                                 >
                                                                     <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
+
+                                                                    {/* Guide image — referência visual */}
+                                                                    {guideImage && (
+                                                                        <img
+                                                                            src={guideImage}
+                                                                            alt={`Guia ${label}`}
+                                                                            className="w-full max-h-16 object-cover rounded border border-gray-100 opacity-60 mb-1"
+                                                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                                                        />
+                                                                    )}
 
                                                                     {/* Action buttons — always visible */}
                                                                     <div className="grid grid-cols-1 gap-1">
@@ -1227,6 +1237,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onDrop={e => { e.preventDefault(); setIntroraisDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntroraisPhotos(prev => [...prev, ...files]); setIntroraisPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">Introrais</span>
+                                                            <img src="/images/guides/introrais.png" alt="Guia Introrais" className="w-full max-h-16 object-cover rounded border border-gray-100 opacity-60 mb-1" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="grid grid-cols-1 gap-1">
                                                                 <button type="button" onClick={() => introraisFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
@@ -1262,6 +1273,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onDrop={e => { e.preventDefault(); setDragOver120(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotos120(prev => [...prev, ...files]); setPreviews120(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">120º</span>
+                                                            <img src="/images/guides/120.png" alt="Guia 120º" className="w-full max-h-16 object-cover rounded border border-gray-100 opacity-60 mb-1" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="grid grid-cols-1 gap-1">
                                                                 <button type="button" onClick={() => fileRef120.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
@@ -1297,6 +1309,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onDrop={e => { e.preventDefault(); setDragOverOutros(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotosOutros(prev => [...prev, ...files]); setPreviewsOutros(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">Outros</span>
+                                                            <img src="/images/guides/outros.png" alt="Guia Outros" className="w-full max-h-16 object-cover rounded border border-gray-100 opacity-60 mb-1" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="grid grid-cols-1 gap-1">
                                                                 <button type="button" onClick={() => fileRefOutros.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
