@@ -1003,6 +1003,9 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto' },
                                                             ];
 
+                                                            // Mobile detection — mobile abre câmara nativa (fotografia computacional)
+                                                            const isMobile = typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0 && typeof window !== 'undefined' && window.innerWidth < 1024;
+
                                                             const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
                                                                 setter(prev => ({
                                                                     files: [...prev.files, ...newFiles],
@@ -1067,12 +1070,21 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                             <Upload className="h-3 w-3" />
                                                                             <span className="text-[7px] font-medium">Ficheiro</span>
                                                                         </button>
-                                                                        {/* Camera */}
+                                                                        {/* Camera — híbrido: mobile = câmara nativa (fotografia computacional), desktop = overlay Pro */}
                                                                         <button
                                                                             type="button"
-                                                                            onClick={() => setCameraTarget(() => setter)}
+                                                                            onClick={() => {
+                                                                                if (isMobile) {
+                                                                                    // Mobile: abrir câmara nativa do SO (HDR, Night Mode, AI stacking)
+                                                                                    const camInput = document.getElementById(`cam-native-${key}`) as HTMLInputElement;
+                                                                                    if (camInput) camInput.click();
+                                                                                } else {
+                                                                                    // Desktop: abrir overlay getUserMedia Pro
+                                                                                    setCameraTarget(() => setter);
+                                                                                }
+                                                                            }}
                                                                             className="flex items-center gap-0.5 px-1.5 py-1 rounded bg-sky-50 text-sky-500 hover:bg-sky-100 transition-colors"
-                                                                            title="Tirar fotografia"
+                                                                            title={isMobile ? 'Abrir câmara nativa' : 'Tirar fotografia (overlay)'}
                                                                         >
                                                                             <Camera className="h-3 w-3" />
                                                                             <span className="text-[7px] font-medium">Câmara</span>
@@ -1089,6 +1101,19 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         type="file"
                                                                         accept="image/*"
                                                                         multiple
+                                                                        className="hidden"
+                                                                        onChange={e => {
+                                                                            const files = e.target.files;
+                                                                            if (files && files.length > 0) addFiles(setter, Array.from(files));
+                                                                            e.target.value = '';
+                                                                        }}
+                                                                    />
+                                                                    {/* Input câmara nativa (mobile only — fotografia computacional) */}
+                                                                    <input
+                                                                        id={`cam-native-${key}`}
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        capture="environment"
                                                                         className="hidden"
                                                                         onChange={e => {
                                                                             const files = e.target.files;
