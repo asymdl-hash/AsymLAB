@@ -1032,11 +1032,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 </span>
                                             </div>
 
-                                            <div className="grid" style={{ gridTemplateColumns: '3fr 1fr', gap: '12px' }}>
+                                            <div className="grid grid-cols-1 sm:grid-cols-[3fr_1fr] gap-3">
                                                 {/* Face — 3/4 */}
                                                 <div className="space-y-1.5">
                                                     <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Face</p>
-                                                    <div className="grid grid-cols-3 gap-2">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                         {(() => {
                                                             const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string }[] = [
                                                                 { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso' },
@@ -1097,7 +1097,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     )}
 
                                                                     {/* Action buttons */}
-                                                                    <div className="flex items-center justify-center gap-1">
+                                                                    <div className="flex flex-wrap items-center justify-center gap-1">
                                                                         {/* Browse */}
                                                                         <button
                                                                             type="button"
@@ -1175,14 +1175,37 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 </button>
                                                             </div>
                                                         ))}
+                                                        {/* Botão Ficheiro */}
                                                         <button
                                                             type="button"
                                                             onClick={() => introraisFileRef.current?.click()}
-                                                            className="w-full aspect-square rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors max-h-[48px]"
+                                                            className="w-full aspect-square rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors max-h-[48px]"
+                                                            title="Anexar ficheiro"
                                                         >
-                                                            <Camera className="h-3.5 w-3.5" />
-                                                            <span className="text-[7px] mt-0.5 font-medium">Foto</span>
+                                                            <Upload className="h-3 w-3" />
+                                                            <span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
                                                         </button>
+                                                        {/* Botão Câmara */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const intrasSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => {
+                                                                    if (typeof action === 'function') {
+                                                                        const virtualPrev = { files: introraisPhotos, previews: introraisPreviews };
+                                                                        const result = action(virtualPrev);
+                                                                        setIntroraisPhotos(result.files);
+                                                                        setIntroraisPreviews(result.previews);
+                                                                    }
+                                                                };
+                                                                setCameraTarget({ setter: intrasSetter, key: 'introrais' });
+                                                            }}
+                                                            className="w-full aspect-square rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors max-h-[48px]"
+                                                            title="Tirar fotografia"
+                                                        >
+                                                            <Camera className="h-3 w-3" />
+                                                            <span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                        </button>
+                                                        {/* Hidden inputs */}
                                                         <input
                                                             ref={introraisFileRef}
                                                             type="file"
@@ -1192,6 +1215,22 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onChange={e => {
                                                                 const files = e.target.files;
                                                                 if (!files) return;
+                                                                const newFiles = Array.from(files);
+                                                                setIntroraisPhotos(prev => [...prev, ...newFiles]);
+                                                                setIntroraisPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
+                                                                e.target.value = '';
+                                                            }}
+                                                        />
+                                                        {/* Input câmara nativa (opc. qualidade máxima) */}
+                                                        <input
+                                                            id="cam-native-introrais"
+                                                            type="file"
+                                                            accept="image/*"
+                                                            capture="environment"
+                                                            className="hidden"
+                                                            onChange={e => {
+                                                                const files = e.target.files;
+                                                                if (!files || files.length === 0) return;
                                                                 const newFiles = Array.from(files);
                                                                 setIntroraisPhotos(prev => [...prev, ...newFiles]);
                                                                 setIntroraisPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
