@@ -50,7 +50,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [toothColors, setToothColors] = useState<ToothColorItem[]>([]);
     const [loadingDropdowns, setLoadingDropdowns] = useState(true);
 
-    // Método + Escala de Cor
+    // MÃƒÂ©todo + Escala de Cor
     const [metodo, setMetodo] = useState('');
     const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
     const [colorScalePhotos, setColorScalePhotos] = useState<File[]>([]);
@@ -62,8 +62,13 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [editingNoteIdx, setEditingNoteIdx] = useState<number | null>(null);
     const colorDropdownRef = useRef<HTMLDivElement>(null);
     const colorFileRef = useRef<HTMLInputElement>(null);
+    // Escala de Cor Ã¢â‚¬â€ Fotos Polarizadas
+    const [polarizedPhotos, setPolarizedPhotos] = useState<File[]>([]);
+    const [polarizedPreviews, setPolarizedPreviews] = useState<string[]>([]);
+    const [polarizedDragOver, setPolarizedDragOver] = useState(false);
+    const polarizedFileRef = useRef<HTMLInputElement>(null);
 
-    // Registos Fotográficos — Face (multi-ficheiro por campo)
+    // Registos FotogrÃƒÂ¡ficos Ã¢â‚¬â€ Face (multi-ficheiro por campo)
     const [faceRepouso, setFaceRepouso] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
     const [faceSorrisoNatural, setFaceSorrisoNatural] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
     const [faceSorrisoAlto, setFaceSorrisoAlto] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
@@ -75,7 +80,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const face45EsqRef = useRef<HTMLInputElement>(null);
     const face45DirRef = useRef<HTMLInputElement>(null);
     const [faceDragOver, setFaceDragOver] = useState<string | null>(null);
-    // Registos Fotográficos — Close-up (multi-ficheiro por campo)
+    // Registos FotogrÃƒÂ¡ficos Ã¢â‚¬â€ Close-up (multi-ficheiro por campo)
     const [closeupRepouso, setCloseupRepouso] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
     const [closeupSorrisoNatural, setCloseupSorrisoNatural] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
     const [closeupSorrisoAlto, setCloseupSorrisoAlto] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
@@ -87,9 +92,9 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const closeup45EsqRef = useRef<HTMLInputElement>(null);
     const closeup45DirRef = useRef<HTMLInputElement>(null);
     const [closeupDragOver, setCloseupDragOver] = useState<string | null>(null);
-    // Câmara (overlay avançado — todos os dispositivos)
+    // CÃƒÂ¢mara (overlay avanÃƒÂ§ado Ã¢â‚¬â€ todos os dispositivos)
     const [cameraTarget, setCameraTarget] = useState<{ setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; key: string } | null>(null);
-    // Registos Fotográficos — Introrais (Superior + Inferior)
+    // Registos FotogrÃƒÂ¡ficos Ã¢â‚¬â€ Introrais (Superior + Inferior)
     const [intraoralSupPhotos, setIntraoralSupPhotos] = useState<File[]>([]);
     const [intraoralSupPreviews, setIntraoralSupPreviews] = useState<string[]>([]);
     const intraoralSupFileRef = useRef<HTMLInputElement>(null);
@@ -100,12 +105,12 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [intraoralInfDragOver, setIntraoralInfDragOver] = useState(false);
     // Lightbox para imagens-guia
 
-    // Registos Fotográficos — 45º
+    // Registos FotogrÃƒÂ¡ficos Ã¢â‚¬â€ 45Ã‚Âº
     const [photos45, setphotos45] = useState<File[]>([]);
     const [previews45, setpreviews45] = useState<string[]>([]);
     const fileRef45 = useRef<HTMLInputElement>(null);
     const [dragOver45, setdragOver45] = useState(false);
-    // Registos Fotográficos — Outros
+    // Registos FotogrÃƒÂ¡ficos Ã¢â‚¬â€ Outros
     const [photosOutros, setPhotosOutros] = useState<File[]>([]);
     const [previewsOutros, setPreviewsOutros] = useState<string[]>([]);
     const fileRefOutros = useRef<HTMLInputElement>(null);
@@ -118,7 +123,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const doctorPickerRef = useRef<HTMLDivElement>(null);
     const teamPickerRef = useRef<HTMLDivElement>(null);
 
-    // Colaboradores da clínica
+    // Colaboradores da clÃƒÂ­nica
     const [clinicTeam, setClinicTeam] = useState<{ user_id: string; full_name: string; phone: string | null; role: string | null }[]>([]);
 
     useEffect(() => {
@@ -135,7 +140,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 setClinics(cls);
                 setToothColors(tc);
 
-                // Calcular próximo número de plano (por paciente)
+                // Calcular prÃƒÂ³ximo nÃƒÂºmero de plano (por paciente)
                 const { count } = await supabase
                     .from('treatment_plans')
                     .select('id', { count: 'exact', head: true })
@@ -150,7 +155,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         loadDropdowns();
     }, []);
 
-    // Carregar colaboradores quando a clínica muda
+    // Carregar colaboradores quando a clÃƒÂ­nica muda
     useEffect(() => {
         async function loadClinicTeam() {
             if (!clinicaId) { setClinicTeam([]); return; }
@@ -205,7 +210,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         return () => { colorScalePreviews.forEach(u => URL.revokeObjectURL(u)); };
     }, []);
 
-    // ── Odontogram teeth derived from workTypeSelections ──
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Odontogram teeth derived from workTypeSelections Ã¢â€â‚¬Ã¢â€â‚¬
     const odontogramTeeth = useMemo(() => {
         const teeth: { tooth_number: number; work_type_id: string | null }[] = [];
         workTypeSelections.forEach(sel => {
@@ -214,10 +219,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         return teeth;
     }, [workTypeSelections]);
 
-    // Total de dentes atribuídos
+    // Total de dentes atribuÃƒÂ­dos
     const totalAssignedTeeth = odontogramTeeth.length;
 
-    // Pendentes por tipo de trabalho — para o Odontograma
+    // Pendentes por tipo de trabalho Ã¢â‚¬â€ para o Odontograma
     const pendingAssignments = useMemo(() =>
         workTypeSelections.map(sel => ({
             work_type_id: sel.work_type_id,
@@ -226,7 +231,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         })),
         [workTypeSelections]);
 
-    // ── Sync: Odontogram → WorkTypeSelections ──
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Sync: Odontogram Ã¢â€ â€™ WorkTypeSelections Ã¢â€â‚¬Ã¢â€â‚¬
     const handleOdontogramChange = useCallback((newTeeth: { tooth_number: number; work_type_id: string | null }[]) => {
         setWorkTypeSelections(prev => {
             // Agrupar novos dentes por work_type_id
@@ -239,7 +244,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 }
             });
 
-            // Começar com cópia das selecções existentes
+            // ComeÃƒÂ§ar com cÃƒÂ³pia das selecÃƒÂ§ÃƒÂµes existentes
             const updated = prev.map(sel => {
                 const newAssigned = teethByWt.get(sel.work_type_id) || [];
                 teethByWt.delete(sel.work_type_id);
@@ -251,7 +256,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 };
             });
 
-            // Tipos novos que vieram do odontograma (não existiam na lista)
+            // Tipos novos que vieram do odontograma (nÃƒÂ£o existiam na lista)
             teethByWt.forEach((teeth, wtId) => {
                 updated.push({
                     work_type_id: wtId,
@@ -264,7 +269,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         });
     }, []);
 
-    // ── Adicionar tipo via dropdown ──
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Adicionar tipo via dropdown Ã¢â€â‚¬Ã¢â€â‚¬
     const addWorkType = useCallback((wtId: string) => {
         setWorkTypeSelections(prev => {
             if (prev.some(s => s.work_type_id === wtId)) return prev;
@@ -273,17 +278,17 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         setShowWtDropdown(false);
     }, []);
 
-    // ── Remover tipo ──
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Remover tipo Ã¢â€â‚¬Ã¢â€â‚¬
     const removeWorkType = useCallback((wtId: string) => {
         setWorkTypeSelections(prev => prev.filter(s => s.work_type_id !== wtId));
     }, []);
 
-    // ── Ajustar quantidade ──
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Ajustar quantidade Ã¢â€â‚¬Ã¢â€â‚¬
     const adjustQty = useCallback((wtId: string, delta: number) => {
         setWorkTypeSelections(prev => prev.map(sel => {
             if (sel.work_type_id !== wtId) return sel;
             const newQty = sel.quantity + delta;
-            // Mínimo = número de dentes atribuídos (não pode ir abaixo)
+            // MÃƒÂ­nimo = nÃƒÂºmero de dentes atribuÃƒÂ­dos (nÃƒÂ£o pode ir abaixo)
             if (newQty < Math.max(1, sel.assigned_teeth.length)) return sel;
             return { ...sel, quantity: newQty };
         }));
@@ -299,8 +304,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
             .filter(Boolean)
             .join(' + ') || 'Plano sem nome';
         if (workTypeSelections.length === 0) { setError('Selecione pelo menos um tipo de trabalho'); return; }
-        if (!medicoId) { setError('Selecione um médico'); return; }
-        if (!clinicaId) { setError('Selecione uma clínica'); return; }
+        if (!medicoId) { setError('Selecione um mÃƒÂ©dico'); return; }
+        if (!clinicaId) { setError('Selecione uma clÃƒÂ­nica'); return; }
 
         try {
             setSubmitting(true);
@@ -386,12 +391,12 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                     ) : (
                         <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col">
                             <div className="p-6 space-y-5 overflow-y-auto flex-1 min-h-0">
-                                {/* Nº Plano + Nome do Plano */}
+                                {/* NÃ‚Âº Plano + Nome do Plano */}
                                 <div className="grid grid-cols-[100px_1fr] gap-3">
                                     <div>
                                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
                                             <Hash className="h-3 w-3" />
-                                            Nº Plano
+                                            NÃ‚Âº Plano
                                         </label>
                                         <div className="mt-1.5 h-9 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm flex items-center font-semibold text-primary">
                                             {nextPlanNumber !== null ? `PT-${String(nextPlanNumber).padStart(4, '0')}` : '...'}
@@ -402,20 +407,20 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                         <Input
                                             value={nome}
                                             onChange={(e) => setNome(e.target.value)}
-                                            placeholder="Ex: Prótese Total Superior"
+                                            placeholder="Ex: PrÃƒÂ³tese Total Superior"
                                             className="mt-1.5"
                                             autoFocus
                                         />
                                     </div>
                                 </div>
 
-                                {/* Clínica + Médicos + Equipa em linha */}
+                                {/* ClÃƒÂ­nica + MÃƒÂ©dicos + Equipa em linha */}
                                 <div className="grid grid-cols-3 gap-3">
-                                    {/* Clínica */}
+                                    {/* ClÃƒÂ­nica */}
                                     <div>
                                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
                                             <Building2 className="h-3 w-3" />
-                                            Clínica *
+                                            ClÃƒÂ­nica *
                                         </label>
                                         <select
                                             value={clinicaId}
@@ -431,11 +436,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                         </select>
                                     </div>
 
-                                    {/* Médicos — Multi-select com checkboxes */}
+                                    {/* MÃƒÂ©dicos Ã¢â‚¬â€ Multi-select com checkboxes */}
                                     <div className="relative" ref={doctorPickerRef}>
                                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
                                             <Stethoscope className="h-3 w-3" />
-                                            Médicos *
+                                            MÃƒÂ©dicos *
                                         </label>
                                         <button
                                             type="button"
@@ -451,7 +456,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         )}
                                                     </>
                                                 ) : (
-                                                    <span className="text-gray-400">Selecionar médico...</span>
+                                                    <span className="text-gray-400">Selecionar mÃƒÂ©dico...</span>
                                                 )}
                                             </span>
                                             <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform", showDoctorPicker && "rotate-180")} />
@@ -460,7 +465,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                         {showDoctorPicker && (
                                             <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 z-10 py-1 max-h-48 overflow-y-auto">
                                                 <div className="px-3 py-1.5 border-b border-gray-100">
-                                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Médicos do Caso</span>
+                                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">MÃƒÂ©dicos do Caso</span>
                                                 </div>
                                                 {doctors.map(doc => {
                                                     const isInTeam = team.some(t => t.doctor_id === doc.user_id);
@@ -508,7 +513,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     }}
                                                                     className="text-[9px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 hover:bg-primary/10 hover:text-primary font-medium opacity-0 group-hover:opacity-100 transition-all shrink-0"
                                                                 >
-                                                                    ★ Tornar principal
+                                                                    Ã¢Ëœâ€¦ Tornar principal
                                                                 </button>
                                                             ) : null}
                                                         </div>
@@ -518,7 +523,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                         )}
                                     </div>
 
-                                    {/* Equipa — Informativa (como Hero Header) */}
+                                    {/* Equipa Ã¢â‚¬â€ Informativa (como Hero Header) */}
                                     <div className="relative" ref={teamPickerRef}>
                                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
                                             <Users className="h-3 w-3" />
@@ -543,11 +548,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                                         {showTeamPicker && (
                                             <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl border border-gray-200 z-10 p-3 max-h-64 overflow-y-auto min-w-[280px]">
-                                                {/* Médicos */}
+                                                {/* MÃƒÂ©dicos */}
                                                 {team.length > 0 && (
                                                     <>
                                                         <div className="px-1 pb-1.5 mb-1.5 border-b border-gray-100">
-                                                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Médicos</span>
+                                                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">MÃƒÂ©dicos</span>
                                                         </div>
                                                         <div className="space-y-1 mb-3">
                                                             {team.map(doc => {
@@ -587,7 +592,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         </div>
                                                     </>
                                                 )}
-                                                {/* Colaboradores da Clínica */}
+                                                {/* Colaboradores da ClÃƒÂ­nica */}
                                                 {clinicTeam.length > 0 && (
                                                     <>
                                                         <div className="px-1 pb-1.5 mb-1.5 border-b border-gray-100">
@@ -627,13 +632,13 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                     </div>
                                 </div>
 
-                                {/* ── Bloco Informação Técnica ── */}
+                                {/* Ã¢â€â‚¬Ã¢â€â‚¬ Bloco InformaÃƒÂ§ÃƒÂ£o TÃƒÂ©cnica Ã¢â€â‚¬Ã¢â€â‚¬ */}
                                 <div className="bg-gray-50/50 rounded-xl border border-gray-200 overflow-hidden">
                                     {/* Header do bloco */}
                                     <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-200/60">
                                         <ClipboardList className="h-3.5 w-3.5 text-gray-400" />
                                         <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
-                                            Informação Técnica
+                                            InformaÃƒÂ§ÃƒÂ£o TÃƒÂ©cnica
                                         </span>
                                         {workTypeSelections.length > 0 && (
                                             <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold ml-auto">
@@ -642,7 +647,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                         )}
                                     </div>
 
-                                    {/* Conteúdo */}
+                                    {/* ConteÃƒÂºdo */}
                                     <div className="p-4 space-y-3">
                                         {/* Linha: Dropdown + Odontograma */}
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -685,7 +690,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             );
                                                         })}
                                                         {workTypes.length > 0 && workTypes.every(wt => workTypeSelections.some(s => s.work_type_id === wt.id)) && (
-                                                            <p className="text-[10px] text-gray-400 text-center py-3">Todos os tipos já foram adicionados</p>
+                                                            <p className="text-[10px] text-gray-400 text-center py-3">Todos os tipos jÃƒÂ¡ foram adicionados</p>
                                                         )}
                                                     </div>
                                                 )}
@@ -694,7 +699,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                             {/* Odontograma */}
                                             <div>
                                                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                                                    🦷 Odontograma
+                                                    Ã°Å¸Â¦Â· Odontograma
                                                 </label>
                                                 <button
                                                     type="button"
@@ -708,18 +713,18 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 >
                                                     <span className="text-xs font-medium">
                                                         {totalAssignedTeeth > 0
-                                                            ? `${totalAssignedTeeth} dente${totalAssignedTeeth !== 1 ? 's' : ''} atribuído${totalAssignedTeeth !== 1 ? 's' : ''}`
+                                                            ? `${totalAssignedTeeth} dente${totalAssignedTeeth !== 1 ? 's' : ''} atribuÃƒÂ­do${totalAssignedTeeth !== 1 ? 's' : ''}`
                                                             : 'Configurar dentes'
                                                         }
                                                     </span>
                                                 </button>
                                             </div>
 
-                                            {/* Método */}
+                                            {/* MÃƒÂ©todo */}
                                             <div>
                                                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
                                                     <ClipboardList className="h-3 w-3" />
-                                                    Método
+                                                    MÃƒÂ©todo
                                                 </label>
                                                 <Input
                                                     value={metodo}
@@ -730,7 +735,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                             </div>
                                         </div>
 
-                                        {/* Lista de tipos seleccionados — logo após o dropdown */}
+                                        {/* Lista de tipos seleccionados Ã¢â‚¬â€ logo apÃƒÂ³s o dropdown */}
                                         {workTypeSelections.length > 0 && (
                                             <div className="space-y-1.5">
                                                 {workTypeSelections.map(sel => {
@@ -762,14 +767,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             {/* Separator */}
                                                             <div className="w-px h-4 bg-gray-200 shrink-0" />
 
-                                                            {/* Dentes atribuídos */}
+                                                            {/* Dentes atribuÃƒÂ­dos */}
                                                             <div className="flex items-center gap-1 flex-wrap min-w-0 max-w-[180px]">
                                                                 {sel.assigned_teeth.sort((a, b) => a - b).map(t => (
                                                                     <span key={t} className="text-[9px] font-mono bg-primary/10 text-primary px-1 py-0.5 rounded font-medium">#{t}</span>
                                                                 ))}
                                                                 {unassigned > 0 && (
                                                                     <span className="text-[9px] text-gray-400 italic">
-                                                                        {unassigned}× por atribuir
+                                                                        {unassigned}Ãƒâ€” por atribuir
                                                                     </span>
                                                                 )}
                                                                 {sel.assigned_teeth.length === 0 && unassigned === 0 && (
@@ -791,7 +796,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
 
 
-                                        {/* ── Sub-secção: Escala de Cor ── */}
+                                        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Sub-secÃƒÂ§ÃƒÂ£o: Escala de Cor Ã¢â€â‚¬Ã¢â€â‚¬ */}
                                         <div className="rounded-lg border border-amber-200/60 bg-amber-50/30 p-3 space-y-2.5">
                                             <div className="flex items-center gap-2">
                                                 <Palette className="h-3.5 w-3.5 text-amber-500" />
@@ -801,7 +806,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                             </div>
 
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                {/* Dropdown Escala de Cor — 2 níveis + multi-select */}
+                                                {/* Dropdown Escala de Cor Ã¢â‚¬â€ 2 nÃƒÂ­veis + multi-select */}
                                                 <div className="relative" ref={colorDropdownRef}>
                                                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         Cor
@@ -832,7 +837,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     </button>
 
                                                     {showColorDropdown && (() => {
-                                                        /* Mapeamento grupo DB → escala real */
+                                                        /* Mapeamento grupo DB Ã¢â€ â€™ escala real */
                                                         const SCALE_MAP: Record<string, string> = {
                                                             'A': 'VITA Classical', 'B': 'VITA Classical', 'C': 'VITA Classical', 'D': 'VITA Classical', 'Bleach': 'VITA Classical',
                                                             '3D-Master': 'VITA 3D-Master',
@@ -851,7 +856,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         return (
                                                             <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                                                                 {!activeColorGroup ? (
-                                                                    /* Nível 1: 3 Escalas reais */
+                                                                    /* NÃƒÂ­vel 1: 3 Escalas reais */
                                                                     <div className="p-2 space-y-1 max-h-48 overflow-y-auto">
                                                                         <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1 pb-1">Escolha a escala</p>
                                                                         {Object.entries(scales).map(([scaleName, scaleData]) => {
@@ -877,11 +882,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                             );
                                                                         })}
                                                                         {toothColors.length === 0 && (
-                                                                            <p className="text-[10px] text-gray-400 text-center py-3">Sem cores no catálogo</p>
+                                                                            <p className="text-[10px] text-gray-400 text-center py-3">Sem cores no catÃƒÂ¡logo</p>
                                                                         )}
                                                                     </div>
                                                                 ) : (
-                                                                    /* Nível 2: Tonalidades dentro da escala seleccionada */
+                                                                    /* NÃƒÂ­vel 2: Tonalidades dentro da escala seleccionada */
                                                                     <div>
                                                                         <button
                                                                             type="button"
@@ -936,615 +941,567 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     })()}
                                                 </div>
 
-                                                {/* Upload fotos escala de cor — estilo Introrais */}
-                                                <div
-                                                    className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${colorDragOver
-                                                        ? 'border-sky-400 bg-sky-100/50'
-                                                        : 'border-gray-200 bg-white'
-                                                        }`}
-                                                    onDragOver={e => { e.preventDefault(); setColorDragOver(true); }}
-                                                    onDragLeave={() => setColorDragOver(false)}
-                                                    onDrop={e => {
-                                                        e.preventDefault();
-                                                        setColorDragOver(false);
-                                                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-                                                        if (files.length > 0) {
-                                                            setColorScalePhotos(prev => [...prev, ...files]);
-                                                            setColorScalePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
-                                                        }
-                                                    }}
-                                                >
-                                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Fotos
-                                                    </label>
-                                                    <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                    <div className="mt-1.5 grid grid-cols-1 gap-1">
-                                                        {/* Botão Ficheiro */}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => colorFileRef.current?.click()}
-                                                            className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2"
-                                                            title="Anexar ficheiro"
-                                                        >
-                                                            <Upload className="h-3 w-3" />
-                                                            <span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                        </button>
-                                                        {/* Botão Câmara */}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const colorSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => {
-                                                                    if (typeof action === 'function') {
-                                                                        const virtualPrev = { files: colorScalePhotos, previews: colorScalePreviews };
-                                                                        const result = action(virtualPrev);
-                                                                        setColorScalePhotos(result.files);
-                                                                        setColorScalePreviews(result.previews);
-                                                                    }
-                                                                };
-                                                                setCameraTarget({ setter: colorSetter, key: 'escalaCor' });
-                                                            }}
-                                                            className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2"
-                                                            title="Tirar fotografia"
-                                                        >
-                                                            <Camera className="h-3 w-3" />
-                                                            <span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                        </button>
-                                                        {/* Previews — abaixo dos botões, colapsável */}
-                                                        {!photosCollapsed && colorScalePreviews.length > 0 && (
-                                                            <div className="grid grid-cols-4 gap-1">
-                                                                {colorScalePreviews.map((url, i) => (
-                                                                    <div key={i} className="rounded border border-gray-200 bg-white overflow-hidden shadow-sm group">
-                                                                        <div className="relative aspect-square bg-gray-100 max-h-[48px]">
-                                                                            <img src={url} alt={colorScalePhotos[i]?.name || `Cor ${i + 1}`} className="w-full h-full object-cover" />
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => {
-                                                                                    URL.revokeObjectURL(url);
-                                                                                    setColorScalePhotos(prev => prev.filter((_, idx) => idx !== i));
-                                                                                    setColorScalePreviews(prev => prev.filter((_, idx) => idx !== i));
-                                                                                    setPhotoNotes(prev => { const n = { ...prev }; delete n[i]; return n; });
-                                                                                }}
-                                                                                className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                            >
-                                                                                <X className="h-2 w-2 text-white" />
-                                                                            </button>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {/* Fotos Ã¢â‚¬â€ coluna esquerda */}
+                                                    <div
+                                                        className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${colorDragOver
+                                                            ? 'border-sky-400 bg-sky-100/50'
+                                                            : 'border-gray-200 bg-white'
+                                                            }`}
+                                                        onDragOver={e => { e.preventDefault(); setColorDragOver(true); }}
+                                                        onDragLeave={() => setColorDragOver(false)}
+                                                        onDrop={e => {
+                                                            e.preventDefault();
+                                                            setColorDragOver(false);
+                                                            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                                                            if (files.length > 0) {
+                                                                setColorScalePhotos(prev => [...prev, ...files]);
+                                                                setColorScalePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                            Fotos
+                                                        </label>
+                                                        <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                        <div className="mt-1.5 grid grid-cols-1 gap-1">
+                                                            <button type="button" onClick={() => colorFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                            </button>
+                                                            <button type="button" onClick={() => { const colorSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: colorScalePhotos, previews: colorScalePreviews }; const result = action(virtualPrev); setColorScalePhotos(result.files); setColorScalePreviews(result.previews); } }; setCameraTarget({ setter: colorSetter, key: 'escalaCor' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">CÃƒÂ¢mara</span>
+                                                            </button>
+                                                            {!photosCollapsed && colorScalePreviews.length > 0 && (
+                                                                <div className="grid grid-cols-2 gap-1">
+                                                                    {colorScalePreviews.map((url, i) => (
+                                                                        <div key={i} className="relative group">
+                                                                            <img src={url} alt={`Cor ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                            <button type="button" onClick={() => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
                                                                         </div>
-                                                                        <div className="px-1 py-0.5">
-                                                                            <span className="text-[7px] text-gray-400 truncate block leading-tight">
-                                                                                {colorScalePhotos[i]?.name || `Foto ${i + 1}`}
-                                                                            </span>
-                                                                            {editingNoteIdx === i ? (
-                                                                                <input
-                                                                                    autoFocus
-                                                                                    value={photoNotes[i] || ''}
-                                                                                    onChange={e => setPhotoNotes(prev => ({ ...prev, [i]: e.target.value }))}
-                                                                                    onBlur={() => setEditingNoteIdx(null)}
-                                                                                    onKeyDown={e => e.key === 'Enter' && setEditingNoteIdx(null)}
-                                                                                    placeholder="Nota..."
-                                                                                    className="mt-0.5 w-full text-[9px] px-1 py-0.5 border border-amber-200 rounded bg-amber-50/50 outline-none focus:ring-1 focus:ring-amber-300"
-                                                                                />
-                                                                            ) : photoNotes[i] ? (
-                                                                                <p
-                                                                                    onClick={() => setEditingNoteIdx(i)}
-                                                                                    className="mt-0.5 text-[9px] font-semibold text-amber-700 cursor-pointer hover:text-amber-800 truncate leading-tight"
-                                                                                >
-                                                                                    📝 {photoNotes[i]}
-                                                                                </p>
-                                                                            ) : (
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {photosCollapsed && colorScalePreviews.length > 0 && (
+                                                                <p className="text-[8px] text-gray-400 text-center">Ã°Å¸â€œÂ· {colorScalePreviews.length} foto(s)</p>
+                                                            )}
+                                                            <input ref={colorFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            <input id="cam-native-escalaCor" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                        </div>
+                                                        {colorScalePreviews.length === 0 && (
+                                                            <p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>
+                                                        )}
+                                                    </div>
+                                                    {/* Polarizadas Ã¢â‚¬â€ coluna direita */}
+                                                    <div
+                                                        className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${polarizedDragOver
+                                                            ? 'border-sky-400 bg-sky-100/50'
+                                                            : 'border-gray-200 bg-white'
+                                                            }`}
+                                                        onDragOver={e => { e.preventDefault(); setPolarizedDragOver(true); }}
+                                                        onDragLeave={() => setPolarizedDragOver(false)}
+                                                        onDrop={e => {
+                                                            e.preventDefault();
+                                                            setPolarizedDragOver(false);
+                                                            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                                                            if (files.length > 0) {
+                                                                setPolarizedPhotos(prev => [...prev, ...files]);
+                                                                setPolarizedPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                            Polarizadas
+                                                        </label>
+                                                        <img src="/images/guides/escala-de-cor-polarizada.png" alt="Guia Polarizada" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                        <div className="mt-1.5 grid grid-cols-1 gap-1">
+                                                            <button type="button" onClick={() => polarizedFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                            </button>
+                                                            <button type="button" onClick={() => { const polSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: polarizedPhotos, previews: polarizedPreviews }; const result = action(virtualPrev); setPolarizedPhotos(result.files); setPolarizedPreviews(result.previews); } }; setCameraTarget({ setter: polSetter, key: 'polarizada' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">CÃƒÂ¢mara</span>
+                                                            </button>
+                                                            {!photosCollapsed && polarizedPreviews.length > 0 && (
+                                                                <div className="grid grid-cols-2 gap-1">
+                                                                    {polarizedPreviews.map((url, i) => (
+                                                                        <div key={i} className="relative group">
+                                                                            <img src={url} alt={`Polarizada ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                            <button type="button" onClick={() => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {photosCollapsed && polarizedPreviews.length > 0 && (
+                                                                <p className="text-[8px] text-gray-400 text-center">Ã°Å¸â€œÂ· {polarizedPreviews.length} foto(s)</p>
+                                                            )}
+                                                            <input ref={polarizedFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            <input id="cam-native-polarizada" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                        </div>
+                                                        {polarizedPreviews.length === 0 && (
+                                                            <p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                </div>
+                                    </div>
+
+                                    {/* Ã¢â€â‚¬Ã¢â€â‚¬ Sub-secÃƒÂ§ÃƒÂ£o: Registos FotogrÃƒÂ¡ficos Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                                    <div className="rounded-lg border border-sky-200/60 bg-sky-50/30 p-3 space-y-2.5">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Camera className="h-3.5 w-3.5 text-sky-500" />
+                                                <span className="text-[10px] uppercase tracking-widest font-semibold text-sky-600">
+                                                    Registos FotogrÃƒÂ¡ficos
+                                                </span>
+                                            </div>
+                                            {(faceRepouso.previews.length > 0 || faceSorrisoNatural.previews.length > 0 || faceSorrisoAlto.previews.length > 0 || closeupRepouso.previews.length > 0 || closeupSorrisoNatural.previews.length > 0 || closeupSorrisoAlto.previews.length > 0 || colorScalePreviews.length > 0 || intraoralSupPreviews.length > 0 || intraoralInfPreviews.length > 0 || previews45.length > 0 || previewsOutros.length > 0) && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPhotosCollapsed(prev => !prev)}
+                                                    className="flex items-center gap-1 text-[9px] text-sky-500 hover:text-sky-700 font-medium transition-colors"
+                                                >
+                                                    {photosCollapsed ? (
+                                                        <><ChevronDown className="h-3 w-3" /> Mostrar fotos</>
+                                                    ) : (
+                                                        <><ChevronUp className="h-3 w-3" /> Minimizar fotos</>
+                                                    )}
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {/* Retrato Ã¢â‚¬â€ linha inteira */}
+                                            <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Retrato</legend>
+                                                <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                                                    {(() => {
+                                                        const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
+                                                            { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso', guideImages: ['/images/guides/retrato-repouso.png'] },
+                                                            { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural', guideImages: ['/images/guides/retrato-sorriso-natural.png'] },
+                                                            { label: 'Sorriso MÃƒÂ¡ximo', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto', guideImages: ['/images/guides/retrato-sorriso-maximo.png'] },
+                                                            { label: '45Ã‚Âº', state: face45Esq, setter: setFace45Esq, ref: face45EsqRef, key: '45', guideImages: ['/images/guides/retrato-45-esquerda.png', '/images/guides/retrato-45-direita.png'] },
+                                                            { label: 'Perfil', state: face45Dir, setter: setFace45Dir, ref: face45DirRef, key: 'perfil', guideImages: ['/images/guides/retrato-perfil-esquerda.png', '/images/guides/retrato-perfil-direita.png'] },
+                                                        ];
+
+                                                        const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
+                                                            setter(prev => ({
+                                                                files: [...prev.files, ...newFiles],
+                                                                previews: [...prev.previews, ...newFiles.map(f => URL.createObjectURL(f))],
+                                                            }));
+                                                        };
+
+                                                        const removeFile = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, idx: number) => {
+                                                            setter(prev => ({
+                                                                files: prev.files.filter((_, i) => i !== idx),
+                                                                previews: prev.previews.filter((_, i) => i !== idx),
+                                                            }));
+                                                        };
+
+                                                        return faceFields.map(({ label, state, setter, ref, key, guideImages }) => (
+                                                            <div
+                                                                key={key}
+                                                                className={cn(
+                                                                    "text-center rounded-lg border-2 border-dashed p-1.5 transition-colors",
+                                                                    faceDragOver === key
+                                                                        ? "border-sky-400 bg-sky-100/50"
+                                                                        : "border-gray-200 bg-white"
+                                                                )}
+                                                                onDragOver={e => { e.preventDefault(); setFaceDragOver(key); }}
+                                                                onDragLeave={() => setFaceDragOver(null)}
+                                                                onDrop={e => {
+                                                                    e.preventDefault();
+                                                                    setFaceDragOver(null);
+                                                                    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                                                                    if (files.length > 0) addFiles(setter, files);
+                                                                }}
+                                                            >
+                                                                <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
+
+                                                                {/* Guide images Ã¢â‚¬â€ referÃƒÂªncia visual */}
+                                                                {guideImages && guideImages.length > 0 && (
+                                                                    <div className={guideImages.length > 1 ? 'grid grid-cols-2 gap-0.5 mb-1' : 'mb-1'}>
+                                                                        {guideImages.map((gi, idx) => (
+                                                                            <img
+                                                                                key={idx}
+                                                                                src={gi}
+                                                                                alt={`Guia ${label} ${idx + 1}`}
+                                                                                className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 cursor-pointer hover:opacity-80 transition-opacity"
+                                                                                onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }}
+                                                                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Action buttons Ã¢â‚¬â€ always visible */}
+                                                                <div className="grid grid-cols-1 gap-1">
+                                                                    {/* Ficheiro */}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => ref.current?.click()}
+                                                                        className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2"
+                                                                        title="Anexar ficheiro"
+                                                                    >
+                                                                        <Upload className="h-3 w-3" />
+                                                                        <span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                    </button>
+                                                                    {/* CÃƒÂ¢mara */}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setCameraTarget({ setter, key })}
+                                                                        className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2"
+                                                                        title="Tirar fotografia"
+                                                                    >
+                                                                        <Camera className="h-3 w-3" />
+                                                                        <span className="text-[6px] mt-0.5 font-medium">CÃƒÂ¢mara</span>
+                                                                    </button>
+                                                                </div>
+
+                                                                {/* Preview grid Ã¢â‚¬â€ abaixo dos botÃƒÂµes, colapsÃƒÂ¡vel */}
+                                                                {!photosCollapsed && state.previews.length > 0 && (
+                                                                    <div className="grid grid-cols-2 gap-1 mt-1">
+                                                                        {state.previews.map((url, i) => (
+                                                                            <div key={i} className="relative group">
+                                                                                <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-[3/4] object-cover rounded border border-gray-200" />
                                                                                 <button
                                                                                     type="button"
-                                                                                    onClick={() => setEditingNoteIdx(i)}
-                                                                                    className="mt-0.5 flex items-center gap-0.5 text-[8px] text-amber-500 hover:text-amber-600 font-semibold transition-colors"
+                                                                                    onClick={() => removeFile(setter, i)}
+                                                                                    className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                                                                 >
-                                                                                    <MessageSquarePlus className="h-2 w-2" />
-                                                                                    Notas
+                                                                                    <X className="h-2 w-2 text-white" />
                                                                                 </button>
-                                                                            )}
-                                                                        </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                                {photosCollapsed && state.previews.length > 0 && (
+                                                                    <p className="text-[8px] text-gray-400 text-center mt-1">Ã°Å¸â€œÂ· {state.previews.length} foto(s)</p>
+                                                                )}
+
+                                                                {state.previews.length === 0 && (
+                                                                    <p className="text-[7px] text-gray-300 mt-1">ou arraste fotos aqui</p>
+                                                                )}
+
+                                                                {/* Hidden inputs */}
+                                                                <input
+                                                                    ref={ref}
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    multiple
+                                                                    className="hidden"
+                                                                    onChange={e => {
+                                                                        const files = e.target.files;
+                                                                        if (files && files.length > 0) addFiles(setter, Array.from(files));
+                                                                        e.target.value = '';
+                                                                    }}
+                                                                />
+                                                                {/* Input cÃƒÂ¢mara nativa (opc. qualidade mÃƒÂ¡xima Ã¢â‚¬â€ fotografia computacional) */}
+                                                                <input
+                                                                    id={`cam-native-${key}`}
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    capture="environment"
+                                                                    className="hidden"
+                                                                    onChange={e => {
+                                                                        const files = e.target.files;
+                                                                        if (files && files.length > 0) addFiles(setter, Array.from(files));
+                                                                        e.target.value = '';
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        ));
+                                                    })()}
+                                                </div>
+                                            </fieldset>
+                                            {/* Close-up Ã¢â‚¬â€ linha inteira, clone do Face */}
+                                            <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Close-up</legend>
+                                                <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                                                    {(() => {
+                                                        const closeupFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
+                                                            { label: 'Repouso', state: closeupRepouso, setter: setCloseupRepouso, ref: closeupRepousoRef, key: 'cu-repouso', guideImages: ['/images/guides/close-up-repouso.png'] },
+                                                            { label: 'Sorriso Natural', state: closeupSorrisoNatural, setter: setCloseupSorrisoNatural, ref: closeupSorrisoNaturalRef, key: 'cu-sorrisoNatural', guideImages: ['/images/guides/close-up-sorriso-natural.png'] },
+                                                            { label: 'Sorriso MÃƒÂ¡ximo', state: closeupSorrisoAlto, setter: setCloseupSorrisoAlto, ref: closeupSorrisoAltoRef, key: 'cu-sorrisoAlto', guideImages: ['/images/guides/close-up-sorriso-maximo.png'] },
+                                                            { label: '45Ã‚Âº', state: closeup45Esq, setter: setCloseup45Esq, ref: closeup45EsqRef, key: 'cu-45', guideImages: ['/images/guides/close-up-45-esquerda.png', '/images/guides/close-up-45-direita.png'] },
+                                                            { label: 'Perfil', state: closeup45Dir, setter: setCloseup45Dir, ref: closeup45DirRef, key: 'cu-perfil', guideImages: ['/images/guides/close-up-perfil-esquerda.png', '/images/guides/close-up-perfil-direita.png'] },
+                                                        ];
+
+                                                        const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
+                                                            setter(prev => ({
+                                                                files: [...prev.files, ...newFiles],
+                                                                previews: [...prev.previews, ...newFiles.map(f => URL.createObjectURL(f))],
+                                                            }));
+                                                        };
+
+                                                        const removeFile = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, idx: number) => {
+                                                            setter(prev => ({
+                                                                files: prev.files.filter((_, i) => i !== idx),
+                                                                previews: prev.previews.filter((_, i) => i !== idx),
+                                                            }));
+                                                        };
+
+                                                        return closeupFields.map(({ label, state, setter, ref, key, guideImages }) => (
+                                                            <div
+                                                                key={key}
+                                                                className={cn(
+                                                                    "text-center rounded-lg border-2 border-dashed p-1.5 transition-colors",
+                                                                    closeupDragOver === key
+                                                                        ? "border-sky-400 bg-sky-100/50"
+                                                                        : "border-gray-200 bg-white"
+                                                                )}
+                                                                onDragOver={e => { e.preventDefault(); setCloseupDragOver(key); }}
+                                                                onDragLeave={() => setCloseupDragOver(null)}
+                                                                onDrop={e => {
+                                                                    e.preventDefault();
+                                                                    setCloseupDragOver(null);
+                                                                    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                                                                    if (files.length > 0) addFiles(setter, files);
+                                                                }}
+                                                            >
+                                                                <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
+
+                                                                {guideImages && guideImages.length > 0 && (
+                                                                    <div className={guideImages.length > 1 ? 'grid grid-cols-2 gap-0.5 mb-1' : 'mb-1'}>
+                                                                        {guideImages.map((gi: string, idx: number) => (
+                                                                            <img
+                                                                                key={idx}
+                                                                                src={gi}
+                                                                                alt={`Guia ${label} ${idx + 1}`}
+                                                                                className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 cursor-pointer hover:opacity-80 transition-opacity"
+                                                                                onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }}
+                                                                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+
+                                                                <div className="grid grid-cols-1 gap-1">
+                                                                    <button type="button" onClick={() => ref.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                        <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                    </button>
+                                                                    <button type="button" onClick={() => setCameraTarget({ setter, key })} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                        <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">CÃƒÂ¢mara</span>
+                                                                    </button>
+                                                                </div>
+
+                                                                {!photosCollapsed && state.previews.length > 0 && (
+                                                                    <div className="grid grid-cols-2 gap-1 mt-1">
+                                                                        {state.previews.map((url, i) => (
+                                                                            <div key={i} className="relative group">
+                                                                                <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                                <button type="button" onClick={() => removeFile(setter, i)} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                                    <X className="h-2 w-2 text-white" />
+                                                                                </button>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                                {photosCollapsed && state.previews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">Ã°Å¸â€œÂ· {state.previews.length} foto(s)</p>)}
+                                                                {state.previews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+
+                                                                <input ref={ref} type="file" accept="image/*" multiple className="hidden" onChange={e => { const files = e.target.files; if (files && files.length > 0) addFiles(setter, Array.from(files)); e.target.value = ''; }} />
+                                                            </div>
+                                                        ));
+                                                    })()}
+                                                </div>
+                                            </fieldset>
+                                            {/* Intraoral Sup + Intraoral Inf + 45Ã‚Âº + Outros Ã¢â‚¬â€ 4 colunas iguais */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                                                {/* --- Intraoral Superior --- */}
+                                                <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Intraoral Superior</legend>
+                                                    <div
+                                                        className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralSupDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                        onDragOver={e => { e.preventDefault(); setIntraoralSupDragOver(true); }}
+                                                        onDragLeave={() => setIntraoralSupDragOver(false)}
+                                                        onDrop={e => { e.preventDefault(); setIntraoralSupDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralSupPhotos(prev => [...prev, ...files]); setIntraoralSupPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                    >
+                                                        <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Superior</span>
+                                                        <img src="/images/guides/intraoral-superior.png" alt="Guia Intraoral Superior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                        <div className="grid grid-cols-1 gap-1">
+                                                            <button type="button" onClick={() => intraoralSupFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                            </button>
+                                                            <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralSupPhotos, previews: intraoralSupPreviews }); setIntraoralSupPhotos(r.files); setIntraoralSupPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralSup' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">CÃƒÂ¢mara</span>
+                                                            </button>
+                                                            <input ref={intraoralSupFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralSupPhotos(p => [...p, ...nf]); setIntraoralSupPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                        </div>
+                                                        {!photosCollapsed && intraoralSupPreviews.length > 0 && (
+                                                            <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                {intraoralSupPreviews.map((url, i) => (
+                                                                    <div key={i} className="relative group">
+                                                                        <img src={url} alt={`Intraoral Sup ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                        <button type="button" onClick={() => { setIntraoralSupPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralSupPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
                                                                     </div>
                                                                 ))}
                                                             </div>
                                                         )}
-                                                        {photosCollapsed && colorScalePreviews.length > 0 && (
-                                                            <p className="text-[8px] text-gray-400 text-center">📷 {colorScalePreviews.length} foto(s)</p>
-                                                        )}
-                                                        {/* Hidden inputs */}
-                                                        <input
-                                                            ref={colorFileRef}
-                                                            type="file"
-                                                            accept="image/*"
-                                                            multiple
-                                                            className="hidden"
-                                                            onChange={e => {
-                                                                const files = e.target.files;
-                                                                if (!files) return;
-                                                                const newFiles = Array.from(files);
-                                                                setColorScalePhotos(prev => [...prev, ...newFiles]);
-                                                                setColorScalePreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
-                                                                e.target.value = '';
-                                                            }}
-                                                        />
-                                                        {/* Input câmara nativa (opc. qualidade máxima) */}
-                                                        <input
-                                                            id="cam-native-escalaCor"
-                                                            type="file"
-                                                            accept="image/*"
-                                                            capture="environment"
-                                                            className="hidden"
-                                                            onChange={e => {
-                                                                const files = e.target.files;
-                                                                if (!files || files.length === 0) return;
-                                                                const newFiles = Array.from(files);
-                                                                setColorScalePhotos(prev => [...prev, ...newFiles]);
-                                                                setColorScalePreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
-                                                                e.target.value = '';
-                                                            }}
-                                                        />
+                                                        {photosCollapsed && intraoralSupPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">Ã°Å¸â€œÂ· {intraoralSupPreviews.length} foto(s)</p>)}
+                                                        {intraoralSupPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
                                                     </div>
-                                                    {colorScalePreviews.length === 0 && (
-                                                        <p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
+                                                </fieldset>
 
-                                        {/* ── Sub-secção: Registos Fotográficos ── */}
-                                        <div className="rounded-lg border border-sky-200/60 bg-sky-50/30 p-3 space-y-2.5">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <Camera className="h-3.5 w-3.5 text-sky-500" />
-                                                    <span className="text-[10px] uppercase tracking-widest font-semibold text-sky-600">
-                                                        Registos Fotográficos
-                                                    </span>
-                                                </div>
-                                                {(faceRepouso.previews.length > 0 || faceSorrisoNatural.previews.length > 0 || faceSorrisoAlto.previews.length > 0 || closeupRepouso.previews.length > 0 || closeupSorrisoNatural.previews.length > 0 || closeupSorrisoAlto.previews.length > 0 || colorScalePreviews.length > 0 || intraoralSupPreviews.length > 0 || intraoralInfPreviews.length > 0 || previews45.length > 0 || previewsOutros.length > 0) && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setPhotosCollapsed(prev => !prev)}
-                                                        className="flex items-center gap-1 text-[9px] text-sky-500 hover:text-sky-700 font-medium transition-colors"
+                                                {/* --- Intraoral Inferior --- */}
+                                                <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Intraoral Inferior</legend>
+                                                    <div
+                                                        className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralInfDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                        onDragOver={e => { e.preventDefault(); setIntraoralInfDragOver(true); }}
+                                                        onDragLeave={() => setIntraoralInfDragOver(false)}
+                                                        onDrop={e => { e.preventDefault(); setIntraoralInfDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralInfPhotos(prev => [...prev, ...files]); setIntraoralInfPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                     >
-                                                        {photosCollapsed ? (
-                                                            <><ChevronDown className="h-3 w-3" /> Mostrar fotos</>
-                                                        ) : (
-                                                            <><ChevronUp className="h-3 w-3" /> Minimizar fotos</>
+                                                        <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Inferior</span>
+                                                        <img src="/images/guides/intraoral-inferior.png" alt="Guia Intraoral Inferior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                        <div className="grid grid-cols-1 gap-1">
+                                                            <button type="button" onClick={() => intraoralInfFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                            </button>
+                                                            <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralInfPhotos, previews: intraoralInfPreviews }); setIntraoralInfPhotos(r.files); setIntraoralInfPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralInf' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">CÃƒÂ¢mara</span>
+                                                            </button>
+                                                            <input ref={intraoralInfFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralInfPhotos(p => [...p, ...nf]); setIntraoralInfPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                        </div>
+                                                        {!photosCollapsed && intraoralInfPreviews.length > 0 && (
+                                                            <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                {intraoralInfPreviews.map((url, i) => (
+                                                                    <div key={i} className="relative group">
+                                                                        <img src={url} alt={`Intraoral Inf ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                        <button type="button" onClick={() => { setIntraoralInfPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralInfPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
                                                         )}
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            <div className="space-y-3">
-                                                {/* Retrato — linha inteira */}
-                                                <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Retrato</legend>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                                                        {(() => {
-                                                            const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
-                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso', guideImages: ['/images/guides/retrato-repouso.png'] },
-                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural', guideImages: ['/images/guides/retrato-sorriso-natural.png'] },
-                                                                { label: 'Sorriso Máximo', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto', guideImages: ['/images/guides/retrato-sorriso-maximo.png'] },
-                                                                { label: '45º', state: face45Esq, setter: setFace45Esq, ref: face45EsqRef, key: '45', guideImages: ['/images/guides/retrato-45-esquerda.png', '/images/guides/retrato-45-direita.png'] },
-                                                                { label: 'Perfil', state: face45Dir, setter: setFace45Dir, ref: face45DirRef, key: 'perfil', guideImages: ['/images/guides/retrato-perfil-esquerda.png', '/images/guides/retrato-perfil-direita.png'] },
-                                                            ];
-
-                                                            const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
-                                                                setter(prev => ({
-                                                                    files: [...prev.files, ...newFiles],
-                                                                    previews: [...prev.previews, ...newFiles.map(f => URL.createObjectURL(f))],
-                                                                }));
-                                                            };
-
-                                                            const removeFile = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, idx: number) => {
-                                                                setter(prev => ({
-                                                                    files: prev.files.filter((_, i) => i !== idx),
-                                                                    previews: prev.previews.filter((_, i) => i !== idx),
-                                                                }));
-                                                            };
-
-                                                            return faceFields.map(({ label, state, setter, ref, key, guideImages }) => (
-                                                                <div
-                                                                    key={key}
-                                                                    className={cn(
-                                                                        "text-center rounded-lg border-2 border-dashed p-1.5 transition-colors",
-                                                                        faceDragOver === key
-                                                                            ? "border-sky-400 bg-sky-100/50"
-                                                                            : "border-gray-200 bg-white"
-                                                                    )}
-                                                                    onDragOver={e => { e.preventDefault(); setFaceDragOver(key); }}
-                                                                    onDragLeave={() => setFaceDragOver(null)}
-                                                                    onDrop={e => {
-                                                                        e.preventDefault();
-                                                                        setFaceDragOver(null);
-                                                                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-                                                                        if (files.length > 0) addFiles(setter, files);
-                                                                    }}
-                                                                >
-                                                                    <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
-
-                                                                    {/* Guide images — referência visual */}
-                                                                    {guideImages && guideImages.length > 0 && (
-                                                                        <div className={guideImages.length > 1 ? 'grid grid-cols-2 gap-0.5 mb-1' : 'mb-1'}>
-                                                                            {guideImages.map((gi, idx) => (
-                                                                                <img
-                                                                                    key={idx}
-                                                                                    src={gi}
-                                                                                    alt={`Guia ${label} ${idx + 1}`}
-                                                                                    className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 cursor-pointer hover:opacity-80 transition-opacity"
-                                                                                    onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }}
-                                                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                                                                />
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Action buttons — always visible */}
-                                                                    <div className="grid grid-cols-1 gap-1">
-                                                                        {/* Ficheiro */}
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => ref.current?.click()}
-                                                                            className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2"
-                                                                            title="Anexar ficheiro"
-                                                                        >
-                                                                            <Upload className="h-3 w-3" />
-                                                                            <span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                                        </button>
-                                                                        {/* Câmara */}
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => setCameraTarget({ setter, key })}
-                                                                            className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2"
-                                                                            title="Tirar fotografia"
-                                                                        >
-                                                                            <Camera className="h-3 w-3" />
-                                                                            <span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                                        </button>
-                                                                    </div>
-
-                                                                    {/* Preview grid — abaixo dos botões, colapsável */}
-                                                                    {!photosCollapsed && state.previews.length > 0 && (
-                                                                        <div className="grid grid-cols-2 gap-1 mt-1">
-                                                                            {state.previews.map((url, i) => (
-                                                                                <div key={i} className="relative group">
-                                                                                    <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-[3/4] object-cover rounded border border-gray-200" />
-                                                                                    <button
-                                                                                        type="button"
-                                                                                        onClick={() => removeFile(setter, i)}
-                                                                                        className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                                    >
-                                                                                        <X className="h-2 w-2 text-white" />
-                                                                                    </button>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                    {photosCollapsed && state.previews.length > 0 && (
-                                                                        <p className="text-[8px] text-gray-400 text-center mt-1">📷 {state.previews.length} foto(s)</p>
-                                                                    )}
-
-                                                                    {state.previews.length === 0 && (
-                                                                        <p className="text-[7px] text-gray-300 mt-1">ou arraste fotos aqui</p>
-                                                                    )}
-
-                                                                    {/* Hidden inputs */}
-                                                                    <input
-                                                                        ref={ref}
-                                                                        type="file"
-                                                                        accept="image/*"
-                                                                        multiple
-                                                                        className="hidden"
-                                                                        onChange={e => {
-                                                                            const files = e.target.files;
-                                                                            if (files && files.length > 0) addFiles(setter, Array.from(files));
-                                                                            e.target.value = '';
-                                                                        }}
-                                                                    />
-                                                                    {/* Input câmara nativa (opc. qualidade máxima — fotografia computacional) */}
-                                                                    <input
-                                                                        id={`cam-native-${key}`}
-                                                                        type="file"
-                                                                        accept="image/*"
-                                                                        capture="environment"
-                                                                        className="hidden"
-                                                                        onChange={e => {
-                                                                            const files = e.target.files;
-                                                                            if (files && files.length > 0) addFiles(setter, Array.from(files));
-                                                                            e.target.value = '';
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                            ));
-                                                        })()}
+                                                        {photosCollapsed && intraoralInfPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">Ã°Å¸â€œÂ· {intraoralInfPreviews.length} foto(s)</p>)}
+                                                        {intraoralInfPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
                                                     </div>
                                                 </fieldset>
-                                                {/* Close-up — linha inteira, clone do Face */}
+
+                                                {/* --- 45Ã‚Âº --- */}
                                                 <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Close-up</legend>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                                                        {(() => {
-                                                            const closeupFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
-                                                                { label: 'Repouso', state: closeupRepouso, setter: setCloseupRepouso, ref: closeupRepousoRef, key: 'cu-repouso', guideImages: ['/images/guides/close-up-repouso.png'] },
-                                                                { label: 'Sorriso Natural', state: closeupSorrisoNatural, setter: setCloseupSorrisoNatural, ref: closeupSorrisoNaturalRef, key: 'cu-sorrisoNatural', guideImages: ['/images/guides/close-up-sorriso-natural.png'] },
-                                                                { label: 'Sorriso Máximo', state: closeupSorrisoAlto, setter: setCloseupSorrisoAlto, ref: closeupSorrisoAltoRef, key: 'cu-sorrisoAlto', guideImages: ['/images/guides/close-up-sorriso-maximo.png'] },
-                                                                { label: '45º', state: closeup45Esq, setter: setCloseup45Esq, ref: closeup45EsqRef, key: 'cu-45', guideImages: ['/images/guides/close-up-45-esquerda.png', '/images/guides/close-up-45-direita.png'] },
-                                                                { label: 'Perfil', state: closeup45Dir, setter: setCloseup45Dir, ref: closeup45DirRef, key: 'cu-perfil', guideImages: ['/images/guides/close-up-perfil-esquerda.png', '/images/guides/close-up-perfil-direita.png'] },
-                                                            ];
-
-                                                            const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
-                                                                setter(prev => ({
-                                                                    files: [...prev.files, ...newFiles],
-                                                                    previews: [...prev.previews, ...newFiles.map(f => URL.createObjectURL(f))],
-                                                                }));
-                                                            };
-
-                                                            const removeFile = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, idx: number) => {
-                                                                setter(prev => ({
-                                                                    files: prev.files.filter((_, i) => i !== idx),
-                                                                    previews: prev.previews.filter((_, i) => i !== idx),
-                                                                }));
-                                                            };
-
-                                                            return closeupFields.map(({ label, state, setter, ref, key, guideImages }) => (
-                                                                <div
-                                                                    key={key}
-                                                                    className={cn(
-                                                                        "text-center rounded-lg border-2 border-dashed p-1.5 transition-colors",
-                                                                        closeupDragOver === key
-                                                                            ? "border-sky-400 bg-sky-100/50"
-                                                                            : "border-gray-200 bg-white"
-                                                                    )}
-                                                                    onDragOver={e => { e.preventDefault(); setCloseupDragOver(key); }}
-                                                                    onDragLeave={() => setCloseupDragOver(null)}
-                                                                    onDrop={e => {
-                                                                        e.preventDefault();
-                                                                        setCloseupDragOver(null);
-                                                                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-                                                                        if (files.length > 0) addFiles(setter, files);
-                                                                    }}
-                                                                >
-                                                                    <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
-
-                                                                    {guideImages && guideImages.length > 0 && (
-                                                                        <div className={guideImages.length > 1 ? 'grid grid-cols-2 gap-0.5 mb-1' : 'mb-1'}>
-                                                                            {guideImages.map((gi: string, idx: number) => (
-                                                                                <img
-                                                                                    key={idx}
-                                                                                    src={gi}
-                                                                                    alt={`Guia ${label} ${idx + 1}`}
-                                                                                    className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 cursor-pointer hover:opacity-80 transition-opacity"
-                                                                                    onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }}
-                                                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                                                                />
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-
-                                                                    <div className="grid grid-cols-1 gap-1">
-                                                                        <button type="button" onClick={() => ref.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
-                                                                            <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                                        </button>
-                                                                        <button type="button" onClick={() => setCameraTarget({ setter, key })} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
-                                                                            <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                                        </button>
+                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">45Ã‚Âº</legend>
+                                                    <div
+                                                        className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOver45 ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                        onDragOver={e => { e.preventDefault(); setdragOver45(true); }}
+                                                        onDragLeave={() => setdragOver45(false)}
+                                                        onDrop={e => { e.preventDefault(); setdragOver45(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setphotos45(prev => [...prev, ...files]); setpreviews45(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                    >
+                                                        <span className="text-[8px] font-semibold text-gray-500 block mb-1">45Ã‚Âº</span>
+                                                        <img src="/images/guides/45.png" alt="Guia 45Ã‚Âº" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                        <div className="grid grid-cols-1 gap-1">
+                                                            <button type="button" onClick={() => fileRef45.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                            </button>
+                                                            <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: photos45, previews: previews45 }); setphotos45(r.files); setpreviews45(r.previews); } }; setCameraTarget({ setter: s, key: 'foto45' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">CÃƒÂ¢mara</span>
+                                                            </button>
+                                                            <input ref={fileRef45} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setphotos45(p => [...p, ...nf]); setpreviews45(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            <input id="cam-native-45" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setphotos45(p => [...p, ...nf]); setpreviews45(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                        </div>
+                                                        {!photosCollapsed && previews45.length > 0 && (
+                                                            <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                {previews45.map((url, i) => (
+                                                                    <div key={i} className="relative group">
+                                                                        <img src={url} alt={`45Ã‚Âº ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                        <button type="button" onClick={() => { setphotos45(p => p.filter((_, idx) => idx !== i)); setpreviews45(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
                                                                     </div>
-
-                                                                    {!photosCollapsed && state.previews.length > 0 && (
-                                                                        <div className="grid grid-cols-2 gap-1 mt-1">
-                                                                            {state.previews.map((url, i) => (
-                                                                                <div key={i} className="relative group">
-                                                                                    <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                                    <button type="button" onClick={() => removeFile(setter, i)} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                                        <X className="h-2 w-2 text-white" />
-                                                                                    </button>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                    {photosCollapsed && state.previews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {state.previews.length} foto(s)</p>)}
-                                                                    {state.previews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
-
-                                                                    <input ref={ref} type="file" accept="image/*" multiple className="hidden" onChange={e => { const files = e.target.files; if (files && files.length > 0) addFiles(setter, Array.from(files)); e.target.value = ''; }} />
-                                                                </div>
-                                                            ));
-                                                        })()}
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {photosCollapsed && previews45.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">Ã°Å¸â€œÂ· {previews45.length} foto(s)</p>)}
+                                                        {previews45.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
                                                     </div>
                                                 </fieldset>
-                                                {/* Intraoral Sup + Intraoral Inf + 45º + Outros — 4 colunas iguais */}
-                                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                                                    {/* --- Intraoral Superior --- */}
-                                                    <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Intraoral Superior</legend>
-                                                        <div
-                                                            className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralSupDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                            onDragOver={e => { e.preventDefault(); setIntraoralSupDragOver(true); }}
-                                                            onDragLeave={() => setIntraoralSupDragOver(false)}
-                                                            onDrop={e => { e.preventDefault(); setIntraoralSupDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralSupPhotos(prev => [...prev, ...files]); setIntraoralSupPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                        >
-                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Superior</span>
-                                                            <img src="/images/guides/intraoral-superior.png" alt="Guia Intraoral Superior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                            <div className="grid grid-cols-1 gap-1">
-                                                                <button type="button" onClick={() => intraoralSupFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
-                                                                    <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                                </button>
-                                                                <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralSupPhotos, previews: intraoralSupPreviews }); setIntraoralSupPhotos(r.files); setIntraoralSupPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralSup' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
-                                                                    <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                                </button>
-                                                                <input ref={intraoralSupFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralSupPhotos(p => [...p, ...nf]); setIntraoralSupPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                            </div>
-                                                            {!photosCollapsed && intraoralSupPreviews.length > 0 && (
-                                                                <div className="grid grid-cols-1 gap-1 mt-1">
-                                                                    {intraoralSupPreviews.map((url, i) => (
-                                                                        <div key={i} className="relative group">
-                                                                            <img src={url} alt={`Intraoral Sup ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                            <button type="button" onClick={() => { setIntraoralSupPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralSupPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                            {photosCollapsed && intraoralSupPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {intraoralSupPreviews.length} foto(s)</p>)}
-                                                            {intraoralSupPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
-                                                        </div>
-                                                    </fieldset>
 
-                                                    {/* --- Intraoral Inferior --- */}
-                                                    <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Intraoral Inferior</legend>
-                                                        <div
-                                                            className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralInfDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                            onDragOver={e => { e.preventDefault(); setIntraoralInfDragOver(true); }}
-                                                            onDragLeave={() => setIntraoralInfDragOver(false)}
-                                                            onDrop={e => { e.preventDefault(); setIntraoralInfDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralInfPhotos(prev => [...prev, ...files]); setIntraoralInfPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                        >
-                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Inferior</span>
-                                                            <img src="/images/guides/intraoral-inferior.png" alt="Guia Intraoral Inferior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                            <div className="grid grid-cols-1 gap-1">
-                                                                <button type="button" onClick={() => intraoralInfFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
-                                                                    <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                                </button>
-                                                                <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralInfPhotos, previews: intraoralInfPreviews }); setIntraoralInfPhotos(r.files); setIntraoralInfPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralInf' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
-                                                                    <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                                </button>
-                                                                <input ref={intraoralInfFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralInfPhotos(p => [...p, ...nf]); setIntraoralInfPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                            </div>
-                                                            {!photosCollapsed && intraoralInfPreviews.length > 0 && (
-                                                                <div className="grid grid-cols-1 gap-1 mt-1">
-                                                                    {intraoralInfPreviews.map((url, i) => (
-                                                                        <div key={i} className="relative group">
-                                                                            <img src={url} alt={`Intraoral Inf ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                            <button type="button" onClick={() => { setIntraoralInfPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralInfPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                            {photosCollapsed && intraoralInfPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {intraoralInfPreviews.length} foto(s)</p>)}
-                                                            {intraoralInfPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                {/* --- Outros --- */}
+                                                <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Outros</legend>
+                                                    <div
+                                                        className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOverOutros ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                        onDragOver={e => { e.preventDefault(); setDragOverOutros(true); }}
+                                                        onDragLeave={() => setDragOverOutros(false)}
+                                                        onDrop={e => { e.preventDefault(); setDragOverOutros(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotosOutros(prev => [...prev, ...files]); setPreviewsOutros(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                    >
+                                                        <span className="text-[8px] font-semibold text-gray-500 block mb-1">Outros</span>
+                                                        <img src="/images/guides/outros.png" alt="Guia Outros" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                        <div className="grid grid-cols-1 gap-1">
+                                                            <button type="button" onClick={() => fileRefOutros.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                            </button>
+                                                            <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: photosOutros, previews: previewsOutros }); setPhotosOutros(r.files); setPreviewsOutros(r.previews); } }; setCameraTarget({ setter: s, key: 'outros' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">CÃƒÂ¢mara</span>
+                                                            </button>
+                                                            <input ref={fileRefOutros} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            <input id="cam-native-outros" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                         </div>
-                                                    </fieldset>
-
-                                                    {/* --- 45º --- */}
-                                                    <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">45º</legend>
-                                                        <div
-                                                            className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOver45 ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                            onDragOver={e => { e.preventDefault(); setdragOver45(true); }}
-                                                            onDragLeave={() => setdragOver45(false)}
-                                                            onDrop={e => { e.preventDefault(); setdragOver45(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setphotos45(prev => [...prev, ...files]); setpreviews45(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                        >
-                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">45º</span>
-                                                            <img src="/images/guides/45.png" alt="Guia 45º" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                            <div className="grid grid-cols-1 gap-1">
-                                                                <button type="button" onClick={() => fileRef45.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
-                                                                    <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                                </button>
-                                                                <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: photos45, previews: previews45 }); setphotos45(r.files); setpreviews45(r.previews); } }; setCameraTarget({ setter: s, key: 'foto45' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
-                                                                    <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                                </button>
-                                                                <input ref={fileRef45} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setphotos45(p => [...p, ...nf]); setpreviews45(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                                <input id="cam-native-45" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setphotos45(p => [...p, ...nf]); setpreviews45(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                        {!photosCollapsed && previewsOutros.length > 0 && (
+                                                            <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                {previewsOutros.map((url, i) => (
+                                                                    <div key={i} className="relative group">
+                                                                        <img src={url} alt={`Outros ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                        <button type="button" onClick={() => { setPhotosOutros(p => p.filter((_, idx) => idx !== i)); setPreviewsOutros(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                            {!photosCollapsed && previews45.length > 0 && (
-                                                                <div className="grid grid-cols-1 gap-1 mt-1">
-                                                                    {previews45.map((url, i) => (
-                                                                        <div key={i} className="relative group">
-                                                                            <img src={url} alt={`45º ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                            <button type="button" onClick={() => { setphotos45(p => p.filter((_, idx) => idx !== i)); setpreviews45(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                            {photosCollapsed && previews45.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previews45.length} foto(s)</p>)}
-                                                            {previews45.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
-                                                        </div>
-                                                    </fieldset>
-
-                                                    {/* --- Outros --- */}
-                                                    <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Outros</legend>
-                                                        <div
-                                                            className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOverOutros ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                            onDragOver={e => { e.preventDefault(); setDragOverOutros(true); }}
-                                                            onDragLeave={() => setDragOverOutros(false)}
-                                                            onDrop={e => { e.preventDefault(); setDragOverOutros(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotosOutros(prev => [...prev, ...files]); setPreviewsOutros(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                        >
-                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">Outros</span>
-                                                            <img src="/images/guides/outros.png" alt="Guia Outros" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                            <div className="grid grid-cols-1 gap-1">
-                                                                <button type="button" onClick={() => fileRefOutros.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
-                                                                    <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                                </button>
-                                                                <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: photosOutros, previews: previewsOutros }); setPhotosOutros(r.files); setPreviewsOutros(r.previews); } }; setCameraTarget({ setter: s, key: 'outros' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
-                                                                    <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                                </button>
-                                                                <input ref={fileRefOutros} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                                <input id="cam-native-outros" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                            </div>
-                                                            {!photosCollapsed && previewsOutros.length > 0 && (
-                                                                <div className="grid grid-cols-1 gap-1 mt-1">
-                                                                    {previewsOutros.map((url, i) => (
-                                                                        <div key={i} className="relative group">
-                                                                            <img src={url} alt={`Outros ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                            <button type="button" onClick={() => { setPhotosOutros(p => p.filter((_, idx) => idx !== i)); setPreviewsOutros(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                            {photosCollapsed && previewsOutros.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previewsOutros.length} foto(s)</p>)}
-                                                            {previewsOutros.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
-                                                        </div>
-                                                    </fieldset>
-                                                </div>
+                                                        )}
+                                                        {photosCollapsed && previewsOutros.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">Ã°Å¸â€œÂ· {previewsOutros.length} foto(s)</p>)}
+                                                        {previewsOutros.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                    </div>
+                                                </fieldset>
                                             </div>
                                         </div>
-
-
                                     </div>
+
+
                                 </div>
-
-                                {/* Error */}
-                                {error && (
-                                    <p className="text-xs text-red-500 bg-red-50 p-2.5 rounded-lg">{error}</p>
-                                )}
                             </div>
 
-                            {/* Actions — fixed at bottom */}
-                            <div className="flex gap-3 p-4 border-t border-gray-100 shrink-0 bg-white">
-                                <Button type="button" variant="outline" className="flex-1 h-9" onClick={onClose}>
-                                    Cancelar
-                                </Button>
-                                <Button type="submit" className="flex-1 h-9 gap-1.5" disabled={submitting}>
-                                    {submitting ? (
-                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    ) : (
-                                        <Plus className="h-3.5 w-3.5" />
-                                    )}
-                                    Criar Plano
-                                </Button>
-                            </div>
-                        </form>
+                            {/* Error */}
+                            {error && (
+                                <p className="text-xs text-red-500 bg-red-50 p-2.5 rounded-lg">{error}</p>
+                            )}
+                        </div>
+
+                            {/* Actions Ã¢â‚¬â€ fixed at bottom */}
+                    <div className="flex gap-3 p-4 border-t border-gray-100 shrink-0 bg-white">
+                        <Button type="button" variant="outline" className="flex-1 h-9" onClick={onClose}>
+                            Cancelar
+                        </Button>
+                        <Button type="submit" className="flex-1 h-9 gap-1.5" disabled={submitting}>
+                            {submitting ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                                <Plus className="h-3.5 w-3.5" />
+                            )}
+                            Criar Plano
+                        </Button>
+                    </div>
+                </form>
                     )}
-                </div>
             </div>
+        </div >
 
-            {/* Odontograma Modal — renderizado fora do modal principal */}
-            <OdontogramModal
-                open={showOdontogram}
-                onClose={() => setShowOdontogram(false)}
-                teeth={odontogramTeeth}
-                workTypes={workTypes.map(wt => ({ id: wt.id, nome: wt.nome, cor: wt.cor }))}
-                onChange={handleOdontogramChange}
-                pendingAssignments={pendingAssignments}
-            />
-            {cameraTarget && (
-                <CameraOverlay
-                    onCapture={(file: File) => {
-                        cameraTarget.setter(prev => ({
-                            files: [...prev.files, file],
-                            previews: [...prev.previews, URL.createObjectURL(file)],
-                        }));
-                    }}
-                    onClose={() => setCameraTarget(null)}
-                    nativeCamKey={cameraTarget.key}
-                />
-            )}
+            {/* Odontograma Modal Ã¢â‚¬â€ renderizado fora do modal principal */ }
+            < OdontogramModal
+    open = { showOdontogram }
+    onClose = {() => setShowOdontogram(false)
+}
+teeth = { odontogramTeeth }
+workTypes = { workTypes.map(wt => ({ id: wt.id, nome: wt.nome, cor: wt.cor })) }
+onChange = { handleOdontogramChange }
+pendingAssignments = { pendingAssignments }
+    />
+    { cameraTarget && (
+        <CameraOverlay
+            onCapture={(file: File) => {
+                cameraTarget.setter(prev => ({
+                    files: [...prev.files, file],
+                    previews: [...prev.previews, URL.createObjectURL(file)],
+                }));
+            }}
+            onClose={() => setCameraTarget(null)}
+            nativeCamKey={cameraTarget.key}
+        />
+    )}
         </>
     );
 }
