@@ -1113,17 +1113,17 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                             </div>
 
                                             <div className="space-y-3">
-                                                {/* Face — linha inteira */}
+                                                {/* Retrato — linha inteira */}
                                                 <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Face</legend>
+                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Retrato</legend>
                                                     <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                                                         {(() => {
                                                             const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
-                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso', guideImages: ['/images/guides/face-repouso.png'] },
-                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural', guideImages: ['/images/guides/face-sorriso-natural.png'] },
-                                                                { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto', guideImages: ['/images/guides/face-sorriso-alto.png'] },
-                                                                { label: '45º', state: face45Esq, setter: setFace45Esq, ref: face45EsqRef, key: '45', guideImages: ['/images/guides/face-45-esquerda.png', '/images/guides/face-45-direita.png'] },
-                                                                { label: 'Perfil', state: face45Dir, setter: setFace45Dir, ref: face45DirRef, key: 'perfil', guideImages: ['/images/guides/face-perfil-esquerda.png', '/images/guides/face-perfil-direita.png'] },
+                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso', guideImages: ['/images/guides/retrato-repouso.png'] },
+                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural', guideImages: ['/images/guides/retrato-sorriso-natural.png'] },
+                                                                { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto', guideImages: ['/images/guides/retrato-sorriso-alto.png'] },
+                                                                { label: '45º', state: face45Esq, setter: setFace45Esq, ref: face45EsqRef, key: '45', guideImages: ['/images/guides/retrato-45-esquerda.png', '/images/guides/retrato-45-direita.png'] },
+                                                                { label: 'Perfil', state: face45Dir, setter: setFace45Dir, ref: face45DirRef, key: 'perfil', guideImages: ['/images/guides/retrato-perfil-esquerda.png', '/images/guides/retrato-perfil-direita.png'] },
                                                             ];
 
                                                             const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
