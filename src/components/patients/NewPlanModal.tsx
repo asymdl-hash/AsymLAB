@@ -1161,8 +1161,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 { label: 'Repouso', state: closeupRepouso, setter: setCloseupRepouso, ref: closeupRepousoRef, key: 'cu-repouso', guideImages: ['/images/guides/close-up-repouso.png'] },
                                                                 { label: 'Sorriso Natural', state: closeupSorrisoNatural, setter: setCloseupSorrisoNatural, ref: closeupSorrisoNaturalRef, key: 'cu-sorrisoNatural', guideImages: ['/images/guides/close-up-sorriso-natural.png'] },
                                                                 { label: 'Sorriso Máximo', state: closeupSorrisoAlto, setter: setCloseupSorrisoAlto, ref: closeupSorrisoAltoRef, key: 'cu-sorrisoAlto', guideImages: ['/images/guides/close-up-sorriso-maximo.png'] },
-                                                                { label: '45º', state: closeup45Esq, setter: setCloseup45Esq, ref: closeup45EsqRef, key: 'cu-45', guideImages: ['/images/guides/close-up-45-esquerda.png', '/images/guides/close-up-45-direita.png'] },
                                                                 { label: 'Retractores', state: closeup45Dir, setter: setCloseup45Dir, ref: closeup45DirRef, key: 'cu-retractores', guideImages: ['/images/guides/close-up-retractores-frontal.png'] },
+                                                                { label: '45º', state: closeup45Esq, setter: setCloseup45Esq, ref: closeup45EsqRef, key: 'cu-45', guideImages: ['/images/guides/close-up-45-esquerda.png', '/images/guides/close-up-45-direita.png'] },
                                                             ];
 
                                                             const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
