@@ -99,7 +99,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const intraoralInfFileRef = useRef<HTMLInputElement>(null);
     const [intraoralInfDragOver, setIntraoralInfDragOver] = useState(false);
     // Lightbox para imagens-guia
-    
+
     // Registos Fotográficos — 45º
     const [photos45, setphotos45] = useState<File[]>([]);
     const [previews45, setpreviews45] = useState<string[]>([]);
@@ -957,7 +957,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         Fotos
                                                     </label>
-                                                    <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                    <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                     <div className="mt-1.5 grid grid-cols-1 gap-1">
                                                         {/* Botão Ficheiro */}
                                                         <button
@@ -1118,12 +1118,12 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Face</legend>
                                                     <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                                                         {(() => {
-                                                            const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImage?: string }[] = [
-                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso', guideImage: '/images/guides/face-repouso.png' },
-                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural', guideImage: '/images/guides/face-sorriso-natural.png' },
-                                                                { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto', guideImage: '/images/guides/face-sorriso-alto.png' },
-                                                                { label: '45º Esquerda', state: face45Esq, setter: setFace45Esq, ref: face45EsqRef, key: '45esq', guideImage: '/images/guides/face-45-esquerda.png' },
-                                                                { label: '45º Direita', state: face45Dir, setter: setFace45Dir, ref: face45DirRef, key: '45dir', guideImage: '/images/guides/face-45-direita.png' },
+                                                            const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
+                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso', guideImages: ['/images/guides/face-repouso.png'] },
+                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural', guideImages: ['/images/guides/face-sorriso-natural.png'] },
+                                                                { label: 'Sorriso Alto', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto', guideImages: ['/images/guides/face-sorriso-alto.png'] },
+                                                                { label: '45º', state: face45Esq, setter: setFace45Esq, ref: face45EsqRef, key: '45', guideImages: ['/images/guides/face-45-esquerda.png', '/images/guides/face-45-direita.png'] },
+                                                                { label: 'Perfil', state: face45Dir, setter: setFace45Dir, ref: face45DirRef, key: 'perfil', guideImages: ['/images/guides/face-perfil-esquerda.png', '/images/guides/face-perfil-direita.png'] },
                                                             ];
 
                                                             const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
@@ -1140,7 +1140,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 }));
                                                             };
 
-                                                            return faceFields.map(({ label, state, setter, ref, key, guideImage }) => (
+                                                            return faceFields.map(({ label, state, setter, ref, key, guideImages }) => (
                                                                 <div
                                                                     key={key}
                                                                     className={cn(
@@ -1160,15 +1160,20 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 >
                                                                     <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
 
-                                                                    {/* Guide image — referência visual */}
-                                                                    {guideImage && (
-                                                                        <img
-                                                                            src={guideImage}
-                                                                            alt={`Guia ${label}`}
-                                                                            className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity"
-                                                                            onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }}
-                                                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                                                        />
+                                                                    {/* Guide images — referência visual */}
+                                                                    {guideImages && guideImages.length > 0 && (
+                                                                        <div className={guideImages.length > 1 ? 'grid grid-cols-2 gap-0.5 mb-1' : 'mb-1'}>
+                                                                            {guideImages.map((gi, idx) => (
+                                                                                <img
+                                                                                    key={idx}
+                                                                                    src={gi}
+                                                                                    alt={`Guia ${label} ${idx + 1}`}
+                                                                                    className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 cursor-pointer hover:opacity-80 transition-opacity"
+                                                                                    onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }}
+                                                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                                                                />
+                                                                            ))}
+                                                                        </div>
                                                                     )}
 
                                                                     {/* Action buttons — always visible */}
@@ -1256,12 +1261,12 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Close-up</legend>
                                                     <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                                                         {(() => {
-                                                            const closeupFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImage?: string }[] = [
-                                                                { label: 'Repouso', state: closeupRepouso, setter: setCloseupRepouso, ref: closeupRepousoRef, key: 'cu-repouso', guideImage: '/images/guides/close-up-repouso.png' },
-                                                                { label: 'Sorriso Natural', state: closeupSorrisoNatural, setter: setCloseupSorrisoNatural, ref: closeupSorrisoNaturalRef, key: 'cu-sorrisoNatural', guideImage: '/images/guides/close-up-sorriso-natural.png' },
-                                                                { label: 'Sorriso Alto', state: closeupSorrisoAlto, setter: setCloseupSorrisoAlto, ref: closeupSorrisoAltoRef, key: 'cu-sorrisoAlto', guideImage: '/images/guides/close-up-sorriso-alto.png' },
-                                                                { label: '45º Esquerda', state: closeup45Esq, setter: setCloseup45Esq, ref: closeup45EsqRef, key: 'cu-45esq', guideImage: '/images/guides/close-up-45-esquerda.png' },
-                                                                { label: '45º Direita', state: closeup45Dir, setter: setCloseup45Dir, ref: closeup45DirRef, key: 'cu-45dir', guideImage: '/images/guides/close-up-45-direita.png' },
+                                                            const closeupFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
+                                                                { label: 'Repouso', state: closeupRepouso, setter: setCloseupRepouso, ref: closeupRepousoRef, key: 'cu-repouso', guideImages: ['/images/guides/close-up-repouso.png'] },
+                                                                { label: 'Sorriso Natural', state: closeupSorrisoNatural, setter: setCloseupSorrisoNatural, ref: closeupSorrisoNaturalRef, key: 'cu-sorrisoNatural', guideImages: ['/images/guides/close-up-sorriso-natural.png'] },
+                                                                { label: 'Sorriso Alto', state: closeupSorrisoAlto, setter: setCloseupSorrisoAlto, ref: closeupSorrisoAltoRef, key: 'cu-sorrisoAlto', guideImages: ['/images/guides/close-up-sorriso-alto.png'] },
+                                                                { label: '45º', state: closeup45Esq, setter: setCloseup45Esq, ref: closeup45EsqRef, key: 'cu-45', guideImages: ['/images/guides/close-up-45-esquerda.png', '/images/guides/close-up-45-direita.png'] },
+                                                                { label: 'Perfil', state: closeup45Dir, setter: setCloseup45Dir, ref: closeup45DirRef, key: 'cu-perfil', guideImages: ['/images/guides/close-up-perfil-esquerda.png', '/images/guides/close-up-perfil-direita.png'] },
                                                             ];
 
                                                             const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
@@ -1278,7 +1283,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 }));
                                                             };
 
-                                                            return closeupFields.map(({ label, state, setter, ref, key, guideImage }) => (
+                                                            return closeupFields.map(({ label, state, setter, ref, key, guideImages }) => (
                                                                 <div
                                                                     key={key}
                                                                     className={cn(
@@ -1298,14 +1303,19 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 >
                                                                     <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
 
-                                                                    {guideImage && (
-                                                                        <img
-                                                                            src={guideImage}
-                                                                            alt={`Guia ${label}`}
-                                                                            className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity"
-                                                                            onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }}
-                                                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                                                        />
+                                                                    {guideImages && guideImages.length > 0 && (
+                                                                        <div className={guideImages.length > 1 ? 'grid grid-cols-2 gap-0.5 mb-1' : 'mb-1'}>
+                                                                            {guideImages.map((gi: string, idx: number) => (
+                                                                                <img
+                                                                                    key={idx}
+                                                                                    src={gi}
+                                                                                    alt={`Guia ${label} ${idx + 1}`}
+                                                                                    className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 cursor-pointer hover:opacity-80 transition-opacity"
+                                                                                    onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }}
+                                                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                                                                />
+                                                                            ))}
+                                                                        </div>
                                                                     )}
 
                                                                     <div className="grid grid-cols-1 gap-1">
@@ -1350,7 +1360,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onDrop={e => { e.preventDefault(); setIntraoralSupDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralSupPhotos(prev => [...prev, ...files]); setIntraoralSupPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Superior</span>
-                                                            <img src="/images/guides/intraoral-superior.png" alt="Guia Intraoral Superior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <img src="/images/guides/intraoral-superior.png" alt="Guia Intraoral Superior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="grid grid-cols-1 gap-1">
                                                                 <button type="button" onClick={() => intraoralSupFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
@@ -1385,7 +1395,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onDrop={e => { e.preventDefault(); setIntraoralInfDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralInfPhotos(prev => [...prev, ...files]); setIntraoralInfPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Inferior</span>
-                                                            <img src="/images/guides/intraoral-inferior.png" alt="Guia Intraoral Inferior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <img src="/images/guides/intraoral-inferior.png" alt="Guia Intraoral Inferior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="grid grid-cols-1 gap-1">
                                                                 <button type="button" onClick={() => intraoralInfFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
@@ -1420,7 +1430,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onDrop={e => { e.preventDefault(); setdragOver45(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setphotos45(prev => [...prev, ...files]); setpreviews45(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">45º</span>
-                                                            <img src="/images/guides/45.png" alt="Guia 45º" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <img src="/images/guides/45.png" alt="Guia 45º" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="grid grid-cols-1 gap-1">
                                                                 <button type="button" onClick={() => fileRef45.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
@@ -1456,7 +1466,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onDrop={e => { e.preventDefault(); setDragOverOutros(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotosOutros(prev => [...prev, ...files]); setPreviewsOutros(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">Outros</span>
-                                                            <img src="/images/guides/outros.png" alt="Guia Outros" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <img src="/images/guides/outros.png" alt="Guia Outros" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="grid grid-cols-1 gap-1">
                                                                 <button type="button" onClick={() => fileRefOutros.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
