@@ -116,6 +116,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const fileRefOutros = useRef<HTMLInputElement>(null);
     const [dragOverOutros, setDragOverOutros] = useState(false);
     const [photosCollapsed, setPhotosCollapsed] = useState(false);
+    const [photoSetup, setPhotoSetup] = useState<'basic' | 'complete'>('basic');
 
     // Pickers
     const [showDoctorPicker, setShowDoctorPicker] = useState(false);
@@ -796,194 +797,194 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
 
 
-                                        {/* ── Sub-secção: Escala de Cor ── */}
-                                        <div className="rounded-lg border border-amber-200/60 bg-amber-50/30 p-3 space-y-2.5">
-                                            <div className="flex items-center gap-2">
-                                                <Palette className="h-3.5 w-3.5 text-amber-500" />
-                                                <span className="text-[10px] uppercase tracking-widest font-semibold text-amber-600">
-                                                    Escala de Cor
-                                                </span>
-                                            </div>
+                                        {photoSetup === 'complete' && (
+                                            <div className="rounded-lg border border-amber-200/60 bg-amber-50/30 p-3 space-y-2.5">
+                                                <div className="flex items-center gap-2">
+                                                    <Palette className="h-3.5 w-3.5 text-amber-500" />
+                                                    <span className="text-[10px] uppercase tracking-widest font-semibold text-amber-600">
+                                                        Escala de Cor
+                                                    </span>
+                                                </div>
 
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                {/* Dropdown Escala de Cor — 2 níveis + multi-select */}
-                                                <div className="relative" ref={colorDropdownRef}>
-                                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Cor
-                                                    </label>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => { setShowColorDropdown(!showColorDropdown); if (showColorDropdown) setActiveColorGroup(null); }}
-                                                        className="mt-1 w-full min-h-[36px] rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
-                                                    >
-                                                        {selectedColorIds.length > 0 ? (
-                                                            <div className="flex flex-wrap gap-1">
-                                                                {selectedColorIds.map(cid => {
-                                                                    const c = toothColors.find(tc => tc.id === cid);
-                                                                    return c ? (
-                                                                        <span key={cid} className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
-                                                                            {c.codigo}
-                                                                            <button type="button" onClick={e => { e.stopPropagation(); setSelectedColorIds(prev => prev.filter(id => id !== cid)); }} className="hover:text-red-500">
-                                                                                <X className="h-2.5 w-2.5" />
-                                                                            </button>
-                                                                        </span>
-                                                                    ) : null;
-                                                                })}
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-gray-400 text-xs">Seleccionar cor...</span>
-                                                        )}
-                                                        <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform shrink-0 ml-1", showColorDropdown && "rotate-180")} />
-                                                    </button>
-
-                                                    {showColorDropdown && (() => {
-                                                        /* Mapeamento grupo DB → escala real */
-                                                        const SCALE_MAP: Record<string, string> = {
-                                                            'A': 'VITA Classical', 'B': 'VITA Classical', 'C': 'VITA Classical', 'D': 'VITA Classical', 'Bleach': 'VITA Classical',
-                                                            '3D-Master': 'VITA 3D-Master',
-                                                            'Chromascop': 'Chromascop',
-                                                        };
-                                                        const scales = toothColors.reduce<Record<string, { grupos: Record<string, ToothColorItem[]>; total: number }>>((acc, tc) => {
-                                                            const g = tc.grupo || 'Outros';
-                                                            const scale = SCALE_MAP[g] || g;
-                                                            if (!acc[scale]) acc[scale] = { grupos: {}, total: 0 };
-                                                            if (!acc[scale].grupos[g]) acc[scale].grupos[g] = [];
-                                                            acc[scale].grupos[g].push(tc);
-                                                            acc[scale].total++;
-                                                            return acc;
-                                                        }, {});
-
-                                                        return (
-                                                            <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                                                                {!activeColorGroup ? (
-                                                                    /* Nível 1: 3 Escalas reais */
-                                                                    <div className="p-2 space-y-1 max-h-48 overflow-y-auto">
-                                                                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1 pb-1">Escolha a escala</p>
-                                                                        {Object.entries(scales).map(([scaleName, scaleData]) => {
-                                                                            const allColors = Object.values(scaleData.grupos).flat();
-                                                                            const selectedCount = allColors.filter(tc => selectedColorIds.includes(tc.id)).length;
-                                                                            return (
-                                                                                <button
-                                                                                    key={scaleName}
-                                                                                    type="button"
-                                                                                    onClick={() => setActiveColorGroup(scaleName)}
-                                                                                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-amber-50 transition-colors text-left"
-                                                                                >
-                                                                                    <Palette className="h-4 w-4 text-amber-400 shrink-0" />
-                                                                                    <div className="flex-1 min-w-0">
-                                                                                        <span className="text-xs font-semibold text-gray-700 block">{scaleName}</span>
-                                                                                        <span className="text-[10px] text-gray-400">{scaleData.total} tonalidades</span>
-                                                                                    </div>
-                                                                                    {selectedCount > 0 && (
-                                                                                        <span className="text-[9px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-bold">{selectedCount}</span>
-                                                                                    )}
-                                                                                    <ChevronDown className="h-3 w-3 text-gray-300 -rotate-90" />
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    {/* Dropdown Escala de Cor — 2 níveis + multi-select */}
+                                                    <div className="relative" ref={colorDropdownRef}>
+                                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                            Cor
+                                                        </label>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { setShowColorDropdown(!showColorDropdown); if (showColorDropdown) setActiveColorGroup(null); }}
+                                                            className="mt-1 w-full min-h-[36px] rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                                                        >
+                                                            {selectedColorIds.length > 0 ? (
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {selectedColorIds.map(cid => {
+                                                                        const c = toothColors.find(tc => tc.id === cid);
+                                                                        return c ? (
+                                                                            <span key={cid} className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
+                                                                                {c.codigo}
+                                                                                <button type="button" onClick={e => { e.stopPropagation(); setSelectedColorIds(prev => prev.filter(id => id !== cid)); }} className="hover:text-red-500">
+                                                                                    <X className="h-2.5 w-2.5" />
                                                                                 </button>
-                                                                            );
-                                                                        })}
-                                                                        {toothColors.length === 0 && (
-                                                                            <p className="text-[10px] text-gray-400 text-center py-3">Sem cores no catálogo</p>
-                                                                        )}
-                                                                    </div>
-                                                                ) : (
-                                                                    /* Nível 2: Tonalidades dentro da escala seleccionada */
-                                                                    <div>
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => setActiveColorGroup(null)}
-                                                                            className="w-full flex items-center gap-2 px-3 py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                                                                        >
-                                                                            <ChevronDown className="h-3 w-3 text-gray-400 rotate-90" />
-                                                                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{activeColorGroup}</span>
-                                                                        </button>
-                                                                        <div className="max-h-52 overflow-y-auto py-1">
-                                                                            {scales[activeColorGroup] && Object.entries(scales[activeColorGroup].grupos).map(([subGrupo, colors]) => (
-                                                                                <div key={subGrupo}>
-                                                                                    {/* Sub-grupo header (ex: A, B, C, D dentro de VITA Classical) */}
-                                                                                    {Object.keys(scales[activeColorGroup].grupos).length > 1 && (
-                                                                                        <div className="px-3 py-1 border-b border-gray-50">
-                                                                                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{subGrupo}</span>
+                                                                            </span>
+                                                                        ) : null;
+                                                                    })}
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-gray-400 text-xs">Seleccionar cor...</span>
+                                                            )}
+                                                            <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform shrink-0 ml-1", showColorDropdown && "rotate-180")} />
+                                                        </button>
+
+                                                        {showColorDropdown && (() => {
+                                                            /* Mapeamento grupo DB → escala real */
+                                                            const SCALE_MAP: Record<string, string> = {
+                                                                'A': 'VITA Classical', 'B': 'VITA Classical', 'C': 'VITA Classical', 'D': 'VITA Classical', 'Bleach': 'VITA Classical',
+                                                                '3D-Master': 'VITA 3D-Master',
+                                                                'Chromascop': 'Chromascop',
+                                                            };
+                                                            const scales = toothColors.reduce<Record<string, { grupos: Record<string, ToothColorItem[]>; total: number }>>((acc, tc) => {
+                                                                const g = tc.grupo || 'Outros';
+                                                                const scale = SCALE_MAP[g] || g;
+                                                                if (!acc[scale]) acc[scale] = { grupos: {}, total: 0 };
+                                                                if (!acc[scale].grupos[g]) acc[scale].grupos[g] = [];
+                                                                acc[scale].grupos[g].push(tc);
+                                                                acc[scale].total++;
+                                                                return acc;
+                                                            }, {});
+
+                                                            return (
+                                                                <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                                                                    {!activeColorGroup ? (
+                                                                        /* Nível 1: 3 Escalas reais */
+                                                                        <div className="p-2 space-y-1 max-h-48 overflow-y-auto">
+                                                                            <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1 pb-1">Escolha a escala</p>
+                                                                            {Object.entries(scales).map(([scaleName, scaleData]) => {
+                                                                                const allColors = Object.values(scaleData.grupos).flat();
+                                                                                const selectedCount = allColors.filter(tc => selectedColorIds.includes(tc.id)).length;
+                                                                                return (
+                                                                                    <button
+                                                                                        key={scaleName}
+                                                                                        type="button"
+                                                                                        onClick={() => setActiveColorGroup(scaleName)}
+                                                                                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-amber-50 transition-colors text-left"
+                                                                                    >
+                                                                                        <Palette className="h-4 w-4 text-amber-400 shrink-0" />
+                                                                                        <div className="flex-1 min-w-0">
+                                                                                            <span className="text-xs font-semibold text-gray-700 block">{scaleName}</span>
+                                                                                            <span className="text-[10px] text-gray-400">{scaleData.total} tonalidades</span>
                                                                                         </div>
-                                                                                    )}
-                                                                                    {colors.map(tc => {
-                                                                                        const isSelected = selectedColorIds.includes(tc.id);
-                                                                                        return (
-                                                                                            <div
-                                                                                                key={tc.id}
-                                                                                                onClick={() => {
-                                                                                                    setSelectedColorIds(prev =>
-                                                                                                        isSelected ? prev.filter(id => id !== tc.id) : [...prev, tc.id]
-                                                                                                    );
-                                                                                                }}
-                                                                                                className={cn(
-                                                                                                    "flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-amber-50 transition-colors text-xs",
-                                                                                                    isSelected && "bg-amber-50"
-                                                                                                )}
-                                                                                            >
-                                                                                                <div className={cn(
-                                                                                                    "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
-                                                                                                    isSelected ? "border-amber-500 bg-amber-500" : "border-gray-300"
-                                                                                                )}>
-                                                                                                    {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
-                                                                                                </div>
-                                                                                                <span className="font-mono text-gray-500 w-8">{tc.codigo}</span>
-                                                                                                <span className="text-gray-700">{tc.nome}</span>
-                                                                                            </div>
-                                                                                        );
-                                                                                    })}
-                                                                                </div>
-                                                                            ))}
+                                                                                        {selectedCount > 0 && (
+                                                                                            <span className="text-[9px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-bold">{selectedCount}</span>
+                                                                                        )}
+                                                                                        <ChevronDown className="h-3 w-3 text-gray-300 -rotate-90" />
+                                                                                    </button>
+                                                                                );
+                                                                            })}
+                                                                            {toothColors.length === 0 && (
+                                                                                <p className="text-[10px] text-gray-400 text-center py-3">Sem cores no catálogo</p>
+                                                                            )}
                                                                         </div>
-                                                                    </div>
-                                                                )}
+                                                                    ) : (
+                                                                        /* Nível 2: Tonalidades dentro da escala seleccionada */
+                                                                        <div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => setActiveColorGroup(null)}
+                                                                                className="w-full flex items-center gap-2 px-3 py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                                                                            >
+                                                                                <ChevronDown className="h-3 w-3 text-gray-400 rotate-90" />
+                                                                                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{activeColorGroup}</span>
+                                                                            </button>
+                                                                            <div className="max-h-52 overflow-y-auto py-1">
+                                                                                {scales[activeColorGroup] && Object.entries(scales[activeColorGroup].grupos).map(([subGrupo, colors]) => (
+                                                                                    <div key={subGrupo}>
+                                                                                        {/* Sub-grupo header (ex: A, B, C, D dentro de VITA Classical) */}
+                                                                                        {Object.keys(scales[activeColorGroup].grupos).length > 1 && (
+                                                                                            <div className="px-3 py-1 border-b border-gray-50">
+                                                                                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{subGrupo}</span>
+                                                                                            </div>
+                                                                                        )}
+                                                                                        {colors.map(tc => {
+                                                                                            const isSelected = selectedColorIds.includes(tc.id);
+                                                                                            return (
+                                                                                                <div
+                                                                                                    key={tc.id}
+                                                                                                    onClick={() => {
+                                                                                                        setSelectedColorIds(prev =>
+                                                                                                            isSelected ? prev.filter(id => id !== tc.id) : [...prev, tc.id]
+                                                                                                        );
+                                                                                                    }}
+                                                                                                    className={cn(
+                                                                                                        "flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-amber-50 transition-colors text-xs",
+                                                                                                        isSelected && "bg-amber-50"
+                                                                                                    )}
+                                                                                                >
+                                                                                                    <div className={cn(
+                                                                                                        "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                                                                                                        isSelected ? "border-amber-500 bg-amber-500" : "border-gray-300"
+                                                                                                    )}>
+                                                                                                        {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                                                                                                    </div>
+                                                                                                    <span className="font-mono text-gray-500 w-8">{tc.codigo}</span>
+                                                                                                    <span className="text-gray-700">{tc.nome}</span>
+                                                                                                </div>
+                                                                                            );
+                                                                                        })}
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })()}
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        {/* Fotos — coluna esquerda */}
+                                                        <div
+                                                            className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${colorDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                            onDragOver={e => { e.preventDefault(); setColorDragOver(true); }}
+                                                            onDragLeave={() => setColorDragOver(false)}
+                                                            onDrop={e => { e.preventDefault(); setColorDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setColorScalePhotos(prev => [...prev, ...files]); setColorScalePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                        >
+                                                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Fotos</label>
+                                                            <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <div className="mt-1.5 grid grid-cols-1 gap-1">
+                                                                <button type="button" onClick={() => colorFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro"><Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span></button>
+                                                                <button type="button" onClick={() => { const colorSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: colorScalePhotos, previews: colorScalePreviews }; const result = action(virtualPrev); setColorScalePhotos(result.files); setColorScalePreviews(result.previews); } }; setCameraTarget({ setter: colorSetter, key: 'escalaCor' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia"><Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span></button>
+                                                                {!photosCollapsed && colorScalePreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{colorScalePreviews.map((url, i) => (<div key={i} className="relative group"><img src={url} alt={`Cor ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={() => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button></div>))}</div>)}
+                                                                {photosCollapsed && colorScalePreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center">📷 {colorScalePreviews.length} foto(s)</p>)}
+                                                                <input ref={colorFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                <input id="cam-native-escalaCor" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             </div>
-                                                        );
-                                                    })()}
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    {/* Fotos — coluna esquerda */}
-                                                    <div
-                                                        className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${colorDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                        onDragOver={e => { e.preventDefault(); setColorDragOver(true); }}
-                                                        onDragLeave={() => setColorDragOver(false)}
-                                                        onDrop={e => { e.preventDefault(); setColorDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setColorScalePhotos(prev => [...prev, ...files]); setColorScalePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                    >
-                                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Fotos</label>
-                                                        <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                        <div className="mt-1.5 grid grid-cols-1 gap-1">
-                                                            <button type="button" onClick={() => colorFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro"><Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span></button>
-                                                            <button type="button" onClick={() => { const colorSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: colorScalePhotos, previews: colorScalePreviews }; const result = action(virtualPrev); setColorScalePhotos(result.files); setColorScalePreviews(result.previews); } }; setCameraTarget({ setter: colorSetter, key: 'escalaCor' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia"><Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span></button>
-                                                            {!photosCollapsed && colorScalePreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{colorScalePreviews.map((url, i) => (<div key={i} className="relative group"><img src={url} alt={`Cor ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={() => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button></div>))}</div>)}
-                                                            {photosCollapsed && colorScalePreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center">📷 {colorScalePreviews.length} foto(s)</p>)}
-                                                            <input ref={colorFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                            <input id="cam-native-escalaCor" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            {colorScalePreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
                                                         </div>
-                                                        {colorScalePreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
-                                                    </div>
-                                                    {/* Polarizadas — coluna direita */}
-                                                    <div
-                                                        className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${polarizedDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                        onDragOver={e => { e.preventDefault(); setPolarizedDragOver(true); }}
-                                                        onDragLeave={() => setPolarizedDragOver(false)}
-                                                        onDrop={e => { e.preventDefault(); setPolarizedDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPolarizedPhotos(prev => [...prev, ...files]); setPolarizedPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                    >
-                                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Polarizadas</label>
-                                                        <img src="/images/guides/escala-de-cor-polarizada.png" alt="Guia Polarizada" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                        <div className="mt-1.5 grid grid-cols-1 gap-1">
-                                                            <button type="button" onClick={() => polarizedFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro"><Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span></button>
-                                                            <button type="button" onClick={() => { const polSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: polarizedPhotos, previews: polarizedPreviews }; const result = action(virtualPrev); setPolarizedPhotos(result.files); setPolarizedPreviews(result.previews); } }; setCameraTarget({ setter: polSetter, key: 'polarizada' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia"><Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span></button>
-                                                            {!photosCollapsed && polarizedPreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{polarizedPreviews.map((url, i) => (<div key={i} className="relative group"><img src={url} alt={`Polarizada ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={() => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button></div>))}</div>)}
-                                                            {photosCollapsed && polarizedPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center">📷 {polarizedPreviews.length} foto(s)</p>)}
-                                                            <input ref={polarizedFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                            <input id="cam-native-polarizada" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                        {/* Polarizadas — coluna direita */}
+                                                        <div
+                                                            className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${polarizedDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                            onDragOver={e => { e.preventDefault(); setPolarizedDragOver(true); }}
+                                                            onDragLeave={() => setPolarizedDragOver(false)}
+                                                            onDrop={e => { e.preventDefault(); setPolarizedDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPolarizedPhotos(prev => [...prev, ...files]); setPolarizedPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                        >
+                                                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Polarizadas</label>
+                                                            <img src="/images/guides/escala-de-cor-polarizada.png" alt="Guia Polarizada" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <div className="mt-1.5 grid grid-cols-1 gap-1">
+                                                                <button type="button" onClick={() => polarizedFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro"><Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span></button>
+                                                                <button type="button" onClick={() => { const polSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: polarizedPhotos, previews: polarizedPreviews }; const result = action(virtualPrev); setPolarizedPhotos(result.files); setPolarizedPreviews(result.previews); } }; setCameraTarget({ setter: polSetter, key: 'polarizada' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia"><Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span></button>
+                                                                {!photosCollapsed && polarizedPreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{polarizedPreviews.map((url, i) => (<div key={i} className="relative group"><img src={url} alt={`Polarizada ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={() => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button></div>))}</div>)}
+                                                                {photosCollapsed && polarizedPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center">📷 {polarizedPreviews.length} foto(s)</p>)}
+                                                                <input ref={polarizedFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                <input id="cam-native-polarizada" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            </div>
+                                                            {polarizedPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
                                                         </div>
-                                                        {polarizedPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                        </div>
+                                            </div>)}
                                         {/* ── Sub-secção: Registos Fotográficos ── */}
                                         <div className="rounded-lg border border-sky-200/60 bg-sky-50/30 p-3 space-y-2.5">
                                             <div className="flex items-center justify-between">
@@ -992,6 +993,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     <span className="text-[10px] uppercase tracking-widest font-semibold text-sky-600">
                                                         Registos Fotográficos
                                                     </span>
+                                                    <div className="flex gap-1 ml-2">
+                                                        <button type="button" onClick={() => setPhotoSetup('basic')} className={cn('px-2 py-0.5 rounded-full text-[9px] font-semibold transition-all', photoSetup === 'basic' ? 'bg-sky-500 text-white shadow-sm' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600')}>
+                                                            Setup Básico
+                                                        </button>
+                                                        <button type="button" onClick={() => setPhotoSetup('complete')} className={cn('px-2 py-0.5 rounded-full text-[9px] font-semibold transition-all', photoSetup === 'complete' ? 'bg-sky-500 text-white shadow-sm' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600')}>
+                                                            Setup Completo
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 {(faceRepouso.previews.length > 0 || faceSorrisoNatural.previews.length > 0 || faceSorrisoAlto.previews.length > 0 || closeupRepouso.previews.length > 0 || closeupSorrisoNatural.previews.length > 0 || closeupSorrisoAlto.previews.length > 0 || colorScalePreviews.length > 0 || intraoralSupPreviews.length > 0 || intraoralInfPreviews.length > 0 || previews45.length > 0 || previewsOutros.length > 0) && (
                                                     <button
@@ -1012,15 +1021,16 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 {/* Retrato — linha inteira */}
                                                 <fieldset className="border border-gray-200 rounded-lg p-2">
                                                     <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Retrato</legend>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                                                    <div className={cn('grid grid-cols-1 gap-2', photoSetup === 'basic' ? 'sm:grid-cols-3' : 'sm:grid-cols-5')}>
                                                         {(() => {
-                                                            const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
+                                                            const allFaceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
                                                                 { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso', guideImages: ['/images/guides/retrato-repouso.png'] },
                                                                 { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural', guideImages: ['/images/guides/retrato-sorriso-natural.png'] },
                                                                 { label: 'Sorriso Máximo', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto', guideImages: ['/images/guides/retrato-sorriso-maximo.png'] },
                                                                 { label: '45º', state: face45Esq, setter: setFace45Esq, ref: face45EsqRef, key: '45', guideImages: ['/images/guides/retrato-45-esquerda.png', '/images/guides/retrato-45-direita.png'] },
                                                                 { label: 'Perfil', state: face45Dir, setter: setFace45Dir, ref: face45DirRef, key: 'perfil', guideImages: ['/images/guides/retrato-perfil-esquerda.png', '/images/guides/retrato-perfil-direita.png'] },
                                                             ];
+                                                            const faceFields = photoSetup === 'basic' ? allFaceFields.filter(f => ['repouso', 'sorrisoNatural', 'sorrisoAlto'].includes(f.key)) : allFaceFields;
 
                                                             const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
                                                                 setter(prev => ({
@@ -1152,8 +1162,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         })()}
                                                     </div>
                                                 </fieldset>
-                                                {/* Close-up — linha inteira, clone do Face */}
-                                                <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                {/* Close-up — linha inteira, clone do Face (apenas Setup Completo) */}
+                                                {photoSetup === 'complete' && (<fieldset className="border border-gray-200 rounded-lg p-2">
                                                     <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Close-up</legend>
                                                     <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                                                         {(() => {
@@ -1243,11 +1253,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             ));
                                                         })()}
                                                     </div>
-                                                </fieldset>
+                                                </fieldset>)}
                                                 {/* Vista Oclusal + 45º + Outros — grid */}
-                                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                                                    {/* --- Vista Oclusal (Intraoral Superior + Inferior) --- */}
-                                                    <fieldset className="border border-gray-200 rounded-lg p-2 sm:col-span-2">
+                                                <div className={cn('grid grid-cols-1 gap-2', photoSetup === 'basic' ? 'sm:grid-cols-1' : 'sm:grid-cols-4')}>
+                                                    {/* --- Vista Oclusal (Intraoral Superior + Inferior) — apenas Setup Completo --- */}
+                                                    {photoSetup === 'complete' && (<fieldset className="border border-gray-200 rounded-lg p-2 sm:col-span-2">
                                                         <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Vista Oclusal</legend>
                                                         <div className="grid grid-cols-2 gap-2">
                                                             <div
@@ -1313,10 +1323,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 {intraoralInfPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
                                                             </div>
                                                         </div>
-                                                    </fieldset>
+                                                    </fieldset>)}
 
-                                                    {/* --- 45º --- */}
-                                                    <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                    {/* --- 45º — apenas Setup Completo --- */}
+                                                    {photoSetup === 'complete' && (<fieldset className="border border-gray-200 rounded-lg p-2">
                                                         <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">45º</legend>
                                                         <div
                                                             className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOver45 ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
@@ -1349,7 +1359,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             {photosCollapsed && previews45.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previews45.length} foto(s)</p>)}
                                                             {previews45.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
                                                         </div>
-                                                    </fieldset>
+                                                    </fieldset>)}
 
                                                     {/* --- Outros --- */}
                                                     <fieldset className="border border-gray-200 rounded-lg p-2">
