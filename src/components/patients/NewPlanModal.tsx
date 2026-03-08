@@ -983,465 +983,470 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 </div>
                                             </div>
 
-                                    </div>
-                                    {/* ── Sub-secção: Registos Fotográficos ── */}
-                                    <div className="rounded-lg border border-sky-200/60 bg-sky-50/30 p-3 space-y-2.5">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Camera className="h-3.5 w-3.5 text-sky-500" />
-                                                <span className="text-[10px] uppercase tracking-widest font-semibold text-sky-600">
-                                                    Registos Fotográficos
-                                                </span>
+                                        </div>
+                                        {/* ── Sub-secção: Registos Fotográficos ── */}
+                                        <div className="rounded-lg border border-sky-200/60 bg-sky-50/30 p-3 space-y-2.5">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Camera className="h-3.5 w-3.5 text-sky-500" />
+                                                    <span className="text-[10px] uppercase tracking-widest font-semibold text-sky-600">
+                                                        Registos Fotográficos
+                                                    </span>
+                                                </div>
+                                                {(faceRepouso.previews.length > 0 || faceSorrisoNatural.previews.length > 0 || faceSorrisoAlto.previews.length > 0 || closeupRepouso.previews.length > 0 || closeupSorrisoNatural.previews.length > 0 || closeupSorrisoAlto.previews.length > 0 || colorScalePreviews.length > 0 || intraoralSupPreviews.length > 0 || intraoralInfPreviews.length > 0 || previews45.length > 0 || previewsOutros.length > 0) && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPhotosCollapsed(prev => !prev)}
+                                                        className="flex items-center gap-1 text-[9px] text-sky-500 hover:text-sky-700 font-medium transition-colors"
+                                                    >
+                                                        {photosCollapsed ? (
+                                                            <><ChevronDown className="h-3 w-3" /> Mostrar fotos</>
+                                                        ) : (
+                                                            <><ChevronUp className="h-3 w-3" /> Minimizar fotos</>
+                                                        )}
+                                                    </button>
+                                                )}
                                             </div>
-                                            {(faceRepouso.previews.length > 0 || faceSorrisoNatural.previews.length > 0 || faceSorrisoAlto.previews.length > 0 || closeupRepouso.previews.length > 0 || closeupSorrisoNatural.previews.length > 0 || closeupSorrisoAlto.previews.length > 0 || colorScalePreviews.length > 0 || intraoralSupPreviews.length > 0 || intraoralInfPreviews.length > 0 || previews45.length > 0 || previewsOutros.length > 0) && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setPhotosCollapsed(prev => !prev)}
-                                                    className="flex items-center gap-1 text-[9px] text-sky-500 hover:text-sky-700 font-medium transition-colors"
-                                                >
-                                                    {photosCollapsed ? (
-                                                        <><ChevronDown className="h-3 w-3" /> Mostrar fotos</>
-                                                    ) : (
-                                                        <><ChevronUp className="h-3 w-3" /> Minimizar fotos</>
-                                                    )}
-                                                </button>
-                                            )}
+
+                                            <div className="space-y-3">
+                                                {/* Retrato — linha inteira */}
+                                                <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Retrato</legend>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                                                        {(() => {
+                                                            const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
+                                                                { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso', guideImages: ['/images/guides/retrato-repouso.png'] },
+                                                                { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural', guideImages: ['/images/guides/retrato-sorriso-natural.png'] },
+                                                                { label: 'Sorriso Máximo', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto', guideImages: ['/images/guides/retrato-sorriso-maximo.png'] },
+                                                                { label: '45º', state: face45Esq, setter: setFace45Esq, ref: face45EsqRef, key: '45', guideImages: ['/images/guides/retrato-45-esquerda.png', '/images/guides/retrato-45-direita.png'] },
+                                                                { label: 'Perfil', state: face45Dir, setter: setFace45Dir, ref: face45DirRef, key: 'perfil', guideImages: ['/images/guides/retrato-perfil-esquerda.png', '/images/guides/retrato-perfil-direita.png'] },
+                                                            ];
+
+                                                            const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
+                                                                setter(prev => ({
+                                                                    files: [...prev.files, ...newFiles],
+                                                                    previews: [...prev.previews, ...newFiles.map(f => URL.createObjectURL(f))],
+                                                                }));
+                                                            };
+
+                                                            const removeFile = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, idx: number) => {
+                                                                setter(prev => ({
+                                                                    files: prev.files.filter((_, i) => i !== idx),
+                                                                    previews: prev.previews.filter((_, i) => i !== idx),
+                                                                }));
+                                                            };
+
+                                                            return faceFields.map(({ label, state, setter, ref, key, guideImages }) => (
+                                                                <div
+                                                                    key={key}
+                                                                    className={cn(
+                                                                        "text-center rounded-lg border-2 border-dashed p-1.5 transition-colors",
+                                                                        faceDragOver === key
+                                                                            ? "border-sky-400 bg-sky-100/50"
+                                                                            : "border-gray-200 bg-white"
+                                                                    )}
+                                                                    onDragOver={e => { e.preventDefault(); setFaceDragOver(key); }}
+                                                                    onDragLeave={() => setFaceDragOver(null)}
+                                                                    onDrop={e => {
+                                                                        e.preventDefault();
+                                                                        setFaceDragOver(null);
+                                                                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                                                                        if (files.length > 0) addFiles(setter, files);
+                                                                    }}
+                                                                >
+                                                                    <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
+
+                                                                    {/* Guide images — referência visual */}
+                                                                    {guideImages && guideImages.length > 0 && (
+                                                                        <div className={guideImages.length > 1 ? 'grid grid-cols-2 gap-0.5 mb-1' : 'mb-1'}>
+                                                                            {guideImages.map((gi, idx) => (
+                                                                                <img
+                                                                                    key={idx}
+                                                                                    src={gi}
+                                                                                    alt={`Guia ${label} ${idx + 1}`}
+                                                                                    className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 cursor-pointer hover:opacity-80 transition-opacity"
+                                                                                    onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }}
+                                                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                                                                />
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Action buttons — always visible */}
+                                                                    <div className="grid grid-cols-1 gap-1">
+                                                                        {/* Ficheiro */}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => ref.current?.click()}
+                                                                            className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2"
+                                                                            title="Anexar ficheiro"
+                                                                        >
+                                                                            <Upload className="h-3 w-3" />
+                                                                            <span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                        </button>
+                                                                        {/* Câmara */}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => setCameraTarget({ setter, key })}
+                                                                            className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2"
+                                                                            title="Tirar fotografia"
+                                                                        >
+                                                                            <Camera className="h-3 w-3" />
+                                                                            <span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                                        </button>
+                                                                    </div>
+
+                                                                    {/* Preview grid — abaixo dos botões, colapsável */}
+                                                                    {!photosCollapsed && state.previews.length > 0 && (
+                                                                        <div className="grid grid-cols-2 gap-1 mt-1">
+                                                                            {state.previews.map((url, i) => (
+                                                                                <div key={i} className="relative group">
+                                                                                    <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-[3/4] object-cover rounded border border-gray-200" />
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => removeFile(setter, i)}
+                                                                                        className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                                    >
+                                                                                        <X className="h-2 w-2 text-white" />
+                                                                                    </button>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                    {photosCollapsed && state.previews.length > 0 && (
+                                                                        <p className="text-[8px] text-gray-400 text-center mt-1">📷 {state.previews.length} foto(s)</p>
+                                                                    )}
+
+                                                                    {state.previews.length === 0 && (
+                                                                        <p className="text-[7px] text-gray-300 mt-1">ou arraste fotos aqui</p>
+                                                                    )}
+
+                                                                    {/* Hidden inputs */}
+                                                                    <input
+                                                                        ref={ref}
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        multiple
+                                                                        className="hidden"
+                                                                        onChange={e => {
+                                                                            const files = e.target.files;
+                                                                            if (files && files.length > 0) addFiles(setter, Array.from(files));
+                                                                            e.target.value = '';
+                                                                        }}
+                                                                    />
+                                                                    {/* Input câmara nativa (opc. qualidade máxima — fotografia computacional) */}
+                                                                    <input
+                                                                        id={`cam-native-${key}`}
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        capture="environment"
+                                                                        className="hidden"
+                                                                        onChange={e => {
+                                                                            const files = e.target.files;
+                                                                            if (files && files.length > 0) addFiles(setter, Array.from(files));
+                                                                            e.target.value = '';
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            ));
+                                                        })()}
+                                                    </div>
+                                                </fieldset>
+                                                {/* Close-up — linha inteira, clone do Face */}
+                                                <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Close-up</legend>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                                                        {(() => {
+                                                            const closeupFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
+                                                                { label: 'Repouso', state: closeupRepouso, setter: setCloseupRepouso, ref: closeupRepousoRef, key: 'cu-repouso', guideImages: ['/images/guides/close-up-repouso.png'] },
+                                                                { label: 'Sorriso Natural', state: closeupSorrisoNatural, setter: setCloseupSorrisoNatural, ref: closeupSorrisoNaturalRef, key: 'cu-sorrisoNatural', guideImages: ['/images/guides/close-up-sorriso-natural.png'] },
+                                                                { label: 'Sorriso Máximo', state: closeupSorrisoAlto, setter: setCloseupSorrisoAlto, ref: closeupSorrisoAltoRef, key: 'cu-sorrisoAlto', guideImages: ['/images/guides/close-up-sorriso-maximo.png'] },
+                                                                { label: '45º', state: closeup45Esq, setter: setCloseup45Esq, ref: closeup45EsqRef, key: 'cu-45', guideImages: ['/images/guides/close-up-45-esquerda.png', '/images/guides/close-up-45-direita.png'] },
+                                                                { label: 'Retractores', state: closeup45Dir, setter: setCloseup45Dir, ref: closeup45DirRef, key: 'cu-retractores', guideImages: ['/images/guides/close-up-perfil-esquerda.png', '/images/guides/close-up-perfil-direita.png'] },
+                                                            ];
+
+                                                            const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
+                                                                setter(prev => ({
+                                                                    files: [...prev.files, ...newFiles],
+                                                                    previews: [...prev.previews, ...newFiles.map(f => URL.createObjectURL(f))],
+                                                                }));
+                                                            };
+
+                                                            const removeFile = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, idx: number) => {
+                                                                setter(prev => ({
+                                                                    files: prev.files.filter((_, i) => i !== idx),
+                                                                    previews: prev.previews.filter((_, i) => i !== idx),
+                                                                }));
+                                                            };
+
+                                                            return closeupFields.map(({ label, state, setter, ref, key, guideImages }) => (
+                                                                <div
+                                                                    key={key}
+                                                                    className={cn(
+                                                                        "text-center rounded-lg border-2 border-dashed p-1.5 transition-colors",
+                                                                        closeupDragOver === key
+                                                                            ? "border-sky-400 bg-sky-100/50"
+                                                                            : "border-gray-200 bg-white"
+                                                                    )}
+                                                                    onDragOver={e => { e.preventDefault(); setCloseupDragOver(key); }}
+                                                                    onDragLeave={() => setCloseupDragOver(null)}
+                                                                    onDrop={e => {
+                                                                        e.preventDefault();
+                                                                        setCloseupDragOver(null);
+                                                                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                                                                        if (files.length > 0) addFiles(setter, files);
+                                                                    }}
+                                                                >
+                                                                    <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
+
+                                                                    {guideImages && guideImages.length > 0 && (
+                                                                        <div className={guideImages.length > 1 ? 'grid grid-cols-2 gap-0.5 mb-1' : 'mb-1'}>
+                                                                            {guideImages.map((gi: string, idx: number) => (
+                                                                                <img
+                                                                                    key={idx}
+                                                                                    src={gi}
+                                                                                    alt={`Guia ${label} ${idx + 1}`}
+                                                                                    className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 cursor-pointer hover:opacity-80 transition-opacity"
+                                                                                    onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }}
+                                                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                                                                />
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+
+                                                                    <div className="grid grid-cols-1 gap-1">
+                                                                        <button type="button" onClick={() => ref.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                            <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                        </button>
+                                                                        <button type="button" onClick={() => setCameraTarget({ setter, key })} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                            <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                                        </button>
+                                                                    </div>
+
+                                                                    {!photosCollapsed && state.previews.length > 0 && (
+                                                                        <div className="grid grid-cols-2 gap-1 mt-1">
+                                                                            {state.previews.map((url, i) => (
+                                                                                <div key={i} className="relative group">
+                                                                                    <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                                    <button type="button" onClick={() => removeFile(setter, i)} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                                        <X className="h-2 w-2 text-white" />
+                                                                                    </button>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                    {photosCollapsed && state.previews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {state.previews.length} foto(s)</p>)}
+                                                                    {state.previews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+
+                                                                    <input ref={ref} type="file" accept="image/*" multiple className="hidden" onChange={e => { const files = e.target.files; if (files && files.length > 0) addFiles(setter, Array.from(files)); e.target.value = ''; }} />
+                                                                </div>
+                                                            ));
+                                                        })()}
+                                                    </div>
+                                                </fieldset>
+                                                {/* Vista Oclusal + 45º + Outros — grid */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                                                    {/* --- Vista Oclusal (Intraoral Superior + Inferior) --- */}
+                                                    <fieldset className="border border-gray-200 rounded-lg p-2 sm:col-span-2">
+                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Vista Oclusal</legend>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                                <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Superior</legend>
+                                                                <div
+                                                                    className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralSupDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                                    onDragOver={e => { e.preventDefault(); setIntraoralSupDragOver(true); }}
+                                                                    onDragLeave={() => setIntraoralSupDragOver(false)}
+                                                                    onDrop={e => { e.preventDefault(); setIntraoralSupDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralSupPhotos(prev => [...prev, ...files]); setIntraoralSupPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                                >
+                                                                    <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Superior</span>
+                                                                    <img src="/images/guides/intraoral-superior.png" alt="Guia Intraoral Superior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                                    <div className="grid grid-cols-1 gap-1">
+                                                                        <button type="button" onClick={() => intraoralSupFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                            <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                        </button>
+                                                                        <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralSupPhotos, previews: intraoralSupPreviews }); setIntraoralSupPhotos(r.files); setIntraoralSupPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralSup' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                            <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                                        </button>
+                                                                        <input ref={intraoralSupFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralSupPhotos(p => [...p, ...nf]); setIntraoralSupPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                    </div>
+                                                                    {!photosCollapsed && intraoralSupPreviews.length > 0 && (
+                                                                        <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                            {intraoralSupPreviews.map((url, i) => (
+                                                                                <div key={i} className="relative group">
+                                                                                    <img src={url} alt={`Intraoral Sup ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                                    <button type="button" onClick={() => { setIntraoralSupPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralSupPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                    {photosCollapsed && intraoralSupPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {intraoralSupPreviews.length} foto(s)</p>)}
+                                                                    {intraoralSupPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                                </div>
+                                                            </fieldset>
+
+                                                            {/* --- Intraoral Inferior --- */}
+                                                            <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                                <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Inferior</legend>
+                                                                <div
+                                                                    className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralInfDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                                    onDragOver={e => { e.preventDefault(); setIntraoralInfDragOver(true); }}
+                                                                    onDragLeave={() => setIntraoralInfDragOver(false)}
+                                                                    onDrop={e => { e.preventDefault(); setIntraoralInfDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralInfPhotos(prev => [...prev, ...files]); setIntraoralInfPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                                >
+                                                                    <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Inferior</span>
+                                                                    <img src="/images/guides/intraoral-inferior.png" alt="Guia Intraoral Inferior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                                    <div className="grid grid-cols-1 gap-1">
+                                                                        <button type="button" onClick={() => intraoralInfFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                            <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                        </button>
+                                                                        <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralInfPhotos, previews: intraoralInfPreviews }); setIntraoralInfPhotos(r.files); setIntraoralInfPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralInf' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                            <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                                        </button>
+                                                                        <input ref={intraoralInfFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralInfPhotos(p => [...p, ...nf]); setIntraoralInfPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                    </div>
+                                                                    {!photosCollapsed && intraoralInfPreviews.length > 0 && (
+                                                                        <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                            {intraoralInfPreviews.map((url, i) => (
+                                                                                <div key={i} className="relative group">
+                                                                                    <img src={url} alt={`Intraoral Inf ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                                    <button type="button" onClick={() => { setIntraoralInfPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralInfPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                    {photosCollapsed && intraoralInfPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {intraoralInfPreviews.length} foto(s)</p>)}
+                                                                    {intraoralInfPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                                </div>
+                                                            </fieldset>
+                                                        </div>
+                                                    </fieldset>
+
+                                                    {/* --- 45º --- */}
+                                                    <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">45º</legend>
+                                                        <div
+                                                            className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOver45 ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                            onDragOver={e => { e.preventDefault(); setdragOver45(true); }}
+                                                            onDragLeave={() => setdragOver45(false)}
+                                                            onDrop={e => { e.preventDefault(); setdragOver45(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setphotos45(prev => [...prev, ...files]); setpreviews45(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                        >
+                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">45º</span>
+                                                            <img src="/images/guides/45.png" alt="Guia 45º" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <div className="grid grid-cols-1 gap-1">
+                                                                <button type="button" onClick={() => fileRef45.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                    <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                </button>
+                                                                <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: photos45, previews: previews45 }); setphotos45(r.files); setpreviews45(r.previews); } }; setCameraTarget({ setter: s, key: 'foto45' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                    <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                                </button>
+                                                                <input ref={fileRef45} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setphotos45(p => [...p, ...nf]); setpreviews45(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                <input id="cam-native-45" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setphotos45(p => [...p, ...nf]); setpreviews45(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            </div>
+                                                            {!photosCollapsed && previews45.length > 0 && (
+                                                                <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                    {previews45.map((url, i) => (
+                                                                        <div key={i} className="relative group">
+                                                                            <img src={url} alt={`45º ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                            <button type="button" onClick={() => { setphotos45(p => p.filter((_, idx) => idx !== i)); setpreviews45(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {photosCollapsed && previews45.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previews45.length} foto(s)</p>)}
+                                                            {previews45.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                        </div>
+                                                    </fieldset>
+
+                                                    {/* --- Outros --- */}
+                                                    <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Outros</legend>
+                                                        <div
+                                                            className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOverOutros ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                            onDragOver={e => { e.preventDefault(); setDragOverOutros(true); }}
+                                                            onDragLeave={() => setDragOverOutros(false)}
+                                                            onDrop={e => { e.preventDefault(); setDragOverOutros(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotosOutros(prev => [...prev, ...files]); setPreviewsOutros(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                        >
+                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">Outros</span>
+                                                            <img src="/images/guides/outros.png" alt="Guia Outros" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <div className="grid grid-cols-1 gap-1">
+                                                                <button type="button" onClick={() => fileRefOutros.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                    <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                </button>
+                                                                <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: photosOutros, previews: previewsOutros }); setPhotosOutros(r.files); setPreviewsOutros(r.previews); } }; setCameraTarget({ setter: s, key: 'outros' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                    <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                                </button>
+                                                                <input ref={fileRefOutros} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                <input id="cam-native-outros" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            </div>
+                                                            {!photosCollapsed && previewsOutros.length > 0 && (
+                                                                <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                    {previewsOutros.map((url, i) => (
+                                                                        <div key={i} className="relative group">
+                                                                            <img src={url} alt={`Outros ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                            <button type="button" onClick={() => { setPhotosOutros(p => p.filter((_, idx) => idx !== i)); setPreviewsOutros(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {photosCollapsed && previewsOutros.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previewsOutros.length} foto(s)</p>)}
+                                                            {previewsOutros.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                        </div>
+                                                    </fieldset>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <div className="space-y-3">
-                                            {/* Retrato — linha inteira */}
-                                            <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Retrato</legend>
-                                                <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                                                    {(() => {
-                                                        const faceFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
-                                                            { label: 'Repouso', state: faceRepouso, setter: setFaceRepouso, ref: faceRepousoRef, key: 'repouso', guideImages: ['/images/guides/retrato-repouso.png'] },
-                                                            { label: 'Sorriso Natural', state: faceSorrisoNatural, setter: setFaceSorrisoNatural, ref: faceSorrisoNaturalRef, key: 'sorrisoNatural', guideImages: ['/images/guides/retrato-sorriso-natural.png'] },
-                                                            { label: 'Sorriso Máximo', state: faceSorrisoAlto, setter: setFaceSorrisoAlto, ref: faceSorrisoAltoRef, key: 'sorrisoAlto', guideImages: ['/images/guides/retrato-sorriso-maximo.png'] },
-                                                            { label: '45º', state: face45Esq, setter: setFace45Esq, ref: face45EsqRef, key: '45', guideImages: ['/images/guides/retrato-45-esquerda.png', '/images/guides/retrato-45-direita.png'] },
-                                                            { label: 'Perfil', state: face45Dir, setter: setFace45Dir, ref: face45DirRef, key: 'perfil', guideImages: ['/images/guides/retrato-perfil-esquerda.png', '/images/guides/retrato-perfil-direita.png'] },
-                                                        ];
 
-                                                        const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
-                                                            setter(prev => ({
-                                                                files: [...prev.files, ...newFiles],
-                                                                previews: [...prev.previews, ...newFiles.map(f => URL.createObjectURL(f))],
-                                                            }));
-                                                        };
-
-                                                        const removeFile = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, idx: number) => {
-                                                            setter(prev => ({
-                                                                files: prev.files.filter((_, i) => i !== idx),
-                                                                previews: prev.previews.filter((_, i) => i !== idx),
-                                                            }));
-                                                        };
-
-                                                        return faceFields.map(({ label, state, setter, ref, key, guideImages }) => (
-                                                            <div
-                                                                key={key}
-                                                                className={cn(
-                                                                    "text-center rounded-lg border-2 border-dashed p-1.5 transition-colors",
-                                                                    faceDragOver === key
-                                                                        ? "border-sky-400 bg-sky-100/50"
-                                                                        : "border-gray-200 bg-white"
-                                                                )}
-                                                                onDragOver={e => { e.preventDefault(); setFaceDragOver(key); }}
-                                                                onDragLeave={() => setFaceDragOver(null)}
-                                                                onDrop={e => {
-                                                                    e.preventDefault();
-                                                                    setFaceDragOver(null);
-                                                                    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-                                                                    if (files.length > 0) addFiles(setter, files);
-                                                                }}
-                                                            >
-                                                                <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
-
-                                                                {/* Guide images — referência visual */}
-                                                                {guideImages && guideImages.length > 0 && (
-                                                                    <div className={guideImages.length > 1 ? 'grid grid-cols-2 gap-0.5 mb-1' : 'mb-1'}>
-                                                                        {guideImages.map((gi, idx) => (
-                                                                            <img
-                                                                                key={idx}
-                                                                                src={gi}
-                                                                                alt={`Guia ${label} ${idx + 1}`}
-                                                                                className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 cursor-pointer hover:opacity-80 transition-opacity"
-                                                                                onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }}
-                                                                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                                                            />
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-
-                                                                {/* Action buttons — always visible */}
-                                                                <div className="grid grid-cols-1 gap-1">
-                                                                    {/* Ficheiro */}
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => ref.current?.click()}
-                                                                        className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2"
-                                                                        title="Anexar ficheiro"
-                                                                    >
-                                                                        <Upload className="h-3 w-3" />
-                                                                        <span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                                    </button>
-                                                                    {/* Câmara */}
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setCameraTarget({ setter, key })}
-                                                                        className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2"
-                                                                        title="Tirar fotografia"
-                                                                    >
-                                                                        <Camera className="h-3 w-3" />
-                                                                        <span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                                    </button>
-                                                                </div>
-
-                                                                {/* Preview grid — abaixo dos botões, colapsável */}
-                                                                {!photosCollapsed && state.previews.length > 0 && (
-                                                                    <div className="grid grid-cols-2 gap-1 mt-1">
-                                                                        {state.previews.map((url, i) => (
-                                                                            <div key={i} className="relative group">
-                                                                                <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-[3/4] object-cover rounded border border-gray-200" />
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => removeFile(setter, i)}
-                                                                                    className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                                >
-                                                                                    <X className="h-2 w-2 text-white" />
-                                                                                </button>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                                {photosCollapsed && state.previews.length > 0 && (
-                                                                    <p className="text-[8px] text-gray-400 text-center mt-1">📷 {state.previews.length} foto(s)</p>
-                                                                )}
-
-                                                                {state.previews.length === 0 && (
-                                                                    <p className="text-[7px] text-gray-300 mt-1">ou arraste fotos aqui</p>
-                                                                )}
-
-                                                                {/* Hidden inputs */}
-                                                                <input
-                                                                    ref={ref}
-                                                                    type="file"
-                                                                    accept="image/*"
-                                                                    multiple
-                                                                    className="hidden"
-                                                                    onChange={e => {
-                                                                        const files = e.target.files;
-                                                                        if (files && files.length > 0) addFiles(setter, Array.from(files));
-                                                                        e.target.value = '';
-                                                                    }}
-                                                                />
-                                                                {/* Input câmara nativa (opc. qualidade máxima — fotografia computacional) */}
-                                                                <input
-                                                                    id={`cam-native-${key}`}
-                                                                    type="file"
-                                                                    accept="image/*"
-                                                                    capture="environment"
-                                                                    className="hidden"
-                                                                    onChange={e => {
-                                                                        const files = e.target.files;
-                                                                        if (files && files.length > 0) addFiles(setter, Array.from(files));
-                                                                        e.target.value = '';
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        ));
-                                                    })()}
-                                                </div>
-                                            </fieldset>
-                                            {/* Close-up — linha inteira, clone do Face */}
-                                            <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Close-up</legend>
-                                                <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                                                    {(() => {
-                                                        const closeupFields: { label: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; key: string; guideImages?: string[] }[] = [
-                                                            { label: 'Repouso', state: closeupRepouso, setter: setCloseupRepouso, ref: closeupRepousoRef, key: 'cu-repouso', guideImages: ['/images/guides/close-up-repouso.png'] },
-                                                            { label: 'Sorriso Natural', state: closeupSorrisoNatural, setter: setCloseupSorrisoNatural, ref: closeupSorrisoNaturalRef, key: 'cu-sorrisoNatural', guideImages: ['/images/guides/close-up-sorriso-natural.png'] },
-                                                            { label: 'Sorriso Máximo', state: closeupSorrisoAlto, setter: setCloseupSorrisoAlto, ref: closeupSorrisoAltoRef, key: 'cu-sorrisoAlto', guideImages: ['/images/guides/close-up-sorriso-maximo.png'] },
-                                                            { label: '45º', state: closeup45Esq, setter: setCloseup45Esq, ref: closeup45EsqRef, key: 'cu-45', guideImages: ['/images/guides/close-up-45-esquerda.png', '/images/guides/close-up-45-direita.png'] },
-                                                            { label: 'Perfil', state: closeup45Dir, setter: setCloseup45Dir, ref: closeup45DirRef, key: 'cu-perfil', guideImages: ['/images/guides/close-up-perfil-esquerda.png', '/images/guides/close-up-perfil-direita.png'] },
-                                                        ];
-
-                                                        const addFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
-                                                            setter(prev => ({
-                                                                files: [...prev.files, ...newFiles],
-                                                                previews: [...prev.previews, ...newFiles.map(f => URL.createObjectURL(f))],
-                                                            }));
-                                                        };
-
-                                                        const removeFile = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, idx: number) => {
-                                                            setter(prev => ({
-                                                                files: prev.files.filter((_, i) => i !== idx),
-                                                                previews: prev.previews.filter((_, i) => i !== idx),
-                                                            }));
-                                                        };
-
-                                                        return closeupFields.map(({ label, state, setter, ref, key, guideImages }) => (
-                                                            <div
-                                                                key={key}
-                                                                className={cn(
-                                                                    "text-center rounded-lg border-2 border-dashed p-1.5 transition-colors",
-                                                                    closeupDragOver === key
-                                                                        ? "border-sky-400 bg-sky-100/50"
-                                                                        : "border-gray-200 bg-white"
-                                                                )}
-                                                                onDragOver={e => { e.preventDefault(); setCloseupDragOver(key); }}
-                                                                onDragLeave={() => setCloseupDragOver(null)}
-                                                                onDrop={e => {
-                                                                    e.preventDefault();
-                                                                    setCloseupDragOver(null);
-                                                                    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-                                                                    if (files.length > 0) addFiles(setter, files);
-                                                                }}
-                                                            >
-                                                                <span className="text-[8px] font-semibold text-gray-500 block mb-1">{label}</span>
-
-                                                                {guideImages && guideImages.length > 0 && (
-                                                                    <div className={guideImages.length > 1 ? 'grid grid-cols-2 gap-0.5 mb-1' : 'mb-1'}>
-                                                                        {guideImages.map((gi: string, idx: number) => (
-                                                                            <img
-                                                                                key={idx}
-                                                                                src={gi}
-                                                                                alt={`Guia ${label} ${idx + 1}`}
-                                                                                className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 cursor-pointer hover:opacity-80 transition-opacity"
-                                                                                onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }}
-                                                                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                                                            />
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-
-                                                                <div className="grid grid-cols-1 gap-1">
-                                                                    <button type="button" onClick={() => ref.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
-                                                                        <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                                    </button>
-                                                                    <button type="button" onClick={() => setCameraTarget({ setter, key })} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
-                                                                        <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                                    </button>
-                                                                </div>
-
-                                                                {!photosCollapsed && state.previews.length > 0 && (
-                                                                    <div className="grid grid-cols-2 gap-1 mt-1">
-                                                                        {state.previews.map((url, i) => (
-                                                                            <div key={i} className="relative group">
-                                                                                <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                                <button type="button" onClick={() => removeFile(setter, i)} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                                    <X className="h-2 w-2 text-white" />
-                                                                                </button>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                                {photosCollapsed && state.previews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {state.previews.length} foto(s)</p>)}
-                                                                {state.previews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
-
-                                                                <input ref={ref} type="file" accept="image/*" multiple className="hidden" onChange={e => { const files = e.target.files; if (files && files.length > 0) addFiles(setter, Array.from(files)); e.target.value = ''; }} />
-                                                            </div>
-                                                        ));
-                                                    })()}
-                                                </div>
-                                            </fieldset>
-                                            {/* Intraoral Sup + Intraoral Inf + 45º + Outros — 4 colunas iguais */}
-                                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                                                {/* --- Intraoral Superior --- */}
-                                                <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Intraoral Superior</legend>
-                                                    <div
-                                                        className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralSupDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                        onDragOver={e => { e.preventDefault(); setIntraoralSupDragOver(true); }}
-                                                        onDragLeave={() => setIntraoralSupDragOver(false)}
-                                                        onDrop={e => { e.preventDefault(); setIntraoralSupDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralSupPhotos(prev => [...prev, ...files]); setIntraoralSupPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                    >
-                                                        <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Superior</span>
-                                                        <img src="/images/guides/intraoral-superior.png" alt="Guia Intraoral Superior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                        <div className="grid grid-cols-1 gap-1">
-                                                            <button type="button" onClick={() => intraoralSupFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
-                                                                <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                            </button>
-                                                            <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralSupPhotos, previews: intraoralSupPreviews }); setIntraoralSupPhotos(r.files); setIntraoralSupPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralSup' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
-                                                                <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                            </button>
-                                                            <input ref={intraoralSupFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralSupPhotos(p => [...p, ...nf]); setIntraoralSupPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                        </div>
-                                                        {!photosCollapsed && intraoralSupPreviews.length > 0 && (
-                                                            <div className="grid grid-cols-1 gap-1 mt-1">
-                                                                {intraoralSupPreviews.map((url, i) => (
-                                                                    <div key={i} className="relative group">
-                                                                        <img src={url} alt={`Intraoral Sup ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                        <button type="button" onClick={() => { setIntraoralSupPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralSupPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                        {photosCollapsed && intraoralSupPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {intraoralSupPreviews.length} foto(s)</p>)}
-                                                        {intraoralSupPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
-                                                    </div>
-                                                </fieldset>
-
-                                                {/* --- Intraoral Inferior --- */}
-                                                <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Intraoral Inferior</legend>
-                                                    <div
-                                                        className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralInfDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                        onDragOver={e => { e.preventDefault(); setIntraoralInfDragOver(true); }}
-                                                        onDragLeave={() => setIntraoralInfDragOver(false)}
-                                                        onDrop={e => { e.preventDefault(); setIntraoralInfDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralInfPhotos(prev => [...prev, ...files]); setIntraoralInfPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                    >
-                                                        <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Inferior</span>
-                                                        <img src="/images/guides/intraoral-inferior.png" alt="Guia Intraoral Inferior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                        <div className="grid grid-cols-1 gap-1">
-                                                            <button type="button" onClick={() => intraoralInfFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
-                                                                <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                            </button>
-                                                            <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralInfPhotos, previews: intraoralInfPreviews }); setIntraoralInfPhotos(r.files); setIntraoralInfPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralInf' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
-                                                                <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                            </button>
-                                                            <input ref={intraoralInfFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralInfPhotos(p => [...p, ...nf]); setIntraoralInfPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                        </div>
-                                                        {!photosCollapsed && intraoralInfPreviews.length > 0 && (
-                                                            <div className="grid grid-cols-1 gap-1 mt-1">
-                                                                {intraoralInfPreviews.map((url, i) => (
-                                                                    <div key={i} className="relative group">
-                                                                        <img src={url} alt={`Intraoral Inf ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                        <button type="button" onClick={() => { setIntraoralInfPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralInfPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                        {photosCollapsed && intraoralInfPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {intraoralInfPreviews.length} foto(s)</p>)}
-                                                        {intraoralInfPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
-                                                    </div>
-                                                </fieldset>
-
-                                                {/* --- 45º --- */}
-                                                <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">45º</legend>
-                                                    <div
-                                                        className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOver45 ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                        onDragOver={e => { e.preventDefault(); setdragOver45(true); }}
-                                                        onDragLeave={() => setdragOver45(false)}
-                                                        onDrop={e => { e.preventDefault(); setdragOver45(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setphotos45(prev => [...prev, ...files]); setpreviews45(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                    >
-                                                        <span className="text-[8px] font-semibold text-gray-500 block mb-1">45º</span>
-                                                        <img src="/images/guides/45.png" alt="Guia 45º" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                        <div className="grid grid-cols-1 gap-1">
-                                                            <button type="button" onClick={() => fileRef45.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
-                                                                <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                            </button>
-                                                            <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: photos45, previews: previews45 }); setphotos45(r.files); setpreviews45(r.previews); } }; setCameraTarget({ setter: s, key: 'foto45' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
-                                                                <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                            </button>
-                                                            <input ref={fileRef45} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setphotos45(p => [...p, ...nf]); setpreviews45(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                            <input id="cam-native-45" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setphotos45(p => [...p, ...nf]); setpreviews45(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                        </div>
-                                                        {!photosCollapsed && previews45.length > 0 && (
-                                                            <div className="grid grid-cols-1 gap-1 mt-1">
-                                                                {previews45.map((url, i) => (
-                                                                    <div key={i} className="relative group">
-                                                                        <img src={url} alt={`45º ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                        <button type="button" onClick={() => { setphotos45(p => p.filter((_, idx) => idx !== i)); setpreviews45(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                        {photosCollapsed && previews45.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previews45.length} foto(s)</p>)}
-                                                        {previews45.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
-                                                    </div>
-                                                </fieldset>
-
-                                                {/* --- Outros --- */}
-                                                <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                    <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Outros</legend>
-                                                    <div
-                                                        className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOverOutros ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                        onDragOver={e => { e.preventDefault(); setDragOverOutros(true); }}
-                                                        onDragLeave={() => setDragOverOutros(false)}
-                                                        onDrop={e => { e.preventDefault(); setDragOverOutros(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotosOutros(prev => [...prev, ...files]); setPreviewsOutros(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                    >
-                                                        <span className="text-[8px] font-semibold text-gray-500 block mb-1">Outros</span>
-                                                        <img src="/images/guides/outros.png" alt="Guia Outros" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                        <div className="grid grid-cols-1 gap-1">
-                                                            <button type="button" onClick={() => fileRefOutros.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
-                                                                <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                            </button>
-                                                            <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: photosOutros, previews: previewsOutros }); setPhotosOutros(r.files); setPreviewsOutros(r.previews); } }; setCameraTarget({ setter: s, key: 'outros' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
-                                                                <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                            </button>
-                                                            <input ref={fileRefOutros} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                            <input id="cam-native-outros" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                        </div>
-                                                        {!photosCollapsed && previewsOutros.length > 0 && (
-                                                            <div className="grid grid-cols-1 gap-1 mt-1">
-                                                                {previewsOutros.map((url, i) => (
-                                                                    <div key={i} className="relative group">
-                                                                        <img src={url} alt={`Outros ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                        <button type="button" onClick={() => { setPhotosOutros(p => p.filter((_, idx) => idx !== i)); setPreviewsOutros(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                        {photosCollapsed && previewsOutros.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previewsOutros.length} foto(s)</p>)}
-                                                        {previewsOutros.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
-                                                    </div>
-                                                </fieldset>
-                                            </div>
-                                        </div>
                                     </div>
-
-
                                 </div>
+
+                                {/* Error */}
+                                {error && (
+                                    <p className="text-xs text-red-500 bg-red-50 p-2.5 rounded-lg">{error}</p>
+                                )}
                             </div>
 
-                            {/* Error */}
-                            {error && (
-                                <p className="text-xs text-red-500 bg-red-50 p-2.5 rounded-lg">{error}</p>
-                            )}
-                        </div>
-
                             {/* Actions — fixed at bottom */}
-                    <div className="flex gap-3 p-4 border-t border-gray-100 shrink-0 bg-white">
-                        <Button type="button" variant="outline" className="flex-1 h-9" onClick={onClose}>
-                            Cancelar
-                        </Button>
-                        <Button type="submit" className="flex-1 h-9 gap-1.5" disabled={submitting}>
-                            {submitting ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                                <Plus className="h-3.5 w-3.5" />
-                            )}
-                            Criar Plano
-                        </Button>
-                    </div>
-                </form>
+                            <div className="flex gap-3 p-4 border-t border-gray-100 shrink-0 bg-white">
+                                <Button type="button" variant="outline" className="flex-1 h-9" onClick={onClose}>
+                                    Cancelar
+                                </Button>
+                                <Button type="submit" className="flex-1 h-9 gap-1.5" disabled={submitting}>
+                                    {submitting ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                        <Plus className="h-3.5 w-3.5" />
+                                    )}
+                                    Criar Plano
+                                </Button>
+                            </div>
+                        </form>
                     )}
-            </div>
-        </div >
+                </div>
+            </div >
 
-            {/* Odontograma Modal — renderizado fora do modal principal */ }
+            {/* Odontograma Modal — renderizado fora do modal principal */}
             < OdontogramModal
-    open = { showOdontogram }
-    onClose = {() => setShowOdontogram(false)
-}
-teeth = { odontogramTeeth }
-workTypes = { workTypes.map(wt => ({ id: wt.id, nome: wt.nome, cor: wt.cor })) }
-onChange = { handleOdontogramChange }
-pendingAssignments = { pendingAssignments }
-    />
-    { cameraTarget && (
-        <CameraOverlay
-            onCapture={(file: File) => {
-                cameraTarget.setter(prev => ({
-                    files: [...prev.files, file],
-                    previews: [...prev.previews, URL.createObjectURL(file)],
-                }));
-            }}
-            onClose={() => setCameraTarget(null)}
-            nativeCamKey={cameraTarget.key}
-        />
-    )}
+                open={showOdontogram}
+                onClose={() => setShowOdontogram(false)
+                }
+                teeth={odontogramTeeth}
+                workTypes={workTypes.map(wt => ({ id: wt.id, nome: wt.nome, cor: wt.cor }))}
+                onChange={handleOdontogramChange}
+                pendingAssignments={pendingAssignments}
+            />
+            {cameraTarget && (
+                <CameraOverlay
+                    onCapture={(file: File) => {
+                        cameraTarget.setter(prev => ({
+                            files: [...prev.files, file],
+                            previews: [...prev.previews, URL.createObjectURL(file)],
+                        }));
+                    }}
+                    onClose={() => setCameraTarget(null)}
+                    nativeCamKey={cameraTarget.key}
+                />
+            )}
         </>
     );
 }
