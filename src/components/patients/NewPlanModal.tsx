@@ -94,6 +94,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [closeupDragOver, setCloseupDragOver] = useState<string | null>(null);
     // Câmara (overlay avançado — todos os dispositivos)
     const [cameraTarget, setCameraTarget] = useState<{ setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; key: string } | null>(null);
+    // Drag inter-campo: rastreia foto a ser arrastada entre campos
+    const dragSourceRef = useRef<{ file: File; preview: string; remove: () => void } | null>(null);
     // Registos Fotográficos — Introrais (Superior + Inferior)
     const [intraoralSupPhotos, setIntraoralSupPhotos] = useState<File[]>([]);
     const [intraoralSupPreviews, setIntraoralSupPreviews] = useState<string[]>([]);
@@ -1091,14 +1093,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${colorDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
                                                         onDragOver={e => { e.preventDefault(); setColorDragOver(true); }}
                                                         onDragLeave={() => setColorDragOver(false)}
-                                                        onDrop={e => { e.preventDefault(); setColorDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setColorScalePhotos(prev => [...prev, ...files]); setColorScalePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                        onDrop={e => { e.preventDefault(); setColorDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; setColorScalePhotos(p => [...p, src.file]); setColorScalePreviews(p => [...p, src.preview]); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setColorScalePhotos(prev => [...prev, ...files]); setColorScalePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                     >
                                                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Fotos</label>
                                                         <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                         <div className="mt-1.5 grid grid-cols-1 gap-1">
                                                             <button type="button" onClick={() => colorFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro"><Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span></button>
                                                             <button type="button" onClick={() => { const colorSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: colorScalePhotos, previews: colorScalePreviews }; const result = action(virtualPrev); setColorScalePhotos(result.files); setColorScalePreviews(result.previews); } }; setCameraTarget({ setter: colorSetter, key: 'escalaCor' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia"><Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span></button>
-                                                            {!photosCollapsed && colorScalePreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{colorScalePreviews.map((url, i) => (<div key={i} className="relative group"><img src={url} alt={`Cor ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={() => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button></div>))}</div>)}
+                                                            {!photosCollapsed && colorScalePreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{colorScalePreviews.map((url, i) => (<div key={i} className="relative group cursor-grab active:cursor-grabbing" draggable onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: colorScalePhotos[i], preview: url, remove: () => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); } }; }} onDragEnd={() => { dragSourceRef.current = null; }}><img src={url} alt={`Cor ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={() => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button></div>))}</div>)}
                                                             {photosCollapsed && colorScalePreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center">📷 {colorScalePreviews.length} foto(s)</p>)}
                                                             <input ref={colorFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             <input id="cam-native-escalaCor" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
@@ -1110,14 +1112,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${polarizedDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
                                                         onDragOver={e => { e.preventDefault(); setPolarizedDragOver(true); }}
                                                         onDragLeave={() => setPolarizedDragOver(false)}
-                                                        onDrop={e => { e.preventDefault(); setPolarizedDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPolarizedPhotos(prev => [...prev, ...files]); setPolarizedPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                        onDrop={e => { e.preventDefault(); setPolarizedDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; setPolarizedPhotos(p => [...p, src.file]); setPolarizedPreviews(p => [...p, src.preview]); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPolarizedPhotos(prev => [...prev, ...files]); setPolarizedPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                     >
                                                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Polarizadas</label>
                                                         <img src="/images/guides/escala-de-cor-polarizada.png" alt="Guia Polarizada" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                         <div className="mt-1.5 grid grid-cols-1 gap-1">
                                                             <button type="button" onClick={() => polarizedFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro"><Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span></button>
                                                             <button type="button" onClick={() => { const polSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: polarizedPhotos, previews: polarizedPreviews }; const result = action(virtualPrev); setPolarizedPhotos(result.files); setPolarizedPreviews(result.previews); } }; setCameraTarget({ setter: polSetter, key: 'polarizada' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia"><Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span></button>
-                                                            {!photosCollapsed && polarizedPreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{polarizedPreviews.map((url, i) => (<div key={i} className="relative group"><img src={url} alt={`Polarizada ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={() => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button></div>))}</div>)}
+                                                            {!photosCollapsed && polarizedPreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{polarizedPreviews.map((url, i) => (<div key={i} className="relative group cursor-grab active:cursor-grabbing" draggable onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: polarizedPhotos[i], preview: url, remove: () => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); } }; }} onDragEnd={() => { dragSourceRef.current = null; }}><img src={url} alt={`Polarizada ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={() => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button></div>))}</div>)}
                                                             {photosCollapsed && polarizedPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center">📷 {polarizedPreviews.length} foto(s)</p>)}
                                                             <input ref={polarizedFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             <input id="cam-native-polarizada" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
@@ -1206,6 +1208,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     onDrop={e => {
                                                                         e.preventDefault();
                                                                         setFaceDragOver(null);
+                                                                        // Internal drag between fields
+                                                                        if (dragSourceRef.current) {
+                                                                            const src = dragSourceRef.current;
+                                                                            addFiles(setter, [src.file]);
+                                                                            src.remove();
+                                                                            dragSourceRef.current = null;
+                                                                            return;
+                                                                        }
                                                                         const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
                                                                         if (files.length > 0) addFiles(setter, files);
                                                                     }}
@@ -1256,7 +1266,19 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     {!photosCollapsed && state.previews.length > 0 && (
                                                                         <div className="grid grid-cols-2 gap-1 mt-1">
                                                                             {state.previews.map((url, i) => (
-                                                                                <div key={i} className="relative group">
+                                                                                <div key={i} className="relative group cursor-grab active:cursor-grabbing"
+                                                                                    draggable
+                                                                                    onDragStart={e => {
+                                                                                        e.dataTransfer.effectAllowed = 'move';
+                                                                                        e.dataTransfer.setData('text/plain', 'internal-photo');
+                                                                                        dragSourceRef.current = {
+                                                                                            file: state.files[i],
+                                                                                            preview: url,
+                                                                                            remove: () => removeFile(setter, i),
+                                                                                        };
+                                                                                    }}
+                                                                                    onDragEnd={() => { dragSourceRef.current = null; }}
+                                                                                >
                                                                                     <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-[3/4] object-cover rounded border border-gray-200" />
                                                                                     <button
                                                                                         type="button"
@@ -1349,6 +1371,13 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     onDrop={e => {
                                                                         e.preventDefault();
                                                                         setCloseupDragOver(null);
+                                                                        if (dragSourceRef.current) {
+                                                                            const src = dragSourceRef.current;
+                                                                            addFiles(setter, [src.file]);
+                                                                            src.remove();
+                                                                            dragSourceRef.current = null;
+                                                                            return;
+                                                                        }
                                                                         const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
                                                                         if (files.length > 0) addFiles(setter, files);
                                                                     }}
@@ -1382,7 +1411,19 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     {!photosCollapsed && state.previews.length > 0 && (
                                                                         <div className="grid grid-cols-2 gap-1 mt-1">
                                                                             {state.previews.map((url, i) => (
-                                                                                <div key={i} className="relative group">
+                                                                                <div key={i} className="relative group cursor-grab active:cursor-grabbing"
+                                                                                    draggable
+                                                                                    onDragStart={e => {
+                                                                                        e.dataTransfer.effectAllowed = 'move';
+                                                                                        e.dataTransfer.setData('text/plain', 'internal-photo');
+                                                                                        dragSourceRef.current = {
+                                                                                            file: state.files[i],
+                                                                                            preview: url,
+                                                                                            remove: () => removeFile(setter, i),
+                                                                                        };
+                                                                                    }}
+                                                                                    onDragEnd={() => { dragSourceRef.current = null; }}
+                                                                                >
                                                                                     <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
                                                                                     <button type="button" onClick={() => removeFile(setter, i)} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                                                         <X className="h-2 w-2 text-white" />
@@ -1410,7 +1451,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralSupDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
                                                                 onDragOver={e => { e.preventDefault(); setIntraoralSupDragOver(true); }}
                                                                 onDragLeave={() => setIntraoralSupDragOver(false)}
-                                                                onDrop={e => { e.preventDefault(); setIntraoralSupDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralSupPhotos(prev => [...prev, ...files]); setIntraoralSupPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                                onDrop={e => { e.preventDefault(); setIntraoralSupDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; setIntraoralSupPhotos(p => [...p, src.file]); setIntraoralSupPreviews(p => [...p, src.preview]); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralSupPhotos(prev => [...prev, ...files]); setIntraoralSupPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                             >
                                                                 <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Superior</span>
                                                                 <img src="/images/guides/intraoral-superior.png" alt="Guia Intraoral Superior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -1426,7 +1467,19 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 {!photosCollapsed && intraoralSupPreviews.length > 0 && (
                                                                     <div className="grid grid-cols-1 gap-1 mt-1">
                                                                         {intraoralSupPreviews.map((url, i) => (
-                                                                            <div key={i} className="relative group">
+                                                                            <div key={i} className="relative group cursor-grab active:cursor-grabbing"
+                                                                                draggable
+                                                                                onDragStart={e => {
+                                                                                    e.dataTransfer.effectAllowed = 'move';
+                                                                                    e.dataTransfer.setData('text/plain', 'internal-photo');
+                                                                                    dragSourceRef.current = {
+                                                                                        file: intraoralSupPhotos[i],
+                                                                                        preview: url,
+                                                                                        remove: () => { setIntraoralSupPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralSupPreviews(p => p.filter((_, idx) => idx !== i)); },
+                                                                                    };
+                                                                                }}
+                                                                                onDragEnd={() => { dragSourceRef.current = null; }}
+                                                                            >
                                                                                 <img src={url} alt={`Intraoral Sup ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
                                                                                 <button type="button" onClick={() => { setIntraoralSupPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralSupPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
                                                                             </div>
@@ -1442,7 +1495,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralInfDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
                                                                 onDragOver={e => { e.preventDefault(); setIntraoralInfDragOver(true); }}
                                                                 onDragLeave={() => setIntraoralInfDragOver(false)}
-                                                                onDrop={e => { e.preventDefault(); setIntraoralInfDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralInfPhotos(prev => [...prev, ...files]); setIntraoralInfPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                                onDrop={e => { e.preventDefault(); setIntraoralInfDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; setIntraoralInfPhotos(p => [...p, src.file]); setIntraoralInfPreviews(p => [...p, src.preview]); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralInfPhotos(prev => [...prev, ...files]); setIntraoralInfPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                             >
                                                                 <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Inferior</span>
                                                                 <img src="/images/guides/intraoral-inferior.png" alt="Guia Intraoral Inferior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -1458,7 +1511,19 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 {!photosCollapsed && intraoralInfPreviews.length > 0 && (
                                                                     <div className="grid grid-cols-1 gap-1 mt-1">
                                                                         {intraoralInfPreviews.map((url, i) => (
-                                                                            <div key={i} className="relative group">
+                                                                            <div key={i} className="relative group cursor-grab active:cursor-grabbing"
+                                                                                draggable
+                                                                                onDragStart={e => {
+                                                                                    e.dataTransfer.effectAllowed = 'move';
+                                                                                    e.dataTransfer.setData('text/plain', 'internal-photo');
+                                                                                    dragSourceRef.current = {
+                                                                                        file: intraoralInfPhotos[i],
+                                                                                        preview: url,
+                                                                                        remove: () => { setIntraoralInfPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralInfPreviews(p => p.filter((_, idx) => idx !== i)); },
+                                                                                    };
+                                                                                }}
+                                                                                onDragEnd={() => { dragSourceRef.current = null; }}
+                                                                            >
                                                                                 <img src={url} alt={`Intraoral Inf ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
                                                                                 <button type="button" onClick={() => { setIntraoralInfPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralInfPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
                                                                             </div>
@@ -1478,7 +1543,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOver45 ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
                                                             onDragOver={e => { e.preventDefault(); setdragOver45(true); }}
                                                             onDragLeave={() => setdragOver45(false)}
-                                                            onDrop={e => { e.preventDefault(); setdragOver45(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setphotos45(prev => [...prev, ...files]); setpreviews45(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                            onDrop={e => { e.preventDefault(); setdragOver45(false); if (dragSourceRef.current) { const src = dragSourceRef.current; setphotos45(p => [...p, src.file]); setpreviews45(p => [...p, src.preview]); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setphotos45(prev => [...prev, ...files]); setpreviews45(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">45º</span>
                                                             <img src="/images/guides/45.png" alt="Guia 45º" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -1495,7 +1560,19 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             {!photosCollapsed && previews45.length > 0 && (
                                                                 <div className="grid grid-cols-1 gap-1 mt-1">
                                                                     {previews45.map((url, i) => (
-                                                                        <div key={i} className="relative group">
+                                                                        <div key={i} className="relative group cursor-grab active:cursor-grabbing"
+                                                                            draggable
+                                                                            onDragStart={e => {
+                                                                                e.dataTransfer.effectAllowed = 'move';
+                                                                                e.dataTransfer.setData('text/plain', 'internal-photo');
+                                                                                dragSourceRef.current = {
+                                                                                    file: photos45[i],
+                                                                                    preview: url,
+                                                                                    remove: () => { setphotos45(p => p.filter((_, idx) => idx !== i)); setpreviews45(p => p.filter((_, idx) => idx !== i)); },
+                                                                                };
+                                                                            }}
+                                                                            onDragEnd={() => { dragSourceRef.current = null; }}
+                                                                        >
                                                                             <img src={url} alt={`45º ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
                                                                             <button type="button" onClick={() => { setphotos45(p => p.filter((_, idx) => idx !== i)); setpreviews45(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
                                                                         </div>
@@ -1514,7 +1591,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOverOutros ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
                                                             onDragOver={e => { e.preventDefault(); setDragOverOutros(true); }}
                                                             onDragLeave={() => setDragOverOutros(false)}
-                                                            onDrop={e => { e.preventDefault(); setDragOverOutros(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotosOutros(prev => [...prev, ...files]); setPreviewsOutros(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                            onDrop={e => { e.preventDefault(); setDragOverOutros(false); if (dragSourceRef.current) { const src = dragSourceRef.current; setPhotosOutros(p => [...p, src.file]); setPreviewsOutros(p => [...p, src.preview]); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotosOutros(prev => [...prev, ...files]); setPreviewsOutros(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">Outros</span>
                                                             <img src="/images/guides/outros.png" alt="Guia Outros" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -1531,7 +1608,19 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             {!photosCollapsed && previewsOutros.length > 0 && (
                                                                 <div className="grid grid-cols-1 gap-1 mt-1">
                                                                     {previewsOutros.map((url, i) => (
-                                                                        <div key={i} className="relative group">
+                                                                        <div key={i} className="relative group cursor-grab active:cursor-grabbing"
+                                                                            draggable
+                                                                            onDragStart={e => {
+                                                                                e.dataTransfer.effectAllowed = 'move';
+                                                                                e.dataTransfer.setData('text/plain', 'internal-photo');
+                                                                                dragSourceRef.current = {
+                                                                                    file: photosOutros[i],
+                                                                                    preview: url,
+                                                                                    remove: () => { setPhotosOutros(p => p.filter((_, idx) => idx !== i)); setPreviewsOutros(p => p.filter((_, idx) => idx !== i)); },
+                                                                                };
+                                                                            }}
+                                                                            onDragEnd={() => { dragSourceRef.current = null; }}
+                                                                        >
                                                                             <img src={url} alt={`Outros ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
                                                                             <button type="button" onClick={() => { setPhotosOutros(p => p.filter((_, idx) => idx !== i)); setPreviewsOutros(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
                                                                         </div>
