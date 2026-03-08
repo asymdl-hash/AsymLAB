@@ -98,6 +98,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [intraoralInfPreviews, setIntraoralInfPreviews] = useState<string[]>([]);
     const intraoralInfFileRef = useRef<HTMLInputElement>(null);
     const [intraoralInfDragOver, setIntraoralInfDragOver] = useState(false);
+    // Lightbox para imagens-guia
+    
     // Registos Fotográficos — 45º
     const [photos45, setphotos45] = useState<File[]>([]);
     const [previews45, setpreviews45] = useState<string[]>([]);
@@ -955,6 +957,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         Fotos
                                                     </label>
+                                                    <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                     <div className="mt-1.5 grid grid-cols-1 gap-1">
                                                         {/* Botão Ficheiro */}
                                                         <button
@@ -1162,7 +1165,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         <img
                                                                             src={guideImage}
                                                                             alt={`Guia ${label}`}
-                                                                            className="w-full max-h-16 object-cover rounded border border-gray-100 opacity-60 mb-1"
+                                                                            className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity"
+                                                                            onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }}
                                                                             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                                                         />
                                                                     )}
@@ -1298,7 +1302,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         <img
                                                                             src={guideImage}
                                                                             alt={`Guia ${label}`}
-                                                                            className="w-full max-h-16 object-cover rounded border border-gray-100 opacity-60 mb-1"
+                                                                            className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity"
+                                                                            onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }}
                                                                             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                                                         />
                                                                     )}
@@ -1333,74 +1338,75 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         })()}
                                                     </div>
                                                 </fieldset>
-                                                {/* Introrais + 45º + Outros — 3 colunas iguais */}
-                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                                    {/* --- Introrais (Superior + Inferior) --- */}
+                                                {/* Intraoral Sup + Intraoral Inf + 45º + Outros — 4 colunas iguais */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                                                    {/* --- Intraoral Superior --- */}
                                                     <fieldset className="border border-gray-200 rounded-lg p-2">
-                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Introrais</legend>
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            {/* Intraoral Superior */}
-                                                            <div
-                                                                className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralSupDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                                onDragOver={e => { e.preventDefault(); setIntraoralSupDragOver(true); }}
-                                                                onDragLeave={() => setIntraoralSupDragOver(false)}
-                                                                onDrop={e => { e.preventDefault(); setIntraoralSupDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralSupPhotos(prev => [...prev, ...files]); setIntraoralSupPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                            >
-                                                                <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Superior</span>
-                                                                <img src="/images/guides/intraoral-superior.png" alt="Guia Intraoral Superior" className="w-full max-h-16 object-cover rounded border border-gray-100 opacity-60 mb-1" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                                <div className="grid grid-cols-1 gap-1">
-                                                                    <button type="button" onClick={() => intraoralSupFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
-                                                                        <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                                    </button>
-                                                                    <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralSupPhotos, previews: intraoralSupPreviews }); setIntraoralSupPhotos(r.files); setIntraoralSupPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralSup' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
-                                                                        <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                                    </button>
-                                                                    <input ref={intraoralSupFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralSupPhotos(p => [...p, ...nf]); setIntraoralSupPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                                </div>
-                                                                {!photosCollapsed && intraoralSupPreviews.length > 0 && (
-                                                                    <div className="grid grid-cols-1 gap-1 mt-1">
-                                                                        {intraoralSupPreviews.map((url, i) => (
-                                                                            <div key={i} className="relative group">
-                                                                                <img src={url} alt={`Intraoral Sup ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                                <button type="button" onClick={() => { setIntraoralSupPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralSupPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                                {photosCollapsed && intraoralSupPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {intraoralSupPreviews.length} foto(s)</p>)}
-                                                                {intraoralSupPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Intraoral Superior</legend>
+                                                        <div
+                                                            className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralSupDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                            onDragOver={e => { e.preventDefault(); setIntraoralSupDragOver(true); }}
+                                                            onDragLeave={() => setIntraoralSupDragOver(false)}
+                                                            onDrop={e => { e.preventDefault(); setIntraoralSupDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralSupPhotos(prev => [...prev, ...files]); setIntraoralSupPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                        >
+                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Superior</span>
+                                                            <img src="/images/guides/intraoral-superior.png" alt="Guia Intraoral Superior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <div className="grid grid-cols-1 gap-1">
+                                                                <button type="button" onClick={() => intraoralSupFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                    <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                </button>
+                                                                <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralSupPhotos, previews: intraoralSupPreviews }); setIntraoralSupPhotos(r.files); setIntraoralSupPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralSup' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                    <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                                </button>
+                                                                <input ref={intraoralSupFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralSupPhotos(p => [...p, ...nf]); setIntraoralSupPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             </div>
-                                                            {/* Intraoral Inferior */}
-                                                            <div
-                                                                className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralInfDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                                onDragOver={e => { e.preventDefault(); setIntraoralInfDragOver(true); }}
-                                                                onDragLeave={() => setIntraoralInfDragOver(false)}
-                                                                onDrop={e => { e.preventDefault(); setIntraoralInfDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralInfPhotos(prev => [...prev, ...files]); setIntraoralInfPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                            >
-                                                                <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Inferior</span>
-                                                                <img src="/images/guides/intraoral-inferior.png" alt="Guia Intraoral Inferior" className="w-full max-h-16 object-cover rounded border border-gray-100 opacity-60 mb-1" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                                <div className="grid grid-cols-1 gap-1">
-                                                                    <button type="button" onClick={() => intraoralInfFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
-                                                                        <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
-                                                                    </button>
-                                                                    <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralInfPhotos, previews: intraoralInfPreviews }); setIntraoralInfPhotos(r.files); setIntraoralInfPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralInf' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
-                                                                        <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
-                                                                    </button>
-                                                                    <input ref={intraoralInfFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralInfPhotos(p => [...p, ...nf]); setIntraoralInfPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            {!photosCollapsed && intraoralSupPreviews.length > 0 && (
+                                                                <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                    {intraoralSupPreviews.map((url, i) => (
+                                                                        <div key={i} className="relative group">
+                                                                            <img src={url} alt={`Intraoral Sup ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                            <button type="button" onClick={() => { setIntraoralSupPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralSupPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                        </div>
+                                                                    ))}
                                                                 </div>
-                                                                {!photosCollapsed && intraoralInfPreviews.length > 0 && (
-                                                                    <div className="grid grid-cols-1 gap-1 mt-1">
-                                                                        {intraoralInfPreviews.map((url, i) => (
-                                                                            <div key={i} className="relative group">
-                                                                                <img src={url} alt={`Intraoral Inf ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                                <button type="button" onClick={() => { setIntraoralInfPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralInfPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                                {photosCollapsed && intraoralInfPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {intraoralInfPreviews.length} foto(s)</p>)}
-                                                                {intraoralInfPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                            )}
+                                                            {photosCollapsed && intraoralSupPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {intraoralSupPreviews.length} foto(s)</p>)}
+                                                            {intraoralSupPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                        </div>
+                                                    </fieldset>
+
+                                                    {/* --- Intraoral Inferior --- */}
+                                                    <fieldset className="border border-gray-200 rounded-lg p-2">
+                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Intraoral Inferior</legend>
+                                                        <div
+                                                            className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${intraoralInfDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                            onDragOver={e => { e.preventDefault(); setIntraoralInfDragOver(true); }}
+                                                            onDragLeave={() => setIntraoralInfDragOver(false)}
+                                                            onDrop={e => { e.preventDefault(); setIntraoralInfDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralInfPhotos(prev => [...prev, ...files]); setIntraoralInfPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                        >
+                                                            <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Inferior</span>
+                                                            <img src="/images/guides/intraoral-inferior.png" alt="Guia Intraoral Inferior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <div className="grid grid-cols-1 gap-1">
+                                                                <button type="button" onClick={() => intraoralInfFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                    <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                                </button>
+                                                                <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralInfPhotos, previews: intraoralInfPreviews }); setIntraoralInfPhotos(r.files); setIntraoralInfPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralInf' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
+                                                                    <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
+                                                                </button>
+                                                                <input ref={intraoralInfFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralInfPhotos(p => [...p, ...nf]); setIntraoralInfPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             </div>
+                                                            {!photosCollapsed && intraoralInfPreviews.length > 0 && (
+                                                                <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                    {intraoralInfPreviews.map((url, i) => (
+                                                                        <div key={i} className="relative group">
+                                                                            <img src={url} alt={`Intraoral Inf ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                            <button type="button" onClick={() => { setIntraoralInfPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralInfPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {photosCollapsed && intraoralInfPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {intraoralInfPreviews.length} foto(s)</p>)}
+                                                            {intraoralInfPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
                                                         </div>
                                                     </fieldset>
 
@@ -1414,7 +1420,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onDrop={e => { e.preventDefault(); setdragOver45(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setphotos45(prev => [...prev, ...files]); setpreviews45(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">45º</span>
-                                                            <img src="/images/guides/45.png" alt="Guia 45º" className="w-full max-h-16 object-cover rounded border border-gray-100 opacity-60 mb-1" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <img src="/images/guides/45.png" alt="Guia 45º" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="grid grid-cols-1 gap-1">
                                                                 <button type="button" onClick={() => fileRef45.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
@@ -1450,7 +1456,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onDrop={e => { e.preventDefault(); setDragOverOutros(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotosOutros(prev => [...prev, ...files]); setPreviewsOutros(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">Outros</span>
-                                                            <img src="/images/guides/outros.png" alt="Guia Outros" className="w-full max-h-16 object-cover rounded border border-gray-100 opacity-60 mb-1" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <img src="/images/guides/outros.png" alt="Guia Outros" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover","max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover","max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="grid grid-cols-1 gap-1">
                                                                 <button type="button" onClick={() => fileRefOutros.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
