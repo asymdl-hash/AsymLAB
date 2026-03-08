@@ -946,7 +946,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 <span className="text-[10px] uppercase tracking-widest font-semibold text-amber-600">
                                                     Escala de Cor
                                                 </span>
-                                                <ChevronDown className={cn("h-3.5 w-3.5 text-amber-400 ml-auto transition-transform", expandEscalaCor && "rotate-180")} />
+                                                <ChevronDown className={cn("h-3.5 w-3.5 text-amber-400 transition-transform", expandEscalaCor && "rotate-180")} />
                                             </button>
 
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" style={{ display: expandEscalaCor ? undefined : 'none' }}>
