@@ -2,7 +2,7 @@
 
 > Especificação completa da estrutura de pastas NAS para o módulo pacientes.
 > Baseada na demonstração NAS criada pelo utilizador (01/03/2026).
-> Última actualização: 02/03/2026
+> Última actualização: 09/03/2026
 
 ---
 
@@ -32,14 +32,27 @@ T-xxxx/                                          ← Só ID, sem nome
     │   ├── 📂 CBCT/                              ← Volumes DICOM
     │   ├── 📂 Considerações/                     ← Considerações iniciais (nível plano)
     │   │   └── 📄 Consideração Inicial VN.pdf    ← Versionadas
-    │   ├── 📂 Escala de Cor/                     ← Fotos escala cor
-    │   ├── 📂 Face/
-    │   │   ├── 📂 Natural/
+    │   ├── 📂 Escala de Cor/
+    │   │   ├── 📂 Escala/                        ← Fotos da escala de cor
+    │   │   └── 📂 Polarizada/                    ← Fotos com filtro polarizado
+    │   ├── 📂 Retrato/                           ← (antes: Face)
     │   │   ├── 📂 Repouso/
-    │   │   └── 📂 Sorriso Alto/
-    │   ├── 📂 Intra-Orais/
+    │   │   ├── 📂 Sorriso Natural/                ← (antes: Natural)
+    │   │   ├── 📂 Sorriso Máximo/                 ← (antes: Sorriso Alto)
+    │   │   ├── 📂 45º/
+    │   │   └── 📂 Perfil/
+    │   ├── 📂 Close-up/                           ← [NOVO]
+    │   │   ├── 📂 Repouso/
+    │   │   ├── 📂 Sorriso Natural/
+    │   │   ├── 📂 Sorriso Máximo/
+    │   │   ├── 📂 Retractores Frontal/
+    │   │   └── 📂 Retractores 45º/
+    │   ├── 📂 Vista Oclusal/                      ← (antes: Intra-Orais)
+    │   │   ├── 📂 Intraoral Superior/
+    │   │   └── 📂 Intraoral Inferior/
+    │   ├── 📂 45º/                                ← [NOVO] secção 45º
     │   ├── 📂 Orto-Periapical/
-    │   ├── 📂 Outras Fotos/
+    │   ├── 📂 Outros/                             ← (antes: Outras Fotos)
     │   ├── 📂 Relatório Plano/                   ← Relatório global versionado
     │   │   └── 📄 Relatório Plano VN.pdf
     │   ├── 📂 Stl's/                             ← STL, OBJ, PLY
@@ -123,13 +136,26 @@ T-{id}/Plano {n}/
 │   ├── CBCT/
 │   ├── Considerações/
 │   ├── Escala de Cor/
-│   ├── Face/
-│   │   ├── Natural/
+│   │   ├── Escala/
+│   │   └── Polarizada/
+│   ├── Retrato/
 │   │   ├── Repouso/
-│   │   └── Sorriso Alto/
-│   ├── Intra-Orais/
+│   │   ├── Sorriso Natural/
+│   │   ├── Sorriso Máximo/
+│   │   ├── 45º/
+│   │   └── Perfil/
+│   ├── Close-up/
+│   │   ├── Repouso/
+│   │   ├── Sorriso Natural/
+│   │   ├── Sorriso Máximo/
+│   │   ├── Retractores Frontal/
+│   │   └── Retractores 45º/
+│   ├── Vista Oclusal/
+│   │   ├── Intraoral Superior/
+│   │   └── Intraoral Inferior/
+│   ├── 45º/
 │   ├── Orto-Periapical/
-│   ├── Outras Fotos/
+│   ├── Outros/
 │   ├── Relatório Plano/
 │   └── Stl's/
 ```
