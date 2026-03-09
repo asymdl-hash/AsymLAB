@@ -1073,6 +1073,66 @@ export const patientsService = {
     },
 
     // ═══════════════════════════════════════════════════════════
+    // Draft Treatment Plans — Rascunhos de planos
+    // ═══════════════════════════════════════════════════════════
+
+    async saveDraft(patientId: string, draftData: Record<string, unknown>, photoPreviews: string[] = []) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Utilizador não autenticado');
+
+        const { data, error } = await supabase
+            .from('treatment_plan_drafts')
+            .upsert({
+                patient_id: patientId,
+                created_by: user.id,
+                draft_data: draftData,
+                photo_previews: photoPreviews,
+                updated_at: new Date().toISOString(),
+                expires_at: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+            }, { onConflict: 'patient_id' })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    async getDraft(patientId: string) {
+        const { data, error } = await supabase
+            .from('treatment_plan_drafts')
+            .select('*')
+            .eq('patient_id', patientId)
+            .maybeSingle();
+
+        if (error) throw error;
+        // Verificar se expirou
+        if (data && new Date(data.expires_at) < new Date()) {
+            await this.deleteDraft(patientId);
+            return null;
+        }
+        return data;
+    },
+
+    async deleteDraft(patientId: string) {
+        const { error } = await supabase
+            .from('treatment_plan_drafts')
+            .delete()
+            .eq('patient_id', patientId);
+
+        if (error) throw error;
+    },
+
+    async getDraftsByUser() {
+        const { data, error } = await supabase
+            .from('treatment_plan_drafts')
+            .select('*, patient:patients!treatment_plan_drafts_patient_id_fkey(id, nome, t_id)')
+            .order('updated_at', { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // NAS Helpers — Criação automática de pastas (fire-and-forget)
     // Conforme PACIENTES_NAS.md
     // ═══════════════════════════════════════════════════════════
