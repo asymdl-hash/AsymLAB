@@ -118,6 +118,15 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const fileRefOutros = useRef<HTMLInputElement>(null);
     const [dragOverOutros, setDragOverOutros] = useState(false);
     const [photosCollapsed, setPhotosCollapsed] = useState(false);
+    // Registos Radiológicos
+    const [radioOrtopan, setRadioOrtopan] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
+    const [radioPeriapicais, setRadioPeriapicais] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
+    const [radioCbct, setRadioCbct] = useState<{ files: File[]; previews: string[] }>({ files: [], previews: [] });
+    const radioOrtopanRef = useRef<HTMLInputElement>(null);
+    const radioPeriapicaisRef = useRef<HTMLInputElement>(null);
+    const radioCbctRef = useRef<HTMLInputElement>(null);
+    const [radioDragOver, setRadioDragOver] = useState<string | null>(null);
+    const [radioCollapsed, setRadioCollapsed] = useState(false);
     const [photoSetup, setPhotoSetup] = useState<'basic' | 'complete'>('basic');
     const [expandEscalaCor, setExpandEscalaCor] = useState(true);
     const [expandRegistos, setExpandRegistos] = useState(true);
@@ -1318,7 +1327,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             <button type="button" onClick={() => { const colorSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: colorScalePhotos, previews: colorScalePreviews }; const result = action(virtualPrev); setColorScalePhotos(result.files); setColorScalePreviews(result.previews); } }; setCameraTarget({ setter: colorSetter, key: 'escalaCor' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia"><Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span></button>
                                                             {!photosCollapsed && colorScalePreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{colorScalePreviews.map((url, i) => (<div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`escalaCor:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`} draggable={!isTouchDevice} onClick={isTouchDevice ? () => togglePhotoSelection(`escalaCor:${i}`) : undefined} onDragStart={!isTouchDevice ? (e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: colorScalePhotos[i], preview: url, note: photoNotes[`escalaCor_${i}`] || '', noteKey: `escalaCor_${i}`, remove: () => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); } }; }) : undefined} onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}>{selectedPhotos.has(`escalaCor:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}<img src={url} alt={`Cor ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={(e) => { e.stopPropagation(); URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button><input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`escalaCor_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`escalaCor_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" /></div>))}</div>)}
                                                             {photosCollapsed && colorScalePreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center">📷 {colorScalePreviews.length} foto(s)</p>)}
-                                                            <input ref={colorFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            <input ref={colorFileRef} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             <input id="cam-native-escalaCor" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                         </div>
                                                         {colorScalePreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
@@ -1339,7 +1348,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             <button type="button" onClick={() => { const polSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: polarizedPhotos, previews: polarizedPreviews }; const result = action(virtualPrev); setPolarizedPhotos(result.files); setPolarizedPreviews(result.previews); } }; setCameraTarget({ setter: polSetter, key: 'polarizada' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia"><Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span></button>
                                                             {!photosCollapsed && polarizedPreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{polarizedPreviews.map((url, i) => (<div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`polarizada:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`} draggable={!isTouchDevice} onClick={isTouchDevice ? () => togglePhotoSelection(`polarizada:${i}`) : undefined} onDragStart={!isTouchDevice ? (e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: polarizedPhotos[i], preview: url, note: photoNotes[`polarizada_${i}`] || '', noteKey: `polarizada_${i}`, remove: () => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); } }; }) : undefined} onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}>{selectedPhotos.has(`polarizada:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}<img src={url} alt={`Polarizada ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={(e) => { e.stopPropagation(); URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button><input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`polarizada_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`polarizada_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" /></div>))}</div>)}
                                                             {photosCollapsed && polarizedPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center">📷 {polarizedPreviews.length} foto(s)</p>)}
-                                                            <input ref={polarizedFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                            <input ref={polarizedFileRef} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             <input id="cam-native-polarizada" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                         </div>
                                                         {polarizedPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
@@ -1553,7 +1562,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     <input
                                                                         ref={ref}
                                                                         type="file"
-                                                                        accept="image/*"
+                                                                        accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed"
                                                                         multiple
                                                                         className="hidden"
                                                                         onChange={e => {
@@ -1700,7 +1709,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         </div>
                                                                     ))}
                                                                     <button type="button" onClick={() => setFieldNotes(prev => ({ ...prev, [`closeup_${key}`]: [...(prev[`closeup_${key}`] || []), ''] }))} className="w-full mt-1 py-1.5 text-[11px] text-gray-400 hover:text-amber-500 hover:bg-amber-50/50 rounded border border-dashed border-gray-200 hover:border-amber-300 transition-colors flex items-center justify-center gap-1">📝 + Nota</button>
-                                                                    <input ref={ref} type="file" accept="image/*" multiple className="hidden" onChange={e => { const files = e.target.files; if (files && files.length > 0) addFiles(setter, Array.from(files)); e.target.value = ''; }} />
+                                                                    <input ref={ref} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const files = e.target.files; if (files && files.length > 0) addFiles(setter, Array.from(files)); e.target.value = ''; }} />
                                                                 </div>
                                                             ));
                                                         })()}
@@ -1727,7 +1736,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralSupPhotos, previews: intraoralSupPreviews }); setIntraoralSupPhotos(r.files); setIntraoralSupPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralSup' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
                                                                         <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
                                                                     </button>
-                                                                    <input ref={intraoralSupFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralSupPhotos(p => [...p, ...nf]); setIntraoralSupPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                    <input ref={intraoralSupFileRef} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralSupPhotos(p => [...p, ...nf]); setIntraoralSupPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                                 </div>
                                                                 {!photosCollapsed && intraoralSupPreviews.length > 0 && (
                                                                     <div className="grid grid-cols-1 gap-1 mt-1">
@@ -1778,7 +1787,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: intraoralInfPhotos, previews: intraoralInfPreviews }); setIntraoralInfPhotos(r.files); setIntraoralInfPreviews(r.previews); } }; setCameraTarget({ setter: s, key: 'intraoralInf' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
                                                                         <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
                                                                     </button>
-                                                                    <input ref={intraoralInfFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralInfPhotos(p => [...p, ...nf]); setIntraoralInfPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                    <input ref={intraoralInfFileRef} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralInfPhotos(p => [...p, ...nf]); setIntraoralInfPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                                 </div>
                                                                 {!photosCollapsed && intraoralInfPreviews.length > 0 && (
                                                                     <div className="grid grid-cols-1 gap-1 mt-1">
@@ -1833,7 +1842,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: photos45, previews: previews45 }); setphotos45(r.files); setpreviews45(r.previews); } }; setCameraTarget({ setter: s, key: 'foto45' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
                                                                     <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
                                                                 </button>
-                                                                <input ref={fileRef45} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setphotos45(p => [...p, ...nf]); setpreviews45(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                <input ref={fileRef45} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setphotos45(p => [...p, ...nf]); setpreviews45(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                                 <input id="cam-native-45" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setphotos45(p => [...p, ...nf]); setpreviews45(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             </div>
                                                             {!photosCollapsed && previews45.length > 0 && (
@@ -1888,7 +1897,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 <button type="button" onClick={() => { const s: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (a) => { if (typeof a === 'function') { const r = a({ files: photosOutros, previews: previewsOutros }); setPhotosOutros(r.files); setPreviewsOutros(r.previews); } }; setCameraTarget({ setter: s, key: 'outros' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia">
                                                                     <Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span>
                                                                 </button>
-                                                                <input ref={fileRefOutros} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                <input ref={fileRefOutros} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                                 <input id="cam-native-outros" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             </div>
                                                             {!photosCollapsed && previewsOutros.length > 0 && (
@@ -1930,6 +1939,106 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
 
                                     </div>
+                                </div>
+
+                                {/* ── Sub-secção: Registos Radiológicos ── */}
+                                <div className="rounded-lg border border-violet-200/60 bg-violet-50/30 p-3 space-y-2.5">
+                                    <div className="flex items-center justify-between">
+                                        <button type="button" onClick={() => setRadioCollapsed(c => !c)} className="flex items-center gap-1.5 text-xs font-semibold text-violet-700 hover:text-violet-900 transition-colors">
+                                            {radioCollapsed ? '▶' : '▼'}
+                                            <span>🩻 Registos Radiológicos</span>
+                                            {(radioOrtopan.files.length + radioPeriapicais.files.length + radioCbct.files.length) > 0 && (
+                                                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-600 text-[9px] font-bold">
+                                                    {radioOrtopan.files.length + radioPeriapicais.files.length + radioCbct.files.length}
+                                                </span>
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    {!radioCollapsed && (
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {(() => {
+                                                const radioFields: { label: string; key: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; icon: string }[] = [
+                                                    { label: 'Ortopantomografia', key: 'ortopan', state: radioOrtopan, setter: setRadioOrtopan, ref: radioOrtopanRef, icon: '📐' },
+                                                    { label: 'Periapicais', key: 'periapicais', state: radioPeriapicais, setter: setRadioPeriapicais, ref: radioPeriapicaisRef, icon: '🦷' },
+                                                    { label: 'CBCT', key: 'cbct', state: radioCbct, setter: setRadioCbct, ref: radioCbctRef, icon: '🔬' },
+                                                ];
+
+                                                const addRadioFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
+                                                    setter(prev => ({
+                                                        files: [...prev.files, ...newFiles],
+                                                        previews: [...prev.previews, ...newFiles.map(f => f.type.startsWith('image/') ? URL.createObjectURL(f) : '')],
+                                                    }));
+                                                };
+
+                                                const removeRadioFile = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, idx: number) => {
+                                                    setter(prev => ({
+                                                        files: prev.files.filter((_, i) => i !== idx),
+                                                        previews: prev.previews.filter((_, i) => i !== idx),
+                                                    }));
+                                                };
+
+                                                const getFileIcon = (file: File) => {
+                                                    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+                                                    if (['zip', 'rar', '7z', 'gz', 'tar'].includes(ext)) return '📦';
+                                                    if (['dcm', 'dicom'].includes(ext)) return '🩻';
+                                                    if (file.type.startsWith('image/')) return '🖼️';
+                                                    return '📄';
+                                                };
+
+                                                return radioFields.map(({ label, key, state, setter, ref, icon }) => (
+                                                    <div
+                                                        key={key}
+                                                        className={cn(
+                                                            "text-center rounded-lg border-2 border-dashed p-1.5 transition-colors",
+                                                            radioDragOver === key
+                                                                ? "border-violet-400 bg-violet-100/50"
+                                                                : "border-gray-200 bg-white"
+                                                        )}
+                                                        onDragOver={e => { e.preventDefault(); setRadioDragOver(key); }}
+                                                        onDragLeave={() => setRadioDragOver(null)}
+                                                        onDrop={e => {
+                                                            e.preventDefault();
+                                                            setRadioDragOver(null);
+                                                            const files = Array.from(e.dataTransfer.files);
+                                                            if (files.length > 0) addRadioFiles(setter, files);
+                                                        }}
+                                                    >
+                                                        <span className="text-[8px] font-semibold text-gray-500 block mb-1">{icon} {label}</span>
+                                                        <div className="mt-1 grid grid-cols-1 gap-1">
+                                                            <button type="button" onClick={() => ref.current?.click()} className="w-full rounded border-2 border-dashed border-violet-300 bg-violet-50/30 flex flex-col items-center justify-center text-violet-500 hover:bg-violet-100/40 hover:border-violet-400 transition-colors py-2" title="Anexar ficheiro">
+                                                                <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
+                                                            </button>
+                                                            <input ref={ref} type="file" accept="image/*,.zip,.rar,.7z,.gz,.tar,.dcm,.dicom,application/zip,application/x-rar-compressed,application/gzip,application/x-7z-compressed,application/dicom" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; addRadioFiles(setter, Array.from(f)); e.target.value = ''; }} />
+                                                        </div>
+                                                        {state.files.length > 0 && (
+                                                            <div className="grid grid-cols-2 gap-1 mt-1.5">
+                                                                {state.files.map((file, i) => (
+                                                                    <div key={i} className="relative group">
+                                                                        {state.previews[i] ? (
+                                                                            <img src={state.previews[i]} alt={file.name} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                        ) : (
+                                                                            <div className="w-full aspect-square rounded border border-gray-200 bg-gray-50 flex flex-col items-center justify-center">
+                                                                                <span className="text-lg">{getFileIcon(file)}</span>
+                                                                                <span className="text-[6px] text-gray-400 mt-0.5 px-0.5 truncate max-w-full">{file.name.length > 15 ? file.name.slice(0, 12) + '...' : file.name}</span>
+                                                                                <span className="text-[5px] text-gray-300">{(file.size / 1024).toFixed(0)} KB</span>
+                                                                            </div>
+                                                                        )}
+                                                                        <button type="button" onClick={(e) => { e.stopPropagation(); if (state.previews[i]) URL.revokeObjectURL(state.previews[i]); removeRadioFile(setter, i); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {state.files.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">arraste ficheiros aqui</p>)}
+                                                    </div>
+                                                ));
+                                            })()}
+                                        </div>
+                                    )}
+
+                                    {radioCollapsed && (radioOrtopan.files.length + radioPeriapicais.files.length + radioCbct.files.length) > 0 && (
+                                        <p className="text-[8px] text-gray-400 text-center">📎 {radioOrtopan.files.length + radioPeriapicais.files.length + radioCbct.files.length} ficheiro(s) anexado(s)</p>
+                                    )}
                                 </div>
 
                                 {/* Error */}
@@ -1993,7 +2102,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                             )}
                         </form>
                     )}
-                </div>
+                </div >
             </div >
 
             {/* Odontograma Modal — renderizado fora do modal principal */}
@@ -2020,52 +2129,56 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
             )}
 
             {/* Mobile multi-select: floating bar */}
-            {isTouchDevice && selectedPhotos.size > 0 && (
-                <div className="fixed bottom-0 left-0 right-0 z-[9999] bg-white border-t-2 border-amber-400 shadow-2xl px-4 py-3 flex items-center justify-between gap-3 safe-area-pb">
-                    <span className="text-sm font-medium text-gray-700">✓ {selectedPhotos.size} foto(s)</span>
-                    <div className="flex items-center gap-2">
-                        <button type="button" onClick={() => setShowMovePicker(true)} className="px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-lg shadow hover:bg-amber-600 transition-colors flex items-center gap-1.5">
-                            📤 Mover para...
-                        </button>
-                        <button type="button" onClick={clearSelection} className="px-3 py-2 bg-gray-100 text-gray-500 text-sm rounded-lg hover:bg-gray-200 transition-colors">
-                            ✕
-                        </button>
+            {
+                isTouchDevice && selectedPhotos.size > 0 && (
+                    <div className="fixed bottom-0 left-0 right-0 z-[9999] bg-white border-t-2 border-amber-400 shadow-2xl px-4 py-3 flex items-center justify-between gap-3 safe-area-pb">
+                        <span className="text-sm font-medium text-gray-700">✓ {selectedPhotos.size} foto(s)</span>
+                        <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => setShowMovePicker(true)} className="px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-lg shadow hover:bg-amber-600 transition-colors flex items-center gap-1.5">
+                                📤 Mover para...
+                            </button>
+                            <button type="button" onClick={clearSelection} className="px-3 py-2 bg-gray-100 text-gray-500 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                                ✕
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Mobile multi-select: destination picker */}
-            {showMovePicker && (
-                <div className="fixed inset-0 z-[10000] bg-black/50 flex items-end justify-center" onClick={() => setShowMovePicker(false)}>
-                    <div className="bg-white rounded-t-2xl w-full max-w-lg max-h-[70vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
-                        <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-                            <span className="text-sm font-semibold text-gray-700">📤 Mover {selectedPhotos.size} foto(s) para...</span>
-                            <button type="button" onClick={() => setShowMovePicker(false)} className="text-gray-400 hover:text-gray-600 text-lg">✕</button>
-                        </div>
-                        <div className="py-2">
-                            {(() => {
-                                const groups: Record<string, { key: string; label: string }[]> = {};
-                                const sourceKeys = new Set(Array.from(selectedPhotos).map(s => s.substring(0, s.lastIndexOf(':'))));
-                                photoFieldsMap.forEach(f => {
-                                    if (sourceKeys.has(f.key)) return; // exclude source fields
-                                    if (!groups[f.group]) groups[f.group] = [];
-                                    groups[f.group].push({ key: f.key, label: f.label });
-                                });
-                                return Object.entries(groups).map(([group, items]) => (
-                                    <div key={group}>
-                                        <p className="px-4 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50">{group}</p>
-                                        {items.map(item => (
-                                            <button key={item.key} type="button" onClick={() => moveSelectedPhotos(item.key)} className="w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-amber-50 active:bg-amber-100 transition-colors border-b border-gray-50 flex items-center gap-2">
-                                                <span className="text-amber-500">→</span> {item.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                ));
-                            })()}
+            {
+                showMovePicker && (
+                    <div className="fixed inset-0 z-[10000] bg-black/50 flex items-end justify-center" onClick={() => setShowMovePicker(false)}>
+                        <div className="bg-white rounded-t-2xl w-full max-w-lg max-h-[70vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+                                <span className="text-sm font-semibold text-gray-700">📤 Mover {selectedPhotos.size} foto(s) para...</span>
+                                <button type="button" onClick={() => setShowMovePicker(false)} className="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+                            </div>
+                            <div className="py-2">
+                                {(() => {
+                                    const groups: Record<string, { key: string; label: string }[]> = {};
+                                    const sourceKeys = new Set(Array.from(selectedPhotos).map(s => s.substring(0, s.lastIndexOf(':'))));
+                                    photoFieldsMap.forEach(f => {
+                                        if (sourceKeys.has(f.key)) return; // exclude source fields
+                                        if (!groups[f.group]) groups[f.group] = [];
+                                        groups[f.group].push({ key: f.key, label: f.label });
+                                    });
+                                    return Object.entries(groups).map(([group, items]) => (
+                                        <div key={group}>
+                                            <p className="px-4 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50">{group}</p>
+                                            {items.map(item => (
+                                                <button key={item.key} type="button" onClick={() => moveSelectedPhotos(item.key)} className="w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-amber-50 active:bg-amber-100 transition-colors border-b border-gray-50 flex items-center gap-2">
+                                                    <span className="text-amber-500">→</span> {item.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    ));
+                                })()}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
         </>
     );
 }
