@@ -122,7 +122,161 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [expandEscalaCor, setExpandEscalaCor] = useState(true);
     const [expandRegistos, setExpandRegistos] = useState(true);
 
-    // Pickers
+    // Mobile multi-select photo move (touch devices only)
+    const [isTouchDevice, setIsTouchDevice] = useState(false);
+    const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+    const [showMovePicker, setShowMovePicker] = useState(false);
+
+    useEffect(() => {
+        setIsTouchDevice(typeof window !== 'undefined' && navigator.maxTouchPoints > 0);
+    }, []);
+
+    const togglePhotoSelection = (key: string) => {
+        setSelectedPhotos(prev => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key); else next.add(key);
+            return next;
+        });
+    };
+
+    const clearSelection = () => { setSelectedPhotos(new Set()); setShowMovePicker(false); };
+
+    // Helper: get file/preview/note for a given fieldKey and index
+    const getPhotoData = (fieldKey: string, index: number): { file: File; preview: string; noteKey: string; note: string } | null => {
+        const pn = photoNotes;
+        if (fieldKey.startsWith('face_')) {
+            const fk = fieldKey.replace('face_', '');
+            const map: Record<string, { files: File[]; previews: string[] }> = { repouso: faceRepouso, sorrisoNatural: faceSorrisoNatural, sorrisoAlto: faceSorrisoAlto, '45': face45Esq, perfil: face45Dir };
+            const s = map[fk]; if (!s || !s.files[index]) return null;
+            const noteKey = `face_${fk}_${index}`;
+            return { file: s.files[index], preview: s.previews[index], noteKey, note: pn[noteKey] || '' };
+        }
+        if (fieldKey.startsWith('closeup_')) {
+            const ck = fieldKey.replace('closeup_', '');
+            const map: Record<string, { files: File[]; previews: string[] }> = { 'cu-repouso': closeupRepouso, 'cu-sorrisoNatural': closeupSorrisoNatural, 'cu-sorrisoAlto': closeupSorrisoAlto, 'cu-retractores': closeup45Dir, 'cu-45': closeup45Esq };
+            const s = map[ck]; if (!s || !s.files[index]) return null;
+            const noteKey = `closeup_${ck}_${index}`;
+            return { file: s.files[index], preview: s.previews[index], noteKey, note: pn[noteKey] || '' };
+        }
+        const flatMap: Record<string, { files: File[]; previews: string[]; prefix: string }> = {
+            escalaCor: { files: colorScalePhotos, previews: colorScalePreviews, prefix: 'escalaCor' },
+            polarizada: { files: polarizedPhotos, previews: polarizedPreviews, prefix: 'polarizada' },
+            intraoralSup: { files: intraoralSupPhotos, previews: intraoralSupPreviews, prefix: 'intraoralSup' },
+            intraoralInf: { files: intraoralInfPhotos, previews: intraoralInfPreviews, prefix: 'intraoralInf' },
+            foto45: { files: photos45, previews: previews45, prefix: 'foto45' },
+            outros: { files: photosOutros, previews: previewsOutros, prefix: 'outros' },
+        };
+        const fm = flatMap[fieldKey]; if (!fm || !fm.files[index]) return null;
+        const noteKey = `${fm.prefix}_${index}`;
+        return { file: fm.files[index], preview: fm.previews[index], noteKey, note: pn[noteKey] || '' };
+    };
+
+    // Helper: add photo to a destination field
+    const addPhotoToField = (destKey: string, file: File, preview: string, note: string) => {
+        if (destKey.startsWith('face_')) {
+            const fk = destKey.replace('face_', '');
+            const setterMap: Record<string, React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>> = { repouso: setFaceRepouso, sorrisoNatural: setFaceSorrisoNatural, sorrisoAlto: setFaceSorrisoAlto, '45': setFace45Esq, perfil: setFace45Dir };
+            const setter = setterMap[fk]; if (setter) setter(prev => ({ files: [...prev.files, file], previews: [...prev.previews, preview] }));
+            if (note) { const countMap: Record<string, { files: File[]; previews: string[] }> = { repouso: faceRepouso, sorrisoNatural: faceSorrisoNatural, sorrisoAlto: faceSorrisoAlto, '45': face45Esq, perfil: face45Dir }; const cnt = countMap[fk]?.files.length || 0; setPhotoNotes(prev => ({ ...prev, [`face_${fk}_${cnt}`]: note })); }
+            return;
+        }
+        if (destKey.startsWith('closeup_')) {
+            const ck = destKey.replace('closeup_', '');
+            const setterMap: Record<string, React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>> = { 'cu-repouso': setCloseupRepouso, 'cu-sorrisoNatural': setCloseupSorrisoNatural, 'cu-sorrisoAlto': setCloseupSorrisoAlto, 'cu-retractores': setCloseup45Dir, 'cu-45': setCloseup45Esq };
+            const setter = setterMap[ck]; if (setter) setter(prev => ({ files: [...prev.files, file], previews: [...prev.previews, preview] }));
+            if (note) { const countMap: Record<string, { files: File[]; previews: string[] }> = { 'cu-repouso': closeupRepouso, 'cu-sorrisoNatural': closeupSorrisoNatural, 'cu-sorrisoAlto': closeupSorrisoAlto, 'cu-retractores': closeup45Dir, 'cu-45': closeup45Esq }; const cnt = countMap[ck]?.files.length || 0; setPhotoNotes(prev => ({ ...prev, [`closeup_${ck}_${cnt}`]: note })); }
+            return;
+        }
+        const flatSetters: Record<string, { setFiles: (fn: (p: File[]) => File[]) => void; setPreviews: (fn: (p: string[]) => string[]) => void; prefix: string; count: number }> = {
+            escalaCor: { setFiles: fn => setColorScalePhotos(fn), setPreviews: fn => setColorScalePreviews(fn), prefix: 'escalaCor', count: colorScalePhotos.length },
+            polarizada: { setFiles: fn => setPolarizedPhotos(fn), setPreviews: fn => setPolarizedPreviews(fn), prefix: 'polarizada', count: polarizedPhotos.length },
+            intraoralSup: { setFiles: fn => setIntraoralSupPhotos(fn), setPreviews: fn => setIntraoralSupPreviews(fn), prefix: 'intraoralSup', count: intraoralSupPhotos.length },
+            intraoralInf: { setFiles: fn => setIntraoralInfPhotos(fn), setPreviews: fn => setIntraoralInfPreviews(fn), prefix: 'intraoralInf', count: intraoralInfPhotos.length },
+            foto45: { setFiles: fn => setphotos45(fn), setPreviews: fn => setpreviews45(fn), prefix: 'foto45', count: photos45.length },
+            outros: { setFiles: fn => setPhotosOutros(fn), setPreviews: fn => setPreviewsOutros(fn), prefix: 'outros', count: photosOutros.length },
+        };
+        const fs = flatSetters[destKey]; if (!fs) return;
+        fs.setFiles(p => [...p, file]); fs.setPreviews(p => [...p, preview]);
+        if (note) setPhotoNotes(prev => ({ ...prev, [`${fs.prefix}_${fs.count}`]: note }));
+    };
+
+    // Helper: remove photo from source field by index
+    const removePhotoFromField = (fieldKey: string, index: number) => {
+        if (fieldKey.startsWith('face_')) {
+            const fk = fieldKey.replace('face_', '');
+            const setterMap: Record<string, React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>> = { repouso: setFaceRepouso, sorrisoNatural: setFaceSorrisoNatural, sorrisoAlto: setFaceSorrisoAlto, '45': setFace45Esq, perfil: setFace45Dir };
+            const setter = setterMap[fk]; if (setter) setter(prev => ({ files: prev.files.filter((_, i) => i !== index), previews: prev.previews.filter((_, i) => i !== index) }));
+            setPhotoNotes(prev => { const next = { ...prev }; delete next[`face_${fk}_${index}`]; return next; });
+            return;
+        }
+        if (fieldKey.startsWith('closeup_')) {
+            const ck = fieldKey.replace('closeup_', '');
+            const setterMap: Record<string, React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>> = { 'cu-repouso': setCloseupRepouso, 'cu-sorrisoNatural': setCloseupSorrisoNatural, 'cu-sorrisoAlto': setCloseupSorrisoAlto, 'cu-retractores': setCloseup45Dir, 'cu-45': setCloseup45Esq };
+            const setter = setterMap[ck]; if (setter) setter(prev => ({ files: prev.files.filter((_, i) => i !== index), previews: prev.previews.filter((_, i) => i !== index) }));
+            setPhotoNotes(prev => { const next = { ...prev }; delete next[`closeup_${ck}_${index}`]; return next; });
+            return;
+        }
+        const flatSetters: Record<string, { setFiles: (fn: (p: File[]) => File[]) => void; setPreviews: (fn: (p: string[]) => string[]) => void; noteKey: string }> = {
+            escalaCor: { setFiles: fn => setColorScalePhotos(fn), setPreviews: fn => setColorScalePreviews(fn), noteKey: `escalaCor_${index}` },
+            polarizada: { setFiles: fn => setPolarizedPhotos(fn), setPreviews: fn => setPolarizedPreviews(fn), noteKey: `polarizada_${index}` },
+            intraoralSup: { setFiles: fn => setIntraoralSupPhotos(fn), setPreviews: fn => setIntraoralSupPreviews(fn), noteKey: `intraoralSup_${index}` },
+            intraoralInf: { setFiles: fn => setIntraoralInfPhotos(fn), setPreviews: fn => setIntraoralInfPreviews(fn), noteKey: `intraoralInf_${index}` },
+            foto45: { setFiles: fn => setphotos45(fn), setPreviews: fn => setpreviews45(fn), noteKey: `foto45_${index}` },
+            outros: { setFiles: fn => setPhotosOutros(fn), setPreviews: fn => setPreviewsOutros(fn), noteKey: `outros_${index}` },
+        };
+        const fs = flatSetters[fieldKey]; if (!fs) return;
+        fs.setFiles(p => p.filter((_, i) => i !== index)); fs.setPreviews(p => p.filter((_, i) => i !== index));
+        setPhotoNotes(prev => { const next = { ...prev }; delete next[fs.noteKey]; return next; });
+    };
+
+    // Move all selected photos to destination
+    const moveSelectedPhotos = (destKey: string) => {
+        // Group by source field and sort indices descending for safe removal
+        const grouped: Record<string, number[]> = {};
+        selectedPhotos.forEach(sel => {
+            const [fk, idx] = [sel.substring(0, sel.lastIndexOf(':')), parseInt(sel.substring(sel.lastIndexOf(':') + 1))];
+            if (!grouped[fk]) grouped[fk] = [];
+            grouped[fk].push(idx);
+        });
+
+        // Collect data first, then remove (descending order)
+        const toMove: { file: File; preview: string; note: string }[] = [];
+        for (const [srcKey, indices] of Object.entries(grouped)) {
+            indices.sort((a, b) => a - b); // ascending for data collection
+            for (const idx of indices) {
+                const data = getPhotoData(srcKey, idx);
+                if (data) toMove.push({ file: data.file, preview: data.preview, note: data.note });
+            }
+            // Remove descending to keep indices valid
+            const descIndices = [...indices].sort((a, b) => b - a);
+            for (const idx of descIndices) removePhotoFromField(srcKey, idx);
+        }
+
+        // Add all to destination
+        for (const item of toMove) addPhotoToField(destKey, item.file, item.preview, item.note);
+        clearSelection();
+    };
+
+    // Photo fields map for the destination picker
+    const photoFieldsMap = [
+        { key: 'face_repouso', label: 'Repouso', group: 'Retrato' },
+        { key: 'face_sorrisoNatural', label: 'Sorriso Natural', group: 'Retrato' },
+        { key: 'face_sorrisoAlto', label: 'Sorriso Máximo', group: 'Retrato' },
+        { key: 'face_45', label: '45º', group: 'Retrato' },
+        { key: 'face_perfil', label: 'Perfil', group: 'Retrato' },
+        { key: 'closeup_cu-repouso', label: 'Repouso', group: 'Close-up' },
+        { key: 'closeup_cu-sorrisoNatural', label: 'Sorriso Natural', group: 'Close-up' },
+        { key: 'closeup_cu-sorrisoAlto', label: 'Sorriso Máximo', group: 'Close-up' },
+        { key: 'closeup_cu-retractores', label: 'Retractores Frontal', group: 'Close-up' },
+        { key: 'closeup_cu-45', label: 'Retractores 45º', group: 'Close-up' },
+        { key: 'escalaCor', label: 'Escala de Cor', group: 'Escala de Cor' },
+        { key: 'polarizada', label: 'Polarizadas', group: 'Polarizadas' },
+        { key: 'intraoralSup', label: 'Intraoral Superior', group: 'Vista Oclusal' },
+        { key: 'intraoralInf', label: 'Intraoral Inferior', group: 'Vista Oclusal' },
+        { key: 'foto45', label: '45º', group: '45º' },
+        { key: 'outros', label: 'Outros', group: 'Outros' },
+    ];
+
     const [showDoctorPicker, setShowDoctorPicker] = useState(false);
     const [showTeamPicker, setShowTeamPicker] = useState(false);
     const doctorPickerRef = useRef<HTMLDivElement>(null);
@@ -1100,7 +1254,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         <div className="mt-1.5 grid grid-cols-1 gap-1">
                                                             <button type="button" onClick={() => colorFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro"><Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span></button>
                                                             <button type="button" onClick={() => { const colorSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: colorScalePhotos, previews: colorScalePreviews }; const result = action(virtualPrev); setColorScalePhotos(result.files); setColorScalePreviews(result.previews); } }; setCameraTarget({ setter: colorSetter, key: 'escalaCor' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia"><Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span></button>
-                                                            {!photosCollapsed && colorScalePreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{colorScalePreviews.map((url, i) => (<div key={i} className="relative group cursor-grab active:cursor-grabbing" draggable onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: colorScalePhotos[i], preview: url, note: photoNotes[`escalaCor_${i}`] || '', noteKey: `escalaCor_${i}`, remove: () => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); } }; }} onDragEnd={() => { dragSourceRef.current = null; }}><img src={url} alt={`Cor ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={() => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button><input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`escalaCor_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`escalaCor_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" /></div>))}</div>)}
+                                                            {!photosCollapsed && colorScalePreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{colorScalePreviews.map((url, i) => (<div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`escalaCor:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`} draggable={!isTouchDevice} onClick={isTouchDevice ? () => togglePhotoSelection(`escalaCor:${i}`) : undefined} onDragStart={!isTouchDevice ? (e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: colorScalePhotos[i], preview: url, note: photoNotes[`escalaCor_${i}`] || '', noteKey: `escalaCor_${i}`, remove: () => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); } }; }) : undefined} onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}>{selectedPhotos.has(`escalaCor:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}<img src={url} alt={`Cor ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={(e) => { e.stopPropagation(); URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button><input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`escalaCor_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`escalaCor_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" /></div>))}</div>)}
                                                             {photosCollapsed && colorScalePreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center">📷 {colorScalePreviews.length} foto(s)</p>)}
                                                             <input ref={colorFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             <input id="cam-native-escalaCor" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
@@ -1121,7 +1275,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         <div className="mt-1.5 grid grid-cols-1 gap-1">
                                                             <button type="button" onClick={() => polarizedFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro"><Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span></button>
                                                             <button type="button" onClick={() => { const polSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: polarizedPhotos, previews: polarizedPreviews }; const result = action(virtualPrev); setPolarizedPhotos(result.files); setPolarizedPreviews(result.previews); } }; setCameraTarget({ setter: polSetter, key: 'polarizada' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia"><Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span></button>
-                                                            {!photosCollapsed && polarizedPreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{polarizedPreviews.map((url, i) => (<div key={i} className="relative group cursor-grab active:cursor-grabbing" draggable onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: polarizedPhotos[i], preview: url, note: photoNotes[`polarizada_${i}`] || '', noteKey: `polarizada_${i}`, remove: () => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); } }; }} onDragEnd={() => { dragSourceRef.current = null; }}><img src={url} alt={`Polarizada ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={() => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button><input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`polarizada_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`polarizada_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" /></div>))}</div>)}
+                                                            {!photosCollapsed && polarizedPreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{polarizedPreviews.map((url, i) => (<div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`polarizada:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`} draggable={!isTouchDevice} onClick={isTouchDevice ? () => togglePhotoSelection(`polarizada:${i}`) : undefined} onDragStart={!isTouchDevice ? (e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: polarizedPhotos[i], preview: url, note: photoNotes[`polarizada_${i}`] || '', noteKey: `polarizada_${i}`, remove: () => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); } }; }) : undefined} onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}>{selectedPhotos.has(`polarizada:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}<img src={url} alt={`Polarizada ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={(e) => { e.stopPropagation(); URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button><input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`polarizada_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`polarizada_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" /></div>))}</div>)}
                                                             {photosCollapsed && polarizedPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center">📷 {polarizedPreviews.length} foto(s)</p>)}
                                                             <input ref={polarizedFileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             <input id="cam-native-polarizada" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
@@ -1272,9 +1426,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     {!photosCollapsed && state.previews.length > 0 && (
                                                                         <div className="grid grid-cols-2 gap-1 mt-1">
                                                                             {state.previews.map((url, i) => (
-                                                                                <div key={i} className="relative group cursor-grab active:cursor-grabbing"
-                                                                                    draggable
-                                                                                    onDragStart={e => {
+                                                                                <div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`face_${key}:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`}
+                                                                                    draggable={!isTouchDevice}
+                                                                                    onClick={isTouchDevice ? () => togglePhotoSelection(`face_${key}:${i}`) : undefined}
+                                                                                    onDragStart={!isTouchDevice ? (e => {
                                                                                         e.dataTransfer.effectAllowed = 'move';
                                                                                         e.dataTransfer.setData('text/plain', 'internal-photo');
                                                                                         dragSourceRef.current = {
@@ -1284,13 +1439,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                                             noteKey: `face_${key}_${i}`,
                                                                                             remove: () => removeFile(setter, i),
                                                                                         };
-                                                                                    }}
-                                                                                    onDragEnd={() => { dragSourceRef.current = null; }}
+                                                                                    }) : undefined}
+                                                                                    onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}
                                                                                 >
+                                                                                    {selectedPhotos.has(`face_${key}:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}
                                                                                     <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-[3/4] object-cover rounded border border-gray-200" />
                                                                                     <button
                                                                                         type="button"
-                                                                                        onClick={() => removeFile(setter, i)}
+                                                                                        onClick={(e) => { e.stopPropagation(); removeFile(setter, i); }}
                                                                                         className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                                                                     >
                                                                                         <X className="h-2 w-2 text-white" />
@@ -1445,9 +1601,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     {!photosCollapsed && state.previews.length > 0 && (
                                                                         <div className="grid grid-cols-2 gap-1 mt-1">
                                                                             {state.previews.map((url, i) => (
-                                                                                <div key={i} className="relative group cursor-grab active:cursor-grabbing"
-                                                                                    draggable
-                                                                                    onDragStart={e => {
+                                                                                <div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`closeup_${key}:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`}
+                                                                                    draggable={!isTouchDevice}
+                                                                                    onClick={isTouchDevice ? () => togglePhotoSelection(`closeup_${key}:${i}`) : undefined}
+                                                                                    onDragStart={!isTouchDevice ? (e => {
                                                                                         e.dataTransfer.effectAllowed = 'move';
                                                                                         e.dataTransfer.setData('text/plain', 'internal-photo');
                                                                                         dragSourceRef.current = {
@@ -1457,11 +1614,12 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                                             noteKey: `closeup_${key}_${i}`,
                                                                                             remove: () => removeFile(setter, i),
                                                                                         };
-                                                                                    }}
-                                                                                    onDragEnd={() => { dragSourceRef.current = null; }}
+                                                                                    }) : undefined}
+                                                                                    onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}
                                                                                 >
+                                                                                    {selectedPhotos.has(`closeup_${key}:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}
                                                                                     <img src={url} alt={`${label} ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                                    <button type="button" onClick={() => removeFile(setter, i)} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                                    <button type="button" onClick={(e) => { e.stopPropagation(); removeFile(setter, i); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                                                         <X className="h-2 w-2 text-white" />
                                                                                     </button>
                                                                                     <input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`closeup_${key}_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`closeup_${key}_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" />
@@ -1512,9 +1670,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 {!photosCollapsed && intraoralSupPreviews.length > 0 && (
                                                                     <div className="grid grid-cols-1 gap-1 mt-1">
                                                                         {intraoralSupPreviews.map((url, i) => (
-                                                                            <div key={i} className="relative group cursor-grab active:cursor-grabbing"
-                                                                                draggable
-                                                                                onDragStart={e => {
+                                                                            <div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`intraoralSup:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`}
+                                                                                draggable={!isTouchDevice}
+                                                                                onClick={isTouchDevice ? () => togglePhotoSelection(`intraoralSup:${i}`) : undefined}
+                                                                                onDragStart={!isTouchDevice ? (e => {
                                                                                     e.dataTransfer.effectAllowed = 'move';
                                                                                     e.dataTransfer.setData('text/plain', 'internal-photo');
                                                                                     dragSourceRef.current = {
@@ -1524,11 +1683,12 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                                         noteKey: `intraoralSup_${i}`,
                                                                                         remove: () => { setIntraoralSupPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralSupPreviews(p => p.filter((_, idx) => idx !== i)); },
                                                                                     };
-                                                                                }}
-                                                                                onDragEnd={() => { dragSourceRef.current = null; }}
+                                                                                }) : undefined}
+                                                                                onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}
                                                                             >
+                                                                                {selectedPhotos.has(`intraoralSup:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}
                                                                                 <img src={url} alt={`Intraoral Sup ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                                <button type="button" onClick={() => { setIntraoralSupPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralSupPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                                <button type="button" onClick={(e) => { e.stopPropagation(); setIntraoralSupPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralSupPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
                                                                                 <input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`intraoralSup_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`intraoralSup_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" />
                                                                             </div>
                                                                         ))}
@@ -1561,9 +1721,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 {!photosCollapsed && intraoralInfPreviews.length > 0 && (
                                                                     <div className="grid grid-cols-1 gap-1 mt-1">
                                                                         {intraoralInfPreviews.map((url, i) => (
-                                                                            <div key={i} className="relative group cursor-grab active:cursor-grabbing"
-                                                                                draggable
-                                                                                onDragStart={e => {
+                                                                            <div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`intraoralInf:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`}
+                                                                                draggable={!isTouchDevice}
+                                                                                onClick={isTouchDevice ? () => togglePhotoSelection(`intraoralInf:${i}`) : undefined}
+                                                                                onDragStart={!isTouchDevice ? (e => {
                                                                                     e.dataTransfer.effectAllowed = 'move';
                                                                                     e.dataTransfer.setData('text/plain', 'internal-photo');
                                                                                     dragSourceRef.current = {
@@ -1573,11 +1734,12 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                                         noteKey: `intraoralInf_${i}`,
                                                                                         remove: () => { setIntraoralInfPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralInfPreviews(p => p.filter((_, idx) => idx !== i)); },
                                                                                     };
-                                                                                }}
-                                                                                onDragEnd={() => { dragSourceRef.current = null; }}
+                                                                                }) : undefined}
+                                                                                onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}
                                                                             >
+                                                                                {selectedPhotos.has(`intraoralInf:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}
                                                                                 <img src={url} alt={`Intraoral Inf ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                                <button type="button" onClick={() => { setIntraoralInfPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralInfPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                                <button type="button" onClick={(e) => { e.stopPropagation(); setIntraoralInfPhotos(p => p.filter((_, idx) => idx !== i)); setIntraoralInfPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
                                                                                 <input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`intraoralInf_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`intraoralInf_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" />
                                                                             </div>
                                                                         ))}
@@ -1615,9 +1777,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             {!photosCollapsed && previews45.length > 0 && (
                                                                 <div className="grid grid-cols-1 gap-1 mt-1">
                                                                     {previews45.map((url, i) => (
-                                                                        <div key={i} className="relative group cursor-grab active:cursor-grabbing"
-                                                                            draggable
-                                                                            onDragStart={e => {
+                                                                        <div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`foto45:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`}
+                                                                            draggable={!isTouchDevice}
+                                                                            onClick={isTouchDevice ? () => togglePhotoSelection(`foto45:${i}`) : undefined}
+                                                                            onDragStart={!isTouchDevice ? (e => {
                                                                                 e.dataTransfer.effectAllowed = 'move';
                                                                                 e.dataTransfer.setData('text/plain', 'internal-photo');
                                                                                 dragSourceRef.current = {
@@ -1627,11 +1790,12 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                                     noteKey: `foto45_${i}`,
                                                                                     remove: () => { setphotos45(p => p.filter((_, idx) => idx !== i)); setpreviews45(p => p.filter((_, idx) => idx !== i)); },
                                                                                 };
-                                                                            }}
-                                                                            onDragEnd={() => { dragSourceRef.current = null; }}
+                                                                            }) : undefined}
+                                                                            onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}
                                                                         >
+                                                                            {selectedPhotos.has(`foto45:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}
                                                                             <img src={url} alt={`45º ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                            <button type="button" onClick={() => { setphotos45(p => p.filter((_, idx) => idx !== i)); setpreviews45(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                            <button type="button" onClick={(e) => { e.stopPropagation(); setphotos45(p => p.filter((_, idx) => idx !== i)); setpreviews45(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
                                                                             <input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`foto45_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`foto45_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" />
                                                                         </div>
                                                                     ))}
@@ -1668,9 +1832,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             {!photosCollapsed && previewsOutros.length > 0 && (
                                                                 <div className="grid grid-cols-1 gap-1 mt-1">
                                                                     {previewsOutros.map((url, i) => (
-                                                                        <div key={i} className="relative group cursor-grab active:cursor-grabbing"
-                                                                            draggable
-                                                                            onDragStart={e => {
+                                                                        <div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`outros:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`}
+                                                                            draggable={!isTouchDevice}
+                                                                            onClick={isTouchDevice ? () => togglePhotoSelection(`outros:${i}`) : undefined}
+                                                                            onDragStart={!isTouchDevice ? (e => {
                                                                                 e.dataTransfer.effectAllowed = 'move';
                                                                                 e.dataTransfer.setData('text/plain', 'internal-photo');
                                                                                 dragSourceRef.current = {
@@ -1680,11 +1845,12 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                                     noteKey: `outros_${i}`,
                                                                                     remove: () => { setPhotosOutros(p => p.filter((_, idx) => idx !== i)); setPreviewsOutros(p => p.filter((_, idx) => idx !== i)); },
                                                                                 };
-                                                                            }}
-                                                                            onDragEnd={() => { dragSourceRef.current = null; }}
+                                                                            }) : undefined}
+                                                                            onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}
                                                                         >
+                                                                            {selectedPhotos.has(`outros:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}
                                                                             <img src={url} alt={`Outros ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                            <button type="button" onClick={() => { setPhotosOutros(p => p.filter((_, idx) => idx !== i)); setPreviewsOutros(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                            <button type="button" onClick={(e) => { e.stopPropagation(); setPhotosOutros(p => p.filter((_, idx) => idx !== i)); setPreviewsOutros(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
                                                                             <input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`outros_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`outros_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" />
                                                                         </div>
                                                                     ))}
@@ -1750,6 +1916,54 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                     onClose={() => setCameraTarget(null)}
                     nativeCamKey={cameraTarget.key}
                 />
+            )}
+
+            {/* Mobile multi-select: floating bar */}
+            {isTouchDevice && selectedPhotos.size > 0 && (
+                <div className="fixed bottom-0 left-0 right-0 z-[9999] bg-white border-t-2 border-amber-400 shadow-2xl px-4 py-3 flex items-center justify-between gap-3 safe-area-pb">
+                    <span className="text-sm font-medium text-gray-700">✓ {selectedPhotos.size} foto(s)</span>
+                    <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => setShowMovePicker(true)} className="px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-lg shadow hover:bg-amber-600 transition-colors flex items-center gap-1.5">
+                            📤 Mover para...
+                        </button>
+                        <button type="button" onClick={clearSelection} className="px-3 py-2 bg-gray-100 text-gray-500 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Mobile multi-select: destination picker */}
+            {showMovePicker && (
+                <div className="fixed inset-0 z-[10000] bg-black/50 flex items-end justify-center" onClick={() => setShowMovePicker(false)}>
+                    <div className="bg-white rounded-t-2xl w-full max-w-lg max-h-[70vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+                            <span className="text-sm font-semibold text-gray-700">📤 Mover {selectedPhotos.size} foto(s) para...</span>
+                            <button type="button" onClick={() => setShowMovePicker(false)} className="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+                        </div>
+                        <div className="py-2">
+                            {(() => {
+                                const groups: Record<string, { key: string; label: string }[]> = {};
+                                const sourceKeys = new Set(Array.from(selectedPhotos).map(s => s.substring(0, s.lastIndexOf(':'))));
+                                photoFieldsMap.forEach(f => {
+                                    if (sourceKeys.has(f.key)) return; // exclude source fields
+                                    if (!groups[f.group]) groups[f.group] = [];
+                                    groups[f.group].push({ key: f.key, label: f.label });
+                                });
+                                return Object.entries(groups).map(([group, items]) => (
+                                    <div key={group}>
+                                        <p className="px-4 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50">{group}</p>
+                                        {items.map(item => (
+                                            <button key={item.key} type="button" onClick={() => moveSelectedPhotos(item.key)} className="w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-amber-50 active:bg-amber-100 transition-colors border-b border-gray-50 flex items-center gap-2">
+                                                <span className="text-amber-500">→</span> {item.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                ));
+                            })()}
+                        </div>
+                    </div>
+                </div>
             )}
         </>
     );
