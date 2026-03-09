@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import BackupSettings from '@/components/settings/BackupSettings';
 import UserManagement from '@/components/settings/UserManagement';
 import CatalogManager from '@/components/settings/CatalogManager';
+import NotificationSettings from '@/components/settings/NotificationSettings';
 import PermissionGuard from '@/components/PermissionGuard';
 
 interface SettingsTab {
@@ -114,12 +115,7 @@ export default function SettingsPage() {
                                 <p className="text-sm">Configurações gerais — em desenvolvimento</p>
                             </div>
                         )}
-                        {activeTab === 'notifications' && (
-                            <div className="text-center py-16 text-gray-500">
-                                <Bell className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                                <p className="text-sm">Notificações — em desenvolvimento</p>
-                            </div>
-                        )}
+                        {activeTab === 'notifications' && <NotificationSettings />}
                         {activeTab === 'appearance' && (
                             <div className="text-center py-16 text-gray-500">
                                 <Palette className="h-12 w-12 mx-auto mb-3 opacity-20" />

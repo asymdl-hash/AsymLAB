@@ -148,6 +148,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
     const [waMode, setWaMode] = useState<'menu' | 'paste' | 'creating'>('menu');
     const [waLoading, setWaLoading] = useState(false);
     const [waError, setWaError] = useState('');
+    const [hasDraft, setHasDraft] = useState(false);
     const doctorMultiRef = useRef<HTMLDivElement>(null);
     const doctorMultiPopupRef = useRef<HTMLDivElement | null>(null);
     const teamRef = useRef<HTMLDivElement>(null);
@@ -199,6 +200,11 @@ export default function PatientForm({ initialData }: PatientFormProps) {
             }
         }
         loadDropdowns();
+
+        // Verificar se existe rascunho de plano
+        patientsService.getDraft(initialData.id)
+            .then(draft => setHasDraft(!!draft))
+            .catch(() => { });
     }, [initialData.id]);
 
     // Carregar equipa da clínica
@@ -868,12 +874,18 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                         {!readOnly && (
                             <Button
                                 size="sm"
-                                className="h-8 gap-1.5 text-xs bg-primary hover:bg-primary/90 text-white"
+                                className="h-8 gap-1.5 text-xs bg-primary hover:bg-primary/90 text-white relative"
                                 onClick={() => setShowNewPlan(true)}
                             >
                                 <Plus className="h-3.5 w-3.5" />
                                 <span className="hidden sm:inline">Criar Plano de Tratamento</span>
                                 <span className="sm:hidden">Novo Plano</span>
+                                {hasDraft && (
+                                    <span className="absolute -top-1 -right-1 flex h-3 w-3" title="Rascunho pendente">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500 border border-white" />
+                                    </span>
+                                )}
                             </Button>
                         )}
                         <Button
@@ -961,6 +973,7 @@ export default function PatientForm({ initialData }: PatientFormProps) {
                     onClose={() => setShowNewPlan(false)}
                     onCreated={async () => {
                         setShowNewPlan(false);
+                        setHasDraft(false); // Limpar badge após criar plano
                         try {
                             const updated = await patientsService.getPatientDetails(patient.id);
                             if (updated) setPatient(updated);
