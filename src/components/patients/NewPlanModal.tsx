@@ -58,8 +58,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [colorDragOver, setColorDragOver] = useState(false);
     const [showColorDropdown, setShowColorDropdown] = useState(false);
     const [activeColorGroup, setActiveColorGroup] = useState<string | null>(null);
-    const [photoNotes, setPhotoNotes] = useState<Record<number, string>>({});
-    const [editingNoteIdx, setEditingNoteIdx] = useState<number | null>(null);
+    const [photoNotes, setPhotoNotes] = useState<Record<string, string>>({});
     const colorDropdownRef = useRef<HTMLDivElement>(null);
     const colorFileRef = useRef<HTMLInputElement>(null);
     // Escala de Cor — Fotos Polarizadas
@@ -1106,6 +1105,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             <input id="cam-native-escalaCor" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                         </div>
                                                         {colorScalePreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                        <input type="text" placeholder="✏️ Nota..." value={photoNotes['escalaCor'] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, escalaCor: e.target.value }))} className="w-full mt-1 px-1.5 py-0.5 text-[8px] text-gray-500 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-amber-300 focus:ring-1 focus:ring-amber-200 placeholder:text-gray-300" />
                                                     </div>
                                                     {/* Polarizadas — coluna direita */}
                                                     <div
@@ -1125,6 +1125,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             <input id="cam-native-polarizada" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                         </div>
                                                         {polarizedPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                        <input type="text" placeholder="✏️ Nota..." value={photoNotes['polarizada'] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, polarizada: e.target.value }))} className="w-full mt-1 px-1.5 py-0.5 text-[8px] text-gray-500 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-amber-300 focus:ring-1 focus:ring-amber-200 placeholder:text-gray-300" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -1299,6 +1300,15 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         <p className="text-[7px] text-gray-300 mt-1">ou arraste fotos aqui</p>
                                                                     )}
 
+                                                                    {/* Nota por campo */}
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="✏️ Nota..."
+                                                                        value={photoNotes[`face_${key}`] || ''}
+                                                                        onChange={e => setPhotoNotes(prev => ({ ...prev, [`face_${key}`]: e.target.value }))}
+                                                                        className="w-full mt-1 px-1.5 py-0.5 text-[8px] text-gray-500 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-amber-300 focus:ring-1 focus:ring-amber-200 placeholder:text-gray-300"
+                                                                    />
+
                                                                     {/* Hidden inputs */}
                                                                     <input
                                                                         ref={ref}
@@ -1435,6 +1445,15 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     {photosCollapsed && state.previews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {state.previews.length} foto(s)</p>)}
                                                                     {state.previews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
 
+                                                                    {/* Nota por campo */}
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="✏️ Nota..."
+                                                                        value={photoNotes[`closeup_${key}`] || ''}
+                                                                        onChange={e => setPhotoNotes(prev => ({ ...prev, [`closeup_${key}`]: e.target.value }))}
+                                                                        className="w-full mt-1 px-1.5 py-0.5 text-[8px] text-gray-500 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-amber-300 focus:ring-1 focus:ring-amber-200 placeholder:text-gray-300"
+                                                                    />
+
                                                                     <input ref={ref} type="file" accept="image/*" multiple className="hidden" onChange={e => { const files = e.target.files; if (files && files.length > 0) addFiles(setter, Array.from(files)); e.target.value = ''; }} />
                                                                 </div>
                                                             ));
@@ -1488,6 +1507,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 )}
                                                                 {photosCollapsed && intraoralSupPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {intraoralSupPreviews.length} foto(s)</p>)}
                                                                 {intraoralSupPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                                <input type="text" placeholder="✏️ Nota..." value={photoNotes['intraoralSup'] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, intraoralSup: e.target.value }))} className="w-full mt-1 px-1.5 py-0.5 text-[8px] text-gray-500 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-amber-300 focus:ring-1 focus:ring-amber-200 placeholder:text-gray-300" />
                                                             </div>
 
                                                             {/* --- Intraoral Inferior --- */}
@@ -1532,6 +1552,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 )}
                                                                 {photosCollapsed && intraoralInfPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {intraoralInfPreviews.length} foto(s)</p>)}
                                                                 {intraoralInfPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                                <input type="text" placeholder="✏️ Nota..." value={photoNotes['intraoralInf'] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, intraoralInf: e.target.value }))} className="w-full mt-1 px-1.5 py-0.5 text-[8px] text-gray-500 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-amber-300 focus:ring-1 focus:ring-amber-200 placeholder:text-gray-300" />
                                                             </div>
                                                         </div>
                                                     </fieldset>)}
@@ -1581,6 +1602,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             )}
                                                             {photosCollapsed && previews45.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previews45.length} foto(s)</p>)}
                                                             {previews45.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                            <input type="text" placeholder="✏️ Nota..." value={photoNotes['foto45'] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, foto45: e.target.value }))} className="w-full mt-1 px-1.5 py-0.5 text-[8px] text-gray-500 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-amber-300 focus:ring-1 focus:ring-amber-200 placeholder:text-gray-300" />
                                                         </div>
                                                     </fieldset>)}
 
@@ -1629,6 +1651,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             )}
                                                             {photosCollapsed && previewsOutros.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {previewsOutros.length} foto(s)</p>)}
                                                             {previewsOutros.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                            <input type="text" placeholder="✏️ Nota..." value={photoNotes['outros'] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, outros: e.target.value }))} className="w-full mt-1 px-1.5 py-0.5 text-[8px] text-gray-500 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-amber-300 focus:ring-1 focus:ring-amber-200 placeholder:text-gray-300" />
                                                         </div>
                                                     </fieldset>
                                                 </div>
