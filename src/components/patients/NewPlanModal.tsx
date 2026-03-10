@@ -2202,11 +2202,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     onDragEnd={() => setDragSubtituloIdx(null)}
                                                                     className="rounded-lg border border-gray-100 bg-gray-50/50 px-2 py-1.5 group/sub hover:border-gray-200 transition-colors"
                                                                 >
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        <span className="text-[9px] text-gray-400 font-medium w-3 text-center flex-shrink-0">{subIdx + 1}.</span>
-                                                                        <GripVertical className="h-3 w-3 text-gray-300 cursor-grab flex-shrink-0 opacity-0 group-hover/sub:opacity-100 transition-opacity" />
-                                                                        <input
-                                                                            type="text"
+                                                                    <div className="flex items-start gap-1.5">
+                                                                        <span className="text-[9px] text-gray-400 font-medium w-3 text-center flex-shrink-0 mt-1">{subIdx + 1}.</span>
+                                                                        <GripVertical className="h-3 w-3 text-gray-300 cursor-grab flex-shrink-0 opacity-0 group-hover/sub:opacity-100 transition-opacity mt-1" />
+                                                                        <textarea
                                                                             value={sub.texto}
                                                                             onChange={e => {
                                                                                 const v = e.target.value;
@@ -2218,8 +2217,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                                     return { ...c, subtitulos: subs, isModified };
                                                                                 }));
                                                                             }}
+                                                                            onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }}
                                                                             placeholder={`Subtítulo ${subIdx + 1}...`}
-                                                                            className="flex-1 text-[11px] font-medium text-gray-600 bg-transparent border-none outline-none placeholder:text-gray-300"
+                                                                            rows={1}
+                                                                            className="flex-1 text-[11px] font-medium text-gray-600 bg-transparent border-none outline-none resize-none placeholder:text-gray-300 overflow-hidden"
                                                                         />
                                                                         <button type="button" onClick={() => {
                                                                             setConsideracoes(prev => prev.map((c, ci) => {
@@ -2229,7 +2230,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                                 const isModified = c.template_id ? (subs.map(s => s.texto).join('|') !== orig.join('|') || subs.length !== orig.length) : c.isModified;
                                                                                 return { ...c, subtitulos: subs, isModified };
                                                                             }));
-                                                                        }} className="text-gray-300 hover:text-red-400 opacity-0 group-hover/sub:opacity-100 transition-all p-0.5">
+                                                                        }} className="text-gray-300 hover:text-red-400 opacity-0 group-hover/sub:opacity-100 transition-all p-0.5 mt-0.5">
                                                                             <X className="h-2.5 w-2.5" />
                                                                         </button>
                                                                     </div>
@@ -2238,9 +2239,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         <textarea
                                                                             value={sub.resposta}
                                                                             onChange={e => setConsideracoes(prev => prev.map((c, ci) => ci === cardIdx ? { ...c, subtitulos: c.subtitulos.map((s, si) => si === subIdx ? { ...s, resposta: e.target.value } : s) } : c))}
+                                                                            onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }}
                                                                             placeholder="Resposta..."
                                                                             rows={1}
-                                                                            className="w-full text-[11px] text-gray-500 bg-white border border-gray-100 rounded px-2 py-1 resize-none focus:outline-none focus:border-gray-300 placeholder:text-gray-300"
+                                                                            className="w-full text-[11px] text-gray-500 bg-white border border-gray-100 rounded px-2 py-1 resize-none overflow-hidden focus:outline-none focus:border-gray-300 placeholder:text-gray-300"
                                                                         />
                                                                         <div className="flex items-center justify-end gap-1.5 mt-0.5">
                                                                             <label className="cursor-pointer text-gray-300 hover:text-gray-500 transition-colors" title="Anexar ficheiro">
