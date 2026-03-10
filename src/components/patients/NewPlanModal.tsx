@@ -2143,9 +2143,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                                             {/* Consideration Cards */}
                                             {consideracoes.map((card, cardIdx) => (
-                                                <div key={card.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-gray-300 transition-colors">
-                                                    {/* Card Header */}
-                                                    <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 bg-gray-50/50">
+                                                <div key={card.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-gray-300 transition-colors max-w-[50%]">
+                                                    {/* Card Header — mini hero */}
+                                                    <div className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-[#111827] via-[#1a2332] to-[#111827] rounded-t-xl">
+                                                        <MessageSquarePlus className="h-3.5 w-3.5 text-gray-400" />
                                                         <input
                                                             type="text"
                                                             value={card.titulo}
@@ -2154,14 +2155,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 setConsideracoes(prev => prev.map((c, i) => i === cardIdx ? { ...c, titulo: v, isModified: c.template_id ? true : c.isModified } : c));
                                                             }}
                                                             placeholder="Título da consideração..."
-                                                            className="flex-1 text-xs font-semibold text-gray-700 bg-transparent border-none outline-none placeholder:text-gray-300"
+                                                            className="flex-1 text-xs font-semibold text-white bg-transparent border-none outline-none placeholder:text-gray-500"
                                                         />
                                                         {card.template_id && card.isModified && (
-                                                            <button type="button" title="Criar novo template a partir deste" className="text-[9px] text-gray-500 hover:text-gray-700 border border-gray-200 rounded-md px-2 py-0.5 hover:bg-gray-50 transition-colors whitespace-nowrap font-medium">
+                                                            <button type="button" title="Criar novo template a partir deste" className="text-[9px] text-gray-400 hover:text-white border border-gray-600 rounded-md px-2 py-0.5 hover:bg-white/10 transition-colors whitespace-nowrap font-medium">
                                                                 + Novo template
                                                             </button>
                                                         )}
-                                                        <button type="button" onClick={() => setConsideracoes(prev => prev.filter((_, i) => i !== cardIdx))} className="text-gray-300 hover:text-red-400 transition-colors p-0.5">
+                                                        <button type="button" onClick={() => setConsideracoes(prev => prev.filter((_, i) => i !== cardIdx))} className="text-gray-500 hover:text-red-400 transition-colors p-0.5">
                                                             <X className="h-3 w-3" />
                                                         </button>
                                                     </div>
@@ -2202,6 +2203,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     className="rounded-lg border border-gray-100 bg-gray-50/50 px-2 py-1.5 group/sub hover:border-gray-200 transition-colors"
                                                                 >
                                                                     <div className="flex items-center gap-1.5">
+                                                                        <span className="text-[9px] text-gray-400 font-medium w-3 text-center flex-shrink-0">{subIdx + 1}.</span>
                                                                         <GripVertical className="h-3 w-3 text-gray-300 cursor-grab flex-shrink-0 opacity-0 group-hover/sub:opacity-100 transition-opacity" />
                                                                         <input
                                                                             type="text"
