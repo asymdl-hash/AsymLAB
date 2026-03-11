@@ -613,7 +613,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
                 {/* Modal */}
-                <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                     {/* ============ HERO HEADER ============ */}
                     <div className="bg-gradient-to-r from-[#111827] via-[#1a2332] to-[#111827] px-5 sm:px-8 pt-5 pb-5 relative rounded-t-2xl">
                         {/* Subtle pattern overlay */}
@@ -1009,7 +1009,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                         <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col">
 
-                            <div className="p-6 space-y-5 overflow-y-auto flex-1 min-h-0">
+                            <div className="p-4 sm:p-6 space-y-5 overflow-y-auto flex-1 min-h-0 pb-24 sm:pb-6">
 
 
 
