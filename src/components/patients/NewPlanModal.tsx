@@ -1976,7 +1976,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                     </div>
 
                                     {!radioCollapsed && (
-                                        <div className="p-3 grid grid-cols-3 gap-2">
+                                        <div className="p-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
                                             {(() => {
                                                 const radioFields: { label: string; key: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; icon: string }[] = [
                                                     { label: 'Ortopantomografia', key: 'ortopan', state: radioOrtopan, setter: setRadioOrtopan, ref: radioOrtopanRef, icon: '📐' },
@@ -2154,7 +2154,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                                             {/* Consideration Cards */}
                                             {consideracoes.map((card, cardIdx) => (
-                                                <div key={card.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-gray-300 transition-colors max-w-[50%]">
+                                                <div key={card.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-gray-300 transition-colors w-full sm:max-w-[50%]">
                                                     {/* Card Header — mini hero */}
                                                     <div className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-[#111827] via-[#1a2332] to-[#111827] rounded-t-xl">
                                                         <MessageSquarePlus className="h-3.5 w-3.5 text-gray-400" />
