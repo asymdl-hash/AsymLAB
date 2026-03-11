@@ -203,3 +203,61 @@
 ::-webkit-scrollbar-thumb:hover {
     opacity: 0.5;
 }
+
+/* =====================================================
+   TIPTAP RICH TEXT EDITOR
+   ===================================================== */
+.rich-text-response-editor {
+    font-size: 11px;
+    line-height: 1.5;
+    color: #6b7280;
+    min-height: 24px;
+    padding: 4px 8px;
+}
+
+.rich-text-response-editor p {
+    margin: 0;
+}
+
+.rich-text-response-editor strong {
+    font-weight: 700;
+    color: #374151;
+}
+
+.rich-text-response-editor ul {
+    list-style-type: disc;
+    padding-left: 1.2em;
+    margin: 2px 0;
+}
+
+.rich-text-response-editor ol {
+    list-style-type: decimal;
+    padding-left: 1.2em;
+    margin: 2px 0;
+}
+
+.rich-text-response-editor li {
+    margin: 1px 0;
+}
+
+.rich-text-response-editor li p {
+    margin: 0;
+}
+
+.rich-text-response-wrapper {
+    border: 1px solid #f3f4f6;
+    border-radius: 4px;
+    background: white;
+    transition: border-color 0.2s;
+}
+
+.rich-text-response-wrapper:focus-within {
+    border-color: #d1d5db;
+}
+
+/* Tiptap BubbleMenu override */
+.tippy-box[data-theme~='light'] {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}

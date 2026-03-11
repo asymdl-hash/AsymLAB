@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
 import { X, Plus, Minus, Loader2, ChevronDown, ChevronUp, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList, Palette, ImagePlus, MessageSquarePlus, Camera, Upload, Search, GripVertical, FileText, Paperclip } from 'lucide-react';
 import CameraOverlay from './CameraOverlay';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { OdontogramModal } from './Odontogram';
 import { considerationsService, ConsiderationTemplate } from '@/services/considerationsService';
+const RichTextResponse = lazy(() => import('./RichTextResponse'));
 
 interface NewPlanModalProps {
     patientId: string;
@@ -2234,16 +2235,15 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                             <X className="h-2.5 w-2.5" />
                                                                         </button>
                                                                     </div>
-                                                                    {/* Response */}
-                                                                    <div className="mt-1 ml-[18px]">
-                                                                        <textarea
-                                                                            value={sub.resposta}
-                                                                            onChange={e => setConsideracoes(prev => prev.map((c, ci) => ci === cardIdx ? { ...c, subtitulos: c.subtitulos.map((s, si) => si === subIdx ? { ...s, resposta: e.target.value } : s) } : c))}
-                                                                            onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }}
-                                                                            placeholder="Resposta..."
-                                                                            rows={1}
-                                                                            className="w-full text-[11px] text-gray-500 bg-white border border-gray-100 rounded px-2 py-1 resize-none overflow-hidden focus:outline-none focus:border-gray-300 placeholder:text-gray-300"
-                                                                        />
+                                                                    {/* Response — Rich Text (Tiptap) */}
+                                                                    <div className="mt-1 ml-[18px] group/rich">
+                                                                        <Suspense fallback={<div className="w-full h-6 bg-gray-50 rounded animate-pulse" />}>
+                                                                            <RichTextResponse
+                                                                                value={sub.resposta}
+                                                                                onChange={(html) => setConsideracoes(prev => prev.map((c, ci) => ci === cardIdx ? { ...c, subtitulos: c.subtitulos.map((s, si) => si === subIdx ? { ...s, resposta: html } : s) } : c))}
+                                                                                placeholder="Resposta..."
+                                                                            />
+                                                                        </Suspense>
                                                                         <div className="flex items-center justify-end gap-1.5 mt-0.5">
                                                                             <label className="cursor-pointer text-gray-300 hover:text-gray-500 transition-colors" title="Anexar ficheiro">
                                                                                 <Paperclip className="h-2.5 w-2.5" />
