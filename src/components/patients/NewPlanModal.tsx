@@ -2169,14 +2169,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     </div>
 
                                                     <div className="p-3 space-y-2">
-                                                        {/* Description */}
-                                                        <textarea
-                                                            value={card.descricao}
-                                                            onChange={e => setConsideracoes(prev => prev.map((c, i) => i === cardIdx ? { ...c, descricao: e.target.value } : c))}
-                                                            placeholder="Descrição / indicações gerais..."
-                                                            rows={2}
-                                                            className="w-full text-[11px] text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-gray-300/50 focus:border-gray-300 placeholder:text-gray-300"
-                                                        />
+                                                        {/* Description — Rich Text (Tiptap) */}
+                                                        <Suspense fallback={<div className="w-full h-12 bg-gray-50 rounded-lg animate-pulse" />}>
+                                                            <RichTextResponse
+                                                                value={card.descricao}
+                                                                onChange={(html) => setConsideracoes(prev => prev.map((c, i) => i === cardIdx ? { ...c, descricao: html } : c))}
+                                                                placeholder="Descrição / indicações gerais..."
+                                                            />
+                                                        </Suspense>
 
                                                         {/* Subtítulos */}
                                                         <div className="space-y-1.5">
