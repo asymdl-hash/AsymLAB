@@ -1334,7 +1334,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     >
                                                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Fotos</label>
                                                         <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                        <div className="mt-1.5 grid grid-cols-1 gap-1">
+                                                        <div className="mt-1.5 grid grid-cols-2 gap-1">
                                                             <button type="button" onClick={() => colorFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro"><Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span></button>
                                                             <button type="button" onClick={() => { const colorSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: colorScalePhotos, previews: colorScalePreviews }; const result = action(virtualPrev); setColorScalePhotos(result.files); setColorScalePreviews(result.previews); } }; setCameraTarget({ setter: colorSetter, key: 'escalaCor' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia"><Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span></button>
                                                             {!photosCollapsed && colorScalePreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{colorScalePreviews.map((url, i) => (<div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`escalaCor:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`} draggable={!isTouchDevice} onClick={isTouchDevice ? () => togglePhotoSelection(`escalaCor:${i}`) : undefined} onDragStart={!isTouchDevice ? (e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: colorScalePhotos[i], preview: url, note: photoNotes[`escalaCor_${i}`] || '', noteKey: `escalaCor_${i}`, remove: () => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); } }; }) : undefined} onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}>{selectedPhotos.has(`escalaCor:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}<img src={url} alt={`Cor ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={(e) => { e.stopPropagation(); URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button><input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`escalaCor_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`escalaCor_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" /></div>))}</div>)}
@@ -1355,7 +1355,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                     >
                                                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Polarizadas</label>
                                                         <img src="/images/guides/escala-de-cor-polarizada.png" alt="Guia Polarizada" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                        <div className="mt-1.5 grid grid-cols-1 gap-1">
+                                                        <div className="mt-1.5 grid grid-cols-2 gap-1">
                                                             <button type="button" onClick={() => polarizedFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro"><Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span></button>
                                                             <button type="button" onClick={() => { const polSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: polarizedPhotos, previews: polarizedPreviews }; const result = action(virtualPrev); setPolarizedPhotos(result.files); setPolarizedPreviews(result.previews); } }; setCameraTarget({ setter: polSetter, key: 'polarizada' }); }} className="w-full rounded border-2 border-dashed border-sky-300 bg-sky-50/30 flex flex-col items-center justify-center text-sky-400 hover:bg-sky-100/40 hover:border-sky-400 transition-colors py-2" title="Tirar fotografia"><Camera className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Câmara</span></button>
                                                             {!photosCollapsed && polarizedPreviews.length > 0 && (<div className="grid grid-cols-2 gap-1">{polarizedPreviews.map((url, i) => (<div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`polarizada:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`} draggable={!isTouchDevice} onClick={isTouchDevice ? () => togglePhotoSelection(`polarizada:${i}`) : undefined} onDragStart={!isTouchDevice ? (e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: polarizedPhotos[i], preview: url, note: photoNotes[`polarizada_${i}`] || '', noteKey: `polarizada_${i}`, remove: () => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); } }; }) : undefined} onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}>{selectedPhotos.has(`polarizada:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}<img src={url} alt={`Polarizada ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={(e) => { e.stopPropagation(); URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button><input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`polarizada_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`polarizada_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" /></div>))}</div>)}
@@ -1372,41 +1372,42 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                                         </div>
                                         {/* ── Sub-secção: Registos Fotográficos ── */}
-                                        <div className="rounded-lg border border-sky-200/60 bg-sky-50/30 p-3 space-y-2.5">
-                                            <div className="flex items-center justify-between">
+                                        <div className="rounded-xl border border-gray-200 overflow-hidden">
+                                            {/* Hero Header */}
+                                            <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-2.5 flex items-center justify-between">
                                                 <button type="button" onClick={() => setExpandRegistos(prev => !prev)} className="flex items-center gap-2 cursor-pointer">
-                                                    <Camera className="h-3.5 w-3.5 text-sky-500" />
-                                                    <span className="text-[10px] uppercase tracking-widest font-semibold text-sky-600">
+                                                    <Camera className="h-4 w-4 text-sky-300" />
+                                                    <span className="text-[11px] uppercase tracking-widest font-semibold text-white">
                                                         Registos Fotográficos
                                                     </span>
-                                                    <ChevronDown className={cn("h-3.5 w-3.5 text-sky-400 transition-transform", expandRegistos && "rotate-180")} />
+                                                    <ChevronDown className={cn("h-3.5 w-3.5 text-slate-400 transition-transform", expandRegistos && "rotate-180")} />
                                                 </button>
-                                                <div className="flex items-center gap-2" style={{ display: expandRegistos ? undefined : 'none' }}>
-                                                    <div className="flex gap-1 ml-2">
-                                                        <button type="button" onClick={() => setPhotoSetup('basic')} className={cn('px-2 py-0.5 rounded-full text-[9px] font-semibold transition-all', photoSetup === 'basic' ? 'bg-sky-500 text-white shadow-sm' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600')}>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex gap-1" style={{ display: expandRegistos ? undefined : 'none' }}>
+                                                        <button type="button" onClick={() => setPhotoSetup('basic')} className={cn('px-2.5 py-0.5 rounded-full text-[9px] font-semibold transition-all', photoSetup === 'basic' ? 'bg-white text-slate-800 shadow-sm' : 'bg-slate-600 text-slate-300 hover:bg-slate-500 hover:text-white')}>
                                                             Setup Básico
                                                         </button>
-                                                        <button type="button" onClick={() => setPhotoSetup('complete')} className={cn('px-2 py-0.5 rounded-full text-[9px] font-semibold transition-all', photoSetup === 'complete' ? 'bg-sky-500 text-white shadow-sm' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600')}>
+                                                        <button type="button" onClick={() => setPhotoSetup('complete')} className={cn('px-2.5 py-0.5 rounded-full text-[9px] font-semibold transition-all', photoSetup === 'complete' ? 'bg-white text-slate-800 shadow-sm' : 'bg-slate-600 text-slate-300 hover:bg-slate-500 hover:text-white')}>
                                                             Setup Completo
                                                         </button>
                                                     </div>
+                                                    {(faceRepouso.previews.length > 0 || faceSorrisoNatural.previews.length > 0 || faceSorrisoAlto.previews.length > 0 || closeupRepouso.previews.length > 0 || closeupSorrisoNatural.previews.length > 0 || closeupSorrisoAlto.previews.length > 0 || colorScalePreviews.length > 0 || intraoralSupPreviews.length > 0 || intraoralInfPreviews.length > 0 || previews45.length > 0 || previewsOutros.length > 0) && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setPhotosCollapsed(prev => !prev)}
+                                                            className="flex items-center gap-1 text-[9px] text-slate-300 hover:text-white font-medium transition-colors"
+                                                        >
+                                                            {photosCollapsed ? (
+                                                                <><ChevronDown className="h-3 w-3" /> Mostrar fotos</>
+                                                            ) : (
+                                                                <><ChevronUp className="h-3 w-3" /> Minimizar fotos</>
+                                                            )}
+                                                        </button>
+                                                    )}
                                                 </div>
-                                                {(faceRepouso.previews.length > 0 || faceSorrisoNatural.previews.length > 0 || faceSorrisoAlto.previews.length > 0 || closeupRepouso.previews.length > 0 || closeupSorrisoNatural.previews.length > 0 || closeupSorrisoAlto.previews.length > 0 || colorScalePreviews.length > 0 || intraoralSupPreviews.length > 0 || intraoralInfPreviews.length > 0 || previews45.length > 0 || previewsOutros.length > 0) && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setPhotosCollapsed(prev => !prev)}
-                                                        className="flex items-center gap-1 text-[9px] text-sky-500 hover:text-sky-700 font-medium transition-colors"
-                                                    >
-                                                        {photosCollapsed ? (
-                                                            <><ChevronDown className="h-3 w-3" /> Mostrar fotos</>
-                                                        ) : (
-                                                            <><ChevronUp className="h-3 w-3" /> Minimizar fotos</>
-                                                        )}
-                                                    </button>
-                                                )}
                                             </div>
 
-                                            <div className="space-y-3" style={{ display: expandRegistos ? undefined : 'none' }}>
+                                            <div className="p-3 space-y-3" style={{ display: expandRegistos ? undefined : 'none' }}>
                                                 {/* Retrato — linha inteira */}
                                                 <fieldset className="border border-gray-200 rounded-lg p-2">
                                                     <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">Retrato</legend>
@@ -1482,7 +1483,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     )}
 
                                                                     {/* Action buttons — always visible */}
-                                                                    <div className="grid grid-cols-1 gap-1">
+                                                                    <div className="grid grid-cols-2 gap-1">
                                                                         {/* Ficheiro */}
                                                                         <button
                                                                             type="button"
@@ -1672,7 +1673,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         </div>
                                                                     )}
 
-                                                                    <div className="grid grid-cols-1 gap-1">
+                                                                    <div className="grid grid-cols-2 gap-1">
                                                                         <button type="button" onClick={() => ref.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                             <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
                                                                         </button>
@@ -1741,7 +1742,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             >
                                                                 <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Superior</span>
                                                                 <img src="/images/guides/intraoral-superior.png" alt="Guia Intraoral Superior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                                <div className="grid grid-cols-1 gap-1">
+                                                                <div className="grid grid-cols-2 gap-1">
                                                                     <button type="button" onClick={() => intraoralSupFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                         <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
                                                                     </button>
@@ -1751,7 +1752,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     <input ref={intraoralSupFileRef} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralSupPhotos(p => [...p, ...nf]); setIntraoralSupPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                                 </div>
                                                                 {!photosCollapsed && intraoralSupPreviews.length > 0 && (
-                                                                    <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                    <div className="grid grid-cols-2 gap-1 mt-1">
                                                                         {intraoralSupPreviews.map((url, i) => (
                                                                             <div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`intraoralSup:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`}
                                                                                 draggable={!isTouchDevice}
@@ -1792,7 +1793,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             >
                                                                 <span className="text-[8px] font-semibold text-gray-500 block mb-1">Intraoral Inferior</span>
                                                                 <img src="/images/guides/intraoral-inferior.png" alt="Guia Intraoral Inferior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                                <div className="grid grid-cols-1 gap-1">
+                                                                <div className="grid grid-cols-2 gap-1">
                                                                     <button type="button" onClick={() => intraoralInfFileRef.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                         <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
                                                                     </button>
@@ -1802,7 +1803,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     <input ref={intraoralInfFileRef} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setIntraoralInfPhotos(p => [...p, ...nf]); setIntraoralInfPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                                 </div>
                                                                 {!photosCollapsed && intraoralInfPreviews.length > 0 && (
-                                                                    <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                    <div className="grid grid-cols-2 gap-1 mt-1">
                                                                         {intraoralInfPreviews.map((url, i) => (
                                                                             <div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`intraoralInf:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`}
                                                                                 draggable={!isTouchDevice}
@@ -1847,7 +1848,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">45º</span>
                                                             <img src="/images/guides/45.png" alt="Guia 45º" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                            <div className="grid grid-cols-1 gap-1">
+                                                            <div className="grid grid-cols-2 gap-1">
                                                                 <button type="button" onClick={() => fileRef45.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
                                                                 </button>
@@ -1858,7 +1859,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 <input id="cam-native-45" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setphotos45(p => [...p, ...nf]); setpreviews45(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             </div>
                                                             {!photosCollapsed && previews45.length > 0 && (
-                                                                <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                <div className="grid grid-cols-2 gap-1 mt-1">
                                                                     {previews45.map((url, i) => (
                                                                         <div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`foto45:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`}
                                                                             draggable={!isTouchDevice}
@@ -1902,7 +1903,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         >
                                                             <span className="text-[8px] font-semibold text-gray-500 block mb-1">Outros</span>
                                                             <img src="/images/guides/outros.png" alt="Guia Outros" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                            <div className="grid grid-cols-1 gap-1">
+                                                            <div className="grid grid-cols-2 gap-1">
                                                                 <button type="button" onClick={() => fileRefOutros.current?.click()} className="w-full rounded border-2 border-dashed border-amber-300 bg-amber-50/30 flex flex-col items-center justify-center text-amber-500 hover:bg-amber-100/40 hover:border-amber-400 transition-colors py-2" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
                                                                 </button>
@@ -1913,7 +1914,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 <input id="cam-native-outros" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPhotosOutros(p => [...p, ...nf]); setPreviewsOutros(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
                                                             </div>
                                                             {!photosCollapsed && previewsOutros.length > 0 && (
-                                                                <div className="grid grid-cols-1 gap-1 mt-1">
+                                                                <div className="grid grid-cols-2 gap-1 mt-1">
                                                                     {previewsOutros.map((url, i) => (
                                                                         <div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`outros:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`}
                                                                             draggable={!isTouchDevice}
@@ -2017,7 +2018,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         }}
                                                     >
                                                         <span className="text-[8px] font-semibold text-gray-500 block mb-1">{icon} {label}</span>
-                                                        <div className="mt-1 grid grid-cols-1 gap-1">
+                                                        <div className="mt-1 grid grid-cols-2 gap-1">
                                                             <button type="button" onClick={() => ref.current?.click()} className="w-full rounded border-2 border-dashed border-violet-300 bg-violet-50/30 flex flex-col items-center justify-center text-violet-500 hover:bg-violet-100/40 hover:border-violet-400 transition-colors py-2" title="Anexar ficheiro">
                                                                 <Upload className="h-3 w-3" /><span className="text-[6px] mt-0.5 font-medium">Ficheiro</span>
                                                             </button>
