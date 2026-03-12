@@ -376,7 +376,7 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
                     <X className="h-6 w-6" />
                 </button>
 
-                {/* Center: Resolution pills (FHD / 4K) */}
+                {/* Center: Resolution pills (FHD / 4K / Nativa) */}
                 <div className="flex items-center gap-1 bg-gray-800 rounded-full px-1 py-0.5">
                     {(Object.entries(RESOLUTIONS) as [Resolution, typeof RESOLUTIONS[Resolution]][]).map(([key, v]) => (
                         <button
@@ -389,6 +389,18 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
                             {v.label}
                         </button>
                     ))}
+                    {nativeCamKey && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const camInput = document.getElementById(`cam-native-${nativeCamKey}`) as HTMLInputElement;
+                                if (camInput) camInput.click();
+                            }}
+                            className="px-3 py-1 rounded-full text-[10px] font-semibold transition-all bg-emerald-500/80 text-white hover:bg-emerald-500"
+                        >
+                            📱 Nativa
+                        </button>
+                    )}
                 </div>
 
                 {/* Right: toolbar buttons */}
