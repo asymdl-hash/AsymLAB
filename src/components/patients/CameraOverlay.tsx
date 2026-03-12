@@ -5,16 +5,13 @@ import {
     X,
     SwitchCamera,
     Grid3X3,
-    Flashlight,
     ZoomIn,
     ZoomOut,
-    Timer,
     Check,
     Image as ImageIcon,
     Settings,
     Sun,
     Focus,
-    Ratio,
     ChevronLeft,
     ChevronRight,
     RotateCcw,
@@ -32,23 +29,12 @@ interface CameraOverlayProps {
     nativeCamKey?: string;
 }
 
-type AspectRatio = '4:3' | '16:9' | '1:1' | 'full';
-type Resolution = 'hd' | 'fhd' | '4k';
-
-const ASPECT_RATIOS: Record<AspectRatio, { label: string; cls: string; w: number; h: number }> = {
-    '4:3': { label: '4:3', cls: 'aspect-[4/3]', w: 4, h: 3 },
-    '16:9': { label: '16:9', cls: 'aspect-[16/9]', w: 16, h: 9 },
-    '1:1': { label: '1:1', cls: 'aspect-square', w: 1, h: 1 },
-    'full': { label: 'Full', cls: '', w: 0, h: 0 },
-};
+type Resolution = 'fhd' | '4k';
 
 const RESOLUTIONS: Record<Resolution, { label: string; w: number; h: number }> = {
-    'hd': { label: 'HD', w: 1280, h: 720 },
     'fhd': { label: 'Full HD', w: 1920, h: 1080 },
     '4k': { label: '4K', w: 3840, h: 2160 },
 };
-
-const TIMER_OPTIONS = [0, 3, 5, 10];
 
 // ---------- Component ----------
 export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: CameraOverlayProps) {
@@ -56,12 +42,10 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
     const videoContainerRef = useRef<HTMLDivElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const burstIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
     // — Camera state
     const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
-    const [resolution, setResolution] = useState<Resolution>('fhd');
-    const [aspectRatio, setAspectRatio] = useState<AspectRatio>('4:3');
+    const [resolution, setResolution] = useState<Resolution>('4k');
 
     // — Zoom
     const [zoom, setZoom] = useState(1);
@@ -75,16 +59,11 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
     const [maxExposure, setMaxExposure] = useState(0);
     const [exposureSupported, setExposureSupported] = useState(false);
 
-    // — Torch
-    const [torchOn, setTorchOn] = useState(false);
-    const [torchSupported, setTorchSupported] = useState(false);
-
     // — Focus
     const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null);
 
     // — UI toggles
     const [showGrid, setShowGrid] = useState(false);
-    const [timerSeconds, setTimerSeconds] = useState(0);
     const [showSettings, setShowSettings] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showGallery, setShowGallery] = useState(false);
@@ -94,7 +73,6 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
     const [captureCount, setCaptureCount] = useState(0);
     const [previews, setPreviews] = useState<string[]>([]);
     const [flashAnim, setFlashAnim] = useState(false);
-    const [countdown, setCountdown] = useState<number | null>(null);
     const [isBursting, setIsBursting] = useState(false);
 
     // — Pinch-to-zoom
@@ -144,10 +122,6 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
             } else {
                 setExposureSupported(false);
             }
-
-            // Torch
-            setTorchSupported(caps.torch !== undefined);
-            setTorchOn(false);
         } catch {
             alert('Não foi possível aceder à câmara. Verifique as permissões.');
             onClose();
@@ -158,7 +132,6 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
         startCamera(facingMode);
         return () => {
             if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
-            if (countdownRef.current) clearInterval(countdownRef.current);
             if (burstIntervalRef.current) clearInterval(burstIntervalRef.current);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -208,18 +181,6 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
         } catch { /* unsupported */ }
     }, []);
 
-    // ────────────────── Torch ──────────────────
-    const toggleTorch = useCallback(async () => {
-        const track = streamRef.current?.getVideoTracks()[0];
-        if (!track) return;
-        const next = !torchOn;
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (track as any).applyConstraints({ advanced: [{ torch: next }] });
-            setTorchOn(next);
-        } catch { /* unsupported */ }
-    }, [torchOn]);
-
     // ────────────────── Switch camera ──────────────────
     const switchCamera = useCallback(() => {
         const next = facingMode === 'user' ? 'environment' : 'user';
@@ -245,7 +206,6 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
         setFocusPoint({ x: cx - rect.left, y: cy - rect.top });
         setTimeout(() => setFocusPoint(null), 1500);
 
-        // Apply point of interest for focus (if supported)
         const track = streamRef.current?.getVideoTracks()[0];
         if (track) {
             try {
@@ -274,27 +234,12 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
         setTimeout(() => setFlashAnim(false), 200);
 
         const canvas = document.createElement('canvas');
-
-        // Apply aspect ratio crop
         const vw = video.videoWidth;
         const vh = video.videoHeight;
-        const ar = ASPECT_RATIOS[aspectRatio];
-        let sx = 0, sy = 0, sw = vw, sh = vh;
 
-        if (ar.w > 0) {
-            const targetRatio = ar.w / ar.h;
-            const currentRatio = vw / vh;
-            if (currentRatio > targetRatio) {
-                sw = Math.round(vh * targetRatio);
-                sx = Math.round((vw - sw) / 2);
-            } else {
-                sh = Math.round(vw / targetRatio);
-                sy = Math.round((vh - sh) / 2);
-            }
-        }
-
-        canvas.width = sw;
-        canvas.height = sh;
+        // Always full frame — no crop
+        canvas.width = vw;
+        canvas.height = vh;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
@@ -302,7 +247,7 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
             ctx.translate(canvas.width, 0);
             ctx.scale(-1, 1);
         }
-        ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
+        ctx.drawImage(video, 0, 0, vw, vh, 0, 0, vw, vh);
 
         canvas.toBlob(blob => {
             if (!blob) return;
@@ -311,29 +256,13 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
             const url = URL.createObjectURL(file);
             setCaptureCount(prev => prev + 1);
             setPreviews(prev => [...prev, url]);
-        }, 'image/jpeg', 0.92);
-    }, [facingMode, aspectRatio, onCapture]);
+        }, 'image/jpeg', 0.95);
+    }, [facingMode, onCapture]);
 
-    // Timer then capture
+    // Direct capture — no timer
     const handleCapture = useCallback(() => {
-        if (timerSeconds > 0) {
-            let count = timerSeconds;
-            setCountdown(count);
-            countdownRef.current = setInterval(() => {
-                count--;
-                if (count <= 0) {
-                    clearInterval(countdownRef.current!);
-                    countdownRef.current = null;
-                    setCountdown(null);
-                    doCapture();
-                } else {
-                    setCountdown(count);
-                }
-            }, 1000);
-        } else {
-            doCapture();
-        }
-    }, [timerSeconds, doCapture]);
+        doCapture();
+    }, [doCapture]);
 
     // Burst mode
     const startBurst = useCallback(() => {
@@ -382,17 +311,23 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
             streamRef.current.getTracks().forEach(t => t.stop());
             streamRef.current = null;
         }
-        if (countdownRef.current) clearInterval(countdownRef.current);
         if (burstIntervalRef.current) clearInterval(burstIntervalRef.current);
         if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
         onClose();
     }, [onClose]);
 
-    // ────────────────── Settings panel ──────────────────
+    // ────────────────── Settings panel info ──────────────────
     const currentTrackSettings = streamRef.current?.getVideoTracks()[0]?.getSettings();
     const actualRes = currentTrackSettings ? `${currentTrackSettings.width}×${currentTrackSettings.height}` : '';
 
-    // ────────────────── RENDER ──────────────────
+    // ────────────────── Zoom preset helper ──────────────────
+    const zoomPreset = (factor: number) => {
+        if (!zoomSupported) return;
+        const clamped = Math.min(maxZoom, Math.max(minZoom, factor));
+        applyZoom(clamped);
+    };
+
+    // ────────────────── RENDER — Gallery ──────────────────
     if (showGallery && previews.length > 0) {
         return (
             <div className="fixed inset-0 z-[100] bg-black flex flex-col">
@@ -432,6 +367,7 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
         );
     }
 
+    // ────────────────── RENDER — Camera ──────────────────
     return (
         <div className="fixed inset-0 z-[100] bg-black flex flex-col" onClick={e => e.stopPropagation()}>
             {/* ──── Header toolbar ──── */}
@@ -440,14 +376,14 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
                     <X className="h-6 w-6" />
                 </button>
 
-                {/* Center: Aspect ratio pills */}
+                {/* Center: Resolution pills (FHD / 4K) */}
                 <div className="flex items-center gap-1 bg-gray-800 rounded-full px-1 py-0.5">
-                    {(Object.entries(ASPECT_RATIOS) as [AspectRatio, typeof ASPECT_RATIOS[AspectRatio]][]).map(([key, v]) => (
+                    {(Object.entries(RESOLUTIONS) as [Resolution, typeof RESOLUTIONS[Resolution]][]).map(([key, v]) => (
                         <button
                             key={key}
                             type="button"
-                            onClick={() => setAspectRatio(key)}
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${aspectRatio === key ? 'bg-sky-500 text-white' : 'text-gray-400 hover:text-white'
+                            onClick={() => changeResolution(key)}
+                            className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-all ${resolution === key ? 'bg-sky-500 text-white' : 'text-gray-400 hover:text-white'
                                 }`}
                         >
                             {v.label}
@@ -458,17 +394,6 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
                 {/* Right: toolbar buttons */}
                 <div className="flex items-center gap-1.5">
                     <ToolBtn active={showGrid} onClick={() => setShowGrid(!showGrid)} title="Grelha"><Grid3X3 className="h-4.5 w-4.5" /></ToolBtn>
-                    <ToolBtn active={timerSeconds > 0} onClick={() => {
-                        const idx = TIMER_OPTIONS.indexOf(timerSeconds);
-                        setTimerSeconds(TIMER_OPTIONS[(idx + 1) % TIMER_OPTIONS.length]);
-                    }} title={`Timer ${timerSeconds}s`}>
-                        <div className="relative">
-                            <Timer className="h-4.5 w-4.5" />
-                            {timerSeconds > 0 && <span className="absolute -bottom-1 -right-1 text-[7px] font-bold bg-sky-500 text-white rounded-full w-3 h-3 flex items-center justify-center">{timerSeconds}</span>}
-                        </div>
-                    </ToolBtn>
-                    {torchSupported && <ToolBtn active={torchOn} onClick={toggleTorch} title="Flash" activeColor="bg-yellow-500"><Flashlight className="h-4.5 w-4.5" /></ToolBtn>}
-                    <ToolBtn onClick={switchCamera} title="Trocar câmara"><SwitchCamera className="h-4.5 w-4.5" /></ToolBtn>
                     <ToolBtn active={showSettings} onClick={() => setShowSettings(!showSettings)} title="Definições"><Settings className="h-4.5 w-4.5" /></ToolBtn>
                     <ToolBtn onClick={toggleFullscreen} title="Ecrã inteiro">{isFullscreen ? <Minimize className="h-4.5 w-4.5" /> : <Maximize className="h-4.5 w-4.5" />}</ToolBtn>
                 </div>
@@ -477,49 +402,21 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
             {/* ──── Settings panel (slide down) ──── */}
             {showSettings && (
                 <div className="bg-gray-900/95 backdrop-blur-sm px-5 py-3 space-y-3 border-b border-gray-700/50 animate-in slide-in-from-top duration-200">
-                    {/* Resolution */}
-                    <div className="flex items-center justify-between">
-                        <span className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold">Resolução</span>
-                        <div className="flex gap-1">
-                            {(Object.entries(RESOLUTIONS) as [Resolution, typeof RESOLUTIONS[Resolution]][]).map(([key, v]) => (
-                                <button
-                                    key={key}
-                                    type="button"
-                                    onClick={() => changeResolution(key)}
-                                    className={`px-2.5 py-1 rounded text-[10px] font-semibold transition-all ${resolution === key ? 'bg-sky-500 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                        }`}
-                                >
-                                    {v.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                    {actualRes && <p className="text-[9px] text-gray-500 text-right -mt-2">Actual: {actualRes}</p>}
+                    {/* Switch camera */}
+                    <button
+                        type="button"
+                        onClick={switchCamera}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gray-800 text-gray-300 text-[11px] font-semibold hover:bg-gray-700 transition-colors border border-gray-700"
+                    >
+                        <SwitchCamera className="h-4 w-4" />
+                        Trocar Câmara ({facingMode === 'environment' ? 'Traseira → Frontal' : 'Frontal → Traseira'})
+                    </button>
 
-                    {/* Exposure */}
-                    {exposureSupported && (
-                        <div className="space-y-1">
-                            <div className="flex items-center justify-between">
-                                <span className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold flex items-center gap-1"><Sun className="h-3 w-3" /> Exposição</span>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] text-gray-300">{exposure > 0 ? '+' : ''}{exposure.toFixed(1)}</span>
-                                    <button type="button" onClick={() => applyExposure(0)} className="text-[9px] text-sky-400 hover:text-sky-300">Reset</button>
-                                </div>
-                            </div>
-                            <input
-                                type="range"
-                                min={minExposure}
-                                max={maxExposure}
-                                step={0.1}
-                                value={exposure}
-                                onChange={e => applyExposure(parseFloat(e.target.value))}
-                                className="w-full accent-yellow-500 h-1"
-                            />
-                        </div>
-                    )}
+                    {/* Resolution info */}
+                    {actualRes && <p className="text-[9px] text-gray-500 text-center">Resolução actual: {actualRes}</p>}
 
                     {/* Burst mode info */}
-                    <p className="text-[9px] text-gray-500 flex items-center gap-1">
+                    <p className="text-[9px] text-gray-500 flex items-center justify-center gap-1">
                         <RotateCcw className="h-3 w-3" /> Modo Burst: manter pressionado o botão de captura
                     </p>
 
@@ -553,19 +450,9 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
                     autoPlay
                     playsInline
                     muted
-                    className={`max-w-full max-h-full object-contain ${aspectRatio !== 'full' ? ASPECT_RATIOS[aspectRatio].cls : ''}`}
+                    className="w-full h-full object-cover"
                     style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : undefined }}
                 />
-
-                {/* Aspect ratio mask (darken outside crop) */}
-                {aspectRatio !== 'full' && (
-                    <div className="absolute inset-0 pointer-events-none">
-                        <div className="absolute inset-0 bg-black/40" />
-                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${ASPECT_RATIOS[aspectRatio].cls} bg-transparent max-w-full max-h-full`}
-                            style={{ boxShadow: '0 0 0 9999px rgba(0,0,0,0.4)', width: '100%' }}
-                        />
-                    </div>
-                )}
 
                 {/* Grid overlay */}
                 {showGrid && (
@@ -600,15 +487,6 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
                 {/* Flash animation */}
                 {flashAnim && <div className="absolute inset-0 bg-white/80 pointer-events-none transition-opacity duration-150" />}
 
-                {/* Countdown */}
-                {countdown !== null && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/30">
-                        <span className="text-9xl font-black text-white drop-shadow-2xl" style={{ animation: 'pulse 1s ease-in-out' }}>
-                            {countdown}
-                        </span>
-                    </div>
-                )}
-
                 {/* Burst indicator */}
                 {isBursting && (
                     <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-red-500/80 text-white text-xs font-semibold animate-pulse">
@@ -622,22 +500,68 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
                         {zoom.toFixed(1)}x
                     </div>
                 )}
+
+                {/* ──── Exposure side bar (right edge) ──── */}
+                {exposureSupported && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5 z-10">
+                        <Sun className="h-3.5 w-3.5 text-yellow-400 drop-shadow-lg" />
+                        <div className="relative h-40 w-6 flex items-center justify-center">
+                            <input
+                                type="range"
+                                min={minExposure}
+                                max={maxExposure}
+                                step={0.1}
+                                value={exposure}
+                                onChange={e => applyExposure(parseFloat(e.target.value))}
+                                className="absolute w-40 h-1 accent-yellow-500 origin-center -rotate-90"
+                                style={{ touchAction: 'none' }}
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => applyExposure(0)}
+                            className="text-[8px] text-yellow-400/80 hover:text-yellow-300 font-semibold"
+                        >
+                            {exposure !== 0 ? (exposure > 0 ? `+${exposure.toFixed(1)}` : exposure.toFixed(1)) : '0'}
+                        </button>
+                    </div>
+                )}
             </div>
 
-            {/* ──── Zoom slider ──── */}
+            {/* ──── Zoom quick buttons ──── */}
             {zoomSupported && maxZoom > minZoom && (
-                <div className="flex items-center gap-3 px-6 py-1.5 bg-gray-900/90">
-                    <ZoomOut className="h-3.5 w-3.5 text-gray-500" />
-                    <input
-                        type="range"
-                        min={minZoom}
-                        max={maxZoom}
-                        step={0.1}
-                        value={zoom}
-                        onChange={e => applyZoom(parseFloat(e.target.value))}
-                        className="flex-1 accent-sky-500 h-1"
-                    />
-                    <ZoomIn className="h-3.5 w-3.5 text-gray-500" />
+                <div className="flex items-center justify-center gap-2 px-6 py-2 bg-gray-900/90">
+                    {[
+                        { label: '0.5x', value: Math.max(minZoom, 0.5) },
+                        { label: '1x', value: Math.max(minZoom, 1) },
+                        { label: '2x', value: Math.min(maxZoom, 2) },
+                    ].map(preset => (
+                        <button
+                            key={preset.label}
+                            type="button"
+                            onClick={() => zoomPreset(preset.value)}
+                            className={`px-3.5 py-1.5 rounded-full text-[11px] font-semibold transition-all ${Math.abs(zoom - preset.value) < 0.05
+                                ? 'bg-sky-500 text-white scale-110'
+                                : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
+                                }`}
+                        >
+                            {preset.label}
+                        </button>
+                    ))}
+                    {/* Manual zoom slider */}
+                    <div className="flex items-center gap-1.5 ml-2 flex-1 max-w-[150px]">
+                        <ZoomOut className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                        <input
+                            type="range"
+                            min={minZoom}
+                            max={maxZoom}
+                            step={0.1}
+                            value={zoom}
+                            onChange={e => applyZoom(parseFloat(e.target.value))}
+                            className="flex-1 accent-sky-500 h-1"
+                        />
+                        <ZoomIn className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                    </div>
                 </div>
             )}
 
@@ -665,13 +589,12 @@ export default function CameraOverlay({ onCapture, onClose, nativeCamKey }: Came
                 <button
                     type="button"
                     onClick={handleCapture}
-                    onMouseDown={e => { if (e.button === 0 && timerSeconds === 0) startBurst(); }}
+                    onMouseDown={e => { if (e.button === 0) startBurst(); }}
                     onMouseUp={stopBurst}
                     onMouseLeave={stopBurst}
-                    onTouchStart={() => { if (timerSeconds === 0) startBurst(); }}
+                    onTouchStart={() => startBurst()}
                     onTouchEnd={stopBurst}
-                    disabled={countdown !== null}
-                    className={`w-20 h-20 rounded-full border-[5px] p-1 transition-all disabled:opacity-50 ${isBursting
+                    className={`w-20 h-20 rounded-full border-[5px] p-1 transition-all ${isBursting
                         ? 'border-red-500 bg-red-500/20 scale-110'
                         : 'border-white bg-white/10 hover:scale-105 active:scale-95'
                         }`}
