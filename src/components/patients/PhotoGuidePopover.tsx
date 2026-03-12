@@ -34,7 +34,7 @@ export function getDefaultGuide(cardKey: string): PhotoGuideData {
         'cu-45': { notes: ['Retractores com vista 45°', 'Mostrar caninos e relação molar'], distance: '0.3m', angle: '45° lateral', lights: 'Twin flash lateral' },
         intraoralSup: { notes: ['Espelho oclusal superior', 'Paciente boca aberta, cabeça inclinada para trás'], distance: '0.3m', angle: 'Espelho 45° sup.', lights: 'Twin flash' },
         intraoralInf: { notes: ['Espelho oclusal inferior', 'Paciente boca aberta, cabeça inclinada para frente'], distance: '0.3m', angle: 'Espelho 45° inf.', lights: 'Twin flash' },
-        foto45: { notes: ['Fotografia frontal com inclinação de 45º', 'Captar dentes superiores em relação ao lábio superior', 'Sorriso natural do paciente'], distance: '0.5m', angle: '45° descend.', lights: 'Flash direto' },
+        foto45: { notes: ['Fotografia frontal com inclinação de 45º', 'Captar dentes superiores em relação ao lábio inferior', 'Sorriso natural do paciente'], distance: '0.5m', angle: '45° descend.', lights: 'Flash direto' },
         outros: { notes: ['Fotografias complementares', 'Composição livre'], distance: 'Variável', angle: 'Variável', lights: 'Variável' },
     };
 
