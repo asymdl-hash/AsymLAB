@@ -1335,7 +1335,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         onDragLeave={() => setColorDragOver(false)}
                                                         onDrop={e => { e.preventDefault(); setColorDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `escalaCor_${colorScalePreviews.length}`; setColorScalePhotos(p => [...p, src.file]); setColorScalePreviews(p => [...p, src.preview]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setColorScalePhotos(prev => [...prev, ...files]); setColorScalePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                     >
-                                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Fotos</label>
+                                                        <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1">Fotos</span>
                                                         <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                         <div className="flex items-center justify-center gap-2 mt-1.5">
                                                             <button type="button" onClick={() => colorFileRef.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro"><Upload className="h-3 w-3" /></button>
@@ -1356,7 +1356,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         onDragLeave={() => setPolarizedDragOver(false)}
                                                         onDrop={e => { e.preventDefault(); setPolarizedDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `polarizada_${polarizedPreviews.length}`; setPolarizedPhotos(p => [...p, src.file]); setPolarizedPreviews(p => [...p, src.preview]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPolarizedPhotos(prev => [...prev, ...files]); setPolarizedPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                     >
-                                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Polarizadas</label>
+                                                        <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1">Polarizadas</span>
                                                         <img src="/images/guides/escala-de-cor-polarizada.png" alt="Guia Polarizada" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                         <div className="flex items-center justify-center gap-2 mt-1.5">
                                                             <button type="button" onClick={() => polarizedFileRef.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro"><Upload className="h-3 w-3" /></button>
@@ -2155,9 +2155,9 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                             {/* Consideration Cards */}
                                             {consideracoes.map((card, cardIdx) => (
                                                 <div key={card.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-gray-300 transition-colors w-full sm:max-w-[50%]">
-                                                    {/* Card Header — mini hero */}
-                                                    <div className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-[#111827] via-[#1a2332] to-[#111827] rounded-t-xl">
-                                                        <MessageSquarePlus className="h-3.5 w-3.5 text-gray-400" />
+                                                    {/* Card Header — gradient tag style */}
+                                                    <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200/60 rounded-t-xl">
+                                                        <MessageSquarePlus className="h-3.5 w-3.5 text-amber-500" />
                                                         <input
                                                             type="text"
                                                             value={card.titulo}
@@ -2166,14 +2166,14 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 setConsideracoes(prev => prev.map((c, i) => i === cardIdx ? { ...c, titulo: v, isModified: c.template_id ? true : c.isModified } : c));
                                                             }}
                                                             placeholder="Título da consideração..."
-                                                            className="flex-1 text-xs font-semibold text-white bg-transparent border-none outline-none placeholder:text-gray-500"
+                                                            className="flex-1 text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-transparent border-none outline-none placeholder:text-amber-400/60"
                                                         />
                                                         {card.template_id && card.isModified && (
-                                                            <button type="button" title="Criar novo template a partir deste" className="text-[9px] text-gray-400 hover:text-white border border-gray-600 rounded-md px-2 py-0.5 hover:bg-white/10 transition-colors whitespace-nowrap font-medium">
+                                                            <button type="button" title="Criar novo template a partir deste" className="text-[9px] text-amber-600 hover:text-amber-800 border border-amber-300 rounded-md px-2 py-0.5 hover:bg-amber-100/50 transition-colors whitespace-nowrap font-medium">
                                                                 + Novo template
                                                             </button>
                                                         )}
-                                                        <button type="button" onClick={() => setConsideracoes(prev => prev.filter((_, i) => i !== cardIdx))} className="text-gray-500 hover:text-red-400 transition-colors p-0.5">
+                                                        <button type="button" onClick={() => setConsideracoes(prev => prev.filter((_, i) => i !== cardIdx))} className="text-amber-400 hover:text-red-400 transition-colors p-0.5">
                                                             <X className="h-3 w-3" />
                                                         </button>
                                                     </div>
