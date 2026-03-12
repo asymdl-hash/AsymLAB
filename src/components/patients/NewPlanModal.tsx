@@ -1916,7 +1916,23 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onDragLeave={() => setdragOver45(false)}
                                                             onDrop={e => { e.preventDefault(); setdragOver45(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `foto45_${previews45.length}`; setphotos45(p => [...p, src.file]); setpreviews45(p => [...p, URL.createObjectURL(src.file)]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setphotos45(prev => [...prev, ...files]); setpreviews45(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
-                                                            <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1">45º</span>
+                                                            <div className="relative">
+                                                                <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">45º</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === 'foto45' ? null : 'foto45'); }}
+                                                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full bg-amber-100/80 border border-amber-200/60 flex items-center justify-center text-amber-500 hover:bg-amber-200 hover:text-amber-700 transition-all"
+                                                                    title="Guia fotográfico"
+                                                                >
+                                                                    <Info className="h-2.5 w-2.5" />
+                                                                </button>
+                                                                {activeGuidePopover === 'foto45' && (
+                                                                    <PhotoGuidePopover
+                                                                        guide={getDefaultGuide('foto45')}
+                                                                        onClose={() => setActiveGuidePopover(null)}
+                                                                    />
+                                                                )}
+                                                            </div>
                                                             <img src="/images/guides/45.png" alt="Guia 45º" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="flex items-center justify-center gap-2">
                                                                 <button type="button" onClick={() => fileRef45.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro">
@@ -1971,7 +1987,23 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onDragLeave={() => setDragOverOutros(false)}
                                                             onDrop={e => { e.preventDefault(); setDragOverOutros(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `outros_${previewsOutros.length}`; setPhotosOutros(p => [...p, src.file]); setPreviewsOutros(p => [...p, URL.createObjectURL(src.file)]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPhotosOutros(prev => [...prev, ...files]); setPreviewsOutros(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
-                                                            <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1">Outros</span>
+                                                            <div className="relative">
+                                                                <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">Outros</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === 'outros' ? null : 'outros'); }}
+                                                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full bg-amber-100/80 border border-amber-200/60 flex items-center justify-center text-amber-500 hover:bg-amber-200 hover:text-amber-700 transition-all"
+                                                                    title="Guia fotográfico"
+                                                                >
+                                                                    <Info className="h-2.5 w-2.5" />
+                                                                </button>
+                                                                {activeGuidePopover === 'outros' && (
+                                                                    <PhotoGuidePopover
+                                                                        guide={getDefaultGuide('outros')}
+                                                                        onClose={() => setActiveGuidePopover(null)}
+                                                                    />
+                                                                )}
+                                                            </div>
                                                             <img src="/images/guides/outros.png" alt="Guia Outros" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="flex items-center justify-center gap-2">
                                                                 <button type="button" onClick={() => fileRefOutros.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro">
