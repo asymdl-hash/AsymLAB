@@ -1208,252 +1208,258 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                 </button>
                                             </div>
 
-                                            <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3" style={{ display: expandEscalaCor ? undefined : 'none' }}>
-                                                {/* Dropdown Escala de Cor — 2 níveis + multi-select */}
-                                                <div className="relative" ref={colorDropdownRef}>
-                                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Cor
-                                                    </label>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => { setShowColorDropdown(!showColorDropdown); if (showColorDropdown) setActiveColorGroup(null); }}
-                                                        className="mt-1 w-full min-h-[36px] rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
-                                                    >
-                                                        {selectedColorIds.length > 0 ? (
-                                                            <div className="flex flex-wrap gap-1">
-                                                                {selectedColorIds.map(cid => {
-                                                                    const c = toothColors.find(tc => tc.id === cid);
-                                                                    return c ? (
-                                                                        <span key={cid} className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
-                                                                            {c.codigo}
-                                                                            <button type="button" onClick={e => { e.stopPropagation(); setSelectedColorIds(prev => prev.filter(id => id !== cid)); }} className="hover:text-red-500">
-                                                                                <X className="h-2.5 w-2.5" />
-                                                                            </button>
-                                                                        </span>
-                                                                    ) : null;
-                                                                })}
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-gray-400 text-xs">Seleccionar cor...</span>
-                                                        )}
-                                                        <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform shrink-0 ml-1", showColorDropdown && "rotate-180")} />
-                                                    </button>
-
-                                                    {showColorDropdown && (() => {
-                                                        /* Mapeamento grupo DB → escala real */
-                                                        const SCALE_MAP: Record<string, string> = {
-                                                            'A': 'VITA Classical', 'B': 'VITA Classical', 'C': 'VITA Classical', 'D': 'VITA Classical', 'Bleach': 'VITA Classical',
-                                                            '3D-Master': 'VITA 3D-Master',
-                                                            'Chromascop': 'Chromascop',
-                                                        };
-                                                        const scales = toothColors.reduce<Record<string, { grupos: Record<string, ToothColorItem[]>; total: number }>>((acc, tc) => {
-                                                            const g = tc.grupo || 'Outros';
-                                                            const scale = SCALE_MAP[g] || g;
-                                                            if (!acc[scale]) acc[scale] = { grupos: {}, total: 0 };
-                                                            if (!acc[scale].grupos[g]) acc[scale].grupos[g] = [];
-                                                            acc[scale].grupos[g].push(tc);
-                                                            acc[scale].total++;
-                                                            return acc;
-                                                        }, {});
-
-                                                        return (
-                                                            <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                                                                {!activeColorGroup ? (
-                                                                    /* Nível 1: 3 Escalas reais */
-                                                                    <div className="p-2 space-y-1 max-h-48 overflow-y-auto">
-                                                                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1 pb-1">Escolha a escala</p>
-                                                                        {Object.entries(scales).map(([scaleName, scaleData]) => {
-                                                                            const allColors = Object.values(scaleData.grupos).flat();
-                                                                            const selectedCount = allColors.filter(tc => selectedColorIds.includes(tc.id)).length;
-                                                                            return (
-                                                                                <button
-                                                                                    key={scaleName}
-                                                                                    type="button"
-                                                                                    onClick={() => setActiveColorGroup(scaleName)}
-                                                                                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-amber-50 transition-colors text-left"
-                                                                                >
-                                                                                    <Palette className="h-4 w-4 text-amber-400 shrink-0" />
-                                                                                    <div className="flex-1 min-w-0">
-                                                                                        <span className="text-xs font-semibold text-gray-700 block">{scaleName}</span>
-                                                                                        <span className="text-[10px] text-gray-400">{scaleData.total} tonalidades</span>
-                                                                                    </div>
-                                                                                    {selectedCount > 0 && (
-                                                                                        <span className="text-[9px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-bold">{selectedCount}</span>
-                                                                                    )}
-                                                                                    <ChevronDown className="h-3 w-3 text-gray-300 -rotate-90" />
-                                                                                </button>
-                                                                            );
+                                            <div className="p-3" style={{ display: expandEscalaCor ? undefined : 'none' }}>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {/* COLUNA ESQUERDA — Cor + Degradê */}
+                                                    <div className="space-y-3">
+                                                        {/* Dropdown Escala de Cor — 2 níveis + multi-select */}
+                                                        <div className="relative" ref={colorDropdownRef}>
+                                                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                Cor
+                                                            </label>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => { setShowColorDropdown(!showColorDropdown); if (showColorDropdown) setActiveColorGroup(null); }}
+                                                                className="mt-1 w-full min-h-[36px] rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-left flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                                                            >
+                                                                {selectedColorIds.length > 0 ? (
+                                                                    <div className="flex flex-wrap gap-1">
+                                                                        {selectedColorIds.map(cid => {
+                                                                            const c = toothColors.find(tc => tc.id === cid);
+                                                                            return c ? (
+                                                                                <span key={cid} className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
+                                                                                    {c.codigo}
+                                                                                    <button type="button" onClick={e => { e.stopPropagation(); setSelectedColorIds(prev => prev.filter(id => id !== cid)); }} className="hover:text-red-500">
+                                                                                        <X className="h-2.5 w-2.5" />
+                                                                                    </button>
+                                                                                </span>
+                                                                            ) : null;
                                                                         })}
-                                                                        {toothColors.length === 0 && (
-                                                                            <p className="text-[10px] text-gray-400 text-center py-3">Sem cores no catálogo</p>
-                                                                        )}
                                                                     </div>
                                                                 ) : (
-                                                                    /* Nível 2: Tonalidades dentro da escala seleccionada */
-                                                                    <div>
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => setActiveColorGroup(null)}
-                                                                            className="w-full flex items-center gap-2 px-3 py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                                                                        >
-                                                                            <ChevronDown className="h-3 w-3 text-gray-400 rotate-90" />
-                                                                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{activeColorGroup}</span>
-                                                                        </button>
-                                                                        <div className="max-h-52 overflow-y-auto py-1">
-                                                                            {scales[activeColorGroup] && Object.entries(scales[activeColorGroup].grupos).map(([subGrupo, colors]) => (
-                                                                                <div key={subGrupo}>
-                                                                                    {/* Sub-grupo header (ex: A, B, C, D dentro de VITA Classical) */}
-                                                                                    {Object.keys(scales[activeColorGroup].grupos).length > 1 && (
-                                                                                        <div className="px-3 py-1 border-b border-gray-50">
-                                                                                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{subGrupo}</span>
-                                                                                        </div>
-                                                                                    )}
-                                                                                    {colors.map(tc => {
-                                                                                        const isSelected = selectedColorIds.includes(tc.id);
-                                                                                        return (
-                                                                                            <div
-                                                                                                key={tc.id}
-                                                                                                onClick={() => {
-                                                                                                    setSelectedColorIds(prev =>
-                                                                                                        isSelected ? prev.filter(id => id !== tc.id) : [...prev, tc.id]
-                                                                                                    );
-                                                                                                }}
-                                                                                                className={cn(
-                                                                                                    "flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-amber-50 transition-colors text-xs",
-                                                                                                    isSelected && "bg-amber-50"
-                                                                                                )}
-                                                                                            >
-                                                                                                <div className={cn(
-                                                                                                    "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
-                                                                                                    isSelected ? "border-amber-500 bg-amber-500" : "border-gray-300"
-                                                                                                )}>
-                                                                                                    {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
-                                                                                                </div>
-                                                                                                <span className="font-mono text-gray-500 w-8">{tc.codigo}</span>
-                                                                                                <span className="text-gray-700">{tc.nome}</span>
-                                                                                            </div>
-                                                                                        );
-                                                                                    })}
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
+                                                                    <span className="text-gray-400 text-xs">Seleccionar cor...</span>
                                                                 )}
-                                                            </div>
-                                                        );
-                                                    })()}
-                                                </div>
-
-                                                {/* Toggle Degradê + ToothThirdsSelector */}
-                                                <div className="mt-2">
-                                                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                                                        <div className={cn(
-                                                            "relative w-8 h-4.5 rounded-full transition-colors",
-                                                            degradeEnabled ? "bg-amber-500" : "bg-gray-300"
-                                                        )} onClick={() => setDegradeEnabled(prev => !prev)}>
-                                                            <div className={cn(
-                                                                "absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform",
-                                                                degradeEnabled ? "translate-x-4" : "translate-x-0.5"
-                                                            )} />
-                                                        </div>
-                                                        <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Degradê</span>
-                                                    </label>
-                                                    {degradeEnabled && (
-                                                        <div className="mt-2 p-2 bg-amber-50/30 rounded-lg border border-amber-200/40">
-                                                            <ToothThirdsSelector
-                                                                toothColors={toothColors}
-                                                                cervicalColorId={cervicalColorId}
-                                                                medioColorId={medioColorId}
-                                                                incisalColorId={incisalColorId}
-                                                                onSelectColor={(third, colorId) => {
-                                                                    if (third === 'cervical') setCervicalColorId(colorId);
-                                                                    else if (third === 'medio') setMedioColorId(colorId);
-                                                                    else setIncisalColorId(colorId);
-                                                                }}
-                                                                activeScale={activeColorGroup}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    {/* Fotos — coluna esquerda */}
-                                                    <div
-                                                        className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${colorDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                        onDragOver={e => { e.preventDefault(); setColorDragOver(true); }}
-                                                        onDragLeave={() => setColorDragOver(false)}
-                                                        onDrop={e => { e.preventDefault(); setColorDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `escalaCor_${colorScalePreviews.length}`; setColorScalePhotos(p => [...p, src.file]); setColorScalePreviews(p => [...p, URL.createObjectURL(src.file)]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setColorScalePhotos(prev => [...prev, ...files]); setColorScalePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                    >
-                                                        <div className="relative">
-                                                            <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">Fotos</span>
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === 'escalaCor' ? null : 'escalaCor'); }}
-                                                                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full bg-amber-100/80 border border-amber-200/60 flex items-center justify-center text-amber-500 hover:bg-amber-200 hover:text-amber-700 transition-all"
-                                                                title="Guia fotográfico"
-                                                            >
-                                                                <Info className="h-2.5 w-2.5" />
+                                                                <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform shrink-0 ml-1", showColorDropdown && "rotate-180")} />
                                                             </button>
-                                                            {activeGuidePopover === 'escalaCor' && (
-                                                                <PhotoGuidePopover
-                                                                    guide={getDefaultGuide('escalaCor')}
-                                                                    onClose={() => setActiveGuidePopover(null)}
-                                                                />
+
+                                                            {showColorDropdown && (() => {
+                                                                /* Mapeamento grupo DB → escala real */
+                                                                const SCALE_MAP: Record<string, string> = {
+                                                                    'A': 'VITA Classical', 'B': 'VITA Classical', 'C': 'VITA Classical', 'D': 'VITA Classical', 'Bleach': 'VITA Classical',
+                                                                    '3D-Master': 'VITA 3D-Master',
+                                                                    'Chromascop': 'Chromascop',
+                                                                };
+                                                                const scales = toothColors.reduce<Record<string, { grupos: Record<string, ToothColorItem[]>; total: number }>>((acc, tc) => {
+                                                                    const g = tc.grupo || 'Outros';
+                                                                    const scale = SCALE_MAP[g] || g;
+                                                                    if (!acc[scale]) acc[scale] = { grupos: {}, total: 0 };
+                                                                    if (!acc[scale].grupos[g]) acc[scale].grupos[g] = [];
+                                                                    acc[scale].grupos[g].push(tc);
+                                                                    acc[scale].total++;
+                                                                    return acc;
+                                                                }, {});
+
+                                                                return (
+                                                                    <div className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                                                                        {!activeColorGroup ? (
+                                                                            /* Nível 1: 3 Escalas reais */
+                                                                            <div className="p-2 space-y-1 max-h-48 overflow-y-auto">
+                                                                                <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1 pb-1">Escolha a escala</p>
+                                                                                {Object.entries(scales).map(([scaleName, scaleData]) => {
+                                                                                    const allColors = Object.values(scaleData.grupos).flat();
+                                                                                    const selectedCount = allColors.filter(tc => selectedColorIds.includes(tc.id)).length;
+                                                                                    return (
+                                                                                        <button
+                                                                                            key={scaleName}
+                                                                                            type="button"
+                                                                                            onClick={() => setActiveColorGroup(scaleName)}
+                                                                                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-amber-50 transition-colors text-left"
+                                                                                        >
+                                                                                            <Palette className="h-4 w-4 text-amber-400 shrink-0" />
+                                                                                            <div className="flex-1 min-w-0">
+                                                                                                <span className="text-xs font-semibold text-gray-700 block">{scaleName}</span>
+                                                                                                <span className="text-[10px] text-gray-400">{scaleData.total} tonalidades</span>
+                                                                                            </div>
+                                                                                            {selectedCount > 0 && (
+                                                                                                <span className="text-[9px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-bold">{selectedCount}</span>
+                                                                                            )}
+                                                                                            <ChevronDown className="h-3 w-3 text-gray-300 -rotate-90" />
+                                                                                        </button>
+                                                                                    );
+                                                                                })}
+                                                                                {toothColors.length === 0 && (
+                                                                                    <p className="text-[10px] text-gray-400 text-center py-3">Sem cores no catálogo</p>
+                                                                                )}
+                                                                            </div>
+                                                                        ) : (
+                                                                            /* Nível 2: Tonalidades dentro da escala seleccionada */
+                                                                            <div>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => setActiveColorGroup(null)}
+                                                                                    className="w-full flex items-center gap-2 px-3 py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                                                                                >
+                                                                                    <ChevronDown className="h-3 w-3 text-gray-400 rotate-90" />
+                                                                                    <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{activeColorGroup}</span>
+                                                                                </button>
+                                                                                <div className="max-h-52 overflow-y-auto py-1">
+                                                                                    {scales[activeColorGroup] && Object.entries(scales[activeColorGroup].grupos).map(([subGrupo, colors]) => (
+                                                                                        <div key={subGrupo}>
+                                                                                            {/* Sub-grupo header (ex: A, B, C, D dentro de VITA Classical) */}
+                                                                                            {Object.keys(scales[activeColorGroup].grupos).length > 1 && (
+                                                                                                <div className="px-3 py-1 border-b border-gray-50">
+                                                                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{subGrupo}</span>
+                                                                                                </div>
+                                                                                            )}
+                                                                                            {colors.map(tc => {
+                                                                                                const isSelected = selectedColorIds.includes(tc.id);
+                                                                                                return (
+                                                                                                    <div
+                                                                                                        key={tc.id}
+                                                                                                        onClick={() => {
+                                                                                                            setSelectedColorIds(prev =>
+                                                                                                                isSelected ? prev.filter(id => id !== tc.id) : [...prev, tc.id]
+                                                                                                            );
+                                                                                                        }}
+                                                                                                        className={cn(
+                                                                                                            "flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-amber-50 transition-colors text-xs",
+                                                                                                            isSelected && "bg-amber-50"
+                                                                                                        )}
+                                                                                                    >
+                                                                                                        <div className={cn(
+                                                                                                            "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                                                                                                            isSelected ? "border-amber-500 bg-amber-500" : "border-gray-300"
+                                                                                                        )}>
+                                                                                                            {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                                                                                                        </div>
+                                                                                                        <span className="font-mono text-gray-500 w-8">{tc.codigo}</span>
+                                                                                                        <span className="text-gray-700">{tc.nome}</span>
+                                                                                                    </div>
+                                                                                                );
+                                                                                            })}
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })()}
+                                                        </div>
+
+                                                        {/* Toggle Degradê + ToothThirdsSelector */}
+                                                        <div className="mt-2">
+                                                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                                                                <div className={cn(
+                                                                    "relative w-8 h-4.5 rounded-full transition-colors",
+                                                                    degradeEnabled ? "bg-amber-500" : "bg-gray-300"
+                                                                )} onClick={() => setDegradeEnabled(prev => !prev)}>
+                                                                    <div className={cn(
+                                                                        "absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform",
+                                                                        degradeEnabled ? "translate-x-4" : "translate-x-0.5"
+                                                                    )} />
+                                                                </div>
+                                                                <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Degradê</span>
+                                                            </label>
+                                                            {degradeEnabled && (
+                                                                <div className="mt-2 p-2 bg-amber-50/30 rounded-lg border border-amber-200/40">
+                                                                    <ToothThirdsSelector
+                                                                        toothColors={toothColors}
+                                                                        cervicalColorId={cervicalColorId}
+                                                                        medioColorId={medioColorId}
+                                                                        incisalColorId={incisalColorId}
+                                                                        onSelectColor={(third, colorId) => {
+                                                                            if (third === 'cervical') setCervicalColorId(colorId);
+                                                                            else if (third === 'medio') setMedioColorId(colorId);
+                                                                            else setIncisalColorId(colorId);
+                                                                        }}
+                                                                        activeScale={activeColorGroup}
+                                                                    />
+                                                                </div>
                                                             )}
                                                         </div>
-                                                        <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                        <div className="flex items-center justify-center gap-2 mt-1.5">
-                                                            <button type="button" onClick={() => colorFileRef.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro"><Upload className="h-3 w-3" /></button>
-                                                            <button type="button" onClick={() => { const colorSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: colorScalePhotos, previews: colorScalePreviews }; const result = action(virtualPrev); setColorScalePhotos(result.files); setColorScalePreviews(result.previews); } }; setCameraTarget({ setter: colorSetter, key: 'escalaCor' }); }} className="w-8 h-8 rounded-full bg-sky-500/10 backdrop-blur-sm border border-sky-300/50 flex items-center justify-center text-sky-500 hover:bg-sky-500/20 hover:border-sky-400 hover:scale-110 transition-all" title="Tirar fotografia"><Camera className="h-3 w-3" /></button>
-                                                            <input ref={colorFileRef} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                            <input id="cam-native-escalaCor" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                        </div>
-                                                        {!photosCollapsed && colorScalePreviews.length > 0 && (<div className="grid grid-cols-2 gap-1 mt-1.5">{colorScalePreviews.map((url, i) => (<div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`escalaCor:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`} draggable={!isTouchDevice} onClick={isTouchDevice ? () => togglePhotoSelection(`escalaCor:${i}`) : undefined} onDragStart={!isTouchDevice ? (e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: colorScalePhotos[i], preview: url, note: photoNotes[`escalaCor_${i}`] || '', noteKey: `escalaCor_${i}`, remove: () => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); } }; }) : undefined} onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}>{selectedPhotos.has(`escalaCor:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}<img src={url} alt={`Cor ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={(e) => { e.stopPropagation(); URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button><input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`escalaCor_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`escalaCor_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" /></div>))}</div>)}
-                                                        {photosCollapsed && colorScalePreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {colorScalePreviews.length} foto(s)</p>)}
-                                                        {colorScalePreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
-                                                        {(fieldNotes.escalaCor || []).map((note, ni) => (<div key={ni} className="flex items-center gap-1 mt-1"><input type="text" placeholder="Nota do campo..." value={note} onChange={e => { const val = e.target.value; setFieldNotes(prev => { const arr = [...(prev.escalaCor || [])]; arr[ni] = val; return { ...prev, escalaCor: arr }; }); }} className="flex-1 px-2 py-1 text-[10px] text-gray-600 bg-amber-50/50 border border-amber-200 rounded focus:outline-none focus:border-amber-400 placeholder:text-gray-300" /><button type="button" onClick={() => setFieldNotes(prev => { const arr = [...(prev.escalaCor || [])]; arr.splice(ni, 1); return { ...prev, escalaCor: arr }; })} className="text-[11px] text-gray-300 hover:text-red-400">✕</button></div>))}
-                                                        <button type="button" onClick={() => setFieldNotes(prev => ({ ...prev, escalaCor: [...(prev.escalaCor || []), ''] }))} className="w-full mt-1 py-1.5 text-[11px] text-gray-400 hover:text-amber-500 hover:bg-amber-50/50 rounded border border-dashed border-gray-200 hover:border-amber-300 transition-colors flex items-center justify-center gap-1">📝 + Nota</button>
                                                     </div>
-                                                    {/* Polarizadas — coluna direita */}
-                                                    <div
-                                                        className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${polarizedDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
-                                                        onDragOver={e => { e.preventDefault(); setPolarizedDragOver(true); }}
-                                                        onDragLeave={() => setPolarizedDragOver(false)}
-                                                        onDrop={e => { e.preventDefault(); setPolarizedDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `polarizada_${polarizedPreviews.length}`; setPolarizedPhotos(p => [...p, src.file]); setPolarizedPreviews(p => [...p, URL.createObjectURL(src.file)]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPolarizedPhotos(prev => [...prev, ...files]); setPolarizedPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
-                                                    >
-                                                        <div className="relative">
-                                                            <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">Polarizadas</span>
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === 'polarizada' ? null : 'polarizada'); }}
-                                                                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full bg-amber-100/80 border border-amber-200/60 flex items-center justify-center text-amber-500 hover:bg-amber-200 hover:text-amber-700 transition-all"
-                                                                title="Guia fotográfico"
+                                                    {/* COLUNA DIREITA — Fotos + Polarizadas */}
+                                                    <div className="space-y-2">
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            {/* Fotos */}
+                                                            <div
+                                                                className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${colorDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                                onDragOver={e => { e.preventDefault(); setColorDragOver(true); }}
+                                                                onDragLeave={() => setColorDragOver(false)}
+                                                                onDrop={e => { e.preventDefault(); setColorDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `escalaCor_${colorScalePreviews.length}`; setColorScalePhotos(p => [...p, src.file]); setColorScalePreviews(p => [...p, URL.createObjectURL(src.file)]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setColorScalePhotos(prev => [...prev, ...files]); setColorScalePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                             >
-                                                                <Info className="h-2.5 w-2.5" />
-                                                            </button>
-                                                            {activeGuidePopover === 'polarizada' && (
-                                                                <PhotoGuidePopover
-                                                                    guide={getDefaultGuide('polarizada')}
-                                                                    onClose={() => setActiveGuidePopover(null)}
-                                                                />
-                                                            )}
+                                                                <div className="relative">
+                                                                    <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">Fotos</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === 'escalaCor' ? null : 'escalaCor'); }}
+                                                                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full bg-amber-100/80 border border-amber-200/60 flex items-center justify-center text-amber-500 hover:bg-amber-200 hover:text-amber-700 transition-all"
+                                                                        title="Guia fotográfico"
+                                                                    >
+                                                                        <Info className="h-2.5 w-2.5" />
+                                                                    </button>
+                                                                    {activeGuidePopover === 'escalaCor' && (
+                                                                        <PhotoGuidePopover
+                                                                            guide={getDefaultGuide('escalaCor')}
+                                                                            onClose={() => setActiveGuidePopover(null)}
+                                                                        />
+                                                                    )}
+                                                                </div>
+                                                                <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                                <div className="flex items-center justify-center gap-2 mt-1.5">
+                                                                    <button type="button" onClick={() => colorFileRef.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro"><Upload className="h-3 w-3" /></button>
+                                                                    <button type="button" onClick={() => { const colorSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: colorScalePhotos, previews: colorScalePreviews }; const result = action(virtualPrev); setColorScalePhotos(result.files); setColorScalePreviews(result.previews); } }; setCameraTarget({ setter: colorSetter, key: 'escalaCor' }); }} className="w-8 h-8 rounded-full bg-sky-500/10 backdrop-blur-sm border border-sky-300/50 flex items-center justify-center text-sky-500 hover:bg-sky-500/20 hover:border-sky-400 hover:scale-110 transition-all" title="Tirar fotografia"><Camera className="h-3 w-3" /></button>
+                                                                    <input ref={colorFileRef} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                    <input id="cam-native-escalaCor" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setColorScalePhotos(p => [...p, ...nf]); setColorScalePreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                </div>
+                                                                {!photosCollapsed && colorScalePreviews.length > 0 && (<div className="grid grid-cols-2 gap-1 mt-1.5">{colorScalePreviews.map((url, i) => (<div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`escalaCor:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`} draggable={!isTouchDevice} onClick={isTouchDevice ? () => togglePhotoSelection(`escalaCor:${i}`) : undefined} onDragStart={!isTouchDevice ? (e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: colorScalePhotos[i], preview: url, note: photoNotes[`escalaCor_${i}`] || '', noteKey: `escalaCor_${i}`, remove: () => { URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); } }; }) : undefined} onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}>{selectedPhotos.has(`escalaCor:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}<img src={url} alt={`Cor ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={(e) => { e.stopPropagation(); URL.revokeObjectURL(url); setColorScalePhotos(p => p.filter((_, idx) => idx !== i)); setColorScalePreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button><input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`escalaCor_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`escalaCor_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" /></div>))}</div>)}
+                                                                {photosCollapsed && colorScalePreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {colorScalePreviews.length} foto(s)</p>)}
+                                                                {colorScalePreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                                {(fieldNotes.escalaCor || []).map((note, ni) => (<div key={ni} className="flex items-center gap-1 mt-1"><input type="text" placeholder="Nota do campo..." value={note} onChange={e => { const val = e.target.value; setFieldNotes(prev => { const arr = [...(prev.escalaCor || [])]; arr[ni] = val; return { ...prev, escalaCor: arr }; }); }} className="flex-1 px-2 py-1 text-[10px] text-gray-600 bg-amber-50/50 border border-amber-200 rounded focus:outline-none focus:border-amber-400 placeholder:text-gray-300" /><button type="button" onClick={() => setFieldNotes(prev => { const arr = [...(prev.escalaCor || [])]; arr.splice(ni, 1); return { ...prev, escalaCor: arr }; })} className="text-[11px] text-gray-300 hover:text-red-400">✕</button></div>))}
+                                                                <button type="button" onClick={() => setFieldNotes(prev => ({ ...prev, escalaCor: [...(prev.escalaCor || []), ''] }))} className="w-full mt-1 py-1.5 text-[11px] text-gray-400 hover:text-amber-500 hover:bg-amber-50/50 rounded border border-dashed border-gray-200 hover:border-amber-300 transition-colors flex items-center justify-center gap-1">📝 + Nota</button>
+                                                            </div>
+                                                            {/* Polarizadas — coluna direita */}
+                                                            <div
+                                                                className={`rounded-lg border-2 border-dashed p-1.5 transition-colors ${polarizedDragOver ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
+                                                                onDragOver={e => { e.preventDefault(); setPolarizedDragOver(true); }}
+                                                                onDragLeave={() => setPolarizedDragOver(false)}
+                                                                onDrop={e => { e.preventDefault(); setPolarizedDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `polarizada_${polarizedPreviews.length}`; setPolarizedPhotos(p => [...p, src.file]); setPolarizedPreviews(p => [...p, URL.createObjectURL(src.file)]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPolarizedPhotos(prev => [...prev, ...files]); setPolarizedPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
+                                                            >
+                                                                <div className="relative">
+                                                                    <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">Polarizadas</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === 'polarizada' ? null : 'polarizada'); }}
+                                                                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full bg-amber-100/80 border border-amber-200/60 flex items-center justify-center text-amber-500 hover:bg-amber-200 hover:text-amber-700 transition-all"
+                                                                        title="Guia fotográfico"
+                                                                    >
+                                                                        <Info className="h-2.5 w-2.5" />
+                                                                    </button>
+                                                                    {activeGuidePopover === 'polarizada' && (
+                                                                        <PhotoGuidePopover
+                                                                            guide={getDefaultGuide('polarizada')}
+                                                                            onClose={() => setActiveGuidePopover(null)}
+                                                                        />
+                                                                    )}
+                                                                </div>
+                                                                <img src="/images/guides/escala-de-cor-polarizada.png" alt="Guia Polarizada" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                                <div className="flex items-center justify-center gap-2 mt-1.5">
+                                                                    <button type="button" onClick={() => polarizedFileRef.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro"><Upload className="h-3 w-3" /></button>
+                                                                    <button type="button" onClick={() => { const polSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: polarizedPhotos, previews: polarizedPreviews }; const result = action(virtualPrev); setPolarizedPhotos(result.files); setPolarizedPreviews(result.previews); } }; setCameraTarget({ setter: polSetter, key: 'polarizada' }); }} className="w-8 h-8 rounded-full bg-sky-500/10 backdrop-blur-sm border border-sky-300/50 flex items-center justify-center text-sky-500 hover:bg-sky-500/20 hover:border-sky-400 hover:scale-110 transition-all" title="Tirar fotografia"><Camera className="h-3 w-3" /></button>
+                                                                    <input ref={polarizedFileRef} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                    <input id="cam-native-polarizada" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
+                                                                </div>
+                                                                {!photosCollapsed && polarizedPreviews.length > 0 && (<div className="grid grid-cols-2 gap-1 mt-1.5">{polarizedPreviews.map((url, i) => (<div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`polarizada:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`} draggable={!isTouchDevice} onClick={isTouchDevice ? () => togglePhotoSelection(`polarizada:${i}`) : undefined} onDragStart={!isTouchDevice ? (e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: polarizedPhotos[i], preview: url, note: photoNotes[`polarizada_${i}`] || '', noteKey: `polarizada_${i}`, remove: () => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); } }; }) : undefined} onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}>{selectedPhotos.has(`polarizada:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}<img src={url} alt={`Polarizada ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={(e) => { e.stopPropagation(); URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button><input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`polarizada_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`polarizada_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" /></div>))}</div>)}
+                                                                {photosCollapsed && polarizedPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {polarizedPreviews.length} foto(s)</p>)}
+                                                                {polarizedPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
+                                                                {(fieldNotes.polarizada || []).map((note, ni) => (<div key={ni} className="flex items-center gap-1 mt-1"><input type="text" placeholder="Nota do campo..." value={note} onChange={e => { const val = e.target.value; setFieldNotes(prev => { const arr = [...(prev.polarizada || [])]; arr[ni] = val; return { ...prev, polarizada: arr }; }); }} className="flex-1 px-2 py-1 text-[10px] text-gray-600 bg-amber-50/50 border border-amber-200 rounded focus:outline-none focus:border-amber-400 placeholder:text-gray-300" /><button type="button" onClick={() => setFieldNotes(prev => { const arr = [...(prev.polarizada || [])]; arr.splice(ni, 1); return { ...prev, polarizada: arr }; })} className="text-[11px] text-gray-300 hover:text-red-400">✕</button></div>))}
+                                                                <button type="button" onClick={() => setFieldNotes(prev => ({ ...prev, polarizada: [...(prev.polarizada || []), ''] }))} className="w-full mt-1 py-1.5 text-[11px] text-gray-400 hover:text-amber-500 hover:bg-amber-50/50 rounded border border-dashed border-gray-200 hover:border-amber-300 transition-colors flex items-center justify-center gap-1">📝 + Nota</button>
+                                                            </div>
                                                         </div>
-                                                        <img src="/images/guides/escala-de-cor-polarizada.png" alt="Guia Polarizada" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                        <div className="flex items-center justify-center gap-2 mt-1.5">
-                                                            <button type="button" onClick={() => polarizedFileRef.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro"><Upload className="h-3 w-3" /></button>
-                                                            <button type="button" onClick={() => { const polSetter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>> = (action) => { if (typeof action === 'function') { const virtualPrev = { files: polarizedPhotos, previews: polarizedPreviews }; const result = action(virtualPrev); setPolarizedPhotos(result.files); setPolarizedPreviews(result.previews); } }; setCameraTarget({ setter: polSetter, key: 'polarizada' }); }} className="w-8 h-8 rounded-full bg-sky-500/10 backdrop-blur-sm border border-sky-300/50 flex items-center justify-center text-sky-500 hover:bg-sky-500/20 hover:border-sky-400 hover:scale-110 transition-all" title="Tirar fotografia"><Camera className="h-3 w-3" /></button>
-                                                            <input ref={polarizedFileRef} type="file" accept="image/*,.zip,.rar,.7z,application/zip,application/x-rar-compressed,application/x-7z-compressed" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                            <input id="cam-native-polarizada" type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; const nf = Array.from(f); setPolarizedPhotos(p => [...p, ...nf]); setPolarizedPreviews(p => [...p, ...nf.map(x => URL.createObjectURL(x))]); e.target.value = ''; }} />
-                                                        </div>
-                                                        {!photosCollapsed && polarizedPreviews.length > 0 && (<div className="grid grid-cols-2 gap-1 mt-1.5">{polarizedPreviews.map((url, i) => (<div key={i} className={`relative group ${isTouchDevice ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${selectedPhotos.has(`polarizada:${i}`) ? 'ring-2 ring-amber-500 rounded' : ''}`} draggable={!isTouchDevice} onClick={isTouchDevice ? () => togglePhotoSelection(`polarizada:${i}`) : undefined} onDragStart={!isTouchDevice ? (e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'internal-photo'); dragSourceRef.current = { file: polarizedPhotos[i], preview: url, note: photoNotes[`polarizada_${i}`] || '', noteKey: `polarizada_${i}`, remove: () => { URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); } }; }) : undefined} onDragEnd={!isTouchDevice ? (() => { dragSourceRef.current = null; }) : undefined}>{selectedPhotos.has(`polarizada:${i}`) && <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center z-10 text-white text-[10px] font-bold">✓</div>}<img src={url} alt={`Polarizada ${i + 1}`} className="w-full aspect-square object-cover rounded border border-gray-200" /><button type="button" onClick={(e) => { e.stopPropagation(); URL.revokeObjectURL(url); setPolarizedPhotos(p => p.filter((_, idx) => idx !== i)); setPolarizedPreviews(p => p.filter((_, idx) => idx !== i)); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button><input type="text" placeholder="Nota..." draggable={false} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} value={photoNotes[`polarizada_${i}`] || ''} onChange={e => setPhotoNotes(prev => ({ ...prev, [`polarizada_${i}`]: e.target.value }))} className="w-full mt-0.5 px-1 py-0.5 text-[7px] text-gray-500 bg-white/90 border border-gray-200 rounded focus:outline-none focus:border-amber-300 placeholder:text-gray-300" /></div>))}</div>)}
-                                                        {photosCollapsed && polarizedPreviews.length > 0 && (<p className="text-[8px] text-gray-400 text-center mt-1">📷 {polarizedPreviews.length} foto(s)</p>)}
-                                                        {polarizedPreviews.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">ou arraste fotos aqui</p>)}
-                                                        {(fieldNotes.polarizada || []).map((note, ni) => (<div key={ni} className="flex items-center gap-1 mt-1"><input type="text" placeholder="Nota do campo..." value={note} onChange={e => { const val = e.target.value; setFieldNotes(prev => { const arr = [...(prev.polarizada || [])]; arr[ni] = val; return { ...prev, polarizada: arr }; }); }} className="flex-1 px-2 py-1 text-[10px] text-gray-600 bg-amber-50/50 border border-amber-200 rounded focus:outline-none focus:border-amber-400 placeholder:text-gray-300" /><button type="button" onClick={() => setFieldNotes(prev => { const arr = [...(prev.polarizada || [])]; arr.splice(ni, 1); return { ...prev, polarizada: arr }; })} className="text-[11px] text-gray-300 hover:text-red-400">✕</button></div>))}
-                                                        <button type="button" onClick={() => setFieldNotes(prev => ({ ...prev, polarizada: [...(prev.polarizada || []), ''] }))} className="w-full mt-1 py-1.5 text-[11px] text-gray-400 hover:text-amber-500 hover:bg-amber-50/50 rounded border border-dashed border-gray-200 hover:border-amber-300 transition-colors flex items-center justify-center gap-1">📝 + Nota</button>
                                                     </div>
                                                 </div>
                                             </div>
-
                                         </div>
                                         {/* ── Sub-secção: Registos Fotográficos ── */}
                                         <div className="rounded-xl border border-gray-200 overflow-hidden">
