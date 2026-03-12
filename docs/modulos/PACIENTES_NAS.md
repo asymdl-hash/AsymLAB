@@ -2,7 +2,7 @@
 
 > Especificação completa da estrutura de pastas NAS para o módulo pacientes.
 > Baseada na demonstração NAS criada pelo utilizador (01/03/2026).
-> Última actualização: 09/03/2026
+> Última actualização: 12/03/2026
 
 ---
 
@@ -29,7 +29,6 @@ T-xxxx/                                          ← Só ID, sem nome
 └── 📂 Plano X/                                   ← Um por plano de tratamento
     │
     ├── 📂 Info Plano/                             ← Media ao nível do PLANO
-    │   ├── 📂 CBCT/                              ← Volumes DICOM
     │   ├── 📂 Considerações/                     ← Considerações iniciais (nível plano)
     │   │   └── 📄 Consideração Inicial VN.pdf    ← Versionadas
     │   ├── 📂 Escala de Cor/
@@ -51,7 +50,10 @@ T-xxxx/                                          ← Só ID, sem nome
     │   │   ├── 📂 Intraoral Superior/
     │   │   └── 📂 Intraoral Inferior/
     │   ├── 📂 45º/                                ← [NOVO] secção 45º
-    │   ├── 📂 Orto-Periapical/
+    │   ├── 📂 Registos Radiológicos/              ← (antes: CBCT + Orto-Periapical separados)
+    │   │   ├── 📂 Ortopantomografia/             ← Panorâmicas
+    │   │   ├── 📂 Periapicais/                   ← Radiografias periapicais
+    │   │   └── 📂 CBCT/                          ← Volumes DICOM
     │   ├── 📂 Outros/                             ← (antes: Outras Fotos)
     │   ├── 📂 Relatório Plano/                   ← Relatório global versionado
     │   │   └── 📄 Relatório Plano VN.pdf
@@ -133,7 +135,6 @@ T-{id}/
 ```
 T-{id}/Plano {n}/
 ├── Info Plano/
-│   ├── CBCT/
 │   ├── Considerações/
 │   ├── Escala de Cor/
 │   │   ├── Escala/
@@ -154,7 +155,10 @@ T-{id}/Plano {n}/
 │   │   ├── Intraoral Superior/
 │   │   └── Intraoral Inferior/
 │   ├── 45º/
-│   ├── Orto-Periapical/
+│   ├── Registos Radiológicos/
+│   │   ├── Ortopantomografia/
+│   │   ├── Periapicais/
+│   │   └── CBCT/
 │   ├── Outros/
 │   ├── Relatório Plano/
 │   └── Stl's/
