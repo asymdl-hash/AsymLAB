@@ -106,67 +106,120 @@ export default function ToothThirdsSelector({
 
     return (
         <div ref={containerRef} className="relative flex items-start gap-3">
-            {/* SVG Tooth Crown */}
-            <div className="relative w-16 shrink-0">
-                <svg viewBox="0 0 60 150" className="w-full h-auto drop-shadow-sm" xmlns="http://www.w3.org/2000/svg">
-                    {/* Gum line */}
-                    <path d="M2 8 Q15 0 30 2 Q45 0 58 8" fill="none" stroke="#e8a0a0" strokeWidth="2" opacity="0.6" />
+            {/* SVG Tooth Crown — anatomically proportioned upper central incisor */}
+            <div className="relative w-20 shrink-0">
+                <svg viewBox="0 0 80 100" className="w-full h-auto drop-shadow-sm" xmlns="http://www.w3.org/2000/svg">
+                    {/* Subtle gum line (scalloped) */}
+                    <path d="M8 12 Q20 4 40 6 Q60 4 72 12" fill="none" stroke="#d4908a" strokeWidth="1.8" opacity="0.5" strokeLinecap="round" />
 
-                    {/* Crown outline - clipPath */}
+                    {/* Crown clipPath — realistic central incisor shape */}
                     <defs>
                         <clipPath id="crown-clip">
-                            <path d="M8 10 Q4 40 6 70 Q5 100 8 120 Q12 140 20 148 Q25 152 30 152 Q35 152 40 148 Q48 140 52 120 Q55 100 54 70 Q56 40 52 10 Q45 4 30 6 Q15 4 8 10 Z" />
+                            <path d="
+                                M22 10
+                                Q18 14 16 22
+                                Q13 32 12 42
+                                Q11 55 12 65
+                                Q13 75 16 82
+                                Q20 90 28 94
+                                Q34 97 40 97
+                                Q46 97 52 94
+                                Q60 90 64 82
+                                Q67 75 68 65
+                                Q69 55 68 42
+                                Q67 32 64 22
+                                Q62 14 58 10
+                                Q50 6 40 6
+                                Q30 6 22 10
+                                Z
+                            " />
                         </clipPath>
+                        {/* Subtle gradient for depth */}
+                        <linearGradient id="tooth-depth" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="rgba(0,0,0,0.06)" />
+                            <stop offset="30%" stopColor="rgba(0,0,0,0)" />
+                            <stop offset="70%" stopColor="rgba(0,0,0,0)" />
+                            <stop offset="100%" stopColor="rgba(0,0,0,0.06)" />
+                        </linearGradient>
                     </defs>
 
                     {/* Cervical third */}
                     <rect
-                        x="0" y="6" width="60" height="50"
+                        x="0" y="4" width="80" height="33"
                         fill={getShadeColor(cervicalColorId, toothColors)}
                         clipPath="url(#crown-clip)"
                         className={cn(
                             "cursor-pointer transition-all duration-200",
-                            openThird === 'cervical' ? 'opacity-90' : 'hover:opacity-80'
+                            openThird === 'cervical' ? 'opacity-100' : 'hover:brightness-95'
                         )}
                         onClick={() => handleThirdClick('cervical')}
                     />
                     {/* Medio third */}
                     <rect
-                        x="0" y="56" width="60" height="48"
+                        x="0" y="37" width="80" height="30"
                         fill={getShadeColor(medioColorId, toothColors)}
                         clipPath="url(#crown-clip)"
                         className={cn(
                             "cursor-pointer transition-all duration-200",
-                            openThird === 'medio' ? 'opacity-90' : 'hover:opacity-80'
+                            openThird === 'medio' ? 'opacity-100' : 'hover:brightness-95'
                         )}
                         onClick={() => handleThirdClick('medio')}
                     />
                     {/* Incisal third */}
                     <rect
-                        x="0" y="104" width="60" height="50"
+                        x="0" y="67" width="80" height="34"
                         fill={getShadeColor(incisalColorId, toothColors)}
                         clipPath="url(#crown-clip)"
                         className={cn(
                             "cursor-pointer transition-all duration-200",
-                            openThird === 'incisal' ? 'opacity-90' : 'hover:opacity-80'
+                            openThird === 'incisal' ? 'opacity-100' : 'hover:brightness-95'
                         )}
                         onClick={() => handleThirdClick('incisal')}
                     />
 
+                    {/* Depth overlay for 3D effect */}
+                    <rect x="0" y="0" width="80" height="100" fill="url(#tooth-depth)" clipPath="url(#crown-clip)" style={{ pointerEvents: 'none' }} />
+
                     {/* Crown border */}
                     <path
-                        d="M8 10 Q4 40 6 70 Q5 100 8 120 Q12 140 20 148 Q25 152 30 152 Q35 152 40 148 Q48 140 52 120 Q55 100 54 70 Q56 40 52 10 Q45 4 30 6 Q15 4 8 10 Z"
-                        fill="none" stroke="#b8a080" strokeWidth="1.5" opacity="0.7"
+                        d="
+                            M22 10
+                            Q18 14 16 22
+                            Q13 32 12 42
+                            Q11 55 12 65
+                            Q13 75 16 82
+                            Q20 90 28 94
+                            Q34 97 40 97
+                            Q46 97 52 94
+                            Q60 90 64 82
+                            Q67 75 68 65
+                            Q69 55 68 42
+                            Q67 32 64 22
+                            Q62 14 58 10
+                            Q50 6 40 6
+                            Q30 6 22 10
+                            Z
+                        "
+                        fill="none" stroke="#b8a080" strokeWidth="1.2" opacity="0.7"
                     />
 
-                    {/* Division lines */}
-                    <line x1="6" y1="56" x2="54" y2="56" stroke="#b8a080" strokeWidth="0.8" strokeDasharray="3 2" opacity="0.6" />
-                    <line x1="5" y1="104" x2="55" y2="104" stroke="#b8a080" strokeWidth="0.8" strokeDasharray="3 2" opacity="0.6" />
+                    {/* Division lines (following crown contour) */}
+                    <path d="M14 37 Q28 35 40 35 Q52 35 66 37" fill="none" stroke="#b8a080" strokeWidth="0.7" strokeDasharray="3 2" opacity="0.5" />
+                    <path d="M12 67 Q28 65 40 65 Q52 65 68 67" fill="none" stroke="#b8a080" strokeWidth="0.7" strokeDasharray="3 2" opacity="0.5" />
 
-                    {/* Mamelons hint at incisal */}
-                    <path d="M18 145 Q22 150 26 148" fill="none" stroke="#d4c4a8" strokeWidth="0.5" opacity="0.4" />
-                    <path d="M27 148 Q30 151 33 148" fill="none" stroke="#d4c4a8" strokeWidth="0.5" opacity="0.4" />
-                    <path d="M34 148 Q38 150 42 145" fill="none" stroke="#d4c4a8" strokeWidth="0.5" opacity="0.4" />
+                    {/* Anatomical details — line angles for realism */}
+                    <path d="M30 14 Q29 50 30 88" fill="none" stroke="#ccc0a8" strokeWidth="0.4" opacity="0.3" />
+                    <path d="M50 14 Q51 50 50 88" fill="none" stroke="#ccc0a8" strokeWidth="0.4" opacity="0.3" />
+
+                    {/* Mamelons at incisal edge */}
+                    <path d="M26 90 Q30 95 34 92" fill="none" stroke="#d4c4a8" strokeWidth="0.5" opacity="0.35" />
+                    <path d="M35 92 Q40 96 45 92" fill="none" stroke="#d4c4a8" strokeWidth="0.5" opacity="0.35" />
+                    <path d="M46 92 Q50 95 54 90" fill="none" stroke="#d4c4a8" strokeWidth="0.5" opacity="0.35" />
+
+                    {/* Active third highlight ring */}
+                    {openThird === 'cervical' && <rect x="10" y="6" width="60" height="31" rx="4" fill="none" stroke="#d97706" strokeWidth="1.5" opacity="0.5" clipPath="url(#crown-clip)" />}
+                    {openThird === 'medio' && <rect x="10" y="37" width="60" height="30" rx="4" fill="none" stroke="#d97706" strokeWidth="1.5" opacity="0.5" clipPath="url(#crown-clip)" />}
+                    {openThird === 'incisal' && <rect x="10" y="67" width="60" height="32" rx="4" fill="none" stroke="#d97706" strokeWidth="1.5" opacity="0.5" clipPath="url(#crown-clip)" />}
                 </svg>
             </div>
 
