@@ -304,7 +304,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
         { key: 'polarizada', label: 'Polarizadas', group: 'Polarizadas' },
         { key: 'intraoralSup', label: 'Intraoral Superior', group: 'Vista Oclusal' },
         { key: 'intraoralInf', label: 'Intraoral Inferior', group: 'Vista Oclusal' },
-        { key: 'foto45', label: '45º', group: '45º' },
+        { key: 'foto45', label: '45º Frontal', group: '45º Frontal' },
         { key: 'outros', label: 'Outros', group: 'Outros' },
     ];
 
@@ -1909,7 +1909,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                                                     {/* --- 45º — apenas Setup Completo --- */}
                                                     {photoSetup === 'complete' && (<fieldset className="border border-gray-200 rounded-lg p-2">
-                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">45º</legend>
+                                                        <legend className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold px-1">45º Frontal</legend>
                                                         <div
                                                             className={`text-center rounded-lg border-2 border-dashed p-1.5 transition-colors ${dragOver45 ? 'border-sky-400 bg-sky-100/50' : 'border-gray-200 bg-white'}`}
                                                             onDragOver={e => { e.preventDefault(); setdragOver45(true); }}
@@ -1917,7 +1917,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             onDrop={e => { e.preventDefault(); setdragOver45(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `foto45_${previews45.length}`; setphotos45(p => [...p, src.file]); setpreviews45(p => [...p, URL.createObjectURL(src.file)]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setphotos45(prev => [...prev, ...files]); setpreviews45(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                         >
                                                             <div className="relative">
-                                                                <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">45º</span>
+                                                                <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">45º Frontal</span>
                                                                 <button
                                                                     type="button"
                                                                     onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === 'foto45' ? null : 'foto45'); }}
@@ -1933,7 +1933,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     />
                                                                 )}
                                                             </div>
-                                                            <img src="/images/guides/45.png" alt="Guia 45º" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                            <img src="/images/guides/45.png" alt="Guia 45º Frontal" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                             <div className="flex items-center justify-center gap-2">
                                                                 <button type="button" onClick={() => fileRef45.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro">
                                                                     <Upload className="h-3 w-3" />
