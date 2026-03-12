@@ -142,6 +142,28 @@ export default function PhotoGuidePopover({ guide, onClose, anchorRef }: PhotoGu
     const popoverRef = useRef<HTMLDivElement>(null);
     const touchStartX = useRef<number | null>(null);
     const totalPages = guide.pages.length;
+    const [pos, setPos] = useState<{ top: number; left: number; openUp: boolean }>({ top: 0, left: 0, openUp: false });
+
+    // ── Calculate fixed position from parent ──
+    useEffect(() => {
+        const calculate = () => {
+            const parent = popoverRef.current?.parentElement;
+            if (!parent) return;
+            const rect = parent.getBoundingClientRect();
+            const popoverH = 380; // approximate popover height
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const openUp = spaceBelow < popoverH && rect.top > popoverH;
+            setPos({
+                left: rect.left + rect.width / 2,
+                top: openUp ? rect.top - 8 : rect.bottom + 8,
+                openUp,
+            });
+        };
+        calculate();
+        window.addEventListener('scroll', calculate, true);
+        window.addEventListener('resize', calculate);
+        return () => { window.removeEventListener('scroll', calculate, true); window.removeEventListener('resize', calculate); };
+    }, []);
 
     // ── Click outside to close ──
     useEffect(() => {
@@ -187,8 +209,13 @@ export default function PhotoGuidePopover({ guide, onClose, anchorRef }: PhotoGu
     return (
         <div
             ref={popoverRef}
-            className="absolute z-50 w-[300px] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/80 overflow-hidden"
-            style={{ top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '8px' }}
+            className="fixed z-[9999] w-[300px] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/80 overflow-hidden"
+            style={{
+                top: pos.openUp ? undefined : `${pos.top}px`,
+                bottom: pos.openUp ? `${window.innerHeight - pos.top}px` : undefined,
+                left: `${pos.left}px`,
+                transform: 'translateX(-50%)',
+            }}
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
         >
