@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } fro
 import { X, Plus, Minus, Loader2, ChevronDown, ChevronUp, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList, Palette, ImagePlus, MessageSquarePlus, Camera, Upload, Search, GripVertical, FileText, Paperclip, Info } from 'lucide-react';
 import CameraOverlay from './CameraOverlay';
 import PhotoGuidePopover, { getDefaultGuide } from './PhotoGuidePopover';
+import ToothThirdsSelector from './ToothThirdsSelector';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { patientsService } from '@/services/patientsService';
@@ -61,6 +62,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [colorDragOver, setColorDragOver] = useState(false);
     const [showColorDropdown, setShowColorDropdown] = useState(false);
     const [activeColorGroup, setActiveColorGroup] = useState<string | null>(null);
+    // Degradê — cor por terços da coroa
+    const [degradeEnabled, setDegradeEnabled] = useState(false);
+    const [cervicalColorId, setCervicalColorId] = useState<string | null>(null);
+    const [medioColorId, setMedioColorId] = useState<string | null>(null);
+    const [incisalColorId, setIncisalColorId] = useState<string | null>(null);
     const [photoNotes, setPhotoNotes] = useState<Record<string, string>>({});
     const [fieldNotes, setFieldNotes] = useState<Record<string, string[]>>({});
     const colorDropdownRef = useRef<HTMLDivElement>(null);
@@ -348,6 +354,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                         if (d.metodo) setMetodo(d.metodo as string);
                         if (d.workTypeSelections) setWorkTypeSelections(d.workTypeSelections as WorkTypeSelection[]);
                         if (d.selectedColorIds) setSelectedColorIds(d.selectedColorIds as string[]);
+                        if (d.degradeEnabled) setDegradeEnabled(d.degradeEnabled as boolean);
+                        if (d.cervicalColorId) setCervicalColorId(d.cervicalColorId as string);
+                        if (d.medioColorId) setMedioColorId(d.medioColorId as string);
+                        if (d.incisalColorId) setIncisalColorId(d.incisalColorId as string);
                         if (d.photoNotes) setPhotoNotes(d.photoNotes as Record<string, string>);
                         if (d.fieldNotes) setFieldNotes(d.fieldNotes as Record<string, string[]>);
                         if (d.photoSetup) setPhotoSetup(d.photoSetup as 'basic' | 'complete');
@@ -517,6 +527,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 metodo,
                 workTypeSelections,
                 selectedColorIds,
+                degradeEnabled,
+                cervicalColorId,
+                medioColorId,
+                incisalColorId,
                 photoNotes,
                 fieldNotes,
                 photoSetup,
@@ -1328,6 +1342,38 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                             </div>
                                                         );
                                                     })()}
+                                                </div>
+
+                                                {/* Toggle Degradê + ToothThirdsSelector */}
+                                                <div className="mt-2">
+                                                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                                                        <div className={cn(
+                                                            "relative w-8 h-4.5 rounded-full transition-colors",
+                                                            degradeEnabled ? "bg-amber-500" : "bg-gray-300"
+                                                        )} onClick={() => setDegradeEnabled(prev => !prev)}>
+                                                            <div className={cn(
+                                                                "absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform",
+                                                                degradeEnabled ? "translate-x-4" : "translate-x-0.5"
+                                                            )} />
+                                                        </div>
+                                                        <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Degradê</span>
+                                                    </label>
+                                                    {degradeEnabled && (
+                                                        <div className="mt-2 p-2 bg-amber-50/30 rounded-lg border border-amber-200/40">
+                                                            <ToothThirdsSelector
+                                                                toothColors={toothColors}
+                                                                cervicalColorId={cervicalColorId}
+                                                                medioColorId={medioColorId}
+                                                                incisalColorId={incisalColorId}
+                                                                onSelectColor={(third, colorId) => {
+                                                                    if (third === 'cervical') setCervicalColorId(colorId);
+                                                                    else if (third === 'medio') setMedioColorId(colorId);
+                                                                    else setIncisalColorId(colorId);
+                                                                }}
+                                                                activeScale={activeColorGroup}
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-2">
