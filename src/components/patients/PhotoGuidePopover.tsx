@@ -35,6 +35,8 @@ export function getDefaultGuide(cardKey: string): PhotoGuideData {
         intraoralSup: { notes: ['Espelho oclusal superior', 'Paciente boca aberta, cabeça inclinada para trás'], distance: '0.3m', angle: 'Espelho 45° sup.', lights: 'Twin flash' },
         intraoralInf: { notes: ['Espelho oclusal inferior', 'Paciente boca aberta, cabeça inclinada para frente'], distance: '0.3m', angle: 'Espelho 45° inf.', lights: 'Twin flash' },
         foto45: { notes: ['Fotografia frontal com inclinação de 45º', 'Captar dentes superiores em relação ao lábio inferior', 'Sorriso natural do paciente'], distance: '0.5m', angle: '45° descend.', lights: 'Flash direto' },
+        escalaCor: { notes: ['Escala de cor junto aos dentes', 'Cartão cinzento 18% visível', 'Retractores colocados'], distance: '0.3m', angle: 'Frontal', lights: 'Flash neutro (sem polarizador)' },
+        polarizada: { notes: ['Filtro polarizador cruzado na câmara e flash', 'Eliminar reflexos para ver translucidência', 'Retractores colocados, sem escala'], distance: '0.3m', angle: 'Frontal', lights: 'Flash polarizado cruzado' },
         outros: { notes: ['Fotografias complementares', 'Composição livre'], distance: 'Variável', angle: 'Variável', lights: 'Variável' },
     };
 
@@ -53,6 +55,8 @@ export function getDefaultGuide(cardKey: string): PhotoGuideData {
         intraoralSup: { iso: '200', speed: '1/200s', aperture: 'f/29', wb: 'Flash (5500K)', flash: 'TTL +0.3', focal: '100mm macro' },
         intraoralInf: { iso: '200', speed: '1/200s', aperture: 'f/29', wb: 'Flash (5500K)', flash: 'TTL +0.3', focal: '100mm macro' },
         foto45: { iso: '200', speed: '1/200s', aperture: 'f/29', wb: 'Flash (5500K)', flash: 'TTL', focal: '100mm macro' },
+        escalaCor: { iso: '200', speed: '1/200s', aperture: 'f/29', wb: 'Flash (5500K)', flash: 'TTL -0.3', focal: '100mm macro' },
+        polarizada: { iso: '200', speed: '1/200s', aperture: 'f/29', wb: 'Manual (5500K)', flash: 'TTL (polar.)', focal: '100mm macro' },
         outros: { iso: '200', speed: '1/200s', aperture: 'f/16', wb: 'Auto', flash: 'TTL', focal: 'Variável' },
     };
 

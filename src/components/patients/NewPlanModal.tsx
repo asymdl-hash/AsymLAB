@@ -1338,7 +1338,23 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         onDragLeave={() => setColorDragOver(false)}
                                                         onDrop={e => { e.preventDefault(); setColorDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `escalaCor_${colorScalePreviews.length}`; setColorScalePhotos(p => [...p, src.file]); setColorScalePreviews(p => [...p, URL.createObjectURL(src.file)]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setColorScalePhotos(prev => [...prev, ...files]); setColorScalePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                     >
-                                                        <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1">Fotos</span>
+                                                        <div className="relative">
+                                                            <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">Fotos</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === 'escalaCor' ? null : 'escalaCor'); }}
+                                                                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full bg-amber-100/80 border border-amber-200/60 flex items-center justify-center text-amber-500 hover:bg-amber-200 hover:text-amber-700 transition-all"
+                                                                title="Guia fotográfico"
+                                                            >
+                                                                <Info className="h-2.5 w-2.5" />
+                                                            </button>
+                                                            {activeGuidePopover === 'escalaCor' && (
+                                                                <PhotoGuidePopover
+                                                                    guide={getDefaultGuide('escalaCor')}
+                                                                    onClose={() => setActiveGuidePopover(null)}
+                                                                />
+                                                            )}
+                                                        </div>
                                                         <img src="/images/guides/escala-de-cor.png" alt="Guia Escala de Cor" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                         <div className="flex items-center justify-center gap-2 mt-1.5">
                                                             <button type="button" onClick={() => colorFileRef.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro"><Upload className="h-3 w-3" /></button>
@@ -1359,7 +1375,23 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                         onDragLeave={() => setPolarizedDragOver(false)}
                                                         onDrop={e => { e.preventDefault(); setPolarizedDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `polarizada_${polarizedPreviews.length}`; setPolarizedPhotos(p => [...p, src.file]); setPolarizedPreviews(p => [...p, URL.createObjectURL(src.file)]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setPolarizedPhotos(prev => [...prev, ...files]); setPolarizedPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                     >
-                                                        <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1">Polarizadas</span>
+                                                        <div className="relative">
+                                                            <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">Polarizadas</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === 'polarizada' ? null : 'polarizada'); }}
+                                                                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full bg-amber-100/80 border border-amber-200/60 flex items-center justify-center text-amber-500 hover:bg-amber-200 hover:text-amber-700 transition-all"
+                                                                title="Guia fotográfico"
+                                                            >
+                                                                <Info className="h-2.5 w-2.5" />
+                                                            </button>
+                                                            {activeGuidePopover === 'polarizada' && (
+                                                                <PhotoGuidePopover
+                                                                    guide={getDefaultGuide('polarizada')}
+                                                                    onClose={() => setActiveGuidePopover(null)}
+                                                                />
+                                                            )}
+                                                        </div>
                                                         <img src="/images/guides/escala-de-cor-polarizada.png" alt="Guia Polarizada" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 mt-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains('object-cover')) { img.classList.remove('object-cover', 'max-h-24'); img.classList.add('object-contain'); } else { img.classList.add('object-cover', 'max-h-24'); img.classList.remove('object-contain'); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                         <div className="flex items-center justify-center gap-2 mt-1.5">
                                                             <button type="button" onClick={() => polarizedFileRef.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro"><Upload className="h-3 w-3" /></button>
