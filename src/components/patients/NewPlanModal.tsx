@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
-import { X, Plus, Minus, Loader2, ChevronDown, ChevronUp, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList, Palette, ImagePlus, MessageSquarePlus, Camera, Upload, Search, GripVertical, FileText, Paperclip } from 'lucide-react';
+import { X, Plus, Minus, Loader2, ChevronDown, ChevronUp, Check, Stethoscope, Users, UserPlus, Building2, Hash, Phone, Copy, Layers, ClipboardList, Palette, ImagePlus, MessageSquarePlus, Camera, Upload, Search, GripVertical, FileText, Paperclip, Info } from 'lucide-react';
 import CameraOverlay from './CameraOverlay';
+import PhotoGuidePopover, { getDefaultGuide } from './PhotoGuidePopover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { patientsService } from '@/services/patientsService';
@@ -142,6 +143,8 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [photoSetup, setPhotoSetup] = useState<'basic' | 'complete'>('basic');
     const [expandEscalaCor, setExpandEscalaCor] = useState(true);
     const [expandRegistos, setExpandRegistos] = useState(true);
+    // PhotoGuidePopover — guia fotográfico interativo
+    const [activeGuidePopover, setActiveGuidePopover] = useState<string | null>(null);
 
     // Draft / Rascunho
     const [draftId, setDraftId] = useState<string | null>(null);
@@ -1467,7 +1470,23 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         if (files.length > 0) addFiles(setter, files);
                                                                     }}
                                                                 >
-                                                                    <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1">{label}</span>
+                                                                    <div className="relative">
+                                                                        <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">{label}</span>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === `face_${key}` ? null : `face_${key}`); }}
+                                                                            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full bg-amber-100/80 border border-amber-200/60 flex items-center justify-center text-amber-500 hover:bg-amber-200 hover:text-amber-700 transition-all"
+                                                                            title="Guia fotográfico"
+                                                                        >
+                                                                            <Info className="h-2.5 w-2.5" />
+                                                                        </button>
+                                                                        {activeGuidePopover === `face_${key}` && (
+                                                                            <PhotoGuidePopover
+                                                                                guide={getDefaultGuide(key)}
+                                                                                onClose={() => setActiveGuidePopover(null)}
+                                                                            />
+                                                                        )}
+                                                                    </div>
 
                                                                     {/* Guide images — referência visual */}
                                                                     {guideImages && guideImages.length > 0 && (
@@ -1659,7 +1678,23 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                         if (files.length > 0) addFiles(setter, files);
                                                                     }}
                                                                 >
-                                                                    <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1">{label}</span>
+                                                                    <div className="relative">
+                                                                        <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">{label}</span>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === `closeup_${key}` ? null : `closeup_${key}`); }}
+                                                                            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full bg-amber-100/80 border border-amber-200/60 flex items-center justify-center text-amber-500 hover:bg-amber-200 hover:text-amber-700 transition-all"
+                                                                            title="Guia fotográfico"
+                                                                        >
+                                                                            <Info className="h-2.5 w-2.5" />
+                                                                        </button>
+                                                                        {activeGuidePopover === `closeup_${key}` && (
+                                                                            <PhotoGuidePopover
+                                                                                guide={getDefaultGuide(key)}
+                                                                                onClose={() => setActiveGuidePopover(null)}
+                                                                            />
+                                                                        )}
+                                                                    </div>
 
                                                                     {guideImages && guideImages.length > 0 && (
                                                                         <div className={guideImages.length > 1 ? 'grid grid-cols-2 gap-0.5 mb-1' : 'mb-1'}>
@@ -1743,7 +1778,23 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 onDragLeave={() => setIntraoralSupDragOver(false)}
                                                                 onDrop={e => { e.preventDefault(); setIntraoralSupDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `intraoralSup_${intraoralSupPreviews.length}`; setIntraoralSupPhotos(p => [...p, src.file]); setIntraoralSupPreviews(p => [...p, URL.createObjectURL(src.file)]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralSupPhotos(prev => [...prev, ...files]); setIntraoralSupPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                             >
-                                                                <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1">Intraoral Superior</span>
+                                                                <div className="relative">
+                                                                    <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">Intraoral Superior</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === 'intraoralSup' ? null : 'intraoralSup'); }}
+                                                                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full bg-amber-100/80 border border-amber-200/60 flex items-center justify-center text-amber-500 hover:bg-amber-200 hover:text-amber-700 transition-all"
+                                                                        title="Guia fotográfico"
+                                                                    >
+                                                                        <Info className="h-2.5 w-2.5" />
+                                                                    </button>
+                                                                    {activeGuidePopover === 'intraoralSup' && (
+                                                                        <PhotoGuidePopover
+                                                                            guide={getDefaultGuide('intraoralSup')}
+                                                                            onClose={() => setActiveGuidePopover(null)}
+                                                                        />
+                                                                    )}
+                                                                </div>
                                                                 <img src="/images/guides/intraoral-superior.png" alt="Guia Intraoral Superior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                                 <div className="flex items-center justify-center gap-2">
                                                                     <button type="button" onClick={() => intraoralSupFileRef.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro">
@@ -1794,7 +1845,23 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                 onDragLeave={() => setIntraoralInfDragOver(false)}
                                                                 onDrop={e => { e.preventDefault(); setIntraoralInfDragOver(false); if (dragSourceRef.current) { const src = dragSourceRef.current; const nk = `intraoralInf_${intraoralInfPreviews.length}`; setIntraoralInfPhotos(p => [...p, src.file]); setIntraoralInfPreviews(p => [...p, URL.createObjectURL(src.file)]); if (src.note) setPhotoNotes(prev => { const next = { ...prev, [nk]: src.note }; delete next[src.noteKey]; return next; }); src.remove(); dragSourceRef.current = null; return; } const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length > 0) { setIntraoralInfPhotos(prev => [...prev, ...files]); setIntraoralInfPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]); } }}
                                                             >
-                                                                <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1">Intraoral Inferior</span>
+                                                                <div className="relative">
+                                                                    <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1 pr-7">Intraoral Inferior</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => { e.stopPropagation(); setActiveGuidePopover(prev => prev === 'intraoralInf' ? null : 'intraoralInf'); }}
+                                                                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full bg-amber-100/80 border border-amber-200/60 flex items-center justify-center text-amber-500 hover:bg-amber-200 hover:text-amber-700 transition-all"
+                                                                        title="Guia fotográfico"
+                                                                    >
+                                                                        <Info className="h-2.5 w-2.5" />
+                                                                    </button>
+                                                                    {activeGuidePopover === 'intraoralInf' && (
+                                                                        <PhotoGuidePopover
+                                                                            guide={getDefaultGuide('intraoralInf')}
+                                                                            onClose={() => setActiveGuidePopover(null)}
+                                                                        />
+                                                                    )}
+                                                                </div>
                                                                 <img src="/images/guides/intraoral-inferior.png" alt="Guia Intraoral Inferior" className="w-full max-h-24 object-cover rounded border border-gray-100 opacity-60 mb-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { const img = e.target as HTMLImageElement; if (img.classList.contains("object-cover")) { img.classList.remove("object-cover", "max-h-24"); img.classList.add("object-contain"); } else { img.classList.add("object-cover", "max-h-24"); img.classList.remove("object-contain"); } }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                                 <div className="flex items-center justify-center gap-2">
                                                                     <button type="button" onClick={() => intraoralInfFileRef.current?.click()} className="w-8 h-8 rounded-full bg-amber-500/10 backdrop-blur-sm border border-amber-300/50 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 hover:border-amber-400 hover:scale-110 transition-all" title="Anexar ficheiro">
