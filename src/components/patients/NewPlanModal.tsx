@@ -2417,113 +2417,112 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                         </div>
 
 
-                                    </div>
-
-                                    {/* ── Sub-secção: Registos Radiológicos ── */}
-                                    <div className="rounded-xl border border-gray-200 overflow-hidden">
-                                        {/* Hero Header */}
-                                        <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-2.5 flex items-center justify-between">
-                                            <button type="button" onClick={() => setRadioCollapsed(c => !c)} className="flex items-center gap-2 cursor-pointer">
-                                                <span className="text-lg">🩻</span>
-                                                <span className="text-[11px] uppercase tracking-widest font-semibold text-white">
-                                                    Registos Radiológicos
-                                                </span>
-                                                <ChevronDown className={cn("h-3.5 w-3.5 text-slate-400 transition-transform", !radioCollapsed && "rotate-180")} />
-                                                {(radioOrtopan.files.length + radioPeriapicais.files.length + radioCbct.files.length) > 0 && (
-                                                    <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-bold">
-                                                        {radioOrtopan.files.length + radioPeriapicais.files.length + radioCbct.files.length}
+                                        {/* ── Sub-secção: Registos Radiológicos ── */}
+                                        <div className="rounded-xl border border-gray-200 overflow-hidden">
+                                            {/* Hero Header */}
+                                            <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-2.5 flex items-center justify-between">
+                                                <button type="button" onClick={() => setRadioCollapsed(c => !c)} className="flex items-center gap-2 cursor-pointer">
+                                                    <span className="text-lg">🩻</span>
+                                                    <span className="text-[11px] uppercase tracking-widest font-semibold text-white">
+                                                        Registos Radiológicos
                                                     </span>
-                                                )}
-                                            </button>
+                                                    <ChevronDown className={cn("h-3.5 w-3.5 text-slate-400 transition-transform", !radioCollapsed && "rotate-180")} />
+                                                    {(radioOrtopan.files.length + radioPeriapicais.files.length + radioCbct.files.length) > 0 && (
+                                                        <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-bold">
+                                                            {radioOrtopan.files.length + radioPeriapicais.files.length + radioCbct.files.length}
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            </div>
+
+                                            {!radioCollapsed && (
+                                                <div className="p-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                    {(() => {
+                                                        const radioFields: { label: string; key: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; icon: string }[] = [
+                                                            { label: 'Ortopantomografia', key: 'ortopan', state: radioOrtopan, setter: setRadioOrtopan, ref: radioOrtopanRef, icon: '📐' },
+                                                            { label: 'Periapicais', key: 'periapicais', state: radioPeriapicais, setter: setRadioPeriapicais, ref: radioPeriapicaisRef, icon: '🦷' },
+                                                            { label: 'CBCT', key: 'cbct', state: radioCbct, setter: setRadioCbct, ref: radioCbctRef, icon: '🔬' },
+                                                        ];
+
+                                                        const addRadioFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
+                                                            setter(prev => ({
+                                                                files: [...prev.files, ...newFiles],
+                                                                previews: [...prev.previews, ...newFiles.map(f => f.type.startsWith('image/') ? URL.createObjectURL(f) : '')],
+                                                            }));
+                                                        };
+
+                                                        const removeRadioFile = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, idx: number) => {
+                                                            setter(prev => ({
+                                                                files: prev.files.filter((_, i) => i !== idx),
+                                                                previews: prev.previews.filter((_, i) => i !== idx),
+                                                            }));
+                                                        };
+
+                                                        const getFileIcon = (file: File) => {
+                                                            const ext = file.name.split('.').pop()?.toLowerCase() || '';
+                                                            if (['zip', 'rar', '7z', 'gz', 'tar'].includes(ext)) return '📦';
+                                                            if (['dcm', 'dicom'].includes(ext)) return '🩻';
+                                                            if (file.type.startsWith('image/')) return '🖼️';
+                                                            return '📄';
+                                                        };
+
+                                                        return radioFields.map(({ label, key, state, setter, ref, icon }) => (
+                                                            <div
+                                                                key={key}
+                                                                className={cn(
+                                                                    "text-center rounded-lg border-2 border-dashed p-1.5 transition-colors",
+                                                                    radioDragOver === key
+                                                                        ? "border-violet-400 bg-violet-100/50"
+                                                                        : "border-gray-200 bg-white"
+                                                                )}
+                                                                onDragOver={e => { e.preventDefault(); setRadioDragOver(key); }}
+                                                                onDragLeave={() => setRadioDragOver(null)}
+                                                                onDrop={e => {
+                                                                    e.preventDefault();
+                                                                    setRadioDragOver(null);
+                                                                    const files = Array.from(e.dataTransfer.files);
+                                                                    if (files.length > 0) addRadioFiles(setter, files);
+                                                                }}
+                                                            >
+                                                                <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1">{icon} {label}</span>
+                                                                <div className="flex items-center justify-center gap-2 mt-1">
+                                                                    <button type="button" onClick={() => ref.current?.click()} className="w-8 h-8 rounded-full bg-violet-500/10 backdrop-blur-sm border border-violet-300/50 flex items-center justify-center text-violet-500 hover:bg-violet-500/20 hover:border-violet-400 hover:scale-110 transition-all" title="Anexar ficheiro">
+                                                                        <Upload className="h-3 w-3" />
+                                                                    </button>
+                                                                    <input ref={ref} type="file" accept="image/*,.zip,.rar,.7z,.gz,.tar,.dcm,.dicom,application/zip,application/x-rar-compressed,application/gzip,application/x-7z-compressed,application/dicom" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; addRadioFiles(setter, Array.from(f)); e.target.value = ''; }} />
+                                                                </div>
+                                                                {state.files.length > 0 && (
+                                                                    <div className="grid grid-cols-2 gap-1 mt-1.5">
+                                                                        {state.files.map((file, i) => (
+                                                                            <div key={i} className="relative group">
+                                                                                {state.previews[i] ? (
+                                                                                    <img src={state.previews[i]} alt={file.name} className="w-full aspect-square object-cover rounded border border-gray-200" />
+                                                                                ) : (
+                                                                                    <div className="w-full aspect-square rounded border border-gray-200 bg-gray-50 flex flex-col items-center justify-center">
+                                                                                        <span className="text-lg">{getFileIcon(file)}</span>
+                                                                                        <span className="text-[6px] text-gray-400 mt-0.5 px-0.5 truncate max-w-full">{file.name.length > 15 ? file.name.slice(0, 12) + '...' : file.name}</span>
+                                                                                        <span className="text-[5px] text-gray-300">{(file.size / 1024).toFixed(0)} KB</span>
+                                                                                    </div>
+                                                                                )}
+                                                                                <button type="button" onClick={(e) => { e.stopPropagation(); if (state.previews[i]) URL.revokeObjectURL(state.previews[i]); removeRadioFile(setter, i); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                                {state.files.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">arraste ficheiros aqui</p>)}
+                                                            </div>
+                                                        ));
+                                                    })()}
+                                                </div>
+                                            )}
+
+                                            {radioCollapsed && (radioOrtopan.files.length + radioPeriapicais.files.length + radioCbct.files.length) > 0 && (
+                                                <p className="text-[8px] text-gray-400 text-center">📎 {radioOrtopan.files.length + radioPeriapicais.files.length + radioCbct.files.length} ficheiro(s) anexado(s)</p>
+                                            )}
                                         </div>
 
-                                        {!radioCollapsed && (
-                                            <div className="p-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                                {(() => {
-                                                    const radioFields: { label: string; key: string; state: { files: File[]; previews: string[] }; setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; ref: React.RefObject<HTMLInputElement>; icon: string }[] = [
-                                                        { label: 'Ortopantomografia', key: 'ortopan', state: radioOrtopan, setter: setRadioOrtopan, ref: radioOrtopanRef, icon: '📐' },
-                                                        { label: 'Periapicais', key: 'periapicais', state: radioPeriapicais, setter: setRadioPeriapicais, ref: radioPeriapicaisRef, icon: '🦷' },
-                                                        { label: 'CBCT', key: 'cbct', state: radioCbct, setter: setRadioCbct, ref: radioCbctRef, icon: '🔬' },
-                                                    ];
-
-                                                    const addRadioFiles = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, newFiles: File[]) => {
-                                                        setter(prev => ({
-                                                            files: [...prev.files, ...newFiles],
-                                                            previews: [...prev.previews, ...newFiles.map(f => f.type.startsWith('image/') ? URL.createObjectURL(f) : '')],
-                                                        }));
-                                                    };
-
-                                                    const removeRadioFile = (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, idx: number) => {
-                                                        setter(prev => ({
-                                                            files: prev.files.filter((_, i) => i !== idx),
-                                                            previews: prev.previews.filter((_, i) => i !== idx),
-                                                        }));
-                                                    };
-
-                                                    const getFileIcon = (file: File) => {
-                                                        const ext = file.name.split('.').pop()?.toLowerCase() || '';
-                                                        if (['zip', 'rar', '7z', 'gz', 'tar'].includes(ext)) return '📦';
-                                                        if (['dcm', 'dicom'].includes(ext)) return '🩻';
-                                                        if (file.type.startsWith('image/')) return '🖼️';
-                                                        return '📄';
-                                                    };
-
-                                                    return radioFields.map(({ label, key, state, setter, ref, icon }) => (
-                                                        <div
-                                                            key={key}
-                                                            className={cn(
-                                                                "text-center rounded-lg border-2 border-dashed p-1.5 transition-colors",
-                                                                radioDragOver === key
-                                                                    ? "border-violet-400 bg-violet-100/50"
-                                                                    : "border-gray-200 bg-white"
-                                                            )}
-                                                            onDragOver={e => { e.preventDefault(); setRadioDragOver(key); }}
-                                                            onDragLeave={() => setRadioDragOver(null)}
-                                                            onDrop={e => {
-                                                                e.preventDefault();
-                                                                setRadioDragOver(null);
-                                                                const files = Array.from(e.dataTransfer.files);
-                                                                if (files.length > 0) addRadioFiles(setter, files);
-                                                            }}
-                                                        >
-                                                            <span className="text-[8px] font-bold text-amber-700 uppercase tracking-wider block mb-1 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-lg px-2 py-1">{icon} {label}</span>
-                                                            <div className="flex items-center justify-center gap-2 mt-1">
-                                                                <button type="button" onClick={() => ref.current?.click()} className="w-8 h-8 rounded-full bg-violet-500/10 backdrop-blur-sm border border-violet-300/50 flex items-center justify-center text-violet-500 hover:bg-violet-500/20 hover:border-violet-400 hover:scale-110 transition-all" title="Anexar ficheiro">
-                                                                    <Upload className="h-3 w-3" />
-                                                                </button>
-                                                                <input ref={ref} type="file" accept="image/*,.zip,.rar,.7z,.gz,.tar,.dcm,.dicom,application/zip,application/x-rar-compressed,application/gzip,application/x-7z-compressed,application/dicom" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; addRadioFiles(setter, Array.from(f)); e.target.value = ''; }} />
-                                                            </div>
-                                                            {state.files.length > 0 && (
-                                                                <div className="grid grid-cols-2 gap-1 mt-1.5">
-                                                                    {state.files.map((file, i) => (
-                                                                        <div key={i} className="relative group">
-                                                                            {state.previews[i] ? (
-                                                                                <img src={state.previews[i]} alt={file.name} className="w-full aspect-square object-cover rounded border border-gray-200" />
-                                                                            ) : (
-                                                                                <div className="w-full aspect-square rounded border border-gray-200 bg-gray-50 flex flex-col items-center justify-center">
-                                                                                    <span className="text-lg">{getFileIcon(file)}</span>
-                                                                                    <span className="text-[6px] text-gray-400 mt-0.5 px-0.5 truncate max-w-full">{file.name.length > 15 ? file.name.slice(0, 12) + '...' : file.name}</span>
-                                                                                    <span className="text-[5px] text-gray-300">{(file.size / 1024).toFixed(0)} KB</span>
-                                                                                </div>
-                                                                            )}
-                                                                            <button type="button" onClick={(e) => { e.stopPropagation(); if (state.previews[i]) URL.revokeObjectURL(state.previews[i]); removeRadioFile(setter, i); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                            {state.files.length === 0 && (<p className="text-[7px] text-gray-300 text-center mt-1">arraste ficheiros aqui</p>)}
-                                                        </div>
-                                                    ));
-                                                })()}
-                                            </div>
-                                        )}
-
-                                        {radioCollapsed && (radioOrtopan.files.length + radioPeriapicais.files.length + radioCbct.files.length) > 0 && (
-                                            <p className="text-[8px] text-gray-400 text-center">📎 {radioOrtopan.files.length + radioPeriapicais.files.length + radioCbct.files.length} ficheiro(s) anexado(s)</p>
-                                        )}
                                     </div>
-
-                                    </div>
+                                </div>
 
                                 {/* Error */}
                                 {error && (
