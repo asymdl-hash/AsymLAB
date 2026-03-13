@@ -2523,7 +2523,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                         )}
                                     </div>
 
-                                </div>
+                                    </div>
 
                                 {/* Error */}
                                 {error && (
