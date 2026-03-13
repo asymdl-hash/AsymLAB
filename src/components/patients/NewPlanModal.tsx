@@ -1195,6 +1195,286 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
 
 
+                                {/* ═══ CONSIDERAÇÕES ═══ */}
+                                <div className="rounded-xl border border-gray-200 overflow-hidden">
+                                    {/* Hero Header */}
+                                    <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-2.5 flex items-center justify-between">
+                                        <button type="button" onClick={() => setConsideracoesCollapsed(c => !c)} className="flex items-center gap-2 cursor-pointer">
+                                            <MessageSquarePlus className="h-4 w-4 text-indigo-300" />
+                                            <span className="text-[11px] uppercase tracking-widest font-semibold text-white">Considerações</span>
+                                            {consideracoes.length > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-bold">{consideracoes.length}</span>}
+                                            <ChevronDown className={cn("h-3.5 w-3.5 text-slate-400 transition-transform", !consideracoesCollapsed && "rotate-180")} />
+                                        </button>
+                                    </div>
+
+                                    {!consideracoesCollapsed && (
+                                        <div className="px-4 pb-4 pt-3 space-y-3">
+
+                                            {/* Template Picker */}
+                                            {showTemplatePicker && (
+                                                <div className="mt-3 space-y-2.5">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Escolher Template</span>
+                                                        <button type="button" onClick={() => setShowTemplatePicker(false)} className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors">✕ Fechar</button>
+                                                    </div>
+                                                    {/* Search */}
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                                                        <input
+                                                            type="text"
+                                                            value={templateSearch}
+                                                            onChange={e => setTemplateSearch(e.target.value)}
+                                                            placeholder="Pesquisar templates..."
+                                                            className="w-full pl-8 pr-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300/50 focus:border-gray-300"
+                                                        />
+                                                    </div>
+                                                    {/* Templates Grid */}
+                                                    {loadingTemplates ? (
+                                                        <div className="text-center py-6"><Loader2 className="h-4 w-4 text-gray-400 animate-spin mx-auto" /></div>
+                                                    ) : availableTemplates.length === 0 ? (
+                                                        <div className="text-center py-6">
+                                                            <MessageSquarePlus className="h-8 w-8 mx-auto text-gray-200 mb-2" />
+                                                            <p className="text-xs text-gray-400">Nenhum template encontrado</p>
+                                                            <button type="button" onClick={() => {
+                                                                setConsideracoes(prev => [...prev, { id: crypto.randomUUID(), titulo: '', descricao: '', subtitulos: [{ id: crypto.randomUUID(), texto: '', resposta: '', anexos: [] }], isModified: true }]);
+                                                                setShowTemplatePicker(false);
+                                                            }} className="mt-2 text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors">
+                                                                + Criar sem template
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="grid grid-cols-2 gap-2 max-h-[180px] overflow-y-auto">
+                                                            {availableTemplates
+                                                                .filter(t => !templateSearch || t.titulo.toLowerCase().includes(templateSearch.toLowerCase()) || (t.fields || []).some((f: any) => f.subtitulo.toLowerCase().includes(templateSearch.toLowerCase())))
+                                                                .map((t: any) => (
+                                                                    <button key={t.id} type="button" onClick={() => {
+                                                                        const subs = (t.fields || []).sort((a: any, b: any) => a.ordem - b.ordem).map((f: any) => ({
+                                                                            id: crypto.randomUUID(),
+                                                                            texto: f.subtitulo,
+                                                                            resposta: '',
+                                                                            anexos: [],
+                                                                        }));
+                                                                        setConsideracoes(prev => [...prev, {
+                                                                            id: crypto.randomUUID(),
+                                                                            template_id: t.id,
+                                                                            titulo: t.titulo,
+                                                                            descricao: '',
+                                                                            subtitulos: subs,
+                                                                            isModified: false,
+                                                                            originalSubtitulos: subs.map((s: any) => s.texto),
+                                                                        }]);
+                                                                        setShowTemplatePicker(false);
+                                                                        setTemplateSearch('');
+                                                                    }} className="text-left p-2.5 rounded-lg border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all group">
+                                                                        <p className="text-[11px] font-semibold text-gray-700 truncate">{t.titulo}</p>
+                                                                        {t.fields && t.fields.length > 0 && (
+                                                                            <p className="text-[9px] text-gray-400 mt-0.5">{t.fields.length} campo{t.fields.length !== 1 ? 's' : ''}</p>
+                                                                        )}
+                                                                    </button>
+                                                                ))}
+                                                        </div>
+                                                    )}
+                                                    {/* Create blank */}
+                                                    {availableTemplates.length > 0 && (
+                                                        <button type="button" onClick={() => {
+                                                            setConsideracoes(prev => [...prev, { id: crypto.randomUUID(), titulo: '', descricao: '', subtitulos: [{ id: crypto.randomUUID(), texto: '', resposta: '', anexos: [] }], isModified: true }]);
+                                                            setShowTemplatePicker(false);
+                                                        }} className="w-full text-[10px] text-gray-400 hover:text-gray-600 py-1.5 transition-colors font-medium">
+                                                            + Criar sem template
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Consideration Cards */}
+                                            {consideracoes.map((card, cardIdx) => (
+                                                <div key={card.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-gray-300 transition-colors w-full sm:max-w-[50%]">
+                                                    {/* Card Header — gradient tag style */}
+                                                    <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200/60 rounded-t-xl">
+                                                        <MessageSquarePlus className="h-3.5 w-3.5 text-amber-500" />
+                                                        <input
+                                                            type="text"
+                                                            value={card.titulo}
+                                                            onChange={e => {
+                                                                const v = e.target.value;
+                                                                setConsideracoes(prev => prev.map((c, i) => i === cardIdx ? { ...c, titulo: v, isModified: c.template_id ? true : c.isModified } : c));
+                                                            }}
+                                                            placeholder="Título da consideração..."
+                                                            className="flex-1 text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-transparent border-none outline-none placeholder:text-amber-400/60"
+                                                        />
+                                                        {card.template_id && card.isModified && (
+                                                            <button type="button" title="Criar novo template a partir deste" className="text-[9px] text-amber-600 hover:text-amber-800 border border-amber-300 rounded-md px-2 py-0.5 hover:bg-amber-100/50 transition-colors whitespace-nowrap font-medium">
+                                                                + Novo template
+                                                            </button>
+                                                        )}
+                                                        <button type="button" onClick={() => setConsideracoes(prev => prev.filter((_, i) => i !== cardIdx))} className="text-amber-400 hover:text-red-400 transition-colors p-0.5">
+                                                            <X className="h-3 w-3" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="p-3 space-y-2">
+                                                        {/* Description — Rich Text (Tiptap) */}
+                                                        <Suspense fallback={<div className="w-full h-12 bg-gray-50 rounded-lg animate-pulse" />}>
+                                                            <RichTextResponse
+                                                                value={card.descricao}
+                                                                onChange={(html) => setConsideracoes(prev => prev.map((c, i) => i === cardIdx ? { ...c, descricao: html } : c))}
+                                                                placeholder="Descrição / indicações gerais..."
+                                                            />
+                                                        </Suspense>
+
+                                                        {/* Subtítulos */}
+                                                        <div className="space-y-1.5">
+                                                            {card.subtitulos.map((sub, subIdx) => (
+                                                                <div
+                                                                    key={sub.id}
+                                                                    draggable
+                                                                    onDragStart={() => setDragSubtituloIdx({ cardIdx, subIdx })}
+                                                                    onDragOver={e => e.preventDefault()}
+                                                                    onDrop={() => {
+                                                                        if (dragSubtituloIdx && dragSubtituloIdx.cardIdx === cardIdx && dragSubtituloIdx.subIdx !== subIdx) {
+                                                                            setConsideracoes(prev => prev.map((c, ci) => {
+                                                                                if (ci !== cardIdx) return c;
+                                                                                const subs = [...c.subtitulos];
+                                                                                const [moved] = subs.splice(dragSubtituloIdx.subIdx, 1);
+                                                                                subs.splice(subIdx, 0, moved);
+                                                                                const orig = c.originalSubtitulos || [];
+                                                                                const isModified = c.template_id ? (subs.map(s => s.texto).join('|') !== orig.join('|')) : c.isModified;
+                                                                                return { ...c, subtitulos: subs, isModified };
+                                                                            }));
+                                                                        }
+                                                                        setDragSubtituloIdx(null);
+                                                                    }}
+                                                                    onDragEnd={() => setDragSubtituloIdx(null)}
+                                                                    className="rounded-lg border border-gray-100 bg-gray-50/50 px-2 py-1.5 group/sub hover:border-gray-200 transition-colors"
+                                                                >
+                                                                    <div className="flex items-start gap-1.5">
+                                                                        <span className="text-[9px] text-gray-400 font-medium w-3 text-center flex-shrink-0 mt-1">{subIdx + 1}.</span>
+                                                                        <GripVertical className="h-3 w-3 text-gray-300 cursor-grab flex-shrink-0 opacity-0 group-hover/sub:opacity-100 transition-opacity mt-1" />
+                                                                        <textarea
+                                                                            value={sub.texto}
+                                                                            onChange={e => {
+                                                                                const v = e.target.value;
+                                                                                setConsideracoes(prev => prev.map((c, ci) => {
+                                                                                    if (ci !== cardIdx) return c;
+                                                                                    const subs = c.subtitulos.map((s, si) => si === subIdx ? { ...s, texto: v } : s);
+                                                                                    const orig = c.originalSubtitulos || [];
+                                                                                    const isModified = c.template_id ? (subs.map(s => s.texto).join('|') !== orig.join('|')) : c.isModified;
+                                                                                    return { ...c, subtitulos: subs, isModified };
+                                                                                }));
+                                                                            }}
+                                                                            onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }}
+                                                                            placeholder={`Subtítulo ${subIdx + 1}...`}
+                                                                            rows={1}
+                                                                            className="flex-1 text-[11px] font-medium text-gray-600 bg-transparent border-none outline-none resize-none placeholder:text-gray-300 overflow-hidden"
+                                                                        />
+                                                                        <button type="button" onClick={() => {
+                                                                            setConsideracoes(prev => prev.map((c, ci) => {
+                                                                                if (ci !== cardIdx) return c;
+                                                                                const subs = c.subtitulos.filter((_, si) => si !== subIdx);
+                                                                                const orig = c.originalSubtitulos || [];
+                                                                                const isModified = c.template_id ? (subs.map(s => s.texto).join('|') !== orig.join('|') || subs.length !== orig.length) : c.isModified;
+                                                                                return { ...c, subtitulos: subs, isModified };
+                                                                            }));
+                                                                        }} className="text-gray-300 hover:text-red-400 opacity-0 group-hover/sub:opacity-100 transition-all p-0.5 mt-0.5">
+                                                                            <X className="h-2.5 w-2.5" />
+                                                                        </button>
+                                                                    </div>
+                                                                    {/* Response — Rich Text (Tiptap) */}
+                                                                    <div className="mt-1 ml-[18px] group/rich">
+                                                                        <Suspense fallback={<div className="w-full h-6 bg-gray-50 rounded animate-pulse" />}>
+                                                                            <RichTextResponse
+                                                                                value={sub.resposta}
+                                                                                onChange={(html) => setConsideracoes(prev => prev.map((c, ci) => ci === cardIdx ? { ...c, subtitulos: c.subtitulos.map((s, si) => si === subIdx ? { ...s, resposta: html } : s) } : c))}
+                                                                                placeholder="Resposta..."
+                                                                            />
+                                                                        </Suspense>
+                                                                        <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                                                                            <label className="cursor-pointer text-gray-300 hover:text-gray-500 transition-colors" title="Anexar ficheiro">
+                                                                                <Paperclip className="h-2.5 w-2.5" />
+                                                                                <input type="file" multiple className="hidden" onChange={e => {
+                                                                                    const files = e.target.files;
+                                                                                    if (!files) return;
+                                                                                    const newAnexos = Array.from(files).map(f => ({ file: f, preview: f.type.startsWith('image/') ? URL.createObjectURL(f) : '' }));
+                                                                                    setConsideracoes(prev => prev.map((c, ci) => ci === cardIdx ? { ...c, subtitulos: c.subtitulos.map((s, si) => si === subIdx ? { ...s, anexos: [...s.anexos, ...newAnexos] } : s) } : c));
+                                                                                    e.target.value = '';
+                                                                                }} />
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* Add Subtítulo */}
+                                                        <button type="button" onClick={() => {
+                                                            setConsideracoes(prev => prev.map((c, ci) => {
+                                                                if (ci !== cardIdx) return c;
+                                                                const subs = [...c.subtitulos, { id: crypto.randomUUID(), texto: '', resposta: '', anexos: [] }];
+                                                                const orig = c.originalSubtitulos || [];
+                                                                const isModified = c.template_id ? (subs.length !== orig.length) : c.isModified;
+                                                                return { ...c, subtitulos: subs, isModified: isModified || c.isModified };
+                                                            }));
+                                                        }} className="w-full py-1 text-[10px] text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-1 font-medium">
+                                                            <Plus className="h-2.5 w-2.5" /> Subtítulo
+                                                        </button>
+
+                                                        {/* Grouped Anexos */}
+                                                        {(() => {
+                                                            const allAnexos = card.subtitulos.flatMap((sub, si) => sub.anexos.map((a, ai) => ({ ...a, subIdx: si, anexoIdx: ai, subTexto: sub.texto || `Subtítulo ${si + 1}` })));
+                                                            if (allAnexos.length === 0) return null;
+                                                            return (
+                                                                <div className="border-t border-gray-100 pt-2">
+                                                                    <span className="text-[9px] font-semibold uppercase tracking-wider text-gray-400">Anexos</span>
+                                                                    <div className="mt-1 space-y-0.5">
+                                                                        {allAnexos.map((a, idx) => (
+                                                                            <div key={idx} className="flex items-center gap-2 text-[10px] text-gray-500 rounded px-2 py-1 hover:bg-gray-50 group/anexo transition-colors">
+                                                                                {a.preview ? (
+                                                                                    <img src={a.preview} alt="" className="h-4 w-4 rounded object-cover flex-shrink-0" />
+                                                                                ) : (
+                                                                                    <FileText className="h-3 w-3 text-gray-300 flex-shrink-0" />
+                                                                                )}
+                                                                                <span className="flex-1 truncate">Anexo resp. {a.subTexto} — {a.file.name}</span>
+                                                                                <button type="button" onClick={() => {
+                                                                                    setConsideracoes(prev => prev.map((c, ci) => ci === cardIdx ? { ...c, subtitulos: c.subtitulos.map((s, si) => si === a.subIdx ? { ...s, anexos: s.anexos.filter((_, ai) => ai !== a.anexoIdx) } : s) } : c));
+                                                                                }} className="text-gray-300 hover:text-red-400 opacity-0 group-hover/anexo:opacity-100 transition-all">
+                                                                                    <X className="h-2.5 w-2.5" />
+                                                                                </button>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                </div>
+                                            ))}
+
+                                            {/* Add Consideration Button */}
+                                            <button type="button" onClick={async () => {
+                                                setShowTemplatePicker(true);
+                                                if (availableTemplates.length === 0) {
+                                                    setLoadingTemplates(true);
+                                                    try {
+                                                        const templates = await considerationsService.getTemplates();
+                                                        setAvailableTemplates(templates);
+                                                    } catch (err) {
+                                                        console.error('Error loading templates:', err);
+                                                    } finally {
+                                                        setLoadingTemplates(false);
+                                                    }
+                                                }
+                                            }} className="w-full py-2 text-[11px] text-gray-400 hover:text-gray-600 rounded-lg border border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50/50 transition-all flex items-center justify-center gap-1.5 font-medium">
+                                                <Plus className="h-3 w-3" /> Adicionar Consideração
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {consideracoesCollapsed && consideracoes.length > 0 && (
+                                        <p className="text-[9px] text-gray-400 text-center pb-2">{consideracoes.length} consideração(ões)</p>
+                                    )}
+                                </div>
+
+
                                         {/* ── Sub-secção: Escala de Cor ── */}
                                         <div className="rounded-xl border border-gray-200">
                                             {/* Hero Header */}
@@ -2244,284 +2524,6 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                     )}
                                 </div>
 
-                                {/* ═══ CONSIDERAÇÕES ═══ */}
-                                <div className="rounded-xl border border-gray-200 overflow-hidden">
-                                    {/* Hero Header */}
-                                    <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-2.5 flex items-center justify-between">
-                                        <button type="button" onClick={() => setConsideracoesCollapsed(c => !c)} className="flex items-center gap-2 cursor-pointer">
-                                            <MessageSquarePlus className="h-4 w-4 text-indigo-300" />
-                                            <span className="text-[11px] uppercase tracking-widest font-semibold text-white">Considerações</span>
-                                            {consideracoes.length > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-bold">{consideracoes.length}</span>}
-                                            <ChevronDown className={cn("h-3.5 w-3.5 text-slate-400 transition-transform", !consideracoesCollapsed && "rotate-180")} />
-                                        </button>
-                                    </div>
-
-                                    {!consideracoesCollapsed && (
-                                        <div className="px-4 pb-4 pt-3 space-y-3">
-
-                                            {/* Template Picker */}
-                                            {showTemplatePicker && (
-                                                <div className="mt-3 space-y-2.5">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Escolher Template</span>
-                                                        <button type="button" onClick={() => setShowTemplatePicker(false)} className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors">✕ Fechar</button>
-                                                    </div>
-                                                    {/* Search */}
-                                                    <div className="relative">
-                                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                                                        <input
-                                                            type="text"
-                                                            value={templateSearch}
-                                                            onChange={e => setTemplateSearch(e.target.value)}
-                                                            placeholder="Pesquisar templates..."
-                                                            className="w-full pl-8 pr-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300/50 focus:border-gray-300"
-                                                        />
-                                                    </div>
-                                                    {/* Templates Grid */}
-                                                    {loadingTemplates ? (
-                                                        <div className="text-center py-6"><Loader2 className="h-4 w-4 text-gray-400 animate-spin mx-auto" /></div>
-                                                    ) : availableTemplates.length === 0 ? (
-                                                        <div className="text-center py-6">
-                                                            <MessageSquarePlus className="h-8 w-8 mx-auto text-gray-200 mb-2" />
-                                                            <p className="text-xs text-gray-400">Nenhum template encontrado</p>
-                                                            <button type="button" onClick={() => {
-                                                                setConsideracoes(prev => [...prev, { id: crypto.randomUUID(), titulo: '', descricao: '', subtitulos: [{ id: crypto.randomUUID(), texto: '', resposta: '', anexos: [] }], isModified: true }]);
-                                                                setShowTemplatePicker(false);
-                                                            }} className="mt-2 text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors">
-                                                                + Criar sem template
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="grid grid-cols-2 gap-2 max-h-[180px] overflow-y-auto">
-                                                            {availableTemplates
-                                                                .filter(t => !templateSearch || t.titulo.toLowerCase().includes(templateSearch.toLowerCase()) || (t.fields || []).some((f: any) => f.subtitulo.toLowerCase().includes(templateSearch.toLowerCase())))
-                                                                .map((t: any) => (
-                                                                    <button key={t.id} type="button" onClick={() => {
-                                                                        const subs = (t.fields || []).sort((a: any, b: any) => a.ordem - b.ordem).map((f: any) => ({
-                                                                            id: crypto.randomUUID(),
-                                                                            texto: f.subtitulo,
-                                                                            resposta: '',
-                                                                            anexos: [],
-                                                                        }));
-                                                                        setConsideracoes(prev => [...prev, {
-                                                                            id: crypto.randomUUID(),
-                                                                            template_id: t.id,
-                                                                            titulo: t.titulo,
-                                                                            descricao: '',
-                                                                            subtitulos: subs,
-                                                                            isModified: false,
-                                                                            originalSubtitulos: subs.map((s: any) => s.texto),
-                                                                        }]);
-                                                                        setShowTemplatePicker(false);
-                                                                        setTemplateSearch('');
-                                                                    }} className="text-left p-2.5 rounded-lg border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all group">
-                                                                        <p className="text-[11px] font-semibold text-gray-700 truncate">{t.titulo}</p>
-                                                                        {t.fields && t.fields.length > 0 && (
-                                                                            <p className="text-[9px] text-gray-400 mt-0.5">{t.fields.length} campo{t.fields.length !== 1 ? 's' : ''}</p>
-                                                                        )}
-                                                                    </button>
-                                                                ))}
-                                                        </div>
-                                                    )}
-                                                    {/* Create blank */}
-                                                    {availableTemplates.length > 0 && (
-                                                        <button type="button" onClick={() => {
-                                                            setConsideracoes(prev => [...prev, { id: crypto.randomUUID(), titulo: '', descricao: '', subtitulos: [{ id: crypto.randomUUID(), texto: '', resposta: '', anexos: [] }], isModified: true }]);
-                                                            setShowTemplatePicker(false);
-                                                        }} className="w-full text-[10px] text-gray-400 hover:text-gray-600 py-1.5 transition-colors font-medium">
-                                                            + Criar sem template
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            )}
-
-                                            {/* Consideration Cards */}
-                                            {consideracoes.map((card, cardIdx) => (
-                                                <div key={card.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-gray-300 transition-colors w-full sm:max-w-[50%]">
-                                                    {/* Card Header — gradient tag style */}
-                                                    <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200/60 rounded-t-xl">
-                                                        <MessageSquarePlus className="h-3.5 w-3.5 text-amber-500" />
-                                                        <input
-                                                            type="text"
-                                                            value={card.titulo}
-                                                            onChange={e => {
-                                                                const v = e.target.value;
-                                                                setConsideracoes(prev => prev.map((c, i) => i === cardIdx ? { ...c, titulo: v, isModified: c.template_id ? true : c.isModified } : c));
-                                                            }}
-                                                            placeholder="Título da consideração..."
-                                                            className="flex-1 text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-transparent border-none outline-none placeholder:text-amber-400/60"
-                                                        />
-                                                        {card.template_id && card.isModified && (
-                                                            <button type="button" title="Criar novo template a partir deste" className="text-[9px] text-amber-600 hover:text-amber-800 border border-amber-300 rounded-md px-2 py-0.5 hover:bg-amber-100/50 transition-colors whitespace-nowrap font-medium">
-                                                                + Novo template
-                                                            </button>
-                                                        )}
-                                                        <button type="button" onClick={() => setConsideracoes(prev => prev.filter((_, i) => i !== cardIdx))} className="text-amber-400 hover:text-red-400 transition-colors p-0.5">
-                                                            <X className="h-3 w-3" />
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="p-3 space-y-2">
-                                                        {/* Description — Rich Text (Tiptap) */}
-                                                        <Suspense fallback={<div className="w-full h-12 bg-gray-50 rounded-lg animate-pulse" />}>
-                                                            <RichTextResponse
-                                                                value={card.descricao}
-                                                                onChange={(html) => setConsideracoes(prev => prev.map((c, i) => i === cardIdx ? { ...c, descricao: html } : c))}
-                                                                placeholder="Descrição / indicações gerais..."
-                                                            />
-                                                        </Suspense>
-
-                                                        {/* Subtítulos */}
-                                                        <div className="space-y-1.5">
-                                                            {card.subtitulos.map((sub, subIdx) => (
-                                                                <div
-                                                                    key={sub.id}
-                                                                    draggable
-                                                                    onDragStart={() => setDragSubtituloIdx({ cardIdx, subIdx })}
-                                                                    onDragOver={e => e.preventDefault()}
-                                                                    onDrop={() => {
-                                                                        if (dragSubtituloIdx && dragSubtituloIdx.cardIdx === cardIdx && dragSubtituloIdx.subIdx !== subIdx) {
-                                                                            setConsideracoes(prev => prev.map((c, ci) => {
-                                                                                if (ci !== cardIdx) return c;
-                                                                                const subs = [...c.subtitulos];
-                                                                                const [moved] = subs.splice(dragSubtituloIdx.subIdx, 1);
-                                                                                subs.splice(subIdx, 0, moved);
-                                                                                const orig = c.originalSubtitulos || [];
-                                                                                const isModified = c.template_id ? (subs.map(s => s.texto).join('|') !== orig.join('|')) : c.isModified;
-                                                                                return { ...c, subtitulos: subs, isModified };
-                                                                            }));
-                                                                        }
-                                                                        setDragSubtituloIdx(null);
-                                                                    }}
-                                                                    onDragEnd={() => setDragSubtituloIdx(null)}
-                                                                    className="rounded-lg border border-gray-100 bg-gray-50/50 px-2 py-1.5 group/sub hover:border-gray-200 transition-colors"
-                                                                >
-                                                                    <div className="flex items-start gap-1.5">
-                                                                        <span className="text-[9px] text-gray-400 font-medium w-3 text-center flex-shrink-0 mt-1">{subIdx + 1}.</span>
-                                                                        <GripVertical className="h-3 w-3 text-gray-300 cursor-grab flex-shrink-0 opacity-0 group-hover/sub:opacity-100 transition-opacity mt-1" />
-                                                                        <textarea
-                                                                            value={sub.texto}
-                                                                            onChange={e => {
-                                                                                const v = e.target.value;
-                                                                                setConsideracoes(prev => prev.map((c, ci) => {
-                                                                                    if (ci !== cardIdx) return c;
-                                                                                    const subs = c.subtitulos.map((s, si) => si === subIdx ? { ...s, texto: v } : s);
-                                                                                    const orig = c.originalSubtitulos || [];
-                                                                                    const isModified = c.template_id ? (subs.map(s => s.texto).join('|') !== orig.join('|')) : c.isModified;
-                                                                                    return { ...c, subtitulos: subs, isModified };
-                                                                                }));
-                                                                            }}
-                                                                            onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }}
-                                                                            placeholder={`Subtítulo ${subIdx + 1}...`}
-                                                                            rows={1}
-                                                                            className="flex-1 text-[11px] font-medium text-gray-600 bg-transparent border-none outline-none resize-none placeholder:text-gray-300 overflow-hidden"
-                                                                        />
-                                                                        <button type="button" onClick={() => {
-                                                                            setConsideracoes(prev => prev.map((c, ci) => {
-                                                                                if (ci !== cardIdx) return c;
-                                                                                const subs = c.subtitulos.filter((_, si) => si !== subIdx);
-                                                                                const orig = c.originalSubtitulos || [];
-                                                                                const isModified = c.template_id ? (subs.map(s => s.texto).join('|') !== orig.join('|') || subs.length !== orig.length) : c.isModified;
-                                                                                return { ...c, subtitulos: subs, isModified };
-                                                                            }));
-                                                                        }} className="text-gray-300 hover:text-red-400 opacity-0 group-hover/sub:opacity-100 transition-all p-0.5 mt-0.5">
-                                                                            <X className="h-2.5 w-2.5" />
-                                                                        </button>
-                                                                    </div>
-                                                                    {/* Response — Rich Text (Tiptap) */}
-                                                                    <div className="mt-1 ml-[18px] group/rich">
-                                                                        <Suspense fallback={<div className="w-full h-6 bg-gray-50 rounded animate-pulse" />}>
-                                                                            <RichTextResponse
-                                                                                value={sub.resposta}
-                                                                                onChange={(html) => setConsideracoes(prev => prev.map((c, ci) => ci === cardIdx ? { ...c, subtitulos: c.subtitulos.map((s, si) => si === subIdx ? { ...s, resposta: html } : s) } : c))}
-                                                                                placeholder="Resposta..."
-                                                                            />
-                                                                        </Suspense>
-                                                                        <div className="flex items-center justify-end gap-1.5 mt-0.5">
-                                                                            <label className="cursor-pointer text-gray-300 hover:text-gray-500 transition-colors" title="Anexar ficheiro">
-                                                                                <Paperclip className="h-2.5 w-2.5" />
-                                                                                <input type="file" multiple className="hidden" onChange={e => {
-                                                                                    const files = e.target.files;
-                                                                                    if (!files) return;
-                                                                                    const newAnexos = Array.from(files).map(f => ({ file: f, preview: f.type.startsWith('image/') ? URL.createObjectURL(f) : '' }));
-                                                                                    setConsideracoes(prev => prev.map((c, ci) => ci === cardIdx ? { ...c, subtitulos: c.subtitulos.map((s, si) => si === subIdx ? { ...s, anexos: [...s.anexos, ...newAnexos] } : s) } : c));
-                                                                                    e.target.value = '';
-                                                                                }} />
-                                                                            </label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-
-                                                        {/* Add Subtítulo */}
-                                                        <button type="button" onClick={() => {
-                                                            setConsideracoes(prev => prev.map((c, ci) => {
-                                                                if (ci !== cardIdx) return c;
-                                                                const subs = [...c.subtitulos, { id: crypto.randomUUID(), texto: '', resposta: '', anexos: [] }];
-                                                                const orig = c.originalSubtitulos || [];
-                                                                const isModified = c.template_id ? (subs.length !== orig.length) : c.isModified;
-                                                                return { ...c, subtitulos: subs, isModified: isModified || c.isModified };
-                                                            }));
-                                                        }} className="w-full py-1 text-[10px] text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-1 font-medium">
-                                                            <Plus className="h-2.5 w-2.5" /> Subtítulo
-                                                        </button>
-
-                                                        {/* Grouped Anexos */}
-                                                        {(() => {
-                                                            const allAnexos = card.subtitulos.flatMap((sub, si) => sub.anexos.map((a, ai) => ({ ...a, subIdx: si, anexoIdx: ai, subTexto: sub.texto || `Subtítulo ${si + 1}` })));
-                                                            if (allAnexos.length === 0) return null;
-                                                            return (
-                                                                <div className="border-t border-gray-100 pt-2">
-                                                                    <span className="text-[9px] font-semibold uppercase tracking-wider text-gray-400">Anexos</span>
-                                                                    <div className="mt-1 space-y-0.5">
-                                                                        {allAnexos.map((a, idx) => (
-                                                                            <div key={idx} className="flex items-center gap-2 text-[10px] text-gray-500 rounded px-2 py-1 hover:bg-gray-50 group/anexo transition-colors">
-                                                                                {a.preview ? (
-                                                                                    <img src={a.preview} alt="" className="h-4 w-4 rounded object-cover flex-shrink-0" />
-                                                                                ) : (
-                                                                                    <FileText className="h-3 w-3 text-gray-300 flex-shrink-0" />
-                                                                                )}
-                                                                                <span className="flex-1 truncate">Anexo resp. {a.subTexto} — {a.file.name}</span>
-                                                                                <button type="button" onClick={() => {
-                                                                                    setConsideracoes(prev => prev.map((c, ci) => ci === cardIdx ? { ...c, subtitulos: c.subtitulos.map((s, si) => si === a.subIdx ? { ...s, anexos: s.anexos.filter((_, ai) => ai !== a.anexoIdx) } : s) } : c));
-                                                                                }} className="text-gray-300 hover:text-red-400 opacity-0 group-hover/anexo:opacity-100 transition-all">
-                                                                                    <X className="h-2.5 w-2.5" />
-                                                                                </button>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })()}
-                                                    </div>
-                                                </div>
-                                            ))}
-
-                                            {/* Add Consideration Button */}
-                                            <button type="button" onClick={async () => {
-                                                setShowTemplatePicker(true);
-                                                if (availableTemplates.length === 0) {
-                                                    setLoadingTemplates(true);
-                                                    try {
-                                                        const templates = await considerationsService.getTemplates();
-                                                        setAvailableTemplates(templates);
-                                                    } catch (err) {
-                                                        console.error('Error loading templates:', err);
-                                                    } finally {
-                                                        setLoadingTemplates(false);
-                                                    }
-                                                }
-                                            }} className="w-full py-2 text-[11px] text-gray-400 hover:text-gray-600 rounded-lg border border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50/50 transition-all flex items-center justify-center gap-1.5 font-medium">
-                                                <Plus className="h-3 w-3" /> Adicionar Consideração
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {consideracoesCollapsed && consideracoes.length > 0 && (
-                                        <p className="text-[9px] text-gray-400 text-center pb-2">{consideracoes.length} consideração(ões)</p>
-                                    )}
-                                </div>
 
                                 {/* Error */}
                                 {error && (
