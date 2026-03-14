@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { OdontogramModal } from './Odontogram';
 import { considerationsService, ConsiderationTemplate } from '@/services/considerationsService';
 const RichTextResponse = lazy(() => import('./RichTextResponse'));
+const ImageAnnotator = lazy(() => import('./ImageAnnotator'));
 
 interface NewPlanModalProps {
     patientId: string;
@@ -136,6 +137,9 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const radioCbctRef = useRef<HTMLInputElement>(null);
     const [radioDragOver, setRadioDragOver] = useState<string | null>(null);
     const [radioCollapsed, setRadioCollapsed] = useState(false);
+    const [annotatorOpen, setAnnotatorOpen] = useState(false);
+    const [annotatorImage, setAnnotatorImage] = useState<string | null>(null);
+    const [annotatorTarget, setAnnotatorTarget] = useState<{ setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>; addFn: (setter: React.Dispatch<React.SetStateAction<{ files: File[]; previews: string[] }>>, files: File[]) => void } | null>(null);
     // Considerações
     interface SubtituloEntry { id: string; texto: string; resposta: string; anexos: { file: File; preview: string }[] }
     interface ConsideracaoEntry { id: string; template_id?: string; titulo: string; descricao: string; subtitulos: SubtituloEntry[]; isModified: boolean; originalSubtitulos?: string[] }
@@ -2518,6 +2522,9 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                                     </div>
                                                                                 )}
                                                                                 <button type="button" onClick={(e) => { e.stopPropagation(); if (state.previews[i]) URL.revokeObjectURL(state.previews[i]); removeRadioFile(setter, i); }} className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-white" /></button>
+                                                                                {key === 'ortopan' && state.previews[i] && (
+                                                                                    <button type="button" onClick={(e) => { e.stopPropagation(); setAnnotatorImage(state.previews[i]); setAnnotatorTarget({ setter, addFn: addRadioFiles }); setAnnotatorOpen(true); }} className="absolute bottom-0.5 right-0.5 w-5 h-5 rounded-full bg-violet-600/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-violet-500" title="Anotar"><span className="text-[8px]">✏️</span></button>
+                                                                                )}
                                                                             </div>
                                                                         ))}
                                                                     </div>
@@ -2675,6 +2682,31 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                     </div>
                 )
             }
+
+            {/* ── Image Annotator Modal ── */}
+            {annotatorOpen && annotatorImage && (
+                <Suspense fallback={<div className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"><Loader2 className="h-8 w-8 text-white animate-spin" /></div>}>
+                    <ImageAnnotator
+                        imageSrc={annotatorImage}
+                        onSave={(dataUrl: string) => {
+                            fetch(dataUrl).then(r => r.blob()).then(blob => {
+                                const file = new File([blob], `anotado-${Date.now()}.png`, { type: 'image/png' });
+                                if (annotatorTarget) {
+                                    annotatorTarget.addFn(annotatorTarget.setter, [file]);
+                                }
+                            });
+                            setAnnotatorOpen(false);
+                            setAnnotatorImage(null);
+                            setAnnotatorTarget(null);
+                        }}
+                        onClose={() => {
+                            setAnnotatorOpen(false);
+                            setAnnotatorImage(null);
+                            setAnnotatorTarget(null);
+                        }}
+                    />
+                </Suspense>
+            )}
         </>
     );
 }
