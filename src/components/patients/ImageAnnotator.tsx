@@ -3,7 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Image as KonvaImage, Transformer, Group } from 'react-konva';
 import Konva from 'konva';
-import { X, FlipHorizontal, FlipVertical, Copy, Trash2, Download, ChevronLeft, RotateCw } from 'lucide-react';
+import { Rect, Text as KonvaText, Circle } from 'react-konva';
+import { X, FlipHorizontal, FlipVertical, Copy, Trash2, Download, ChevronLeft, RotateCw, FileText } from 'lucide-react';
 
 /* ─────────────────────── Types ─────────────────────── */
 interface AnnotationElement {
@@ -16,6 +17,7 @@ interface AnnotationElement {
     scaleX: number;
     scaleY: number;
     rotation: number;
+    tooth?: number;  // FDI tooth number (11-48)
 }
 
 interface DentalElementDef {
@@ -230,6 +232,7 @@ export default function ImageAnnotator({ imageSrc, onSave, onClose }: ImageAnnot
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
     const [shiftHeld, setShiftHeld] = useState(false);
+    const [showToothPicker, setShowToothPicker] = useState(false);
 
     // ─── Track Shift key state ───
     useEffect(() => {
@@ -355,6 +358,40 @@ export default function ImageAnnotator({ imageSrc, onSave, onClose }: ImageAnnot
         }, 100);
     }, [onSave]);
 
+    // ─── Assign tooth number to selected element ───
+    const assignTooth = useCallback((toothNum: number) => {
+        if (!selectedId) return;
+        setElements(prev => prev.map(el =>
+            el.id === selectedId ? { ...el, tooth: el.tooth === toothNum ? undefined : toothNum } : el
+        ));
+        setShowToothPicker(false);
+    }, [selectedId]);
+
+    // Build report from element-tooth associations
+    const generateReport = useCallback(() => {
+        const associations: { tooth: number; element: string }[] = [];
+        for (const el of elements) {
+            if (el.tooth) {
+                const label = DENTAL_ELEMENTS.find(d => d.type === el.elementType)?.label || el.elementType;
+                associations.push({ tooth: el.tooth, element: label });
+            }
+        }
+        // Group by tooth
+        const grouped: Record<number, string[]> = {};
+        for (const a of associations) {
+            if (!grouped[a.tooth]) grouped[a.tooth] = [];
+            grouped[a.tooth].push(a.element);
+        }
+        // Sort by tooth number
+        const sorted = Object.entries(grouped).sort(([a], [b]) => Number(a) - Number(b));
+        const lines = sorted.map(([tooth, elems]) => `Dente ${tooth} → ${elems.join(' + ')}`);
+        const report = lines.length > 0
+            ? 'RELATÓRIO PROTÉTICO\n\n' + lines.join('\n')
+            : 'Nenhum elemento com dente associado.';
+        alert(report);
+        return report;
+    }, [elements]);
+
     const rotate90 = useCallback(() => {
         if (!selectedId) return;
         setElements(prev => prev.map(el =>
@@ -421,13 +458,24 @@ export default function ImageAnnotator({ imageSrc, onSave, onClose }: ImageAnnot
                     <span className="hidden sm:inline">Cancelar</span>
                 </button>
                 <h2 className="text-white text-sm font-semibold tracking-wide">✏️ Anotar Imagem</h2>
-                <button
-                    onClick={exportImage}
-                    className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                >
-                    <Download className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Exportar</span>
-                </button>
+                <div className="flex items-center gap-2">
+                    {elements.some(el => el.tooth) && (
+                        <button
+                            onClick={generateReport}
+                            className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                        >
+                            <FileText className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Relatório</span>
+                        </button>
+                    )}
+                    <button
+                        onClick={exportImage}
+                        className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                    >
+                        <Download className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Exportar</span>
+                    </button>
+                </div>
             </div>
 
             {/* ── Main Layout ── */}
@@ -482,14 +530,31 @@ export default function ImageAnnotator({ imageSrc, onSave, onClose }: ImageAnnot
                                 />
                                 {/* Annotation elements */}
                                 {elements.map(el => (
-                                    <AnnotationNode
-                                        key={el.id}
-                                        el={el}
-                                        isSelected={el.id === selectedId}
-                                        shiftHeld={shiftHeld}
-                                        onSelect={() => setSelectedId(el.id)}
-                                        onChange={attrs => updateElement(el.id, attrs)}
-                                    />
+                                    <React.Fragment key={el.id}>
+                                        <AnnotationNode
+                                            el={el}
+                                            isSelected={el.id === selectedId}
+                                            shiftHeld={shiftHeld}
+                                            onSelect={() => setSelectedId(el.id)}
+                                            onChange={attrs => updateElement(el.id, attrs)}
+                                        />
+                                        {/* Tooth FDI label badge */}
+                                        {el.tooth && (
+                                            <Group x={el.x} y={el.y - (el.height * Math.abs(el.scaleY)) / 2 - 12} listening={false}>
+                                                <Circle radius={10} fill="#7c3aed" stroke="#a78bfa" strokeWidth={1} />
+                                                <KonvaText
+                                                    text={`${el.tooth}`}
+                                                    fontSize={9}
+                                                    fontStyle="bold"
+                                                    fill="#fff"
+                                                    align="center"
+                                                    width={20}
+                                                    offsetX={10}
+                                                    offsetY={5}
+                                                />
+                                            </Group>
+                                        )}
+                                    </React.Fragment>
                                 ))}
                             </Layer>
                         </Stage>
@@ -504,23 +569,94 @@ export default function ImageAnnotator({ imageSrc, onSave, onClose }: ImageAnnot
                         const pos = getFloatingButtonPos();
                         if (!pos) return null;
                         return (
-                            <div
-                                className="fixed z-[10000] flex items-center gap-0.5 bg-slate-800/95 backdrop-blur-sm border border-white/15 rounded-lg px-1 py-0.5 shadow-xl"
-                                style={{ left: `${pos.x}px`, top: `${pos.y}px`, transform: 'translateX(-50%)' }}
-                            >
-                                <button onClick={flipH} className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded transition-colors" title="Flip H">
-                                    <FlipHorizontal className="h-3.5 w-3.5" />
-                                </button>
-                                <button onClick={flipV} className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded transition-colors" title="Flip V">
-                                    <FlipVertical className="h-3.5 w-3.5" />
-                                </button>
-                                <button onClick={rotate90} className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded transition-colors" title="Rodar 90°">
-                                    <RotateCw className="h-3.5 w-3.5" />
-                                </button>
-                                <div className="w-px h-4 bg-white/10 mx-0.5" />
-                                <button onClick={deleteSelected} className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/15 rounded transition-colors" title="Eliminar">
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                </button>
+                            <div className="fixed z-[10000] flex flex-col items-center gap-1" style={{ left: `${pos.x}px`, top: `${pos.y}px`, transform: 'translateX(-50%)' }}>
+                                {/* Action buttons row */}
+                                <div className="flex items-center gap-0.5 bg-slate-800/95 backdrop-blur-sm border border-white/15 rounded-lg px-1 py-0.5 shadow-xl">
+                                    <button onClick={flipH} className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded transition-colors" title="Flip H">
+                                        <FlipHorizontal className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button onClick={flipV} className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded transition-colors" title="Flip V">
+                                        <FlipVertical className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button onClick={rotate90} className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded transition-colors" title="Rodar 90°">
+                                        <RotateCw className="h-3.5 w-3.5" />
+                                    </button>
+                                    <div className="w-px h-4 bg-white/10 mx-0.5" />
+                                    <button
+                                        onClick={() => setShowToothPicker(p => !p)}
+                                        className={`p-1.5 rounded transition-colors ${selectedEl?.tooth ? 'text-violet-400 hover:text-violet-300 bg-violet-500/20' : 'text-white/70 hover:text-white hover:bg-white/10'
+                                            }`}
+                                        title={selectedEl?.tooth ? `Dente ${selectedEl.tooth}` : 'Associar dente'}
+                                    >
+                                        <span className="text-sm">🦷</span>
+                                    </button>
+                                    <div className="w-px h-4 bg-white/10 mx-0.5" />
+                                    <button onClick={deleteSelected} className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/15 rounded transition-colors" title="Eliminar">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+
+                                {/* FDI Tooth Picker popup — anatomical layout */}
+                                {showToothPicker && (() => {
+                                    const isUsed = (t: number) => elements.some(e => e.tooth === t && e.id !== selectedId);
+                                    const isActive = (t: number) => selectedEl?.tooth === t;
+                                    const toothBtn = (t: number, jaw: 'upper' | 'lower') => (
+                                        <button
+                                            key={t}
+                                            onClick={() => assignTooth(t)}
+                                            disabled={isUsed(t)}
+                                            className={`w-8 h-10 text-[10px] font-bold flex items-center justify-center transition-all border ${jaw === 'upper'
+                                                ? 'rounded-t-[10px] rounded-b-[4px]'
+                                                : 'rounded-t-[4px] rounded-b-[10px]'
+                                                } ${isActive(t)
+                                                    ? 'bg-violet-600 text-white border-violet-400 ring-2 ring-violet-400/50'
+                                                    : isUsed(t)
+                                                        ? 'bg-slate-800 text-white/20 border-slate-700 cursor-not-allowed'
+                                                        : 'bg-slate-800/80 text-white/70 border-slate-600/50 hover:bg-violet-600/40 hover:text-white hover:border-violet-500/50'
+                                                }`}
+                                        >
+                                            {t}
+                                        </button>
+                                    );
+                                    return (
+                                        <div className="bg-slate-900/98 backdrop-blur-md border border-white/15 rounded-xl p-4 shadow-2xl">
+                                            <p className="text-[9px] uppercase tracking-widest text-white/40 text-center mb-3 font-semibold">Selecionar Dente (FDI)</p>
+                                            {/* Maxilla (upper jaw) */}
+                                            <div className="flex items-end justify-center gap-[2px] mb-1">
+                                                {/* Q1 — upper right (18→11) */}
+                                                {[18, 17, 16, 15, 14, 13, 12, 11].map(t => toothBtn(t, 'upper'))}
+                                                {/* Center divider */}
+                                                <div className="w-px h-10 bg-white/20 mx-1" />
+                                                {/* Q2 — upper left (21→28) */}
+                                                {[21, 22, 23, 24, 25, 26, 27, 28].map(t => toothBtn(t, 'upper'))}
+                                            </div>
+                                            {/* Divider line */}
+                                            <div className="flex items-center gap-2 my-1.5">
+                                                <span className="text-[7px] text-white/25 font-medium uppercase">Maxilar</span>
+                                                <div className="flex-1 h-px bg-white/10" />
+                                                <span className="text-[7px] text-white/25 font-medium uppercase">Mandíbula</span>
+                                            </div>
+                                            {/* Mandible (lower jaw) */}
+                                            <div className="flex items-start justify-center gap-[2px] mt-1">
+                                                {/* Q4 — lower right (48→41) */}
+                                                {[48, 47, 46, 45, 44, 43, 42, 41].map(t => toothBtn(t, 'lower'))}
+                                                {/* Center divider */}
+                                                <div className="w-px h-10 bg-white/20 mx-1" />
+                                                {/* Q3 — lower left (31→38) */}
+                                                {[31, 32, 33, 34, 35, 36, 37, 38].map(t => toothBtn(t, 'lower'))}
+                                            </div>
+                                            {/* Remove association */}
+                                            {selectedEl?.tooth && (
+                                                <button
+                                                    onClick={() => assignTooth(selectedEl.tooth!)}
+                                                    className="w-full mt-3 text-[10px] text-red-400 hover:text-red-300 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors border border-red-500/20"
+                                                >
+                                                    ✕ Remover associação (Dente {selectedEl.tooth})
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         );
                     })()}
