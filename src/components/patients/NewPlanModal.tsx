@@ -2498,7 +2498,11 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                                                     <button type="button" onClick={() => ref.current?.click()} className="w-8 h-8 rounded-full bg-violet-500/10 backdrop-blur-sm border border-violet-300/50 flex items-center justify-center text-violet-500 hover:bg-violet-500/20 hover:border-violet-400 hover:scale-110 transition-all" title="Anexar ficheiro">
                                                                         <Upload className="h-3 w-3" />
                                                                     </button>
+                                                                    <button type="button" onClick={() => { const camInput = document.getElementById(`cam-native-radio-${key}`); camInput?.click(); }} className="w-8 h-8 rounded-full bg-sky-500/10 backdrop-blur-sm border border-sky-300/50 flex items-center justify-center text-sky-500 hover:bg-sky-500/20 hover:border-sky-400 hover:scale-110 transition-all" title="Tirar fotografia">
+                                                                        <Camera className="h-3 w-3" />
+                                                                    </button>
                                                                     <input ref={ref} type="file" accept="image/*,.zip,.rar,.7z,.gz,.tar,.dcm,.dicom,application/zip,application/x-rar-compressed,application/gzip,application/x-7z-compressed,application/dicom" multiple className="hidden" onChange={e => { const f = e.target.files; if (!f) return; addRadioFiles(setter, Array.from(f)); e.target.value = ''; }} />
+                                                                    <input id={`cam-native-radio-${key}`} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files; if (!f || f.length === 0) return; addRadioFiles(setter, Array.from(f)); e.target.value = ''; }} />
                                                                 </div>
                                                                 {state.files.length > 0 && (
                                                                     <div className="grid grid-cols-2 gap-1 mt-1.5">
