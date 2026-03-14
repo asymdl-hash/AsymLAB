@@ -57,13 +57,15 @@ function useImage(src: string): HTMLImageElement | null {
 interface AnnotationNodeProps {
     el: AnnotationElement;
     isSelected: boolean;
+    shiftHeld: boolean;
     onSelect: () => void;
     onChange: (newAttrs: Partial<AnnotationElement>) => void;
 }
 
-function AnnotationNode({ el, isSelected, onSelect, onChange }: AnnotationNodeProps) {
+function AnnotationNode({ el, isSelected, shiftHeld, onSelect, onChange }: AnnotationNodeProps) {
     const shapeRef = useRef<Konva.Image>(null);
     const trRef = useRef<Konva.Transformer>(null);
+    const dragStartRef = useRef<{ x: number; y: number; w: number; h: number; ptrX: number; ptrY: number; mode: 'move' | 'scale' | 'scaleHV' } | null>(null);
     const image = useImage(
         DENTAL_ELEMENTS.find(d => d.type === el.elementType)?.src || ''
     );
@@ -91,10 +93,76 @@ function AnnotationNode({ el, isSelected, onSelect, onChange }: AnnotationNodePr
                 scaleX={el.scaleX}
                 scaleY={el.scaleY}
                 rotation={el.rotation}
+                shadowColor="#ffffff"
+                shadowBlur={6}
+                shadowOpacity={0.5}
                 draggable
                 onClick={onSelect}
                 onTap={onSelect}
+                onDragStart={(e) => {
+                    const evt = e.evt as MouseEvent;
+                    if (evt.shiftKey || evt.ctrlKey || evt.metaKey) {
+                        const stage = e.target.getStage();
+                        const pointer = stage?.getPointerPosition();
+                        dragStartRef.current = {
+                            x: e.target.x(),
+                            y: e.target.y(),
+                            w: el.width,
+                            h: el.height,
+                            ptrX: pointer?.x || 0,
+                            ptrY: pointer?.y || 0,
+                            mode: evt.shiftKey ? 'scale' : 'scaleHV',
+                        };
+                    } else {
+                        dragStartRef.current = null;
+                    }
+                }}
+                onDragMove={(e) => {
+                    const ds = dragStartRef.current;
+                    if (!ds) return; // normal drag — Konva handles it
+                    // Cancel the visual drag, keep position fixed
+                    e.target.x(ds.x);
+                    e.target.y(ds.y);
+                    const pointer = e.target.getStage()?.getPointerPosition();
+                    if (!pointer) return;
+                    // Center of element (x,y with offset = center)
+                    const cx = ds.x;
+                    const cy = ds.y;
+                    if (ds.mode === 'scale') {
+                        // Proportional: distance from center
+                        const initDist = Math.sqrt((ds.ptrX - cx) ** 2 + (ds.ptrY - cy) ** 2);
+                        const currDist = Math.sqrt((pointer.x - cx) ** 2 + (pointer.y - cy) ** 2);
+                        const scaleFactor = initDist > 5 ? currDist / initDist : 1;
+                        const clamped = Math.max(0.2, Math.min(5, scaleFactor));
+                        onChange({ width: Math.max(10, ds.w * clamped), height: Math.max(10, ds.h * clamped) });
+                    } else {
+                        // H/V: dominant axis from total movement
+                        const totalDx = Math.abs(pointer.x - ds.ptrX);
+                        const totalDy = Math.abs(pointer.y - ds.ptrY);
+                        if (totalDx > totalDy) {
+                            // Horizontal: distance from center X
+                            const initDistX = Math.abs(ds.ptrX - cx);
+                            const currDistX = Math.abs(pointer.x - cx);
+                            const scaleFactor = initDistX > 5 ? currDistX / initDistX : 1;
+                            const clamped = Math.max(0.2, Math.min(5, scaleFactor));
+                            onChange({ width: Math.max(10, ds.w * clamped) });
+                        } else {
+                            // Vertical: distance from center Y
+                            const initDistY = Math.abs(ds.ptrY - cy);
+                            const currDistY = Math.abs(pointer.y - cy);
+                            const scaleFactor = initDistY > 5 ? currDistY / initDistY : 1;
+                            const clamped = Math.max(0.2, Math.min(5, scaleFactor));
+                            onChange({ height: Math.max(10, ds.h * clamped) });
+                        }
+                    }
+                }}
                 onDragEnd={(e) => {
+                    const ds = dragStartRef.current;
+                    if (ds) {
+                        // Restore position (was already fixed during drag)
+                        dragStartRef.current = null;
+                        return;
+                    }
                     onChange({ x: e.target.x(), y: e.target.y() });
                 }}
                 onTransformEnd={() => {
@@ -128,8 +196,8 @@ function AnnotationNode({ el, isSelected, onSelect, onChange }: AnnotationNodePr
                     ref={trRef}
                     rotateEnabled={false}
                     enabledAnchors={['top-left', 'top-center', 'top-right', 'middle-left', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right']}
-                    keepRatio={false}
-                    anchorSize={8}
+                    keepRatio={shiftHeld}
+                    anchorSize={10}
                     anchorCornerRadius={2}
                     anchorStroke="#8b5cf6"
                     anchorFill="#1e1b4b"
@@ -161,6 +229,16 @@ export default function ImageAnnotator({ imageSrc, onSave, onClose }: ImageAnnot
     const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
+    const [shiftHeld, setShiftHeld] = useState(false);
+
+    // ─── Track Shift key state ───
+    useEffect(() => {
+        const down = (e: KeyboardEvent) => { if (e.key === 'Shift') setShiftHeld(true); };
+        const up = (e: KeyboardEvent) => { if (e.key === 'Shift') setShiftHeld(false); };
+        window.addEventListener('keydown', down);
+        window.addEventListener('keyup', up);
+        return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
+    }, []);
 
     // ─── Responsive sizing ───
     useEffect(() => {
@@ -408,6 +486,7 @@ export default function ImageAnnotator({ imageSrc, onSave, onClose }: ImageAnnot
                                         key={el.id}
                                         el={el}
                                         isSelected={el.id === selectedId}
+                                        shiftHeld={shiftHeld}
                                         onSelect={() => setSelectedId(el.id)}
                                         onChange={attrs => updateElement(el.id, attrs)}
                                     />
