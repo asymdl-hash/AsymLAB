@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dental Elements Preview — AsymLAB</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #7c3aed, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .category {
+      margin-bottom: 2rem;
+    }
+
+    .category-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #7c3aed;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.2s;
+      cursor: default;
+    }
+
+    .card:hover {
+      border-color: rgba(124, 58, 237, 0.4);
+      background: #1e293b;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+    }
+
+    .card-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      text-align: center;
+    }
+
+    .card-file {
+      font-size: 0.6rem;
+      color: #475569;
+      font-family: 'Fira Code', monospace;
+      word-break: break-all;
+      text-align: center;
+    }
+
+    .card-type {
+      font-size: 0.6rem;
+      color: #7c3aed;
+      background: rgba(124, 58, 237, 0.1);
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 500;
+    }
+
+    .stats {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.7rem;
+      color: #475569;
+    }
+
+    .checkered {
+      background-image:
+        linear-gradient(45deg, #162032 25%, transparent 25%),
+        linear-gradient(-45deg, #162032 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #162032 75%),
+        linear-gradient(-45deg, transparent 75%, #162032 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+      border-radius: 8px;
+      padding: 12px;
+      width: 104px;
+      height: 104px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🦷 Elementos Dentários — Preview</h1>
+  <p class="subtitle">15 elementos disponíveis no Image Annotator</p>
+
+  <!-- Restaurações -->
+  <div class="category">
+    <h2 class="category-title">🔧 Restaurações</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/coroa.png" alt="Coroa"></div>
+        <span class="card-label">Coroa</span>
+        <span class="card-type">coroa</span>
+        <span class="card-file">coroa.png</span>
+      </div>
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/exocad-faceta.svg" alt="Faceta"></div>
+        <span class="card-label">Faceta</span>
+        <span class="card-type">faceta</span>
+        <span class="card-file">exocad-faceta.svg</span>
+      </div>
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/vertiprep.png" alt="Vertiprep"></div>
+        <span class="card-label">Vertiprep</span>
+        <span class="card-type">vertiprep</span>
+        <span class="card-file">vertiprep.png</span>
+      </div>
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/overlay.png" alt="Overlay"></div>
+        <span class="card-label">Overlay</span>
+        <span class="card-type">overlay</span>
+        <span class="card-file">overlay.png</span>
+      </div>
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/veneerlay.png" alt="Veneerlay"></div>
+        <span class="card-label">Veneerlay</span>
+        <span class="card-type">veneerlay</span>
+        <span class="card-file">veneerlay.png</span>
+      </div>
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/exocad-inlay.svg" alt="Onlay"></div>
+        <span class="card-label">Onlay</span>
+        <span class="card-type">onlay</span>
+        <span class="card-file">exocad-inlay.svg</span>
+      </div>
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/composito-injectado.png"
+            alt="Compósito"></div>
+        <span class="card-label">Compósito Injectado</span>
+        <span class="card-type">composito</span>
+        <span class="card-file">composito-injectado.png</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prótese -->
+  <div class="category">
+    <h2 class="category-title">🌉 Prótese</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/pontico.png" alt="Pôntico"></div>
+        <span class="card-label">Pôntico</span>
+        <span class="card-type">pontico</span>
+        <span class="card-file">pontico.png</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cirúrgico -->
+  <div class="category">
+    <h2 class="category-title">🔩 Cirúrgico</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/implante.png" alt="Implante"></div>
+        <span class="card-label">Implante</span>
+        <span class="card-type">implante</span>
+        <span class="card-file">implante.png</span>
+      </div>
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/enxerto.png" alt="Enxerto"></div>
+        <span class="card-label">Enxerto</span>
+        <span class="card-type">enxerto</span>
+        <span class="card-file">enxerto.png</span>
+      </div>
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/osteotomia.png" alt="Osteotomia">
+        </div>
+        <span class="card-label">Osteotomia</span>
+        <span class="card-type">osteotomia</span>
+        <span class="card-file">osteotomia.png</span>
+      </div>
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/gengivectomia.png"
+            alt="Gengivectomia"></div>
+        <span class="card-label">Gengivectomia</span>
+        <span class="card-type">gengivectomia</span>
+        <span class="card-file">gengivectomia.png</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Outros -->
+  <div class="category">
+    <h2 class="category-title">🦷 Outros</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/desvitalizacao.png"
+            alt="Desvitalização"></div>
+        <span class="card-label">Desvitalização</span>
+        <span class="card-type">desvitalizacao</span>
+        <span class="card-file">desvitalizacao.png</span>
+      </div>
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/orto.png" alt="Orto"></div>
+        <span class="card-label">Ortodontia</span>
+        <span class="card-type">orto</span>
+        <span class="card-file">orto.png</span>
+      </div>
+      <div class="card">
+        <div class="checkered"><img class="card-img" src="/images/dental-elements/branqueamento.png"
+            alt="Branqueamento"></div>
+        <span class="card-label">Branqueamento</span>
+        <span class="card-type">branqueamento</span>
+        <span class="card-file">branqueamento.png</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    15 elementos · 4 categorias · 13 PNGs + 2 SVGs
+  </div>
+</body>
+
+</html>
