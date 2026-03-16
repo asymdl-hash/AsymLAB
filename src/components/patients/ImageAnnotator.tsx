@@ -28,11 +28,25 @@ interface DentalElementDef {
 }
 
 const DENTAL_ELEMENTS: DentalElementDef[] = [
-    { type: 'coroa', label: 'Coroa', icon: '👑', src: '/images/dental-elements/exocad-coroa.svg' },
-    { type: 'pontico', label: 'Pôntico', icon: '🌉', src: '/images/dental-elements/exocad-bridge.svg' },
+    // ─── Restaurações ───
+    { type: 'coroa', label: 'Coroa', icon: '👑', src: '/images/dental-elements/coroa.png' },
     { type: 'faceta', label: 'Faceta', icon: '🪟', src: '/images/dental-elements/exocad-faceta.svg' },
-    { type: 'implante', label: 'Implante', icon: '🔩', src: '/images/dental-elements/exocad-implante.svg' },
+    { type: 'vertiprep', label: 'Vertiprep', icon: '🔧', src: '/images/dental-elements/vertiprep.png' },
+    { type: 'overlay', label: 'Overlay', icon: '🔲', src: '/images/dental-elements/overlay.png' },
+    { type: 'veneerlay', label: 'Veneerlay', icon: '✨', src: '/images/dental-elements/veneerlay.png' },
     { type: 'onlay', label: 'Onlay', icon: '🦴', src: '/images/dental-elements/exocad-inlay.svg' },
+    { type: 'composito', label: 'Compósito', icon: '💉', src: '/images/dental-elements/composito-injectado.png' },
+    // ─── Prótese ───
+    { type: 'pontico', label: 'Pôntico', icon: '🌉', src: '/images/dental-elements/pontico.png' },
+    // ─── Cirúrgico ───
+    { type: 'implante', label: 'Implante', icon: '🔩', src: '/images/dental-elements/implante.png' },
+    { type: 'enxerto', label: 'Enxerto', icon: '🧱', src: '/images/dental-elements/enxerto.png' },
+    { type: 'osteotomia', label: 'Osteotomia', icon: '🦴', src: '/images/dental-elements/osteotomia.png' },
+    { type: 'gengivectomia', label: 'Gengivect.', icon: '🩹', src: '/images/dental-elements/gengivectomia.png' },
+    // ─── Outros ───
+    { type: 'desvitalizacao', label: 'Desvitaliz.', icon: '🦷', src: '/images/dental-elements/desvitalizacao.png' },
+    { type: 'orto', label: 'Orto', icon: '📐', src: '/images/dental-elements/orto.png' },
+    { type: 'branqueamento', label: 'Branqueam.', icon: '☀️', src: '/images/dental-elements/branqueamento.png' },
 ];
 
 /* ─────────────────── Props ─────────────────── */
