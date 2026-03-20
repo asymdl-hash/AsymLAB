@@ -29,13 +29,14 @@ import {
     Package,
     Settings,
     CalendarClock,
+    Milestone,
 } from 'lucide-react';
 import { catalogService } from '@/services/catalogService';
 import { considerationsService } from '@/services/considerationsService';
 import { settingsService, QueueWaitThresholds, BADGE_COLOR_OPTIONS, getBadgeClasses } from '@/services/settingsService';
 
 // ===== SUB-TAB CONFIG =====
-type CatalogTab = 'work_types' | 'materials' | 'tooth_colors' | 'templates' | 'statuses' | 'suppliers' | 'brands' | 'production_phases' | 'appointment_types' | 'general';
+type CatalogTab = 'work_types' | 'materials' | 'tooth_colors' | 'templates' | 'statuses' | 'suppliers' | 'brands' | 'production_phases' | 'appointment_types' | 'plan_phases' | 'general';
 
 const CATALOG_TABS: { id: CatalogTab; label: string; icon: React.ElementType; description: string }[] = [
     { id: 'work_types', label: 'Tipos de Trabalho', icon: Briefcase, description: 'Prótese fixa, removível, implantes, etc.' },
@@ -47,6 +48,7 @@ const CATALOG_TABS: { id: CatalogTab; label: string; icon: React.ElementType; de
     { id: 'brands', label: 'Marcas', icon: Tag, description: 'Catálogo de marcas dentárias' },
     { id: 'production_phases', label: 'Fases de Produção', icon: Factory, description: 'Fases do processo produtivo laboratorial' },
     { id: 'appointment_types', label: 'Tipos de Agendamento', icon: CalendarClock, description: 'Moldagem, prova, colocação e outros tipos de consulta' },
+    { id: 'plan_phases', label: 'Fases do Plano', icon: Milestone, description: 'Planeamento, provisórios, definitivos, cirurgia, controlo' },
     { id: 'general', label: 'Definições Gerais', icon: Settings, description: 'Parâmetros globais da aplicação (thresholds, limites, etc.)' },
 ];
 
@@ -92,6 +94,7 @@ export default function CatalogManager() {
             {activeTab === 'brands' && <BrandsManager />}
             {activeTab === 'production_phases' && <ProductionPhasesManager />}
             {activeTab === 'appointment_types' && <AppointmentTypesManager />}
+            {activeTab === 'plan_phases' && <PlanPhasesManager />}
             {activeTab === 'general' && <GeneralSettingsManager />}
 
         </div>
@@ -2235,6 +2238,216 @@ function AppointmentTypesManager() {
                         value={addForm.nome}
                         onChange={e => setAddForm({ ...addForm, nome: e.target.value })}
                         placeholder="Nome do tipo de agendamento..."
+                        className="flex-1 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2 focus:outline-none focus:border-primary/50"
+                        autoFocus
+                    />
+                    <input
+                        type="color"
+                        value={addForm.cor}
+                        onChange={e => setAddForm({ ...addForm, cor: e.target.value })}
+                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
+                    />
+                    <button onClick={handleAdd} disabled={saving} className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50">
+                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    </button>
+                    <button onClick={() => setShowAdd(false)} className="p-2 text-muted-foreground hover:text-card-foreground/80">
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+            )}
+
+            {/* Table */}
+            {loading ? (
+                <div className="text-center py-12 text-muted-foreground"><Loader2 className="h-5 w-5 mx-auto animate-spin" /></div>
+            ) : filtered.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground text-sm">Sem registos</div>
+            ) : (
+                <table className="w-full text-sm">
+                    <thead className="bg-muted/50 text-muted-foreground text-xs uppercase tracking-wider">
+                        <tr>
+                            <th className="text-left px-4 py-3 w-16">Emoji</th>
+                            <th className="text-left px-4 py-3 w-12">Cor</th>
+                            <th className="text-left px-4 py-3">Nome</th>
+                            <th className="text-left px-4 py-3 w-16">Activo</th>
+                            <th className="text-right px-4 py-3 w-24">Acções</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                        {filtered.map(item => (
+                            <tr key={item.id} className="hover:bg-muted/30 transition-colors group">
+                                <td className="px-4 py-3">
+                                    {editingId === item.id ? (
+                                        <input type="text" value={editForm.emoji || ''} onChange={e => setEditForm({ ...editForm, emoji: e.target.value })} className="w-12 text-center text-lg border border-border rounded bg-muted py-1" />
+                                    ) : (
+                                        <span className="text-lg">{item.emoji}</span>
+                                    )}
+                                </td>
+                                <td className="px-4 py-3">
+                                    {editingId === item.id ? (
+                                        <input type="color" value={editForm.cor || '#6366f1'} onChange={e => setEditForm({ ...editForm, cor: e.target.value })} className="w-8 h-8 rounded border border-border cursor-pointer" />
+                                    ) : (
+                                        <div className="w-6 h-6 rounded-full border border-border" style={{ backgroundColor: item.cor || '#6366f1' }} />
+                                    )}
+                                </td>
+                                <td className="px-4 py-3">
+                                    {editingId === item.id ? (
+                                        <input type="text" value={editForm.nome || ''} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} className="w-full px-2 py-1 text-sm border border-border rounded bg-muted" autoFocus />
+                                    ) : (
+                                        <span className="font-medium text-card-foreground">{item.nome}</span>
+                                    )}
+                                </td>
+                                <td className="px-4 py-3">
+                                    <button onClick={() => toggleActive(item)} className="text-muted-foreground hover:text-primary transition-colors">
+                                        {item.activo ? <ToggleRight className="h-5 w-5 text-green-500" /> : <ToggleLeft className="h-5 w-5" />}
+                                    </button>
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {editingId === item.id ? (
+                                            <>
+                                                <button onClick={handleSave} disabled={saving} className="p-1.5 text-primary hover:bg-primary/10 rounded">
+                                                    {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                                                </button>
+                                                <button onClick={() => setEditingId(null)} className="p-1.5 text-muted-foreground hover:text-card-foreground/80 rounded">
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button onClick={() => { setEditingId(item.id); setEditForm({ nome: item.nome, emoji: item.emoji, cor: item.cor }); }} className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Editar">
+                                                    <Edit3 className="h-3.5 w-3.5" />
+                                                </button>
+                                                {deleteConfirm === item.id ? (
+                                                    <>
+                                                        <button onClick={() => handleDelete(item.id)} className="p-1.5 bg-destructive/20 text-destructive rounded text-xs">Sim</button>
+                                                        <button onClick={() => setDeleteConfirm(null)} className="p-1.5 bg-muted text-muted-foreground rounded text-xs">Não</button>
+                                                    </>
+                                                ) : (
+                                                    <button onClick={() => setDeleteConfirm(item.id)} className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors">
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </button>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
+
+            {/* Footer */}
+            <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground">
+                {filtered.length} registo(s) · {items.filter(i => i.activo).length} activo(s)
+            </div>
+        </div>
+    );
+}
+
+
+
+// =====================================================
+// PLAN PHASES MANAGER (Fases do Plano)
+// =====================================================
+function PlanPhasesManager() {
+    const [items, setItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showAdd, setShowAdd] = useState(false);
+    const [addForm, setAddForm] = useState({ nome: '', emoji: '📋', cor: '#6366f1' });
+    const [saving, setSaving] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editForm, setEditForm] = useState<any>({});
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const [search, setSearch] = useState('');
+
+    const load = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await catalogService.getPlanPhases();
+            setItems(data);
+        } catch (e) { console.error(e); }
+        finally { setLoading(false); }
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
+
+    const handleAdd = async () => {
+        if (!addForm.nome.trim()) return;
+        try {
+            setSaving(true);
+            await catalogService.createPlanPhase(addForm);
+            setAddForm({ nome: '', emoji: '📋', cor: '#6366f1' });
+            setShowAdd(false);
+            load();
+        } catch (e) { console.error(e); } finally { setSaving(false); }
+    };
+
+    const handleSave = async () => {
+        if (!editingId) return;
+        try {
+            setSaving(true);
+            await catalogService.updatePlanPhase(editingId, editForm);
+            setEditingId(null);
+            load();
+        } catch (e) { console.error(e); } finally { setSaving(false); }
+    };
+
+    const handleDelete = async (id: string) => {
+        try {
+            await catalogService.deletePlanPhase(id);
+            setDeleteConfirm(null);
+            load();
+        } catch (e) { console.error(e); }
+    };
+
+    const toggleActive = async (item: any) => {
+        await catalogService.updatePlanPhase(item.id, { activo: !item.activo });
+        load();
+    };
+
+    const filtered = items.filter(i =>
+        i.nome.toLowerCase().includes(search.toLowerCase())
+    );
+
+    return (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+            {/* Toolbar */}
+            <div className="flex items-center justify-between p-4 border-b border-border">
+                <div className="relative flex-1 max-w-xs">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Pesquisar fases..."
+                        className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-muted text-card-foreground focus:outline-none focus:border-primary/50"
+                    />
+                </div>
+                <button
+                    onClick={() => setShowAdd(true)}
+                    className="flex items-center gap-1.5 text-sm px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                    <Plus className="h-4 w-4" />
+                    Nova Fase
+                </button>
+            </div>
+
+            {/* Add form */}
+            {showAdd && (
+                <div className="p-4 bg-muted/50 border-b border-border flex items-center gap-3">
+                    <input
+                        type="text"
+                        value={addForm.emoji}
+                        onChange={e => setAddForm({ ...addForm, emoji: e.target.value })}
+                        className="w-12 text-center text-lg border border-border rounded-lg bg-muted py-2"
+                        title="Emoji"
+                    />
+                    <input
+                        type="text"
+                        value={addForm.nome}
+                        onChange={e => setAddForm({ ...addForm, nome: e.target.value })}
+                        placeholder="Nome da fase do plano..."
                         className="flex-1 text-sm border border-border rounded-lg bg-muted text-card-foreground px-3 py-2 focus:outline-none focus:border-primary/50"
                         autoFocus
                     />

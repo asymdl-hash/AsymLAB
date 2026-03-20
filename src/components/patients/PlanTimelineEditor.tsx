@@ -79,6 +79,16 @@ export default function PlanTimelineEditor({ phases, onChange }: PlanTimelineEdi
         }).catch(() => { /* usa fallback */ });
     }, []);
 
+    // ── Fases do plano (sugestões do catálogo) ──
+    const [phaseOptions, setPhaseOptions] = useState<{ nome: string; emoji: string }[]>([]);
+
+    useEffect(() => {
+        catalogService.getPlanPhases().then(data => {
+            const active = (data || []).filter((t: any) => t.activo);
+            setPhaseOptions(active.map((t: any) => ({ nome: t.nome, emoji: t.emoji || '📋' })));
+        }).catch(() => { /* sem sugestões */ });
+    }, []);
+
     // Auto-focus nos inputs
     useEffect(() => {
         if (addingPhase && phaseInputRef.current) phaseInputRef.current.focus();
@@ -397,15 +407,21 @@ export default function PlanTimelineEditor({ phases, onChange }: PlanTimelineEdi
                                                 <input
                                                     ref={phaseInputRef}
                                                     type="text"
+                                                    list="phase-suggestions"
                                                     value={newPhaseName}
                                                     onChange={e => setNewPhaseName(e.target.value)}
                                                     onKeyDown={e => {
                                                         if (e.key === 'Enter') handleAddPhase();
                                                         if (e.key === 'Escape') { setAddingPhase(false); setNewPhaseName(''); }
                                                     }}
-                                                    placeholder="Nome da fase..."
+                                                    placeholder="Escolha ou escreva..."
                                                     className="w-full text-xs border border-amber-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 placeholder:text-gray-400"
                                                 />
+                                                <datalist id="phase-suggestions">
+                                                    {phaseOptions.map(opt => (
+                                                        <option key={opt.nome} value={opt.nome}>{opt.emoji} {opt.nome}</option>
+                                                    ))}
+                                                </datalist>
                                                 <div className="flex gap-1.5">
                                                     <button
                                                         type="button"
