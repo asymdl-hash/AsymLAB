@@ -333,4 +333,54 @@ export const catalogService = {
         const { error } = await supabase.from('production_phases').delete().eq('id', id);
         if (error) throw error;
     },
+
+    // ─── APPOINTMENT TYPES (Tipos de Agendamento) ─────────────
+
+    async getAppointmentTypes() {
+        const { data, error } = await supabase
+            .from('appointment_types_catalog')
+            .select('*')
+            .order('ordem', { ascending: true });
+        if (error) throw error;
+        return data || [];
+    },
+
+    async createAppointmentType(item: { nome: string; emoji?: string; cor?: string }) {
+        const { data: maxOrdem } = await supabase
+            .from('appointment_types_catalog')
+            .select('ordem')
+            .order('ordem', { ascending: false })
+            .limit(1)
+            .single();
+
+        const { data, error } = await supabase
+            .from('appointment_types_catalog')
+            .insert({
+                nome: item.nome,
+                emoji: item.emoji || '📋',
+                cor: item.cor || '#6366f1',
+                ordem: (maxOrdem?.ordem || 0) + 1,
+                activo: true,
+            })
+            .select('*')
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async updateAppointmentType(id: string, updates: Partial<{ nome: string; emoji: string; cor: string; ordem: number; activo: boolean }>) {
+        const { data, error } = await supabase
+            .from('appointment_types_catalog')
+            .update(updates)
+            .eq('id', id)
+            .select('*')
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async deleteAppointmentType(id: string) {
+        const { error } = await supabase.from('appointment_types_catalog').delete().eq('id', id);
+        if (error) throw error;
+    },
 };

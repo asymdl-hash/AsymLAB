@@ -11,6 +11,7 @@ import { patientsService } from '@/services/patientsService';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { OdontogramModal } from './Odontogram';
+import PlanTimelineEditor, { TimelinePhase } from './PlanTimelineEditor';
 import { considerationsService, ConsiderationTemplate } from '@/services/considerationsService';
 const RichTextResponse = lazy(() => import('./RichTextResponse'));
 const ImageAnnotator = lazy(() => import('./ImageAnnotator'));
@@ -156,6 +157,9 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
     const [expandRegistos, setExpandRegistos] = useState(true);
     // PhotoGuidePopover — guia fotográfico interativo
     const [activeGuidePopover, setActiveGuidePopover] = useState<string | null>(null);
+
+    // Timeline — fases e agendamentos (modo draft)
+    const [timelinePhases, setTimelinePhases] = useState<TimelinePhase[]>([]);
 
     // Draft / Rascunho
     const [draftId, setDraftId] = useState<string | null>(null);
@@ -366,6 +370,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                         if (d.photoNotes) setPhotoNotes(d.photoNotes as Record<string, string>);
                         if (d.fieldNotes) setFieldNotes(d.fieldNotes as Record<string, string[]>);
                         if (d.photoSetup) setPhotoSetup(d.photoSetup as 'basic' | 'complete');
+                        if (d.timelinePhases) setTimelinePhases(d.timelinePhases as TimelinePhase[]);
                         setDraftId(draft.id);
                         setDraftLoaded(true);
                         console.log('[Draft] Rascunho restaurado para paciente', patientId);
@@ -539,6 +544,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                 photoNotes,
                 fieldNotes,
                 photoSetup,
+                timelinePhases,
             };
             const saved = await patientsService.saveDraft(patientId, draftData);
             setDraftId(saved.id);
@@ -598,6 +604,30 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                         });
                     } catch (err) {
                         console.error('Erro ao enviar foto de escala:', err);
+                    }
+                }
+
+                // Criar fases e agendamentos da timeline
+                for (const phase of timelinePhases) {
+                    try {
+                        const createdPhase = await patientsService.createPhase({
+                            treatment_plan_id: plan.id,
+                            nome: phase.nome,
+                            ordem: phase.ordem,
+                        });
+                        if (createdPhase?.id) {
+                            for (const apt of phase.appointments) {
+                                await patientsService.createAppointment({
+                                    phase_id: createdPhase.id,
+                                    tipo: apt.tipo,
+                                    data_prevista: apt.data_prevista,
+                                    hora_prevista: apt.hora_prevista,
+                                    notas: apt.notas,
+                                });
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Erro ao criar fase/agendamento:', err);
                     }
                 }
             }
@@ -1199,6 +1229,10 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
                                         )}
 
 
+                                        {/* ═══════ TIMELINE DO PLANO ═══════ */}
+                                        <div className="mb-6">
+                                            <PlanTimelineEditor phases={timelinePhases} onChange={setTimelinePhases} />
+                                        </div>
 
                                         {/* ═══ CONSIDERAÇÕES ═══ */}
                                         <div className="rounded-xl border border-gray-200 overflow-hidden">
@@ -2543,6 +2577,7 @@ export default function NewPlanModal({ patientId, patientClinicaId, patientMedic
 
                                     </div>
                                 </div>
+
 
                                 {/* Error */}
                                 {error && (

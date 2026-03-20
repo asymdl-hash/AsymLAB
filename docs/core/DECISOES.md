@@ -2,7 +2,7 @@
 
 > Registo de todas as decisões de design validadas.
 > Cada decisão tem data, contexto e status.
-> Última actualização: 05/03/2026 (V2.2.0)
+> Última actualização: 20/03/2026 (V2.2.0)
 
 ---
 
@@ -106,6 +106,79 @@ Leitura de calendários partilhados por clínicas. Sync **unidireccional** (lemo
 
 ### D-CAL-04. Marcos na Timeline (01/03/2026)
 Timeline horizontal do paciente inclui **marcos** que indicam recolhas (entregas físicas).
+
+### D-CAL-05. Configuração do Calendário na Ficha da Clínica (20/03/2026)
+Na ficha de cada clínica, existe uma secção de configuração onde se regista o **único calendário partilhado** (ID do Google Calendar — 1 calendário por clínica). Nessa zona, mapeia-se os campos do evento:
+- **Nome/Título do evento** → Nome do paciente
+- **Descrição do evento** → Tipo de agendamento (texto livre escrito pela clínica — fica como está no nosso sistema)
+- **Data/Hora do evento** → Data e horário do agendamento
+
+Desta forma, a aplicação sabe interpretar automaticamente os eventos criados pela clínica.
+
+### D-CAL-06. Notificação ao Criar/Alterar/Eliminar Evento (20/03/2026)
+Quando uma clínica cria, altera ou elimina um evento no calendário partilhado:
+1. A aplicação recebe uma **notificação** (via webhook/polling do Google Calendar API)
+2. A notificação mostra: nome do paciente (do título), tipo de agendamento (da descrição), data/hora, e tipo de acção (novo/alterado/eliminado)
+3. **Todos os funcionários do laboratório** recebem a notificação
+4. Ao clicar na notificação → inicia o wizard de associação (novo) ou mostra o agendamento afectado (alteração/eliminação)
+
+### D-CAL-07. Wizard de Associação — Paciente (20/03/2026)
+Ao clicar na notificação, a app inicia um **wizard** com os seguintes passos:
+
+**Passo 1 — Identificar Paciente:**
+- A app sugere automaticamente pacientes existentes nessa clínica (match por nome do evento)
+- Se não houver sugestões → campo de pesquisa de pacientes filtrado por essa clínica
+- Se o paciente não existir → opção de **criar novo paciente** (pré-preenchido com nome do evento e clínica)
+
+### D-CAL-08. Wizard de Associação — Plano/Fase/Agendamento (20/03/2026)
+**Passo 2 — Associar ao Plano:**
+Após identificar o paciente:
+- Se tem **plano activo** → pergunta se é para esse plano
+- Se tem **múltiplos planos** → lista para escolher
+- Se **não tem plano** → opção de criar novo plano
+
+**Passo 3 — Associar à Fase:**
+- Se o plano tem fases → lista para escolher qual fase
+- Se não tem fases → opção de criar nova fase
+
+**Passo 4 — Criar Agendamento:**
+- Confirma tipo de agendamento (pré-preenchido da descrição do evento)
+- Confirma data/hora (pré-preenchido do evento)
+- Cria o agendamento associado à fase seleccionada
+
+### D-CAL-09. Sync de Alterações a Eventos Já Associados (20/03/2026)
+Quando a clínica **altera ou elimina** um evento que já foi associado a um paciente:
+- A app recebe notificação **imediata** da alteração (sem buffer — já está associado)
+- A notificação mostra a mudança proposta (ex: "Novo horário: 14h → 16h")
+- **Nada muda automaticamente no paciente** — o funcionário deve confirmar ou rejeitar
+- Se confirmado → alteração aplicada ao agendamento do paciente
+- Se rejeitado → agendamento mantém-se inalterado, flag "divergência com calendário externo"
+
+### D-CAL-10. Agrupamento Contínuo Até Confirmação (20/03/2026)
+Os eventos de uma clínica são criados gradualmente (5-10 min entre si) e podem ser alterados/eliminados antes de serem processados. O buffer **não é temporal** — é baseado na **acção do funcionário**:
+
+**Regra:** Enquanto o funcionário **não confirmar/associar** os eventos pendentes de um paciente, todas as alterações ficam agrupadas na mesma notificação:
+- Novos eventos para o mesmo paciente → acrescentados ao grupo
+- Evento alterado que ainda não foi confirmado → actualizado no grupo (versão mais recente)
+- Evento eliminado que ainda não foi confirmado → removido do grupo (com menção "1 evento eliminado")
+- A notificação actualiza-se em tempo real: *"Clínica X — 3 novos, 1 alterado, 1 eliminado para João Silva"*
+
+**No wizard (quando o funcionário finalmente clica):**
+- Paciente identificado 1 vez (Passo 1)
+- Apresenta a lista consolidada final: apenas os eventos que realmente existem, com os dados mais recentes
+- Menciona resumo das alterações que ocorreram (ex: "2 eventos foram alterados desde a criação original")
+
+### D-CAL-11. Confirmação Humana Obrigatória (20/03/2026)
+Nenhuma criação, alteração ou eliminação de evento Google Calendar afecta automaticamente os dados do paciente. **Toda a acção requer confirmação explícita do funcionário.** Isto aplica-se tanto a eventos novos (wizard) como a alterações a eventos já associados (D-CAL-09).
+
+### D-CAL-12. Dupla Timestamp no Histórico (20/03/2026)
+Quando eventos são associados a pacientes, entram no **histórico do paciente** com **dupla timestamp**:
+- **Data do evento** (data original da acção no Google Calendar) → define a **posição cronológica** no histórico
+- **Data da associação** (quando o funcionário confirmou) → registada como metadata
+
+Exemplo: evento criado a 12/03, associado a 16/03 → aparece no histórico na posição do dia **12/03**, com nota *"Associado em 16/03"*.
+
+Isto garante que o histórico do paciente reflecte a **cronologia real dos acontecimentos**, mesmo quando a associação é feita dias depois.
 
 ---
 
