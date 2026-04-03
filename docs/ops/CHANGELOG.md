@@ -4,6 +4,203 @@ Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
 ---
 
+## Catálogos Dinâmicos - 2026-03-20
+
+> ⚠️ Versões V1.22/V1.23 — anomalia de numeração. Sequência correcta seria V2.10/V2.11.
+
+## V1.23.0 - 2026-03-20
+- **Catálogo de Fases do Plano** — tabela DB `plan_phases_catalog`, CRUD service, novo sub-tab no CatalogManager
+- `datalist` no PlanTimelineEditor para sugestões de fases a partir do catálogo
+
+## V1.22.0 - 2026-03-20
+- **Catálogo de Tipos de Agendamento** — tabela DB `appointment_types_catalog`, CRUD service, sub-tab no CatalogManager
+- Dropdown dinâmico no PlanTimelineEditor populado a partir do catálogo
+
+---
+
+## DSD Image Annotator & Templates Dentários - 2026-03-14 a 2026-03-17
+
+## V2.9.4 - 2026-03-17
+- Templates: Gengivectomia e enxerto corrigidos manualmente
+
+## V2.9.3 - 2026-03-17
+- Templates dentários substituídos pelos originais editados manualmente (versões do utilizador)
+
+## V2.9.2 - 2026-03-17
+- Ajustes templates — linhas tracejadas pôntico, branco enxerto, compósito actualizado
+
+## V2.9.1 - 2026-03-16
+- Remoção de fundos dos templates dentários + preview page (15/15 transparentes)
+
+## V2.9.0 - 2026-03-16
+- **15 elementos dentários no Annotator**: Coroa, Faceta, Vertiprep, Overlay, Veneerlay, Onlay, Compósito, Pôntico, Implante, Enxerto, Osteotomia, Gengivectomia, Desvitalização, Orto, Branqueamento
+
+## V2.8.0 - 2026-03-14
+- **Seletor manual FDI** no Annotator — remoção da infraestrutura ONNX (detecção automática descartada)
+
+## V2.7.1 - 2026-03-14
+- Annotator: resize centrado Shift/Ctrl+drag, glow SVG, handles maiores, barra superior removida
+
+## V2.7.0 - 2026-03-14
+- **DSD Image Annotator** — editor de anotações dentárias com `react-konva`
+- 5 elementos exocad iniciais, resize livre, rotação centrada, botões contextuais flutuantes, exportação PNG
+
+## V2.6.1 - 2026-03-14
+- Botão câmara nos campos Registos Radiológicos (Ortopan, Periapicais, CBCT)
+
+## V2.6.0 - 2026-03-14
+- Badge **Polarizadas** na secção Escala de Cor — toggle shows/hides polarized photos field
+
+---
+
+## Registo Fotográfico Avançado - 2026-03-07 a 2026-03-13
+
+## V2.5.3 - 2026-03-13
+- Reposicionamento Considerações acima da Escala de Cor no modal plano
+- Fix DOM nesting e width dos Registos Radiológicos
+
+## V2.5.2 - 2026-03-12
+- Redesign tooth SVG trapezoidal, layout 2 colunas, inline dropdown, shade colors nos terços
+
+## V2.5.1 - 2026-03-12
+- **ToothThirdsSelector** — degradé toggle com 3 terços clicáveis para selecção de cor
+
+## V2.5.0 - 2026-03-12
+- **PhotoGuidePopover** na Escala de Cor (Fotos + Polarizadas) com dados de guia dedicados
+
+## V2.4.9 - 2026-03-12
+- Rename 45deg → 45deg Frontal + actualização guia posicionamento
+
+## V2.4.8 - 2026-03-12
+- PhotoGuidePopover em 45° e Outros — cobertura completa de todas as secções
+
+## V2.4.7 - 2026-03-12
+- Fix popover clipping — `position:fixed` para escapar overflow do parent
+
+## V2.4.6 - 2026-03-12
+- **PhotoGuidePopover** — guia interactivo de posicionamento câmara e settings por secção fotográfica
+
+## V2.4.5 - 2026-03-12
+- Reestruturação NAS registos radiológicos — Ortopantomografia/Periapicais/CBCT sob Registos Radiológicos
+
+## V2.4.4 - 2026-03-12
+- Fix drag-and-drop broken previews — criar novo blob URL em vez de reutilizar o revogado
+
+## V2.4.3 - 2026-03-12
+- Fix layout preview Escala de Cor — thumbnail grid fora do container flex
+
+## V2.4.2 - 2026-03-12
+- Botão câmara nativa no header pills (Full HD / 4K / Nativa)
+
+## V2.4.1 - 2026-03-12
+- **Redesign CameraOverlay** — full view, FHD/4K header, exposure sidebar, zoom presets 0.5x/1x/2x, remove timer+flash
+
+## V2.4.0 - 2026-03-12
+- Unificação estilos cards — gradient tag amber em Escala de Cor + Considerações
+
+## V2.3.9 - 2026-03-11
+- Mobile responsive — Radiológicos vertical stack + Considerações full width
+
+## V2.3.8 - 2026-03-11
+- Fix mobile scroll — Radiológicos e Considerações acessíveis com pb-24 e max-h-95vh
+
+## V2.3.7 - 2026-03-11
+- Fix layout botões — flex centrado + conversão dos botões dashed restantes
+
+## V2.3.6 - 2026-03-11
+- Fix Vercel cron schedule — daily em vez de every 6h (Hobby plan limit)
+
+## V2.3.5 - 2026-03-11
+- **Redesign cards fotográficos** — Opção B gradient tag + botões icon-only glassmorphism
+
+## V2.3.4 - 2026-03-11
+- Hero header dark gradient na secção Considerações
+
+## V2.3.3 - 2026-03-11
+- Hero header dark gradient na Escala de Cor e Registos Radiológicos
+
+## V2.3.2 - 2026-03-11
+- Hero header dark gradient nos Registos Fotográficos + botões Ficheiro/Câmara lado a lado
+
+## V2.3.1 - 2026-03-11
+- Rich Text (Tiptap) no campo Descrição das Considerações
+
+## V2.3.0 - 2026-03-11
+- **Rich Text (Tiptap)** no campo Resposta das Considerações — negrito, listas numeradas e marcadores com smart toggle
+
+---
+
+## Considerações & Drafts & Mobile Photos - 2026-03-07 a 2026-03-10
+
+## V2.22.3 - 2026-03-10
+- Auto-expanding textareas nos campos subtitle e response
+
+## V2.22.2 - 2026-03-10
+- Considerações cards — 50% width, subtitles auto-numerados, mini hero header
+
+## V2.22.1 - 2026-03-10
+- Redesign Considerações cards — styling profissional neutro
+
+## V2.21.0 - 2026-03-09
+- Registos Radiológicos + multi-ficheiro alargado
+
+## V2.20.0 - 2026-03-09
+- **Fase B** — Cron cleanup drafts, WhatsApp lembretes, Definições de rascunhos
+
+## V2.19.0 - 2026-03-09
+- **Sistema de rascunhos Fase A** — draft save/restore/finalize, PLAN_SUBFOLDERS update, migration SQL
+
+## V2.18.1 - 2026-03-09
+- Actualizar estrutura NAS — Retrato, Close-up, Vista Oclusal, 45°, Escala+Polarizada, Outros
+
+## V2.18.0 - 2026-03-09
+- **Mobile multi-select photo move** — tap to select + floating bar + destination picker (touch devices only)
+
+## V2.17.0–V2.17.5 - 2026-03-09
+- Per-photo notes em todos os campos de registo fotográfico
+- Notes viajam com fotos arrastadas entre campos
+- Botão de nota por campo (layout refinado)
+
+## V2.16.0 - 2026-03-08
+- **Drag-and-drop** fotos entre todos os campos de registo
+
+## V2.15.0–V2.15.2 - 2026-03-08
+- Secções colapsáveis (Escala de Cor, Registos Fotográficos)
+- Hero header no modal New Plan (estilo dark navy PatientForm)
+- Fix chevron position Escala de Cor
+
+## V2.14.0–V2.14.1 - 2026-03-08
+- Toggle Setup Básico/Completo para secção de registo fotográfico
+- Escala de Cor sempre visível (independente do toggle)
+
+## V2.13.0–V2.13.19 - 2026-03-07/08
+- Secção Close-up (Repouso, Sorriso Natural, Sorriso Alto)
+- 45° Esquerda e Direita em Face e Close-up
+- Rename Face → Retrato, Sorriso Alto → Sorriso Máximo, Perfil → Retractores
+- Vista Oclusal (agrupamento Intraoral Superior + Inferior)
+- Guias referência fotográficas por campo com images
+- Polarizadas em Escala de Cor (2 colunas)
+- Fix case sensitivity Vercel (Linux) nos filenames
+
+## V2.12.0–V2.12.5 - 2026-03-07
+- Reorganização layout fotos — Face full width, Introrais+120+Outros em 3 colunas
+- Guias referência com imagens por campo
+- Fieldset/legend para headers de secção
+- Rename 120 → 45
+
+## V2.11.0–V2.11.9 - 2026-03-07
+- **Câmara Pro** — zoom/pinch, resolução HD-4K, aspect ratio, exposição, tap-focus, burst, galeria, fullscreen
+- Híbrido câmara nativa mobile + overlay Pro desktop
+- Multi-captura mobile — sessão loop com Tirar Mais / Concluir
+- Botão Câmara Pro em Introrais + Escala de Cor
+- Drag-and-drop no campo Introrais
+- Escala de Cor com escalas (BleachVITA Classical)
+
+## V2.10.9 - 2026-03-07
+- **Camera Pro** — zoom/pinch, resolução HD-4K, aspect ratio, exposição, tap-focus, burst, galeria, fullscreen
+
+---
+
 ## V2.2.0 - 2026-03-05
 - **F5b Chat Interno** — Pesquisa accent/case-insensitive (D-CHAT-02), mobile bottom sheet, badge de contexto
 - Barra de pesquisa com debounce 300ms, navegação ▲▼ entre resultados, highlight com ring amber
