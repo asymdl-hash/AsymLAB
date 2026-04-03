@@ -997,7 +997,7 @@ function MaterialsManager() {
 
                                 {/* Materials in category */}
                                 {!isCollapsed && (
-                                    <table className="w-full text-sm">
+                                    <table className="w-full text-sm table-fixed">
                                         <tbody className="divide-y divide-gray-800/50">
                                             {catItems.map(item => (
                                                 <tr key={item.id} className="hover:bg-muted/30">
@@ -1064,45 +1064,45 @@ function MaterialsManager() {
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <td className="px-4 py-2.5 w-12"><div className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: item.cor || '#94a3b8' }} /></td>
-                                                            <td className="px-4 py-2.5">
-                                                                <div className="font-medium text-card-foreground">{item.nome}</div>
+                                                            <td className="px-4 py-2.5" style={{ width: '48px' }}><div className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: item.cor || '#94a3b8' }} /></td>
+                                                            <td className="px-4 py-2.5 overflow-hidden">
+                                                                <div className="font-medium text-card-foreground truncate">{item.nome}</div>
                                                                 {(item.marca || item.fornecedor) && (
-                                                                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                                                                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
                                                                         {item.marca && <span className="mr-2">🏷 {item.marca}</span>}
                                                                         {item.fornecedor && <span>🏢 {item.fornecedor}</span>}
                                                                     </div>
                                                                 )}
                                                             </td>
-                                                            <td className="px-2 py-2.5 text-right text-xs">
+                                                            <td className="px-2 py-2.5 text-right text-xs" style={{ width: '80px' }}>
                                                                 {item.preco_pvp > 0 ? (
                                                                     <span className="text-card-foreground font-medium">{Number(item.preco_pvp).toFixed(2)}€</span>
                                                                 ) : (
                                                                     <span className="text-muted-foreground/40">—</span>
                                                                 )}
                                                             </td>
-                                                            <td className="text-center px-2 py-2.5">
+                                                            <td className="text-center px-2 py-2.5" style={{ width: '48px' }}>
                                                                 <button onClick={() => toggleWidgetFlag(item.id, 'widget_dentes', item.widget_dentes)}
                                                                     className={`transition-colors ${item.widget_dentes !== dDefault ? 'ring-1 ring-amber-500/50 rounded' : ''}`}
                                                                     title={item.widget_dentes !== dDefault ? 'Diferente do default da categoria' : ''}>
                                                                     {item.widget_dentes ? <ToggleRight className="h-4.5 w-4.5 text-green-500" /> : <ToggleLeft className="h-4.5 w-4.5 text-muted-foreground" />}
                                                                 </button>
                                                             </td>
-                                                            <td className="text-center px-2 py-2.5">
+                                                            <td className="text-center px-2 py-2.5" style={{ width: '48px' }}>
                                                                 <button onClick={() => toggleWidgetFlag(item.id, 'widget_fresagem', item.widget_fresagem)}
                                                                     className={`transition-colors ${item.widget_fresagem !== fDefault ? 'ring-1 ring-amber-500/50 rounded' : ''}`}
                                                                     title={item.widget_fresagem !== fDefault ? 'Diferente do default da categoria' : ''}>
                                                                     {item.widget_fresagem ? <ToggleRight className="h-4.5 w-4.5 text-green-500" /> : <ToggleLeft className="h-4.5 w-4.5 text-muted-foreground" />}
                                                                 </button>
                                                             </td>
-                                                            <td className="text-center px-2 py-2.5">
+                                                            <td className="text-center px-2 py-2.5" style={{ width: '48px' }}>
                                                                 <button onClick={() => toggleWidgetFlag(item.id, 'widget_componentes', item.widget_componentes)}
                                                                     className={`transition-colors ${item.widget_componentes !== cDefault ? 'ring-1 ring-amber-500/50 rounded' : ''}`}
                                                                     title={item.widget_componentes !== cDefault ? 'Diferente do default da categoria' : ''}>
                                                                     {item.widget_componentes ? <ToggleRight className="h-4.5 w-4.5 text-green-500" /> : <ToggleLeft className="h-4.5 w-4.5 text-muted-foreground" />}
                                                                 </button>
                                                             </td>
-                                                            <td className="px-4 py-2.5 text-right">
+                                                            <td className="px-4 py-2.5 text-right" style={{ width: '80px' }}>
                                                                 <div className="flex justify-end gap-1">
                                                                     <button onClick={() => { setEditingId(item.id); setEditForm({ ...item }); }} className="p-1.5 text-muted-foreground hover:text-blue-500 hover:bg-blue-900/30 rounded"><Edit3 className="h-3.5 w-3.5" /></button>
                                                                     {deleteConfirm === item.id ? (
