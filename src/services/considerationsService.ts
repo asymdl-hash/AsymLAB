@@ -274,14 +274,14 @@ export const considerationsService = {
         phaseId?: string;
         tipo?: string;
     }) {
+        // NOTA: PostgREST não suporta duas relações opostas com o mesmo FK na mesma query.
+        // Por isso buscamos parent inline e resolvemos responses no client.
         let query = supabase
             .from('considerations')
             .select(`
                 *,
                 autor:user_profiles!considerations_autor_id_fkey(user_id, full_name, app_role),
-                template:consideration_templates(titulo, tipo),
-                parent:considerations!considerations_parent_id_fkey(id, conteudo, lado, fields),
-                responses:considerations!considerations_parent_id_fkey(id, lado, tipo, fields, conteudo, created_at)
+                template:consideration_templates(titulo, tipo)
             `)
             .eq('patient_id', patientId)
             .order('created_at', { ascending: false });
@@ -292,7 +292,15 @@ export const considerationsService = {
 
         const { data, error } = await query;
         if (error) throw error;
-        return data || [];
+
+        const items = data || [];
+
+        // Resolver parent e responses no client-side a partir dos dados já carregados
+        return items.map(item => ({
+            ...item,
+            parent: item.parent_id ? items.find(c => c.id === item.parent_id) || null : null,
+            responses: items.filter(c => c.parent_id === item.id),
+        }));
     },
 
     /** Criar consideração V2 (com template, fields, tipo) */
@@ -437,14 +445,24 @@ export const considerationsService = {
             .select(`
                 *,
                 autor:user_profiles!considerations_autor_id_fkey(full_name),
-                template:consideration_templates(titulo),
-                parent:considerations!considerations_parent_id_fkey(id, conteudo, lado, fields)
+                template:consideration_templates(titulo)
             `)
             .eq('share_token', token)
             .gt('share_expires_at', new Date().toISOString())
             .single();
 
         if (error) throw error;
+
+        // Se tem parent_id, buscar parent separadamente
+        if (data?.parent_id) {
+            const { data: parent } = await supabase
+                .from('considerations')
+                .select('id, conteudo, lado, fields')
+                .eq('id', data.parent_id)
+                .single();
+            return { ...data, parent };
+        }
+
         return data;
     },
 };
