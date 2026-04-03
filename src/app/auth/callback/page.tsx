@@ -10,26 +10,36 @@ import { Button } from '@/components/ui/button';
 export default function AuthCallbackPage() {
     const router = useRouter();
     const [error, setError] = useState('');
-    const [status, setStatus] = useState('A processar o seu convite...');
+    const [status, setStatus] = useState('A processar...');
 
     useEffect(() => {
         const handleCallback = async () => {
             try {
-                // O Supabase Auth redireciona com tokens no hash fragment
-                // O @supabase/ssr client-side detecta automaticamente o hash
-                // e processa a sessão via onAuthStateChange
+                let isRecovery = false;
 
-                // Verificar se há um code na URL (PKCE flow)
+                // 1. Check for PKCE code in query params
                 const url = new URL(window.location.href);
                 const code = url.searchParams.get('code');
 
                 if (code) {
                     setStatus('A trocar código de autenticação...');
+
+                    // Listen for PASSWORD_RECOVERY event BEFORE exchanging code
+                    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+                        if (event === 'PASSWORD_RECOVERY') {
+                            isRecovery = true;
+                        }
+                    });
+
                     const { error } = await supabase.auth.exchangeCodeForSession(code);
                     if (error) throw error;
+
+                    // Small delay to let onAuthStateChange fire
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    subscription.unsubscribe();
                 }
 
-                // Verificar se há tokens no hash (Implicit flow - usado em convites)
+                // 2. Check for tokens in hash (Implicit flow - used in invites)
                 const hashParams = new URLSearchParams(window.location.hash.substring(1));
                 const accessToken = hashParams.get('access_token');
                 const refreshToken = hashParams.get('refresh_token');
@@ -42,29 +52,41 @@ export default function AuthCallbackPage() {
                         refresh_token: refreshToken,
                     });
                     if (error) throw error;
+
+                    if (type === 'invite' || type === 'recovery') {
+                        isRecovery = true;
+                    }
                 }
 
-                // Aguardar um momento para a sessão ser processada
+                // 3. Verify session exists
                 setStatus('A verificar sessão...');
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 500));
 
-                // Verificar se temos sessão
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (!session) {
-                    // Sem sessão - talvez o token já expirou
                     throw new Error('Não foi possível criar a sessão. O link pode ter expirado.');
                 }
 
-                // Verificar se é um convite ou recovery — redirecionar para set-password
-                if (type === 'invite' || type === 'recovery') {
-                    setStatus('Bem-vindo! A preparar a sua conta...');
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                // 4. Route based on flow type
+                if (isRecovery) {
+                    setStatus('A preparar redefinição de password...');
+                    await new Promise(resolve => setTimeout(resolve, 300));
                     router.replace('/auth/set-password');
                     return;
                 }
 
-                // Para outros fluxos, ir para dashboard
+                // Check if it's an invite (user has no password set yet)
+                // The hash type check above handles implicit flow invites
+                // For PKCE invites, check if user was recently created
+                if (type === 'invite') {
+                    setStatus('Bem-vindo! A preparar a sua conta...');
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    router.replace('/auth/set-password');
+                    return;
+                }
+
+                // Default: go to dashboard
                 router.replace('/dashboard');
 
             } catch (err: any) {
