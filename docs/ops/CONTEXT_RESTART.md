@@ -4,7 +4,7 @@
 
 ---
 
-## Estado Atual — Versão: V2.9.4 + Catálogos (03/04/2026)
+## Estado Atual — Versão: V2.10.0 (03/04/2026)
 
 ### Foco Principal
 Remodelação completa da Ficha do Paciente (F0–F7) + Sistema de Registo Fotográfico + DSD Image Annotator. A remodelação principal está **concluída (F0–F7)**. Últimos trabalhos focaram-se no Annotator DSD e Catálogos dinâmicos.
@@ -52,6 +52,13 @@ Remodelação completa da Ficha do Paciente (F0–F7) + Sistema de Registo Fotog
 - **Catálogo de Tipos de Agendamento** — tabela DB `appointment_types_catalog`, CRUD service, sub-tab no CatalogManager, dropdown dinâmico no PlanTimelineEditor (V1.22.0)
 - **Catálogo de Fases do Plano** — tabela DB `plan_phases_catalog`, CRUD service, sub-tab no CatalogManager, datalist no PlanTimelineEditor (V1.23.0)
 
+#### Bloco 4: Fix PGRST200 Considerations (V2.10.0)
+- **Fix PGRST200 FK Ambiguity** — corrigidas queries self-referencing em `considerationsService.ts`
+- PostgREST não suporta dois joins opostos com o mesmo FK hint na mesma query
+- `parent` e `responses` agora resolvidos client-side
+- `getByShareToken` simplificado — parent carregado em query separada
+- Verificado no browser: tab Considerações carrega sem erros
+
 #### Bloco Anterior: Registos Fotográficos Avançados (V2.10.9 → V2.22.3)
 - **Câmara Pro** — zoom/pinch, resolução HD-4K, aspect ratio, exposição, tap-focus (V2.10.9)
 - **Híbrido câmara nativa mobile** + overlay Pro desktop (V2.11.0)
@@ -64,8 +71,8 @@ Remodelação completa da Ficha do Paciente (F0–F7) + Sistema de Registo Fotog
 - **Considerações refinadas** — cards 50% width, auto-numbered, hero header (V2.22.1-V2.22.3)
 
 ### Bugs Conhecidos
-- **PGRST200** na tabela `considerations` (FK em falta) — pré-existente, não bloqueia implementação actual
-- **Versionamento anomalias** — V1.22/V1.23 depois de V2.9.4 (sequência quebrada)
+- ~~**PGRST200** na tabela `considerations`~~ — ✅ **RESOLVIDO em V2.10.0** (queries self-referencing FK corrigidas)
+- **Versionamento anomalias** — V1.22/V1.23 depois de V2.9.4 (sequência quebrada, agora corrigida com V2.10.0)
 
 ### Regras Activas (Workflows)
 | Workflow | Descrição |
@@ -85,10 +92,9 @@ Usar como referência principal para continuar de onde parámos.
 
 ## Próximos Passos
 1. **F5c** — Chat NAS Integration (pastas Chat Interno/Galeria + Metadata)
-2. **PGRST200** — Corrigir FK considerations quando oportuno
-3. **Navegação Chat** por Plano → Fase → Agendamento
-4. **QA & Testes formais** do módulo pacientes
-5. **NAS padrão master** + Supabase cache
-6. **Corrigir versionamento** — próximo commit deve usar V2.10.0+
+2. **Navegação Chat** por Plano → Fase → Agendamento
+3. **QA & Testes formais** do módulo pacientes (Considerações agora funcional)
+4. **NAS padrão master** + Supabase cache
+5. **Consideration_versions FK** — verificar se `consideration_versions_edited_by_fkey` existe no Supabase
 
-*(Ficheiro sincronizado em 03/04/2026. Ler ao reiniciar para continuar de onde ficámos.)*
+*(Ficheiro sincronizado em 03/04/2026 — V2.10.0. Ler ao reiniciar para continuar de onde ficámos.)*

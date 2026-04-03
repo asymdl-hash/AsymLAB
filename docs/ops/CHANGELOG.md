@@ -2,6 +2,15 @@
 
 Registo histórico de todas as versões e alterações do projeto AsymLAB PWA.
 
+## Fix PGRST200 Considerations - 2026-04-03
+
+## V2.10.0 - 2026-04-03
+- **Fix PGRST200 FK Ambiguity** — corrigidas queries self-referencing em `considerationsService.ts`
+- Removidos joins ambíguos `parent` + `responses` com o mesmo FK hint (`considerations_parent_id_fkey`)
+- Parent e responses agora resolvidos client-side a partir dos dados carregados
+- `getByShareToken` simplificado — parent carregado em query separada
+- Verificado: tab Considerações carrega sem erros no módulo Pacientes
+
 ---
 
 ## Catálogos Dinâmicos - 2026-03-20
